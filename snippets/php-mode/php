@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: php
+# key: php
+# group: dunder methods
+# --
+<?php
+        $0
+?>
