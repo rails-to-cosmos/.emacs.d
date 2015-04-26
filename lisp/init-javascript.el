@@ -1,9 +1,13 @@
-(require-package 'json-mode)
-(when (>= emacs-major-version 24)
-  (require-package 'js2-mode)
-  (require-package 'ac-js2)
-  (require-package 'coffee-mode))
-(require-package 'js-comint)
+(use-package json-mode
+  :ensure t)
+(use-package js2-mode
+  :ensure t)
+(use-package ac-js2
+  :ensure t)
+(use-package coffee-mode
+  :ensure t)
+(use-package js-comint
+  :ensure t)
 
 (defcustom preferred-javascript-mode
   (first (remove-if-not #'fboundp '(js2-mode js-mode)))
@@ -53,7 +57,9 @@
 
 ;; Javascript nests {} and () a lot, so I find this helpful
 
-(require-package 'rainbow-delimiters)
+(use-package rainbow-delimiters
+  :ensure t)
+
 (dolist (hook '(js2-mode-hook js-mode-hook json-mode-hook))
   (add-hook hook 'rainbow-delimiters-mode))
 
@@ -93,7 +99,8 @@
 ;; ---------------------------------------------------------------------------
 
 (when (and (>= emacs-major-version 24) (featurep 'js2-mode))
-  (require-package 'skewer-mode)
+  (use-package skewer-mode
+    :ensure t)
   (after-load 'skewer-mode
     (add-hook 'skewer-mode-hook
               (lambda () (inferior-js-keys-mode -1)))))

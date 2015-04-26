@@ -1,12 +1,17 @@
-(when (< emacs-major-version 24)
-  (require-package 'org))
-(require-package 'org-fstree)
-(when *is-a-mac*
-  (require-package 'org-mac-link)
-  (autoload 'org-mac-grab-link "org-mac-link" nil t)
-  (require-package 'org-mac-iCal))
+(use-package org
+  :ensure t)
 
-(require 'org-crypt)
+(use-package org-fstree
+  :ensure t)
+
+(when *is-a-mac*
+  (use-package org-mac-link
+    :ensure t)
+  (autoload 'org-mac-grab-link "org-mac-link" nil t)
+  (use-package org-mac-iCal
+    :ensure t))
+
+(use-package org-crypt)
 (org-crypt-use-before-save-magic)
 (setq org-tags-exclude-from-inheritance (quote ("crypt")))
 (setq org-crypt-key nil)
@@ -79,7 +84,9 @@
   (define-key org-clock-mode-line-map [header-line mouse-2] 'org-clock-goto)
   (define-key org-clock-mode-line-map [header-line mouse-1] 'org-clock-menu))
 
-(require-package 'org-pomodoro)
+(use-package org-pomodoro
+  :ensure t)
+
 (after-load 'org-agenda
   (define-key org-agenda-mode-map (kbd "P") 'org-pomodoro))
 

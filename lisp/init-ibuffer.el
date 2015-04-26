@@ -1,8 +1,11 @@
-(require-package 'fullframe)
+(use-package fullframe
+  :ensure t)
+
 (after-load 'ibuffer
  (fullframe ibuffer ibuffer-quit))
 
-(require-package 'ibuffer-vc)
+(use-package ibuffer-vc
+  :ensure t)
 
 (defun ibuffer-set-up-preferred-filters ()
   (ibuffer-vc-set-filter-groups-by-vc-root)
@@ -10,8 +13,6 @@
     (ibuffer-do-sort-by-filename/process)))
 
 (add-hook 'ibuffer-hook 'ibuffer-set-up-preferred-filters)
-
-
 
 (after-load 'ibuffer
   ;; Use human readable Size column instead of original one

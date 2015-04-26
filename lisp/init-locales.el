@@ -19,11 +19,15 @@
    (set-selection-coding-system 'utf-8))
   (prefer-coding-system 'utf-8))
 
-(require-package 'ucs-utils)
-(require-package 'unicode-fonts)
-(require 'unicode-fonts)
+(use-package ucs-utils
+  :ensure t)
+
+(use-package unicode-fonts
+  :ensure t)
+
 (unicode-fonts-setup)
-;; (require 'ucs-utils)
-(require 'font-utils)
+
+(use-package font-utils
+  :ensure t)
 
 (provide 'init-locales)

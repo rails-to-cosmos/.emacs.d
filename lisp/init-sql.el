@@ -1,6 +1,12 @@
-(require-package 'sql-indent)
-(require-package 'sqlup-mode)
-(require-package 'edbi)
+(use-package sql-indent
+  :ensure t)
+
+(use-package sqlup-mode
+  :ensure t)
+
+(use-package edbi
+  :ensure t)
+
 
 (after-load 'sql
   (require 'sql-indent))

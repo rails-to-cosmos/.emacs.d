@@ -1,14 +1,17 @@
 (require 'init-git)
 
-(require-package 'yagist)
-(require-package 'github-browse-file)
-(require-package 'bug-reference-github)
+(use-package yagist
+  :ensure t)
+(use-package github-browse-file
+  :ensure t)
+(use-package bug-reference-github
+  :ensure t)
+
 (add-hook 'prog-mode-hook 'bug-reference-prog-mode)
 
-(when (eval-when-compile (> emacs-major-version 23))
-  (require-package 'github-clone)
-  (require-package 'magit-gh-pulls))
-
-
+(use-package github-clone
+    :ensure t)
+(use-package magit-gh-pulls)
+  :ensure t)
 
 (provide 'init-github)

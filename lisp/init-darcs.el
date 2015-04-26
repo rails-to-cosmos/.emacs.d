@@ -1,5 +1,7 @@
-(require-package 'darcsum)
-(require-package 'vc-darcs)
+(use-package darcsum
+  :ensure t)
+(use-package vc-darcs
+  :ensure t)
 
 
 ;; TODO: include this in the vc-darcs ELPA package

@@ -1,4 +1,5 @@
-(require-package 'hideshow)
+(use-package hideshow
+  :ensure t)
 
 (global-set-key (kbd "C-+") 'hs-toggle-hiding)
 

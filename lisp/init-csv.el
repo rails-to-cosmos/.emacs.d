@@ -1,5 +1,7 @@
-(require-package 'csv-mode)
-(require-package 'csv-nav)
+(use-package csv-mode
+  :ensure t)
+(use-package csv-nav
+  :ensure t)
 
 (add-auto-mode 'csv-mode "\\.[Cc][Ss][Vv]\\'")
 

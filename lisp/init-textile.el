@@ -1,4 +1,5 @@
-(require-package 'textile-mode)
+(use-package textile-mode
+  :ensure t)
 
 (autoload 'textile-mode "textile-mode" "Mode for editing Textile documents" t)
 (setq auto-mode-alist

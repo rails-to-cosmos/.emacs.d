@@ -1,3 +1,18 @@
+;;----------------------------------------------------------------------------
+;; Use-package.el initialization
+;;----------------------------------------------------------------------------
+
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+(setq package-enable-at-startup nil)
+(package-initialize)
+(if (not (package-installed-p 'use-package))
+    (progn
+      (package-refresh-contents)
+      (package-install 'use-package)))
+(require 'use-package)
+
 (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
       savehist-file (concat emacs-persistence-directory ".minibuffer-history")
       ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
@@ -13,20 +28,12 @@
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
       abbrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
 
-(unless (file-exists-p emacs-persistence-directory)
-  (make-directory emacs-persistence-directory t))
-(unless (file-exists-p eshell-directory-name)
-  (make-directory eshell-directory-name t))
+(make-directory emacs-persistence-directory t)
 
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
-(add-to-list 'load-path (expand-file-name "packages" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-
 (setenv "PATH" (shell-command-to-string "source ~/.bash_profile; echo -n $PATH"))
-
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "packages" user-emacs-directory))
 
 (defconst *is-a-mac* (eq system-type 'darwin))
 (defconst *is-a-win* (eq system-type 'windows-nt))
@@ -35,35 +42,22 @@
 ;; Bootstrap config
 ;;----------------------------------------------------------------------------
 
-(require 'init-utils)
-(require 'init-elpa)      ;; Machinery for installing required packages
-
-;;----------------------------------------------------------------------------
-;; User interface
-;;----------------------------------------------------------------------------
-(tool-bar-mode -1)
-(setq-default line-spacing 5)
-(fringe-mode -1)
-(global-visual-line-mode 1)
-(setq-default indent-tabs-mode nil)
-(menu-bar-mode -1)
-(setq scroll-conservatively 50)
-(setq scroll-margin 4)
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
-(blink-cursor-mode -1)
-(setq save-abbrevs t)
+(use-package init-utils)
+(use-package init-user-interface)
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
+(use-package bookmark+
+  :ensure t)
 (use-package wgrep)
 (use-package diminish)
 (use-package scratch)
 (use-package mwe-log-commands)
 (use-package restclient)
-(use-package yasnippet)
+(use-package yasnippet
+  :ensure t)
 (use-package emmet-mode)
 (use-package python-django)
 (use-package init-frame-hooks)
@@ -85,7 +79,6 @@
 (use-package init-sessions)
 (use-package init-fonts)
 (use-package init-editing-utils)
-(use-package init-vc)
 (use-package init-darcs)
 (use-package init-git)
 (use-package init-foldings)
@@ -93,7 +86,6 @@
 (use-package init-textile)
 (use-package init-markdown)
 (use-package init-csv)
-(use-package init-erlang)
 (use-package init-javascript)
 (use-package init-php)
 (use-package init-org)
@@ -104,7 +96,6 @@
 (use-package init-lisp)
 (use-package init-spelling)
 (use-package init-misc)
-(use-package init-ledger)
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
@@ -116,6 +107,7 @@
 (use-package dsvn)
 
 (use-package multiple-cursors
+  :ensure t
   :bind (("C->" . mc/mark-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
@@ -159,9 +151,7 @@
   (error "Please move init-local.el to ~/.emacs.d/lisp"))
 (require 'init-local nil t)
 
-(use-package bookmark+)
-(use-package dired+)
-(use-package dedicated)
+;; (use-package dedicated)
 
 (use-package hl-line+
   :config (set-face-background hl-line-face "#363636"))
@@ -171,9 +161,6 @@
 
 (use-package fiplr
   :bind (("C-x f" . fiplr-find-file)))
-
-;; (use-package golden-ratio
-;;   :config (golden-ratio-mode 1))
 
 (defun make-frame-transparent ()
   (interactive)

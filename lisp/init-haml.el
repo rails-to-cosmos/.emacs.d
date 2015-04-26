@@ -1,4 +1,5 @@
-(require-package 'haml-mode)
+(use-package haml-mode
+  :ensure t)
 
 (after-load 'haml-mode
   (define-key haml-mode-map (kbd "C-o") 'open-line)

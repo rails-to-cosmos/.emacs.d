@@ -1,6 +1,6 @@
-(when (eval-when-compile (>= emacs-major-version 24))
-  (require-package 'flycheck)
-  (add-hook 'after-init-hook 'global-flycheck-mode))
+(use-package flycheck
+  :ensure t)
+(add-hook 'after-init-hook 'global-flycheck-mode)
 
 ;; Override default flycheck triggers
 (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)

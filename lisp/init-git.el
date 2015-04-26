@@ -1,11 +1,21 @@
-(require-package 'magit)
-(require-package 'git-blame)
-(require-package 'git-commit-mode)
-(require-package 'git-rebase-mode)
-(require-package 'gitignore-mode)
-(require-package 'gitconfig-mode)
-(require-package 'git-messenger) ;; Though see also vc-annotate's "n" & "p" bindings
-(require-package 'git-timemachine)
+(setq magit-last-seen-setup-instructions "1.4.0")
+
+(use-package magit
+  :ensure t)
+(use-package git-blame
+  :ensure t)
+(use-package git-commit-mode
+  :ensure t)
+(use-package git-rebase-mode
+  :ensure t)
+(use-package gitignore-mode
+  :ensure t)
+(use-package gitconfig-mode
+  :ensure t)
+(use-package git-messenger
+  :ensure t)
+(use-package git-timemachine
+  :ensure t)
 
 (setq-default
  magit-save-some-buffers nil
@@ -20,7 +30,8 @@
 (after-load 'magit
   (define-key magit-status-mode-map (kbd "C-M-<up>") 'magit-goto-parent-section))
 
-(require-package 'fullframe)
+(use-package fullframe
+  :ensure t)
 (after-load 'magit
   (fullframe magit-status magit-mode-quit-window))
 
@@ -50,7 +61,8 @@
 
 ;;; git-svn support
 
-(require-package 'magit-svn)
+(use-package magit-svn
+  :ensure t)
 (autoload 'magit-svn-enabled "magit-svn")
 (defun sanityinc/maybe-enable-magit-svn-mode ()
   (when (magit-svn-enabled)
@@ -79,7 +91,8 @@
                      (ido-completing-read "git-svn command: " git-svn--available-commands nil t)))))
 
 
-(require-package 'git-messenger)
+(use-package git-messenger
+  :ensure t)
 (global-set-key (kbd "C-x v p") #'git-messenger:popup-message)
 
 

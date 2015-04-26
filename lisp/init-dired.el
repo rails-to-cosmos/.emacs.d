@@ -1,9 +1,8 @@
-(require-package 'dired+)
-
 (setq diredp-hide-details-initially-flag nil)
 
 (after-load 'dired
-  (require 'dired+)
+  (use-package dired+
+    :ensure t)
   (when (fboundp 'global-dired-hide-details-mode)
     (global-dired-hide-details-mode -1))
   (setq dired-recursive-deletes 'top)

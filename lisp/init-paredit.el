@@ -1,4 +1,6 @@
-(require-package 'paredit)
+(use-package paredit
+  :ensure t)
+
 (autoload 'enable-paredit-mode "paredit")
 
 (defun maybe-map-paredit-newline ()
@@ -49,7 +51,9 @@
 ;; Enable some handy paredit functions in all prog modes
 ;; ----------------------------------------------------------------------------
 
-(require-package 'paredit-everywhere)
+(use-package paredit-everywhere
+  :ensure t)
+
 (add-hook 'prog-mode-hook 'paredit-everywhere-mode)
 (add-hook 'css-mode-hook 'paredit-everywhere-mode)
 

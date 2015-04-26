@@ -1,8 +1,12 @@
-(require-package 'elisp-slime-nav)
+(use-package elisp-slime-nav
+  :ensure t)
+
 (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
   (add-hook hook 'elisp-slime-nav-mode))
 
-(require-package 'lively)
+(use-package lively
+  :ensure t)
+
 
 (setq-default initial-scratch-message
               (concat ";; Aye, fight and you may die. Run, and you'll live at least a while. And dying in your beds, many years from now, would you be willin' to trade all the days, from this day to that, for one chance, just one chance, to come back here and tell our enemies that they may take our lives, but they'll never take our freedom.\n
@@ -16,7 +20,6 @@
 ;; Life is about the people you meet and the things you create with them.\n"))
 
 
-
 ;; Make C-x C-e run 'eval-region if the region is active
 
 (defun sanityinc/eval-last-sexp-or-region (prefix)
@@ -31,9 +34,10 @@
 (after-load 'lisp-mode
   (define-key emacs-lisp-mode-map (kbd "C-x C-e") 'sanityinc/eval-last-sexp-or-region))
 
-(require-package 'ipretty)
-(ipretty-mode 1)
+(use-package ipretty
+  :ensure t)
 
+(ipretty-mode 1)
 
 (defadvice pp-display-expression (after make-read-only (expression out-buffer-name) activate)
   "Enable `view-mode' in the output buffer - if any - so it can be closed with `\"q\"."
@@ -79,7 +83,9 @@
 ;; Automatic byte compilation
 ;; ----------------------------------------------------------------------------
 
-(require-package 'auto-compile)
+(use-package auto-compile
+  :ensure t)
+
 (auto-compile-on-save-mode 1)
 (auto-compile-on-load-mode 1)
 
@@ -87,7 +93,9 @@
 ;; Highlight current sexp
 ;; ----------------------------------------------------------------------------
 
-(require-package 'hl-sexp)
+(use-package hl-sexp
+  :ensure t)
+
 
 ;; Prevent flickery behaviour due to hl-sexp-mode unhighlighting before each command
 (after-load 'hl-sexp
@@ -116,8 +124,12 @@
 ;; ----------------------------------------------------------------------------
 ;; Enable desired features for all lisp modes
 ;; ----------------------------------------------------------------------------
-(require-package 'rainbow-delimiters)
-(require-package 'redshank)
+(use-package rainbow-delimiters
+  :ensure t)
+
+(use-package redshank
+  :ensure t)
+
 (after-load 'redshank
   (diminish 'redshank-mode))
 
@@ -159,13 +171,17 @@
 
 (add-hook 'after-save-hook #'sanityinc/maybe-check-parens)
 
-(require-package 'eldoc-eval)
+(use-package eldoc-eval
+  :ensure t)
+
 (require 'eldoc-eval)
 
 (add-to-list 'auto-mode-alist '("\\.emacs-project\\'" . emacs-lisp-mode))
 (add-to-list 'auto-mode-alist '("archive-contents\\'" . emacs-lisp-mode))
 
-(require-package 'cl-lib-highlight)
+(use-package cl-lib-highlight
+  :ensure t)
+
 (after-load 'lisp-mode
   (cl-lib-highlight-initialize))
 
@@ -204,29 +220,25 @@
     ad-do-it))
 
 
-
-(require-package 'macrostep)
+(use-package macrostep
+  :ensure t)
+
 
 (after-load 'lisp-mode
   (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))
 
-
-
 ;; A quick way to jump to the definition of a function given its key binding
 (global-set-key (kbd "C-h K") 'find-function-on-key)
 
-
-
 (when (eval-when-compile (>= emacs-major-version 24))
   ;; rainbow-mode needs color.el, bundled with Emacs >= 24.
-  (require-package 'rainbow-mode)
+  (use-package rainbow-mode
+    :ensure t)
 
   (defun sanityinc/enable-rainbow-mode-if-theme ()
     (when (string-match "\\(color-theme-\\|-theme\\.el\\)" (buffer-name))
       (rainbow-mode 1)))
 
   (add-hook 'emacs-lisp-mode-hook 'sanityinc/enable-rainbow-mode-if-theme))
-
-
 
 (provide 'init-lisp)

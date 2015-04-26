@@ -1,5 +1,7 @@
-(require-package 'unfill)
-(require-package 'whole-line-or-region)
+(use-package unfill
+  :ensure t)
+(use-package whole-line-or-region
+  :ensure t)
 
 (when (fboundp 'electric-pair-mode)
   (electric-pair-mode))
@@ -59,13 +61,13 @@
   (add-hook hook #'sanityinc/no-trailing-whitespace))
 
 
-(require-package 'whitespace-cleanup-mode)
-(global-whitespace-cleanup-mode t)
+(use-package whitespace-cleanup-mode
+  :init (global-whitespace-cleanup-mode t)
+  :bind (("RET" . newline-and-indent))
+  :ensure t)
 
-
 ;;; Newline behaviour
 
-(global-set-key (kbd "RET") 'newline-and-indent)
 (defun sanityinc/newline-at-end-of-line ()
   "Move to end of line, enter a newline, and reindent."
   (interactive)
@@ -86,18 +88,21 @@
 (when (fboundp 'global-prettify-symbols-mode)
   (global-prettify-symbols-mode))
 
-
-(require-package 'undo-tree)
-(global-undo-tree-mode)
-(diminish 'undo-tree-mode)
+(use-package undo-tree
+  :init
+  (global-undo-tree-mode)
+  (diminish 'undo-tree-mode)
+  :ensure t)
 
-
-(require-package 'highlight-symbol)
-(dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
-  (add-hook hook 'highlight-symbol-mode)
-  (add-hook hook 'highlight-symbol-nav-mode))
-(eval-after-load 'highlight-symbol
-  '(diminish 'highlight-symbol-mode))
+(use-package highlight-symbol
+  :init
+  (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
+    (add-hook hook 'highlight-symbol-mode)
+    (add-hook hook 'highlight-symbol-nav-mode))
+  (eval-after-load 'highlight-symbol
+    '(diminish 'highlight-symbol-mode))
+  :ensure)
+
 
 ;;----------------------------------------------------------------------------
 ;; Zap *up* to char is a handy pair for zap-to-char
@@ -107,7 +112,8 @@
 
 
 
-(require-package 'browse-kill-ring)
+(use-package browse-kill-ring
+  :ensure t)
 
 
 ;;----------------------------------------------------------------------------
@@ -125,7 +131,8 @@
 ;;----------------------------------------------------------------------------
 ;; Expand region
 ;;----------------------------------------------------------------------------
-(require-package 'expand-region)
+(use-package expand-region
+  :ensure t)
 (global-set-key (kbd "C-=") 'er/expand-region)
 
 
@@ -155,12 +162,14 @@
 (global-set-key (kbd "C-.") 'set-mark-command)
 (global-set-key (kbd "C-x C-.") 'pop-global-mark)
 
-(require-package 'ace-jump-mode)
+(use-package ace-jump-mode
+  :ensure t)
 (global-set-key (kbd "C-;") 'ace-jump-mode)
 (global-set-key (kbd "C-:") 'ace-jump-word-mode)
 
 
-(require-package 'multiple-cursors)
+(use-package multiple-cursors
+  :ensure t)
 ;; multiple-cursors
 (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C->") 'mc/mark-next-like-this)
@@ -192,15 +201,18 @@
 ;;----------------------------------------------------------------------------
 ;; Page break lines
 ;;----------------------------------------------------------------------------
-(require-package 'page-break-lines)
-(global-page-break-lines-mode)
-(diminish 'page-break-lines-mode)
+(use-package page-break-lines
+  :init
+  (global-page-break-lines-mode)
+  (diminish 'page-break-lines-mode)
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Fill column indicator
 ;;----------------------------------------------------------------------------
 (when (eval-when-compile (> emacs-major-version 23))
-  (require-package 'fill-column-indicator)
+  (use-package fill-column-indicator
+    :ensure t)
   (defun sanityinc/prog-mode-fci-settings ()
     (turn-on-fci-mode)
     (when show-trailing-whitespace
@@ -239,7 +251,8 @@
 ;; it will use those keybindings. For this reason, you might prefer to
 ;; use M-S-up and M-S-down, which will work even in lisp modes.
 ;;----------------------------------------------------------------------------
-(require-package 'move-dup)
+(use-package move-dup
+  :ensure t)
 (global-set-key [M-up] 'md/move-lines-up)
 (global-set-key [M-down] 'md/move-lines-down)
 (global-set-key [M-S-up] 'md/move-lines-up)
@@ -356,18 +369,22 @@ With arg N, insert N newlines."
 
 
 (when (executable-find "ag")
-  (require-package 'ag)
-  (require-package 'wgrep-ag)
+  (use-package ag
+    :ensure t)
+  (use-package wgrep-ag
+    :ensure t)
   (setq-default ag-highlight-search t)
   (global-set-key (kbd "M-?") 'ag-project))
 
 
 
-(require-package 'highlight-escape-sequences)
+(use-package highlight-escape-sequences
+  :ensure t)
 (hes-mode)
 
 
-(require-package 'guide-key)
+(use-package guide-key
+  :ensure t)
 (setq guide-key/guide-key-sequence '("C-x r" "C-x 4" "C-x 5" "C-c ;" "C-c ; f" "C-c ' f" "C-x n"))
 (guide-key-mode 1)
 (diminish 'guide-key-mode)

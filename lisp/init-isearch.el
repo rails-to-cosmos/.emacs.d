@@ -1,12 +1,14 @@
 ;; Show number of matches while searching
-(when (>= emacs-major-version 24)
-  (require-package 'anzu)
+(use-package anzu
+    :ensure t)
   (global-anzu-mode t)
   (diminish 'anzu-mode)
   (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
-  (global-set-key [remap query-replace] 'anzu-query-replace))
+  (global-set-key [remap query-replace] 'anzu-query-replace)
 
-(require-package 'flx-isearch)
+(use-package flx-isearch
+  :ensure t)
+
 (global-set-key (kbd "C-M-s") 'flx-isearch-forward)
 (global-set-key (kbd "C-M-r") 'flx-isearch-backward)
 
