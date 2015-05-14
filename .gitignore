@@ -16,3 +16,4 @@ elpa/
 el-get
 .#*
 emacs.org
+.smex-items
