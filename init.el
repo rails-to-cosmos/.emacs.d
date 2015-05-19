@@ -43,7 +43,22 @@
 ;;----------------------------------------------------------------------------
 
 (use-package init-utils)
-(use-package init-user-interface)
+
+;;----------------------------------------------------------------------------
+;; User interface
+;;----------------------------------------------------------------------------
+(tool-bar-mode -1)
+(setq-default line-spacing 5)
+(fringe-mode -1)
+(global-visual-line-mode 1)
+(setq-default indent-tabs-mode nil)
+(menu-bar-mode -1)
+(setq scroll-conservatively 50)
+(setq scroll-margin 4)
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+(blink-cursor-mode -1)
+(setq save-abbrevs t)
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
