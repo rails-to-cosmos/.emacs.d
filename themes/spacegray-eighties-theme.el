@@ -3,10 +3,10 @@
 
 (custom-theme-set-faces
  'spacegray-eighties
- '(default ((t (:family "Consolas" :foundry "nil" :width normal :height 120 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#d3d0c8" :background "#2d2d2d" :stipple nil :inherit nil))))
+ '(default ((t (:family "Inconsolata" :foundry "nil" :width normal :height 120 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#d3d0c8" :background "#2d2d2d" :stipple nil :inherit nil))))
  '(cursor ((t (:background "#cac5be"))))
- '(fixed-pitch ((t (:family "Consolas"))))
- '(variable-pitch ((t (:family "Consolas"))))
+ '(fixed-pitch ((t (:family "Inconsolata"))))
+ '(variable-pitch ((t (:family "Inconsolata"))))
 
  '(escape-glyph ((t (:foreground "#60cccc"))))
  '(minibuffer-prompt ((t (:inherit minibuffer :foreground "#c294cc"))))
@@ -117,6 +117,6 @@
                            :height 110
                            :width normal
                            :foundry nil
-                           :family "Consolas"))))))
+                           :family "Inconsolata"))))))
 
 (provide-theme 'spacegray-eighties)
