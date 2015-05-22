@@ -1,8 +1,3 @@
-(load-theme 'spacegray-eighties t)
-
-;; (use-package atom-dark-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'atom-dark t))
+(load-theme 'spacegray-eighties)
 
 (provide 'init-themes)
