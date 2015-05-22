@@ -77,7 +77,7 @@
 (use-package python-django)
 (use-package init-frame-hooks)
 (use-package init-xterm)
-(use-package init-themes)
+(load-theme 'spacegray-eighties t)
 (use-package init-osx-keys)
 (use-package init-gui-frames)
 (use-package init-proxies)
@@ -111,6 +111,19 @@
 (use-package init-lisp)
 (use-package init-spelling)
 (use-package init-misc)
+
+(use-package google-translate
+  :config
+  (defun translate-sentence (sentence)
+    "Automatic translation without specifying language"
+    (interactive "sTranslate sentence: ")
+    (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                         ("[а-яА-Я]" . ("ru" "en"))))
+    (dolist (lang-regex lang-regexes)
+      (if (string-match (car lang-regex) sentence)
+          (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
+  :bind
+  ("C-c C-y C-t" . translate-sentence))
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
