@@ -49,7 +49,7 @@
 ;;----------------------------------------------------------------------------
 (tool-bar-mode -1)
 (setq-default line-spacing 5)
-(fringe-mode -1)
+(fringe-mode '(10 . 0))
 (global-visual-line-mode 1)
 (setq-default indent-tabs-mode nil)
 (menu-bar-mode -1)
@@ -59,6 +59,7 @@
 (setq inhibit-startup-message t)
 (blink-cursor-mode -1)
 (setq save-abbrevs t)
+(load-theme 'spacegray-eighties t)
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
@@ -77,7 +78,6 @@
 (use-package python-django)
 (use-package init-frame-hooks)
 (use-package init-xterm)
-(load-theme 'spacegray-eighties t)
 (use-package init-osx-keys)
 (use-package init-gui-frames)
 (use-package init-proxies)
@@ -113,8 +113,7 @@
 (use-package init-misc)
 
 (use-package google-translate
-  :config
-  (defun translate-sentence (sentence)
+  :config (defun translate-sentence (sentence)
     "Automatic translation without specifying language"
     (interactive "sTranslate sentence: ")
     (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
@@ -122,8 +121,8 @@
     (dolist (lang-regex lang-regexes)
       (if (string-match (car lang-regex) sentence)
           (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind
-  ("C-c C-y C-t" . translate-sentence))
+
+  :bind ("C-x C-y C-t C-t" . translate-sentence))
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
@@ -131,8 +130,10 @@
 (use-package init-locales)
 
 ;; Extra packages which don't require any configuration
-(use-package gnuplot)
-(use-package dsvn)
+(use-package gnuplot
+  :ensure t)
+(use-package dsvn
+  :ensure t)
 
 (use-package multiple-cursors
   :ensure t
@@ -140,7 +141,8 @@
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
-(use-package regex-tool)
+(use-package regex-tool
+  :ensure t)
 
 (dolist (command '(yank yank-pop))
   (eval `(defadvice ,command (after indent-region activate)
