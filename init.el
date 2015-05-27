@@ -144,6 +144,9 @@
 (use-package regex-tool
   :ensure t)
 
+(use-package pdf-tools
+  :ensure t)
+
 (dolist (command '(yank yank-pop))
   (eval `(defadvice ,command (after indent-region activate)
            (and (not current-prefix-arg)
