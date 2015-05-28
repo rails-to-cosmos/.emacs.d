@@ -17,3 +17,5 @@ el-get
 .#*
 emacs.org
 .smex-items
+
+*.elc

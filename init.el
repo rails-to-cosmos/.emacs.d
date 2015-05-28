@@ -65,17 +65,6 @@
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
-(use-package bookmark+
-  :ensure t)
-(use-package wgrep)
-(use-package diminish)
-(use-package scratch)
-(use-package mwe-log-commands)
-(use-package restclient)
-(use-package yasnippet
-  :ensure t)
-(use-package emmet-mode)
-(use-package python-django)
 (use-package init-frame-hooks)
 (use-package init-xterm)
 (use-package init-osx-keys)
@@ -130,10 +119,30 @@
 (use-package init-locales)
 
 ;; Extra packages which don't require any configuration
+
 (use-package gnuplot
   :ensure t)
 (use-package dsvn
   :ensure t)
+(use-package bookmark+
+  :ensure t)
+(use-package wgrep
+  :ensure t)
+(use-package diminish
+  :ensure t)
+(use-package scratch
+  :ensure t)
+(use-package mwe-log-commands
+  :ensure t)
+(use-package restclient
+  :ensure t)
+(use-package yasnippet
+  :ensure t)
+(use-package emmet-mode
+  :ensure t)
+(use-package python-django
+  :ensure t)
+
 
 (use-package multiple-cursors
   :ensure t
@@ -286,6 +295,5 @@ point reaches the beginning or end of the buffer, stop there."
 
 (use-package elmacro
   :ensure t)
-
 
 (provide 'init)
