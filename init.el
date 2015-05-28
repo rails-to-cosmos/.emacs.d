@@ -184,8 +184,6 @@
   (error "Please move init-local.el to ~/.emacs.d/lisp"))
 (require 'init-local nil t)
 
-;; (use-package dedicated)
-
 (use-package hl-line+
   :config (set-face-background hl-line-face "#363636"))
 
@@ -282,5 +280,12 @@ point reaches the beginning or end of the buffer, stop there."
 (global-set-key (kbd "C-x _") 'save-macro)
 
 (use-package init-eshell-commands)
+
+(use-package emmet-mode
+  :ensure t)
+
+(use-package elmacro
+  :ensure t)
+
 
 (provide 'init)
