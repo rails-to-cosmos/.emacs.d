@@ -65,6 +65,29 @@
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
+(use-package gnuplot
+  :ensure t)
+(use-package dsvn
+  :ensure t)
+(use-package bookmark+
+  :ensure t)
+(use-package wgrep
+  :ensure t)
+(use-package diminish
+  :ensure t)
+(use-package scratch
+  :ensure t)
+(use-package mwe-log-commands
+  :ensure t)
+(use-package restclient
+  :ensure t)
+(use-package yasnippet
+  :ensure t)
+(use-package emmet-mode
+  :ensure t)
+(use-package python-django
+  :ensure t)
+
 (use-package init-frame-hooks)
 (use-package init-xterm)
 (use-package init-osx-keys)
@@ -120,30 +143,6 @@
 
 ;; Extra packages which don't require any configuration
 
-(use-package gnuplot
-  :ensure t)
-(use-package dsvn
-  :ensure t)
-(use-package bookmark+
-  :ensure t)
-(use-package wgrep
-  :ensure t)
-(use-package diminish
-  :ensure t)
-(use-package scratch
-  :ensure t)
-(use-package mwe-log-commands
-  :ensure t)
-(use-package restclient
-  :ensure t)
-(use-package yasnippet
-  :ensure t)
-(use-package emmet-mode
-  :ensure t)
-(use-package python-django
-  :ensure t)
-
-
 (use-package multiple-cursors
   :ensure t
   :bind (("C->" . mc/mark-next-like-this)
@@ -191,6 +190,7 @@
 ;;----------------------------------------------------------------------------
 (when (file-exists-p (expand-file-name "init-local.el" user-emacs-directory))
   (error "Please move init-local.el to ~/.emacs.d/lisp"))
+
 (require 'init-local nil t)
 
 (use-package hl-line+
