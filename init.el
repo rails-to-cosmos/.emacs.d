@@ -85,8 +85,12 @@
   :ensure t)
 (use-package emmet-mode
   :ensure t)
+(use-package impatient-mode
+  :ensure t)
+;; http://localhost:8080/imp/
 (use-package python-django
   :ensure t)
+
 
 (use-package init-frame-hooks)
 (use-package init-xterm)
@@ -133,7 +137,6 @@
     (dolist (lang-regex lang-regexes)
       (if (string-match (car lang-regex) sentence)
           (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-
   :bind ("C-x C-y C-t C-t" . translate-sentence))
 
 ;;----------------------------------------------------------------------------
@@ -194,13 +197,16 @@
 (require 'init-local nil t)
 
 (use-package hl-line+
-  :config (set-face-background hl-line-face "#363636"))
+  :config (set-face-background hl-line-face "#363636")
+  :ensure t)
 
 (use-package imenu-anywhere
-  :bind (("C-." . imenu-anywhere)))
+  :bind (("C-." . imenu-anywhere))
+  :ensure t)
 
 (use-package fiplr
-  :bind (("C-x f" . fiplr-find-file)))
+  :bind (("C-x f" . fiplr-find-file))
+  :ensure t)
 
 (defun make-frame-transparent ()
   (interactive)
