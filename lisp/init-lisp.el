@@ -9,14 +9,11 @@
 
 
 (setq-default initial-scratch-message
-              (concat ";; Aye, fight and you may die. Run, and you'll live at least a while. And dying in your beds, many years from now, would you be willin' to trade all the days, from this day to that, for one chance, just one chance, to come back here and tell our enemies that they may take our lives, but they'll never take our freedom.\n
+              (concat ";; Playfully doing something difficult, whether useful or not, that is hacking.\n
 ;; maybe not from the sources
 ;; you have poured yours
 ;; maybe not from the directions
 ;; you are staring at\n
-;; Если используешь их в битве, но победа долго не приходит, их оружие притупляется, а рвение — ослабевает. Если осаждаешь города, их силы истощаются.
-;; Если подвергаешь войско длительной войне, запасов государства не хватит. Поэтому я слышал об успехе быстрых военных походов, и не слышал об успехе затяжных. Ни одно государство не извлекло выгоды из длительной войны.\n
-;; Playfully doing something difficult, whether useful or not, that is hacking.\n
 ;; Life is about the people you meet and the things you create with them.\n"))
 
 
