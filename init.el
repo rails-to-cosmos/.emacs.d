@@ -113,7 +113,6 @@
 (use-package init-fonts)
 (use-package init-editing-utils)
 (use-package init-darcs)
-(use-package init-git)
 (use-package init-foldings)
 (use-package init-crontab)
 (use-package init-textile)
@@ -139,7 +138,8 @@
     (dolist (lang-regex lang-regexes)
       (if (string-match (car lang-regex) sentence)
           (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind ("C-x C-y C-t C-t" . translate-sentence))
+  :bind ("C-x C-y C-t C-t" . translate-sentence)
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
