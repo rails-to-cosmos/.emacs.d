@@ -38,6 +38,8 @@
 (setenv "PATH" (shell-command-to-string "source ~/.bash_profile; echo -n $PATH"))
 
 (defconst *is-a-mac* (eq system-type 'darwin))
+(setq mac-command-modifier 'meta)
+
 (defconst *is-a-win* (eq system-type 'windows-nt))
 
 ;;----------------------------------------------------------------------------

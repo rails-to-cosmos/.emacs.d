@@ -216,7 +216,7 @@
                            :underline nil
                            :slant normal
                            :weight normal
-                           :height 150
+                           :height 120
                            :width normal
                            :foundry nil
                            :family "Inconsolata"))))))
