@@ -2,8 +2,10 @@
   "Invoke shell with commands"
   (interactive "MName of shell buffer to create: ")
   (pop-to-buffer (get-buffer-create name))
+  (setq default-eshell-buffer-name eshell-buffer-name)
   (setq eshell-buffer-name name)
   (eshell)
+  (setq eshell-buffer-name default-eshell-buffer-name)
   (loop for command in commands
         do (insert (concat command "\n")))
   (eshell-send-input)
