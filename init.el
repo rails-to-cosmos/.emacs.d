@@ -3,6 +3,11 @@
 ;;----------------------------------------------------------------------------
 
 (require 'package)
+
+(setenv "LANG" "en_US.UTF-8")
+(setenv "LC_ALL" "en_US.UTF-8")
+(setenv "LC_CTYPE" "en_US.UTF-8")
+
 (package-refresh-contents)
 
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
@@ -84,7 +89,9 @@
 (use-package mwe-log-commands
   :ensure t)
 (use-package restclient
-  :ensure t)
+  :ensure t
+  :config
+  (add-auto-mode 'restclient-mode "\\.rest\\'"))
 (use-package yasnippet
   :ensure t)
 (use-package emmet-mode
@@ -132,7 +139,7 @@
 (use-package init-misc)
 
 (use-package google-translate
-  :config (defun translate-sentence (sentence)
+  :config (defun translate-text (sentence)
     "Automatic translation without specifying language"
     (interactive "sTranslate sentence: ")
     (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
@@ -140,7 +147,7 @@
     (dolist (lang-regex lang-regexes)
       (if (string-match (car lang-regex) sentence)
           (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind ("C-x C-y C-t C-t" . translate-sentence)
+  :bind ("C-x C-y C-t C-t" . translate-text) ;; C-x C-y C-Translate C-Text
   :ensure t)
 
 ;;----------------------------------------------------------------------------
@@ -296,7 +303,7 @@ point reaches the beginning or end of the buffer, stop there."
   (insert-kbd-macro name)      ; copy the macro
   (newline)                    ; insert a newline
   (switch-to-buffer nil))      ; return to the initial buffer
-(global-set-key (kbd "C-x _") 'save-macro)
+;; (global-set-key (kbd "C-x _") 'save-macro)
 
 (use-package init-eshell-commands)
 
@@ -305,5 +312,13 @@ point reaches the beginning or end of the buffer, stop there."
 
 (use-package elmacro
   :ensure t)
+
+(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (flet ((process-list ())) ad-do-it))
+
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function
+            kill-buffer-query-functions))
 
 (provide 'init)

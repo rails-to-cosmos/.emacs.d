@@ -2,10 +2,49 @@
   "Invoke shell with commands"
   (interactive "MName of shell buffer to create: ")
   (pop-to-buffer (get-buffer-create name))
-  (shell (current-buffer))
+  (setq eshell-buffer-name name)
+  (eshell)
   (loop for command in commands
-        do (process-send-string nil (concat command "\n")))
+        do (insert (concat command "\n")))
+  (eshell-send-input)
   (goto-char (point-max)))
+
+;; chordials administration
+
+(defvar chordials-root-dir "~/Documents/Stuff/Chordials/")
+(defvar chordials-api-dir "~/Documents/Stuff/Chordials/api/")
+(defvar chordials-env-dir (concatenate 'string chordials-root-dir "env/"))
+(defvar chordials-env-bin-dir (concatenate 'string chordials-env-dir "bin/"))
+(defvar chordials-python (concatenate 'string chordials-env-dir "bin/python3"))
+(defvar chordials-pip (concatenate 'string chordials-env-dir "bin/pip"))
+
+(defun chordials-api-run ()
+  (interactive)
+  (spawn-shell "*Chordials Shell*" (concatenate 'string "cd " chordials-root-dir))
+  (spawn-shell "*Chordials BaseX Server Listener*" "basexhttp")
+  (spawn-shell "*Chordials Server Listener*" (concatenate 'string chordials-env-bin-dir "python3 " chordials-api-dir "api.py"))
+  (sanityinc/toggle-delete-other-windows))
+
+(defun chordials-api-kill ()
+  (interactive)
+  (shell-command "basexhttpstop")
+  (kill-buffer "*Chordials BaseX Server Listener*")
+  (kill-buffer "*Chordials Shell*")
+  (kill-buffer "*Chordials Server Listener*")
+  (sanityinc/toggle-delete-other-windows))
+
+(global-set-key (kbd "C-x C-y C-c C-a C-r") 'chordials-api-run)
+(global-set-key (kbd "C-x C-y C-c C-a C-k") 'chordials-api-kill)
+
+(defun chordials-pip-install (name)
+  "Install pip package"
+  (interactive "MName of pip package to install: ")
+  (spawn-shell "*Chordials Pip Manager Shell*" (concatenate 'string chordials-pip " install " name)))
+
+(defun chordials-pip-update ()
+  "Update pip packages"
+  (interactive)
+  (spawn-shell "*Chordials Pip Manager Shell*" (concatenate 'string chordials-pip " freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 " chordials-pip " install -U")))
 
 ;; nginx-administration
 
