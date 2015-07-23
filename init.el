@@ -199,14 +199,6 @@
                 (let ((mark-even-if-inactive transient-mark-mode))
                   (indent-region (region-beginning) (region-end) nil))))))
 
-;;----------------------------------------------------------------------------
-;; Allow users to provide an optional "init-local" containing personal settings
-;;----------------------------------------------------------------------------
-(when (file-exists-p (expand-file-name "init-local.el" user-emacs-directory))
-  (error "Please move init-local.el to ~/.emacs.d/lisp"))
-
-(require 'init-local nil t)
-
 (use-package hl-line+
   :config (set-face-background hl-line-face "#363636")
   :ensure t)
@@ -305,8 +297,6 @@ point reaches the beginning or end of the buffer, stop there."
   (switch-to-buffer nil))      ; return to the initial buffer
 ;; (global-set-key (kbd "C-x _") 'save-macro)
 
-(use-package init-eshell-commands)
-
 (use-package emmet-mode
   :ensure t)
 
@@ -320,5 +310,8 @@ point reaches the beginning or end of the buffer, stop there."
 (setq kill-buffer-query-functions
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
+
+(use-package init-shell-commands)
+(use-package init-local)
 
 (provide 'init)
