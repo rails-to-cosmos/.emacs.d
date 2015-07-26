@@ -10,6 +10,8 @@
   (insert "import pdb; pdb.set_trace()")
   (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
+(define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
+
 ;; python-mode
 ;; ============
 ;; pre-requisites on ubuntu
@@ -22,30 +24,30 @@
 ;; Experimenting with python3, but not gotten it working yet
 ;; (setq python-python-command "/home/sid/.virtualenvs/emacs/bin/python")
 ;; (setq python-shell-interpreter "/usr/bin/python3")
-(add-hook 'python-mode-hook
-          (lambda ()
-            (setq indent-tabs-mode nil)
-            (setq tab-width 4)
-            (setq python-indent-offset 4)))
+;; (add-hook 'python-mode-hook
+;;           (lambda ()
+;;             (setq indent-tabs-mode nil)
+;;             (setq tab-width 4)
+;;             (setq python-indent-offset 4)))
 
 ;; anaconda
-(use-package anaconda-mode
-  :ensure t
-  :config
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'eldoc-mode))
-(use-package company-anaconda
-  :ensure t
-  :config
-  (add-to-list 'company-backends 'company-anaconda))
+;; (use-package anaconda-mode
+;;   :ensure t
+;;   :config
+;;   (add-hook 'python-mode-hook 'anaconda-mode)
+;;   (add-hook 'python-mode-hook 'eldoc-mode))
+;; (use-package company-anaconda
+;;   :ensure t
+;;   :config
+;;   (add-to-list 'company-backends 'company-anaconda))
 
 ;; virtualenv
-(use-package virtualenvwrapper
-  :ensure t
-  :config
-  (venv-initialize-interactive-shells) ;; if you want interactive shell support
-  (venv-initialize-eshell) ;; if you want eshell support
-  (setq venv-location "~/.virtualenvs/"))
+;; (use-package virtualenvwrapper
+;;   :ensure t
+;;   :config
+;;   (venv-initialize-interactive-shells) ;; if you want interactive shell support
+;;   (venv-initialize-eshell) ;; if you want eshell support
+;;   (setq venv-location "~/.virtualenvs/"))
 ;; (setq python-shell-virtualenv-path "~/.virtualenvs/default")
 
 ;; pep8
@@ -54,8 +56,6 @@
 ;; (use-package py-autopep8
 ;;  :ensure t)
 ;; (setq py-autopep8-options '("--ignore=E309,"))
-
-
 
 ;; (defun python-interactive ()
 ;;   "Enter the interactive Python environment"
@@ -66,7 +66,5 @@
 ;;     (comint-send-input)))
 
 ;; (global-set-key (kbd "C-c i") 'python-interactive)
-
-(define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
 
 (provide 'init-python-mode)

@@ -389,5 +389,13 @@ With arg N, insert N newlines."
 (guide-key-mode 1)
 (diminish 'guide-key-mode)
 
+(use-package swiper
+  :ensure t
+  :bind (("C-s" . swiper)
+         ("C-r" . swiper)
+         ("C-c C-r" . ivy-resume))
+  :config
+  (ivy-mode t)
+  (setq ivy-use-virtual-buffers t))
 
 (provide 'init-editing-utils)

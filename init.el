@@ -277,12 +277,6 @@ point reaches the beginning or end of the buffer, stop there."
         (goto-char (marker-position (car (last mark-ring))))))))
 (global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
 
-(defun top-join-line ()
-  "Join the current line with the line beneath it."
-  (interactive)
-  (delete-indentation 1))
-(global-set-key (kbd "C-^") 'top-join-line)
-
 (defun save-macro (name)
   "save a macro. Take a name as argument
         and save the last defined macro under
