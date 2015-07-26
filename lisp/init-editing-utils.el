@@ -6,34 +6,6 @@
 (when (fboundp 'electric-pair-mode)
   (electric-pair-mode))
 
-;;----------------------------------------------------------------------------
-;; Some basic preferences
-;;----------------------------------------------------------------------------
-(setq-default
- ;; blink-cursor-delay 0
- ;; blink-cursor-interval 0.4
- bookmark-default-file (expand-file-name ".bookmarks.el" user-emacs-directory)
- buffers-menu-max-size 30
- case-fold-search t
- column-number-mode t
- compilation-scroll-output t
- delete-selection-mode t
- ediff-split-window-function 'split-window-horizontally
- ediff-window-setup-function 'ediff-setup-windows-plain
- grep-highlight-matches t
- grep-scroll-output t
- indent-tabs-mode nil
- make-backup-files nil
- mouse-yank-at-point t
- save-interprogram-paste-before-kill t
- scroll-preserve-screen-position 'always
- set-mark-command-repeat-pop t
- show-trailing-whitespace t
- tooltip-delay 1.5
- truncate-lines nil
- truncate-partial-width-windows nil
- visible-bell t)
-
 (when *is-a-mac*
   (setq-default locate-command "mdfind"))
 
@@ -43,7 +15,6 @@
 
 (transient-mark-mode t)
 
-
 ;;; Whitespace
 
 (defun sanityinc/no-trailing-whitespace ()
@@ -76,14 +47,10 @@
 
 (global-set-key (kbd "S-<return>") 'sanityinc/newline-at-end-of-line)
 
-
-
 (when (eval-when-compile (string< "24.3.1" emacs-version))
   ;; https://github.com/purcell/emacs.d/issues/138
   (after-load 'subword
     (diminish 'subword-mode)))
-
-
 
 (when (fboundp 'global-prettify-symbols-mode)
   (global-prettify-symbols-mode))
@@ -111,7 +78,6 @@
 (global-set-key (kbd "M-Z") 'zap-up-to-char)
 
 
-
 (use-package browse-kill-ring
   :ensure t)
 
@@ -185,8 +151,6 @@
 ;; Train myself to use M-f and M-b instead
 (global-unset-key [M-left])
 (global-unset-key [M-right])
-
-
 
 (defun kill-back-to-indentation ()
   "Kill from point back to the first non-whitespace character on the line."
@@ -366,8 +330,6 @@ With arg N, insert N newlines."
                    (lambda (s1 s2) (eq (random 2) 0)))))))
 
 
-
-
 (when (executable-find "ag")
   (use-package ag
     :ensure t)
@@ -377,12 +339,10 @@ With arg N, insert N newlines."
   (global-set-key (kbd "M-?") 'ag-project))
 
 
-
 (use-package highlight-escape-sequences
   :ensure t)
 (hes-mode)
 
-
 (use-package guide-key
   :ensure t)
 (setq guide-key/guide-key-sequence '("C-x r" "C-x 4" "C-x 5" "C-c ;" "C-c ; f" "C-c ' f" "C-x n"))
@@ -395,7 +355,17 @@ With arg N, insert N newlines."
          ("C-r" . swiper)
          ("C-c C-r" . ivy-resume))
   :config
-  (ivy-mode t)
-  (setq ivy-use-virtual-buffers t))
+  ;; (ivy-mode t)
+  ;; (setq ivy-use-virtual-buffers t)
+  )
+
+(use-package typo
+  :ensure t)
+(add-hook 'text-mode-hook 'typo-mode)
+
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-setup-side-window-bottom))
 
 (provide 'init-editing-utils)

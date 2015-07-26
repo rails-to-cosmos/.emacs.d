@@ -33,7 +33,15 @@
       custom-file (concat emacs-persistence-directory ".custom")
       eshell-directory-name (concat emacs-persistence-directory "eshell")
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
-      abbrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
+      abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
+
+      ;; shell-pop-default-directory (concat emacs-persistence-directory "shell-pop")
+      ;; shell-pop-shell-type (quote ("ansi-term" "*pop-shell*" (lambda nil (ansi-term shell-pop-term-shell))))
+      ;; shell-pop-term-shell "/bin/bash"
+      ;; shell-pop-universal-key "C-t"
+      ;; shell-pop-window-size 30
+      ;; shell-pop-full-span t
+      ;; shell-pop-window-position "bottom"
 
 (make-directory emacs-persistence-directory t)
 
@@ -56,19 +64,8 @@
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
-(tool-bar-mode -1)
-(setq-default line-spacing 5)
-(fringe-mode '(10 . 0))
-(global-visual-line-mode 1)
-(setq-default indent-tabs-mode nil)
-(menu-bar-mode -1)
-(setq scroll-conservatively 50)
-(setq scroll-margin 4)
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
-(blink-cursor-mode -1)
-(setq save-abbrevs t)
-(load-theme 'spacegray-eighties t)
+
+(use-package init-user-interface)
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
@@ -137,18 +134,6 @@
 (use-package init-lisp)
 (use-package init-spelling)
 (use-package init-misc)
-
-(use-package google-translate
-  :config (defun translate-text (sentence)
-    "Automatic translation without specifying language"
-    (interactive "sTranslate sentence: ")
-    (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
-                         ("[а-яА-Я]" . ("ru" "en"))))
-    (dolist (lang-regex lang-regexes)
-      (if (string-match (car lang-regex) sentence)
-          (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind ("C-x C-y C-t C-t" . translate-text) ;; C-x C-y C-Translate C-Text
-  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
@@ -305,7 +290,10 @@ point reaches the beginning or end of the buffer, stop there."
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
 
-(use-package init-shell-commands)
+(use-package init-shell)
 (use-package init-local)
+
+(use-package hackernews
+  :ensure t)
 
 (provide 'init)

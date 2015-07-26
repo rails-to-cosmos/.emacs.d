@@ -83,5 +83,19 @@
         (error "Cannot open tramp file")
       (browse-url (concat "file://" file-name)))))
 
+;;----------------------------------------------------------------------------
+;; Google translate util
+;;----------------------------------------------------------------------------
+(use-package google-translate
+  :config (defun translate-text (sentence)
+            "Automatic translation without specifying language"
+            (interactive "sTranslate sentence: ")
+            (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                 ("[а-яА-Я]" . ("ru" "en"))))
+            (dolist (lang-regex lang-regexes)
+              (if (string-match (car lang-regex) sentence)
+                  (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
+  :bind ("C-x C-y C-t C-t" . translate-text) ;; C-x C-y C-Translate C-Text
+  :ensure t)
 
 (provide 'init-utils)

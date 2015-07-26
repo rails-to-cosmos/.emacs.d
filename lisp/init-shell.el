@@ -1,3 +1,6 @@
+;; (use-package shell-pop
+;;   :ensure t)
+
 (defun spawn-shell (name &rest commands)
   "Invoke shell with commands"
   (interactive "MName of shell buffer to create: ")
@@ -13,4 +16,16 @@
   (eshell-send-input)
   (goto-char (point-max)))
 
-(provide 'init-shell-commands)
+(use-package eshell-prompt-extras
+  :ensure t)
+(with-eval-after-load "esh-opt"
+  (require 'virtualenvwrapper)
+  (venv-initialize-eshell)
+  (autoload 'epe-theme-lambda "eshell-prompt-extras")
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-dakrone))
+
+(use-package eshell-z
+  :ensure t)
+
+(provide 'init-shell)
