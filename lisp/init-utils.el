@@ -98,4 +98,27 @@
   :bind ("C-x C-y C-t C-t" . translate-text) ;; C-x C-y C-Translate C-Text
   :ensure t)
 
+(defun save-macro (name)
+  "save a macro. Take a name as argument
+        and save the last defined macro under
+        this name at the end of your .emacs"
+  (interactive "SName of the macro :") ; ask for the name of the macro
+  (kmacro-name-last-macro name)        ; use this name for the macro
+  (find-file user-init-file)   ; open ~/.emacs or other user init file
+  (goto-char (point-max))      ; go to the end of the .emacs
+  (newline)                    ; insert a newline
+  (insert-kbd-macro name)      ; copy the macro
+  (newline)                    ; insert a newline
+  (switch-to-buffer nil))      ; return to the initial buffer
+;; (global-set-key (kbd "C-x _") 'save-macro)
+
+(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (flet ((process-list ())) ad-do-it))
+
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function
+            kill-buffer-query-functions))
+
+
 (provide 'init-utils)

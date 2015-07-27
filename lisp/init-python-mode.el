@@ -10,6 +10,8 @@
   (insert "import pdb; pdb.set_trace()")
   (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
+(add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
+
 (define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
 
 ;; python-mode
@@ -51,11 +53,9 @@
 ;; (setq python-shell-virtualenv-path "~/.virtualenvs/default")
 
 ;; pep8
-;; (use-package python-pep8
-;;  :ensure t)
-;; (use-package py-autopep8
-;;  :ensure t)
-;; (setq py-autopep8-options '("--ignore=E309,"))
+(use-package py-autopep8
+ :ensure t)
+(setq py-autopep8-options '("--ignore=E309,"))
 
 ;; (defun python-interactive ()
 ;;   "Enter the interactive Python environment"

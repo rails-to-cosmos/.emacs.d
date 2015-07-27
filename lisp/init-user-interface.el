@@ -24,7 +24,7 @@
  truncate-partial-width-windows nil
  visible-bell t
  line-spacing 5
- indent-tabs-mode -1)
+ indent-tabs-mode nil)
 
 (setq scroll-conservatively 50
       scroll-margin 4
@@ -40,13 +40,22 @@
 (fringe-mode '(10 . 0))
 (global-visual-line-mode 1)
 
-
-(load-theme 'spacegray-eighties t)
-(use-package zerodark-theme
+(use-package emmet-mode
   :ensure t)
 
-;; (load-theme 'zerodark-theme t)
+(use-package elmacro
+  :ensure t)
 
+(defun make-frame-transparent ()
+  (interactive)
+  (set-frame-parameter (selected-frame) 'alpha '(85 85)))
+
+(defun make-frame-opaque ()
+  (interactive)
+  (set-frame-parameter (selected-frame) 'alpha '(100 100)))
+
+;;; TODO optimize it:
+(load-theme 'zerodark t)
 (provide 'init-user-interface)
 
 ;;; init-user-interface.el ends here

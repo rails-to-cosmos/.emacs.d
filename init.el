@@ -62,12 +62,6 @@
 (use-package init-utils)
 
 ;;----------------------------------------------------------------------------
-;; User interface
-;;----------------------------------------------------------------------------
-
-(use-package init-user-interface)
-
-;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
@@ -125,7 +119,7 @@
 (use-package init-markdown)
 (use-package init-csv)
 (use-package init-javascript)
-(use-package init-php)
+(use-package init-web)
 (use-package init-org)
 (use-package init-nxml)
 (use-package init-haml)
@@ -196,14 +190,6 @@
   :bind (("C-x f" . fiplr-find-file))
   :ensure t)
 
-(defun make-frame-transparent ()
-  (interactive)
-  (set-frame-parameter (selected-frame) 'alpha '(85 85)))
-
-(defun make-frame-opaque ()
-  (interactive)
-  (set-frame-parameter (selected-frame) 'alpha '(100 100)))
-
 (defun sudo-edit (&optional arg)
   "Edit currently visited file as root.
 
@@ -222,78 +208,15 @@ buffer is not visiting a file."
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
 
-(defun smarter-move-beginning-of-line (arg)
-  "Move point back to indentation of beginning of line.
-
-Move point to the first non-whitespace character on this line.
-If point is already there, move to the beginning of the line.
-Effectively toggle between the first non-whitespace character and
-the beginning of the line.
-
-If ARG is not nil or 1, move forward ARG - 1 lines first.  If
-point reaches the beginning or end of the buffer, stop there."
-  (interactive "^p")
-  (setq arg (or arg 1))
-
-  ;; Move lines first
-  (when (/= arg 1)
-    (let ((line-move-visual nil))
-      (forward-line (1- arg))))
-
-  (let ((orig-point (point)))
-    (back-to-indentation)
-    (when (= orig-point (point))
-      (move-beginning-of-line 1))))
-
-;; remap C-a to `smarter-move-beginning-of-line'
-(global-set-key [remap move-beginning-of-line]
-                'smarter-move-beginning-of-line)
-
-(defun unpop-to-mark-command ()
-  "Unpop off mark ring. Does nothing if mark ring is empty."
-  (interactive)
-  (when mark-ring
-    (let ((pos (marker-position (car (last mark-ring)))))
-      (if (not (= (point) pos))
-          (goto-char pos)
-        (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
-        (set-marker (mark-marker) pos)
-        (setq mark-ring (nbutlast mark-ring))
-        (goto-char (marker-position (car (last mark-ring))))))))
-(global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
-
-(defun save-macro (name)
-  "save a macro. Take a name as argument
-        and save the last defined macro under
-        this name at the end of your .emacs"
-  (interactive "SName of the macro :") ; ask for the name of the macro
-  (kmacro-name-last-macro name)        ; use this name for the macro
-  (find-file user-init-file)   ; open ~/.emacs or other user init file
-  (goto-char (point-max))      ; go to the end of the .emacs
-  (newline)                    ; insert a newline
-  (insert-kbd-macro name)      ; copy the macro
-  (newline)                    ; insert a newline
-  (switch-to-buffer nil))      ; return to the initial buffer
-;; (global-set-key (kbd "C-x _") 'save-macro)
-
-(use-package emmet-mode
-  :ensure t)
-
-(use-package elmacro
-  :ensure t)
-
-(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (flet ((process-list ())) ad-do-it))
-
-(setq kill-buffer-query-functions
-      (remq 'process-kill-buffer-query-function
-            kill-buffer-query-functions))
-
 (use-package init-shell)
 (use-package init-local)
-
 (use-package hackernews
   :ensure t)
+
+;;----------------------------------------------------------------------------
+;; User interface
+;;----------------------------------------------------------------------------
+
+(use-package init-user-interface)
 
 (provide 'init)
