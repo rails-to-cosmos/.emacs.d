@@ -13,6 +13,7 @@
 (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
 
 (define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
+(hl-line-mode t)
 
 ;; python-mode
 ;; ============
