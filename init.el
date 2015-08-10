@@ -1,5 +1,43 @@
+;;; init.el --- Dmitry Akatov's emacs configuration
+;;
+;; Filename: init.el
+;; Description: Dmitry Akatov's emacs configuration
+;; Author: Dmitry Akatov
+;; Created: Sun Aug 09 21:49:00 2015 (-0400)
+;; Version: 1.0.0
+;; URL: www.github.com/jordonbiondo/.emacs.d
+;; Keywords: Emacs 24.3
+;; Compatibility: emacs >= 24.3
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Commentary:
+;;
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 3, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Code:
+
 ;;----------------------------------------------------------------------------
-;; Use-package.el initialization
+;; Use-package initialization
 ;;----------------------------------------------------------------------------
 
 (require 'package)
@@ -7,8 +45,6 @@
 (setenv "LANG" "en_US.UTF-8")
 (setenv "LC_ALL" "en_US.UTF-8")
 (setenv "LC_CTYPE" "en_US.UTF-8")
-
-(package-refresh-contents)
 
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
@@ -19,6 +55,7 @@
       (package-refresh-contents)
       (package-install 'use-package)))
 (require 'use-package)
+(package-refresh-contents)
 
 (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
       savehist-file (concat emacs-persistence-directory ".minibuffer-history")
@@ -44,6 +81,7 @@
       ;; shell-pop-window-position "bottom"
 
 (make-directory emacs-persistence-directory t)
+
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
@@ -217,6 +255,51 @@ buffer is not visiting a file."
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-(use-package init-user-interface)
+(setq-default
+ buffers-menu-max-size 30
+ case-fold-search t
+ compilation-scroll-output t
+ ediff-split-window-function 'split-window-horizontally
+ ediff-window-setup-function 'ediff-setup-windows-plain
+ grep-highlight-matches t
+ grep-scroll-output t
+ make-backup-files nil
+ mouse-yank-at-point t
+ save-interprogram-paste-before-kill t
+ scroll-preserve-screen-position 'always
+ set-mark-command-repeat-pop t
+ show-trailing-whitespace t
+ tooltip-delay 1.5
+ truncate-lines nil
+ truncate-partial-width-windows nil
+ visible-bell t
+ line-spacing 5
+ indent-tabs-mode nil)
+
+(setq scroll-conservatively 50
+      scroll-margin 4
+      inhibit-splash-screen t
+      inhibit-startup-message t
+      save-abbrevs t)
+
+(blink-cursor-mode -1)
+(menu-bar-mode -1)
+(column-number-mode t)
+(delete-selection-mode t)
+(tool-bar-mode -1)
+(fringe-mode '(10 . 0))
+(global-visual-line-mode 1)
+
+(defun make-frame-transparent ()
+  (interactive)
+  (set-frame-parameter (selected-frame) 'alpha '(85 85)))
+
+(defun make-frame-opaque ()
+  (interactive)
+  (set-frame-parameter (selected-frame) 'alpha '(100 100)))
+
+;;; TODO optimize it:
+(load-theme 'zerodark t)
 
 (provide 'init)
+;;; init.el ends here

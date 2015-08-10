@@ -10,10 +10,10 @@
   (insert "import pdb; pdb.set_trace()")
   (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-(add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
-
 (define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
 (hl-line-mode t)
+
+(add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
 
 ;; python-mode
 ;; ============

@@ -349,24 +349,26 @@ With arg N, insert N newlines."
 (guide-key-mode 1)
 (diminish 'guide-key-mode)
 
-(use-package swiper
-  :ensure t
-  :bind (("C-s" . swiper)
-         ("C-r" . swiper)
-         ("C-c C-r" . ivy-resume))
-  :config
-  ;; (ivy-mode t)
-  ;; (setq ivy-use-virtual-buffers t)
-  )
-
-(use-package typo
-  :ensure t)
-(add-hook 'text-mode-hook 'typo-mode)
+;; (use-package swiper
+;;   :ensure t
+;;   :bind (("C-s" . swiper)
+;;          ("C-r" . swiper)
+;;          ("C-c C-r" . ivy-resume))
+;;   :config
+;;   ;; (ivy-mode t)
+;;   ;; (setq ivy-use-virtual-buffers t)
+;;   )
 
 (use-package which-key
   :ensure t
   :config
   (which-key-setup-side-window-bottom))
+
+(use-package emmet-mode
+  :ensure t)
+
+(use-package elmacro
+  :ensure t)
 
 (defun smarter-move-beginning-of-line (arg)
   "Move point back to indentation of beginning of line.
@@ -407,5 +409,9 @@ point reaches the beginning or end of the buffer, stop there."
         (setq mark-ring (nbutlast mark-ring))
         (goto-char (marker-position (car (last mark-ring))))))))
 (global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
+
+;; awesome!
+(use-package wide-n
+  :ensure t)
 
 (provide 'init-editing-utils)

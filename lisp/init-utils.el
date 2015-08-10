@@ -95,7 +95,7 @@
             (dolist (lang-regex lang-regexes)
               (if (string-match (car lang-regex) sentence)
                   (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind ("C-x C-y C-t C-t" . translate-text) ;; C-x C-y C-Translate C-Text
+  :bind ("C-x y t t" . translate-text) ;; C-x C-y C-Translate C-Text
   :ensure t)
 
 (defun save-macro (name)
