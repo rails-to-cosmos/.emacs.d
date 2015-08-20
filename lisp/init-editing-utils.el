@@ -410,8 +410,4 @@ point reaches the beginning or end of the buffer, stop there."
         (goto-char (marker-position (car (last mark-ring))))))))
 (global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
 
-;; awesome!
-(use-package wide-n
-  :ensure t)
-
 (provide 'init-editing-utils)

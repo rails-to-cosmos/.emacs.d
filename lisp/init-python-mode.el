@@ -15,6 +15,9 @@
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
 
+(use-package virtualenvwrapper
+		 :ensure t)
+
 ;; python-mode
 ;; ============
 ;; pre-requisites on ubuntu
