@@ -99,6 +99,9 @@
 
 (use-package init-utils)
 
+(use-package golden-ratio
+  :ensure t)
+
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
