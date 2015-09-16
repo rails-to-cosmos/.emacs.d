@@ -410,4 +410,8 @@ point reaches the beginning or end of the buffer, stop there."
         (goto-char (marker-position (car (last mark-ring))))))))
 (global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
 
+(use-package vimish-fold
+  :config (vimish-fold-global-mode t)
+  :ensure t)
+
 (provide 'init-editing-utils)

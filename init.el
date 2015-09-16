@@ -5,9 +5,9 @@
 ;; Author: Dmitry Akatov
 ;; Created: Sun Aug 09 21:49:00 2015 (-0400)
 ;; Version: 1.0.0
-;; URL: www.github.com/jordonbiondo/.emacs.d
-;; Keywords: Emacs 24.3
-;; Compatibility: emacs >= 24.3
+;; URL: https://github.com/rails-to-cosmos/.emacs.d
+;; Keywords: Emacs 24.5
+;; Compatibility: emacs >= 24.5
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -98,9 +98,6 @@
 ;;----------------------------------------------------------------------------
 
 (use-package init-utils)
-
-(use-package golden-ratio
-  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
@@ -254,6 +251,14 @@ buffer is not visiting a file."
 (use-package hackernews
   :ensure t)
 
+(use-package avy
+  :ensure t
+  :bind (("C-;" . avy-goto-char)
+         ("C-'" . avy-goto-char-2)
+         ("M-g l" . avy-goto-line)
+         ("M-g w" . avy-goto-word-1)
+         ("M-g e" . avy-goto-word-0)))
+
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
@@ -294,14 +299,24 @@ buffer is not visiting a file."
 (global-visual-line-mode 1)
 
 (defun make-frame-transparent ()
+  "Make current frame transparent."
   (interactive)
   (set-frame-parameter (selected-frame) 'alpha '(85 85)))
 
 (defun make-frame-opaque ()
+  "Make current frame opaque."
   (interactive)
   (set-frame-parameter (selected-frame) 'alpha '(100 100)))
 
-;;; TODO optimize it:
+(use-package logview
+  :ensure t)
+
+(use-package dizzee
+  :ensure t)
+
+(use-package list-processes+
+  :ensure t)
+
 (load-theme 'zerodark t)
 
 (provide 'init)

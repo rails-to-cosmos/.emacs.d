@@ -98,11 +98,19 @@
   :bind ("C-x y t t" . translate-text) ;; C-x C-y C-Translate C-Text
   :ensure t)
 
+;;----------------------------------------------------------------------------
+;; Media downloader tool
+;;----------------------------------------------------------------------------
+;; (defun download-media (url)
+;;   "download music of film from specified url"
+;;   (interactive "SSpecify url: ")
+;;   (shell-command (concat "youtube-dl " url)))
+
 (defun save-macro (name)
   "save a macro. Take a name as argument
         and save the last defined macro under
         this name at the end of your .emacs"
-  (interactive "SName of the macro :") ; ask for the name of the macro
+  (interactive "SName of the macro:") ; ask for the name of the macro
   (kmacro-name-last-macro name)        ; use this name for the macro
   (find-file user-init-file)   ; open ~/.emacs or other user init file
   (goto-char (point-max))      ; go to the end of the .emacs

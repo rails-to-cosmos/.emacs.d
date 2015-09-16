@@ -7,15 +7,8 @@
 (use-package lively
   :ensure t)
 
-
 (setq-default initial-scratch-message
-              (concat ";; Playfully doing something difficult, whether useful or not, that is hacking.\n
-;; maybe not from the sources
-;; you have poured yours
-;; maybe not from the directions
-;; you are staring at\n
-;; Life is about the people you meet and the things you create with them.\n"))
-
+              (concat ";; I've always thought they were lighthouses...\n\n"))
 
 ;; Make C-x C-e run 'eval-region if the region is active
 
