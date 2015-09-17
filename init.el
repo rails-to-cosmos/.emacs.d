@@ -55,7 +55,6 @@
       (package-refresh-contents)
       (package-install 'use-package)))
 (require 'use-package)
-(package-refresh-contents)
 
 (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
       savehist-file (concat emacs-persistence-directory ".minibuffer-history")
@@ -72,16 +71,7 @@
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
       abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
 
-      ;; shell-pop-default-directory (concat emacs-persistence-directory "shell-pop")
-      ;; shell-pop-shell-type (quote ("ansi-term" "*pop-shell*" (lambda nil (ansi-term shell-pop-term-shell))))
-      ;; shell-pop-term-shell "/bin/bash"
-      ;; shell-pop-universal-key "C-t"
-      ;; shell-pop-window-size 30
-      ;; shell-pop-full-span t
-      ;; shell-pop-window-position "bottom"
-
 (make-directory emacs-persistence-directory t)
-
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
@@ -90,8 +80,6 @@
 
 (defconst *is-a-mac* (eq system-type 'darwin))
 (setq mac-command-modifier 'meta)
-
-(defconst *is-a-win* (eq system-type 'windows-nt))
 
 ;;----------------------------------------------------------------------------
 ;; Bootstrap config
@@ -127,11 +115,8 @@
   :ensure t)
 (use-package impatient-mode
   :ensure t)
-;; http://localhost:8080/imp/
-(use-package python-django
-  :ensure t)
 
-
+(use-package init-python-mode)
 (use-package init-frame-hooks)
 (use-package init-xterm)
 (use-package init-osx-keys)
@@ -153,7 +138,6 @@
 (use-package init-darcs)
 (use-package init-foldings)
 (use-package init-crontab)
-(use-package init-textile)
 (use-package init-markdown)
 (use-package init-csv)
 (use-package init-javascript)
@@ -161,7 +145,6 @@
 (use-package init-org)
 (use-package init-nxml)
 (use-package init-haml)
-(use-package init-python-mode)
 (use-package init-paredit)
 (use-package init-lisp)
 (use-package init-spelling)
@@ -315,6 +298,10 @@ buffer is not visiting a file."
   :ensure t)
 
 (use-package list-processes+
+  :ensure t)
+
+(use-package symon
+  :config (symon-mode t)
   :ensure t)
 
 (load-theme 'zerodark t)

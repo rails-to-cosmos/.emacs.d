@@ -3,6 +3,9 @@
 		("SConscript\\'" . python-mode))
               auto-mode-alist))
 
+(use-package python-django
+  :ensure t)
+
 (use-package ob-ipython
   :ensure t)
 
