@@ -338,6 +338,8 @@ With arg N, insert N newlines."
   (setq-default ag-highlight-search t)
   (global-set-key (kbd "M-?") 'ag-project))
 
+(global-set-key (kbd "C-x y d c") 'desktop-clear)
+
 
 (use-package highlight-escape-sequences
   :ensure t)

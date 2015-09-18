@@ -137,8 +137,6 @@
 (use-package init-editing-utils)
 (use-package init-darcs)
 (use-package init-foldings)
-(use-package init-crontab)
-(use-package init-markdown)
 (use-package init-csv)
 (use-package init-javascript)
 (use-package init-web)
