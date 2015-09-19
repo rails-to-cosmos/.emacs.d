@@ -1,28 +1,40 @@
-(setq auto-mode-alist
-      (append '(("SConstruct\\'" . python-mode)
-		("SConscript\\'" . python-mode))
-              auto-mode-alist))
+(use-package python
+  :mode ("\\.py\\'" . python-mode)
 
-(use-package python-django
+  :interpreter ("ipython" . python-mode)
+
+  :load-path "python/"
+
+  :config
+  (defun python-add-breakpoint ()
+    "Add a break point"
+    (interactive)
+    (insert "import ipdb; ipdb.set_trace()")
+    (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+
+  (add-hook 'python-mode-hook 'hl-line-mode)
+
+  :bind (("C-c C-b" . python-add-breakpoint))
+
   :ensure t)
 
-(use-package ob-ipython
-  :ensure t)
+;; (setq auto-mode-alist
+;;       (append '(("SConstruct\\'" . python-mode)
+;; 		("SConscript\\'" . python-mode))
+;;               auto-mode-alist))
 
-(defun python-add-breakpoint ()
-  "Add a break point"
-  (interactive)
-  ;; (newline-and-indent)
-  (insert "import ipdb; ipdb.set_trace()")
-  (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+;; (use-package python-django
+;;   :ensure t)
 
-(define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
-(hl-line-mode t)
+;; (use-package ob-ipython
+;;   :ensure t)
 
-(add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
+;; 
 
-(use-package virtualenvwrapper
-		 :ensure t)
+;; (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
+
+;; (use-package virtualenvwrapper
+;; 		 :ensure t)
 
 ;; python-mode
 ;; ============
@@ -63,9 +75,9 @@
 ;; (setq python-shell-virtualenv-path "~/.virtualenvs/default")
 
 ;; pep8
-(use-package py-autopep8
- :ensure t)
+;; (use-package py-autopep8
+;;  :ensure t)
 
-(setq py-autopep8-options '("--ignore=E309,"))
+;; (setq py-autopep8-options '("--ignore=E309,"))
 
 (provide 'init-python-mode)

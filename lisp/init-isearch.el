@@ -1,16 +1,11 @@
 ;; Show number of matches while searching
 (use-package anzu
-    :ensure t)
+  :config
   (global-anzu-mode t)
-  (diminish 'anzu-mode)
   (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
   (global-set-key [remap query-replace] 'anzu-query-replace)
-
-(use-package flx-isearch
+  :diminish anzu-mode
   :ensure t)
-
-(global-set-key (kbd "C-M-s") 'flx-isearch-forward)
-(global-set-key (kbd "C-M-r") 'flx-isearch-backward)
 
 ;; Activate occur easily inside isearch
 (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)

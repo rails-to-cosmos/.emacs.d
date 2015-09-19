@@ -62,7 +62,7 @@
       (diff-removed-refined-background "#981b1b")
       (diff-current-background "#3e4d58")
       (diff-current-refined-background "#456981"))
-  
+
   (custom-theme-set-faces
    'zerodark
    `(default ((,class (:background ,background :foreground ,default))))

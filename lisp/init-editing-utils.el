@@ -68,8 +68,7 @@
     (add-hook hook 'highlight-symbol-nav-mode))
   (eval-after-load 'highlight-symbol
     '(diminish 'highlight-symbol-mode))
-  :ensure)
-
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Zap *up* to char is a handy pair for zap-to-char

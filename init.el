@@ -42,19 +42,24 @@
 
 (require 'package)
 
-(setenv "LANG" "en_US.UTF-8")
-(setenv "LC_ALL" "en_US.UTF-8")
-(setenv "LC_CTYPE" "en_US.UTF-8")
-
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
-(setq package-enable-at-startup nil)
+;; (setq package-enable-at-startup nil)
 (package-initialize)
+
 (if (not (package-installed-p 'use-package))
     (progn
       (package-refresh-contents)
       (package-install 'use-package)))
-(require 'use-package)
+
+(eval-when-compile
+  (require 'use-package))
+(require 'diminish)
+(require 'bind-key)
+
+;;----------------------------------------------------------------------------
+;; Paths
+;;----------------------------------------------------------------------------
 
 (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
       savehist-file (concat emacs-persistence-directory ".minibuffer-history")
@@ -72,11 +77,21 @@
       abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
 
 (make-directory emacs-persistence-directory t)
-
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
+;;----------------------------------------------------------------------------
+;; Env vars
+;;----------------------------------------------------------------------------
+
 (setenv "PATH" (shell-command-to-string "source ~/.bash_profile; echo -n $PATH"))
+(setenv "LANG" "en_US.UTF-8")
+(setenv "LC_ALL" "en_US.UTF-8")
+(setenv "LC_CTYPE" "en_US.UTF-8")
+
+;;----------------------------------------------------------------------------
+;; System constants
+;;----------------------------------------------------------------------------
 
 (defconst *is-a-mac* (eq system-type 'darwin))
 (setq mac-command-modifier 'meta)
@@ -92,8 +107,6 @@
 ;;----------------------------------------------------------------------------
 
 (use-package gnuplot
-  :ensure t)
-(use-package dsvn
   :ensure t)
 (use-package bookmark+
   :ensure t)
@@ -117,26 +130,27 @@
   :ensure t)
 
 (use-package init-python-mode)
-(use-package init-frame-hooks)
-(use-package init-xterm)
-(use-package init-osx-keys)
 (use-package init-gui-frames)
-(use-package init-proxies)
 (use-package init-dired)
 (use-package init-isearch)
-(use-package init-uniquify)
+
+(use-package uniquify
+  :config
+  (setq uniquify-buffer-name-style 'reverse)
+  (setq uniquify-separator " • ")
+  (setq uniquify-after-kill-buffer-p t)
+  (setq uniquify-ignore-buffers-re "^\\*"))
+
 (use-package init-ibuffer)
 (use-package init-flycheck)
 (use-package init-recentf)
 (use-package init-ido)
 (use-package init-hippie-expand)
-(use-package init-auto-complete)
 (use-package init-windows)
 (use-package init-sessions)
 (use-package init-fonts)
 (use-package init-editing-utils)
 (use-package init-darcs)
-(use-package init-foldings)
 (use-package init-csv)
 (use-package init-javascript)
 (use-package init-web)
@@ -205,23 +219,6 @@
   :bind (("C-." . imenu-anywhere))
   :ensure t)
 
-(use-package fiplr
-  :bind (("C-x f" . fiplr-find-file))
-  :ensure t)
-
-(defun sudo-edit (&optional arg)
-  "Edit currently visited file as root.
-
-With a prefix ARG prompt for a file to visit.
-Will also prompt for a file to visit if current
-buffer is not visiting a file."
-  (interactive "P")
-  (if (or arg (not buffer-file-name))
-      (find-file (concat "/sudo:root@localhost:"
-                         (ido-read-file-name "Find file(as root): ")))
-    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-(global-set-key (kbd "C-x C-r") 'sudo-edit)
-
 (setq frame-title-format
       '((:eval (if (buffer-file-name)
                    (abbreviate-file-name (buffer-file-name))
@@ -229,6 +226,7 @@ buffer is not visiting a file."
 
 (use-package init-shell)
 (use-package init-local)
+
 (use-package hackernews
   :ensure t)
 
@@ -279,19 +277,6 @@ buffer is not visiting a file."
 (fringe-mode '(10 . 0))
 (global-visual-line-mode 1)
 
-(defun make-frame-transparent ()
-  "Make current frame transparent."
-  (interactive)
-  (set-frame-parameter (selected-frame) 'alpha '(85 85)))
-
-(defun make-frame-opaque ()
-  "Make current frame opaque."
-  (interactive)
-  (set-frame-parameter (selected-frame) 'alpha '(100 100)))
-
-(use-package logview
-  :ensure t)
-
 (use-package dizzee
   :ensure t)
 
@@ -305,4 +290,5 @@ buffer is not visiting a file."
 (load-theme 'zerodark t)
 
 (provide 'init)
+
 ;;; init.el ends here

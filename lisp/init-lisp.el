@@ -128,14 +128,13 @@
   "Enable features useful in any Lisp mode."
   (rainbow-delimiters-mode t)
   (enable-paredit-mode)
-  (turn-on-eldoc-mode)
+  (eldoc-mode t)
   (redshank-mode))
 
 (defun sanityinc/emacs-lisp-setup ()
   "Enable features useful when working with elisp."
   (elisp-slime-nav-mode t)
-  (set-up-hippie-expand-for-elisp)
-  (ac-emacs-lisp-mode-setup))
+  (set-up-hippie-expand-for-elisp))
 
 (defconst sanityinc/elispy-modes
   '(emacs-lisp-mode ielm-mode)
