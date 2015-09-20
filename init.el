@@ -61,12 +61,12 @@
 (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
       savehist-file (concat emacs-persistence-directory ".minibuffer-history")
       ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
-      smex-save-file (concat emacs-persistence-directory ".smex-items")
       session-save-file (concat emacs-persistence-directory ".session")
       frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
       bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")
       bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
       desktop-path (list emacs-persistence-directory)
+      recentf-save-file (concat emacs-persistence-directory ".recentf")
       ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last")
       custom-file (concat emacs-persistence-directory ".custom")
       eshell-directory-name (concat emacs-persistence-directory "eshell")
@@ -223,7 +223,7 @@
         ido-use-filename-at-point nil
         ido-auto-merge-work-directories-length 0
         ido-use-virtual-buffers t
-        smex-save-file (expand-file-name ".smex-items" user-emacs-directory)
+        smex-save-file (concat emacs-persistence-directory ".smex-items")
         ido-default-buffer-method 'selected-window)
   (global-set-key [remap execute-extended-command] 'smex)
   (defadvice ido-find-file (after find-file-sudo activate)
@@ -320,7 +320,7 @@
                  "%b"))))
 
 (require 'init-shell)
-(require 'init-local)
+(require 'init-local nil t)
 
 (use-package hackernews)
 

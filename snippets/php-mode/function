@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: function
-# key: func
-# group: dunder methods
-# --
-public function ${name}(${args}) {
-    $0
-}
