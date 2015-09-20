@@ -19,15 +19,10 @@
    (set-selection-coding-system 'utf-8))
   (prefer-coding-system 'utf-8))
 
-(use-package ucs-utils
-  :ensure t)
-
+(use-package ucs-utils)
 (use-package unicode-fonts
-  :ensure t)
-
-(unicode-fonts-setup)
-
-(use-package font-utils
-  :ensure t)
+  :config
+  (unicode-fonts-setup))
+(use-package font-utils)
 
 (provide 'init-locales)

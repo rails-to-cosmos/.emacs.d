@@ -1,19 +1,51 @@
+(setq-default
+ buffers-menu-max-size 30
+ case-fold-search t
+ compilation-scroll-output t
+ ediff-split-window-function 'split-window-horizontally
+ ediff-window-setup-function 'ediff-setup-windows-plain
+ grep-highlight-matches t
+ grep-scroll-output t
+ make-backup-files nil
+ mouse-yank-at-point t
+ save-interprogram-paste-before-kill t
+ scroll-preserve-screen-position 'always
+ set-mark-command-repeat-pop t
+ show-trailing-whitespace t
+ tooltip-delay 1.5
+ truncate-lines nil
+ truncate-partial-width-windows nil
+ visible-bell t
+ line-spacing 5
+ indent-tabs-mode nil)
+
+(setq scroll-conservatively 50
+      scroll-margin 4
+      inhibit-splash-screen t
+      inhibit-startup-message t
+      save-abbrevs t)
+
+(blink-cursor-mode -1)
+(menu-bar-mode -1)
+(column-number-mode t)
+(delete-selection-mode t)
+(fringe-mode '(10 . 0))
+(global-visual-line-mode 1)
+(toggle-frame-fullscreen)
+
 ;;----------------------------------------------------------------------------
 ;; Suppress GUI features
 ;;----------------------------------------------------------------------------
-(setq use-file-dialog nil)
-(setq use-dialog-box nil)
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-echo-area-message t)
-
-;;----------------------------------------------------------------------------
-;; Show a marker in the left fringe for lines not in the buffer
-;;----------------------------------------------------------------------------
-(setq indicate-empty-lines t)
+(setq use-file-dialog nil
+      use-dialog-box nil
+      inhibit-startup-screen t
+      inhibit-startup-echo-area-message t
+      indicate-empty-lines t)
 
 ;;----------------------------------------------------------------------------
 ;; Window size and features
 ;;----------------------------------------------------------------------------
+
 (when (fboundp 'tool-bar-mode)
   (tool-bar-mode -1))
 (when (fboundp 'set-scroll-bar-mode)
@@ -28,11 +60,6 @@
          (newalpha (+ incr oldalpha)))
     (when (and (<= frame-alpha-lower-limit newalpha) (>= 100 newalpha))
       (modify-frame-parameters frame (list (cons 'alpha newalpha))))))
-
-(when (and *is-a-mac* (fboundp 'toggle-frame-fullscreen))
-  ;; Command-Meta-f to toggle fullscreen mode
-  ;; Hint: Customize `ns-use-native-fullscreen'
-  (global-set-key (kbd "M-C-f") 'toggle-frame-fullscreen))
 
 (global-set-key (kbd "M-C-8") '(lambda () (interactive) (sanityinc/adjust-opacity nil -10)))
 (global-set-key (kbd "M-C-9") '(lambda () (interactive) (sanityinc/adjust-opacity nil 10)))

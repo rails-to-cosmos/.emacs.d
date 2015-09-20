@@ -1,7 +1,7 @@
 ;; save a list of open files in ~/.emacs.d/.emacs.desktop
 
 
-(desktop-save-mode 1)
+;; (desktop-save-mode 1)
 (defadvice desktop-read (around trace-desktop-errors activate)
   (let ((debug-on-error t))
     ad-do-it))

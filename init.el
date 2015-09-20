@@ -41,21 +41,18 @@
 ;;----------------------------------------------------------------------------
 
 (require 'package)
-
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
-;; (setq package-enable-at-startup nil)
 (package-initialize)
-
 (if (not (package-installed-p 'use-package))
     (progn
       (package-refresh-contents)
       (package-install 'use-package)))
-
+(setq use-package-always-ensure t)
 (eval-when-compile
   (require 'use-package))
-(require 'diminish)
-(require 'bind-key)
+(use-package diminish)
+(use-package bind-key)
 
 ;;----------------------------------------------------------------------------
 ;; Paths
@@ -75,7 +72,6 @@
       eshell-directory-name (concat emacs-persistence-directory "eshell")
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
       abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
-
 (make-directory emacs-persistence-directory t)
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
@@ -84,7 +80,11 @@
 ;; Env vars
 ;;----------------------------------------------------------------------------
 
-(setenv "PATH" (shell-command-to-string "source ~/.bash_profile; echo -n $PATH"))
+;;(setenv "PATH" (shell-command-to-string "source ~/.bash_profile; echo -n $PATH"))
+
+(let ((path-from-shell (replace-regexp-in-string "^.*\n.*shell\n" "" (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+  (setenv "PATH" path-from-shell)
+  (setq exec-path (split-string path-from-shell path-separator)))
 (setenv "LANG" "en_US.UTF-8")
 (setenv "LC_ALL" "en_US.UTF-8")
 (setenv "LC_CTYPE" "en_US.UTF-8")
@@ -97,197 +97,251 @@
 (setq mac-command-modifier 'meta)
 
 ;;----------------------------------------------------------------------------
-;; Bootstrap config
+;; User interface
+;;----------------------------------------------------------------------------
+(load-theme 'zerodark t)
+
+;;----------------------------------------------------------------------------
+;; Text editing utils
 ;;----------------------------------------------------------------------------
 
-(use-package init-utils)
+(require 'init-utils)
+
+(use-package wgrep)
+
+;;----------------------------------------------------------------------------
+;; Logging
+;;----------------------------------------------------------------------------
+
+(use-package mwe-log-commands)
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
-(use-package gnuplot
-  :ensure t)
-(use-package bookmark+
-  :ensure t)
-(use-package wgrep
-  :ensure t)
-(use-package diminish
-  :ensure t)
-(use-package scratch
-  :ensure t)
-(use-package mwe-log-commands
-  :ensure t)
-(use-package restclient
-  :ensure t
-  :config
-  (add-auto-mode 'restclient-mode "\\.rest\\'"))
-(use-package yasnippet
-  :ensure t)
-(use-package emmet-mode
-  :ensure t)
-(use-package impatient-mode
-  :ensure t)
+(use-package bookmark+)
+(use-package scratch)
+(use-package yasnippet)
+(use-package emmet-mode)
+(use-package impatient-mode)
 
-(use-package init-python-mode)
-(use-package init-gui-frames)
-(use-package init-dired)
-(use-package init-isearch)
+(use-package restclient
+  :mode ("\\.rest\\'" . restclient-mode))
+
+(use-package python
+  :mode ("\\.py\\'" . python-mode)
+  :interpreter ("ipython" . python-mode)
+  :load-path "python/"
+  :config
+  (defun python-add-breakpoint ()
+    "Add a break point"
+    (interactive)
+    (insert "import ipdb; ipdb.set_trace()")
+    (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+  (setq jedi:complete-on-dot t)
+  (eval-after-load "python"
+    '(define-key python-mode-map "\C-cx" 'jedi-direx:pop-to-buffer))
+  (add-hook 'python-mode-hook 'linum-mode)
+  (add-hook 'python-mode-hook 'jedi:setup)
+  (add-hook 'jedi-mode-hook 'jedi-direx:setup)
+  :bind (("C-c C-b" . python-add-breakpoint))
+  :ensure jedi
+  :ensure cinspect
+  :ensure jedi-direx
+  :ensure py-isort
+  :ensure py-yapf
+  :ensure pyenv-mode
+  :ensure virtualenvwrapper
+  :ensure py-autopep8
+  :ensure ob-ipython)
+
+(require 'init-gui-frames)
+(require 'init-dired)
+(require 'init-isearch)
 
 (use-package uniquify
-  :config
-  (setq uniquify-buffer-name-style 'reverse)
-  (setq uniquify-separator " • ")
-  (setq uniquify-after-kill-buffer-p t)
-  (setq uniquify-ignore-buffers-re "^\\*"))
+  :disabled t
+  :init
+  (setq uniquify-buffer-name-style 'reverse
+        uniquify-separator " • "
+        uniquify-after-kill-buffer-p t
+        uniquify-ignore-buffers-re "^\\*"))
 
-(use-package init-ibuffer)
-(use-package init-flycheck)
-(use-package init-recentf)
-(use-package init-ido)
-(use-package init-hippie-expand)
-(use-package init-windows)
-(use-package init-sessions)
-(use-package init-fonts)
-(use-package init-editing-utils)
-(use-package init-darcs)
-(use-package init-csv)
-(use-package init-javascript)
-(use-package init-web)
-(use-package init-org)
-(use-package init-nxml)
-(use-package init-haml)
-(use-package init-paredit)
-(use-package init-lisp)
-(use-package init-spelling)
-(use-package init-misc)
+(use-package ibuffer
+  :config
+  (setq ibuffer-formats
+        '((mark modified read-only vc-status-mini " "
+                (name 18 18 :left :elide)
+                " "
+                (size-h 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " "
+                filename-and-process)
+          (mark modified read-only vc-status-mini " "
+                (name 18 18 :left :elide)
+                " "
+                (size-h 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " "
+                (vc-status 16 16 :left)
+                " "
+                filename-and-process))
+        ibuffer-filter-group-name-face 'font-lock-doc-face)
+  (define-ibuffer-column size-h
+    (:name "Size" :inline t)
+    (cond
+     ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+     ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+     (t (format "%8d" (buffer-size)))))
+  (defun ibuffer-set-up-preferred-filters ()
+    (ibuffer-vc-set-filter-groups-by-vc-root)
+    (unless (eq ibuffer-sorting-mode 'filename/process)
+      (ibuffer-do-sort-by-filename/process)))
+  (after-load 'ibuffer
+    (fullframe ibuffer ibuffer-quit))
+  :bind ("C-x C-b" . ibuffer)
+  :ensure fullframe
+  :ensure ibuffer-vc
+  :ensure ibuffer-git)
+
+(use-package flycheck
+  :config
+  (add-hook 'after-init-hook 'global-flycheck-mode)
+  (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+        flycheck-idle-change-delay 0.8
+        flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+
+(use-package ido
+  :config
+  (ido-mode t)
+  (ido-vertical-mode t)
+  (ido-everywhere t)
+  (ido-ubiquitous-mode t)
+  (setq ido-enable-flex-matching t
+        ido-use-filename-at-point nil
+        ido-auto-merge-work-directories-length 0
+        ido-use-virtual-buffers t
+        smex-save-file (expand-file-name ".smex-items" user-emacs-directory)
+        ido-default-buffer-method 'selected-window)
+  (global-set-key [remap execute-extended-command] 'smex)
+  (defadvice ido-find-file (after find-file-sudo activate)
+    "Find file as root if necessary."
+    (unless (and buffer-file-name
+                 (file-writable-p buffer-file-name))
+      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+  (defun bind-ido-keys ()
+    "Keybindings for ido mode."
+    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+    (define-key ido-completion-map (kbd "C-p")   'ido-prev-match))
+  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+  (add-hook 'ido-setup-hook #'bind-ido-keys)
+  :ensure ido-vertical-mode
+  :ensure idomenu
+  :ensure ido-completing-read+
+  :ensure ido-ubiquitous
+  :ensure smex)
+
+(require 'init-hippie-expand)
+
+(use-package switch-window
+  :config
+  (setq switch-window-shortcut-style 'alphabet)
+  ;;----------------------------------------------------------------------------
+  ;; When splitting window, show (other-buffer) in the new window
+  ;;----------------------------------------------------------------------------
+  (defun split-window-func-with-other-buffer (split-function)
+    (lexical-let ((s-f split-function))
+      (lambda ()
+        (interactive)
+        (funcall s-f)
+        (set-window-buffer (next-window) (other-buffer)))))
+  ;;----------------------------------------------------------------------------
+  ;; Rearrange split windows
+  ;;----------------------------------------------------------------------------
+  (defun split-window-horizontally-instead ()
+    (interactive)
+    (save-excursion
+      (delete-other-windows)
+      (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
+
+  (defun split-window-vertically-instead ()
+    (interactive)
+    (save-excursion
+      (delete-other-windows)
+      (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
+  (global-set-key "\C-x2" (split-window-func-with-other-buffer 'split-window-vertically))
+  (global-set-key "\C-x3" (split-window-func-with-other-buffer 'split-window-horizontally))
+  (global-set-key "\C-x1" 'delete-other-windows)
+  :bind (("C-x o" . switch-window)
+         ("\C-x|" . split-window-horizontally-instead)
+         ("\C-x_" . split-window-vertically-instead)))
+
+;; (require 'init-sessions)
+(require 'init-fonts)
+(require 'init-editing-utils)
+(require 'init-darcs)
+(require 'init-csv)
+(require 'init-javascript)
+(require 'init-web)
+(require 'init-org)
+(require 'init-nxml)
+(require 'init-haml)
+(require 'init-paredit)
+(require 'init-lisp)
+(require 'init-misc)
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
 ;;----------------------------------------------------------------------------
-(use-package init-locales)
+(require 'init-locales)
 
 ;; Extra packages which don't require any configuration
 
 (use-package multiple-cursors
-  :ensure t
   :bind (("C->" . mc/mark-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
-(use-package regex-tool
-  :ensure t)
+(use-package regex-tool)
 
-(use-package pdf-tools
-  :ensure t)
-
-(dolist (command '(yank yank-pop))
-  (eval `(defadvice ,command (after indent-region activate)
-           (and (not current-prefix-arg)
-                (member major-mode '(asm-mode
-                                     c++-mode
-                                     c-mode
-                                     clojure-mode
-                                     cperl-mode
-                                     csharp-mode
-                                     espresso-mode
-                                     factor-mode
-                                     haskell-mode
-                                     js-mode
-                                     latex-mode
-                                     lisp-mode
-                                     lua-mode
-                                     nxml-mode
-                                     objc-mode
-                                     php-mode
-                                     plain-tex-mode
-                                     python-mode
-                                     rspec-mode
-                                     ruby-mode
-                                     rust-mode
-                                     scheme-mode
-                                     vbnet-mode
-                                     emacs-lisp-mode))
-                (let ((mark-even-if-inactive transient-mark-mode))
-                  (indent-region (region-beginning) (region-end) nil))))))
+(use-package pdf-tools)
 
 (use-package hl-line+
-  :config (set-face-background hl-line-face "#363636")
-  :ensure t)
+  :config (set-face-background hl-line-face "#363636"))
 
 (use-package imenu-anywhere
-  :bind (("C-." . imenu-anywhere))
-  :ensure t)
+  :bind (("C-." . imenu-anywhere)))
 
 (setq frame-title-format
       '((:eval (if (buffer-file-name)
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
 
-(use-package init-shell)
-(use-package init-local)
+(require 'init-shell)
+(require 'init-local)
 
-(use-package hackernews
-  :ensure t)
+(use-package hackernews)
 
 (use-package avy
-  :ensure t
   :bind (("C-;" . avy-goto-char)
          ("C-'" . avy-goto-char-2)
          ("M-g l" . avy-goto-line)
          ("M-g w" . avy-goto-word-1)
          ("M-g e" . avy-goto-word-0)))
 
-;;----------------------------------------------------------------------------
-;; User interface
-;;----------------------------------------------------------------------------
+(use-package dizzee)
 
-(setq-default
- buffers-menu-max-size 30
- case-fold-search t
- compilation-scroll-output t
- ediff-split-window-function 'split-window-horizontally
- ediff-window-setup-function 'ediff-setup-windows-plain
- grep-highlight-matches t
- grep-scroll-output t
- make-backup-files nil
- mouse-yank-at-point t
- save-interprogram-paste-before-kill t
- scroll-preserve-screen-position 'always
- set-mark-command-repeat-pop t
- show-trailing-whitespace t
- tooltip-delay 1.5
- truncate-lines nil
- truncate-partial-width-windows nil
- visible-bell t
- line-spacing 5
- indent-tabs-mode nil)
-
-(setq scroll-conservatively 50
-      scroll-margin 4
-      inhibit-splash-screen t
-      inhibit-startup-message t
-      save-abbrevs t)
-
-(blink-cursor-mode -1)
-(menu-bar-mode -1)
-(column-number-mode t)
-(delete-selection-mode t)
-(tool-bar-mode -1)
-(fringe-mode '(10 . 0))
-(global-visual-line-mode 1)
-
-(use-package dizzee
-  :ensure t)
-
-(use-package list-processes+
-  :ensure t)
+(use-package list-processes+)
 
 (use-package symon
-  :config (symon-mode t)
-  :ensure t)
+  :config (symon-mode t))
 
-(load-theme 'zerodark t)
+(use-package camcorder
+  :commands camcorder-mode)
+
+
 
 (provide 'init)
 
