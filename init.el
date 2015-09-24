@@ -142,6 +142,7 @@
     (python-highlight-breakpoints))
   (add-hook 'python-mode-hook 'linum-mode)
   (add-hook 'python-mode-hook 'jedi-mode)
+  (add-hook 'python-mode-hook 'jedi:install-server)
   (add-hook 'python-mode-hook 'jedi:ac-setup)
   (add-hook 'python-mode-hook 'jedi:setup)
   ;; (add-hook 'python-mode-hook 'elpy-enable)
