@@ -352,7 +352,11 @@
 (use-package nhexl-mode
   :ensure t)
 
-
+;; https://github.com/kiwanami/emacs-calfw
+(use-package calfw
+  :config
+  (require 'calfw-org)
+  :ensure t)
 
 (provide 'init)
 
