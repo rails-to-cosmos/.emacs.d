@@ -133,27 +133,35 @@
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
   :config
+  (defun python-highlight-breakpoints ()
+    (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
   (defun python-add-breakpoint ()
     "Add a break point"
     (interactive)
     (insert "import ipdb; ipdb.set_trace()")
-    (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
-  (setq jedi:complete-on-dot t)
-  (eval-after-load "python"
-    '(define-key python-mode-map "\C-cx" 'jedi-direx:pop-to-buffer))
+    (python-highlight-breakpoints))
   (add-hook 'python-mode-hook 'linum-mode)
+  (add-hook 'python-mode-hook 'jedi-mode)
+  (add-hook 'python-mode-hook 'jedi:ac-setup)
   (add-hook 'python-mode-hook 'jedi:setup)
+  ;; (add-hook 'python-mode-hook 'elpy-enable)
+  ;; (add-hook 'python-mode-hook 'elpy-mode)
+  (add-hook 'python-mode-hook 'python-highlight-breakpoints)
   (add-hook 'jedi-mode-hook 'jedi-direx:setup)
-  :bind (("C-c C-b" . python-add-breakpoint))
+  :bind (("C-c C-b" . python-add-breakpoint)
+         ("C-c x" . jedi-direx:pop-to-buffer))
+  ;; :ensure elpy
   :ensure jedi
   :ensure cinspect
   :ensure jedi-direx
   :ensure py-isort
   :ensure py-yapf
-  :ensure pyenv-mode
-  :ensure virtualenvwrapper
-  :ensure py-autopep8
-  :ensure ob-ipython)
+  ;; :ensure pyenv-mode
+  ;; :ensure virtualenvwrapper
+  ;; :ensure py-autopep8
+  ;; :ensure ob-ipython
+  ;; :ensure pip-requirements
+  )
 
 (require 'init-gui-frames)
 (require 'init-dired)
@@ -340,6 +348,9 @@
 
 (use-package camcorder
   :commands camcorder-mode)
+
+(use-package nhexl-mode
+  :ensure t)
 
 
 

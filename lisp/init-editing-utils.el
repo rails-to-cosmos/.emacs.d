@@ -413,6 +413,7 @@ point reaches the beginning or end of the buffer, stop there."
 
 (use-package vimish-fold
   :config (vimish-fold-global-mode t)
-  :ensure t)
+  :bind (("C-c v f" . vimish-fold)
+         ("C-c v r" . vimish-fold-refold)))
 
 (provide 'init-editing-utils)
