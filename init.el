@@ -358,6 +358,12 @@
   (require 'calfw-org)
   :ensure t)
 
+(use-package keyfreq
+  :config
+  (keyfreq-mode t)
+  (keyfreq-autosave-mode t)
+  :ensure t)
+
 (provide 'init)
 
 ;;; init.el ends here
