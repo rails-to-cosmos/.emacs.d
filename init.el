@@ -151,12 +151,13 @@
   (add-hook 'jedi-mode-hook 'jedi-direx:setup)
   :bind (("C-c C-b" . python-add-breakpoint)
          ("C-c x" . jedi-direx:pop-to-buffer))
-  ;; :ensure elpy
   :ensure jedi
   :ensure cinspect
   :ensure jedi-direx
   :ensure py-isort
   :ensure py-yapf
+  :ensure pungi
+  :ensure company-jedi
   ;; :ensure pyenv-mode
   ;; :ensure virtualenvwrapper
   ;; :ensure py-autopep8
@@ -378,6 +379,9 @@
     :ensure bug-reference-github
     :ensure magit-gh-pulls
     :ensure git-gutter+)
+
+(use-package twittering-mode
+  :defer t)
 
 (provide 'init)
 

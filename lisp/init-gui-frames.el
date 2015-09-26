@@ -46,10 +46,12 @@
 ;; Window size and features
 ;;----------------------------------------------------------------------------
 
-(when (fboundp 'tool-bar-mode)
-  (tool-bar-mode -1))
-(when (fboundp 'set-scroll-bar-mode)
-  (set-scroll-bar-mode nil))
+(mapc (lambda (mode) (when (fboundp mode) (apply mode '(-1))))
+      '(tool-bar-mode menu-bar-mode scroll-bar-mode))
+
+(setq ring-bell-function 'ignore
+      inhibit-startup-screen t
+      indent-tabs-mode nil)
 
 (let ((no-border '(internal-border-width . 0)))
   (add-to-list 'default-frame-alist no-border)
