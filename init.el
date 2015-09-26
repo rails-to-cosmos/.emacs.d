@@ -367,18 +367,21 @@
   :ensure t)
 
 (use-package magit
-    :bind (("C-x m" . magit-status)
+  :bind (("C-x m" . magit-status)
          ("C-c g b" . magit-blame)
          ("C-c g l" . magit-log-buffer-file))
-    :config (progn
-              (global-git-gutter+-mode t))
-    :commands magit-status
-    :ensure github-clone
-    :ensure yagist
-    :ensure github-browse-file
-    :ensure bug-reference-github
-    :ensure magit-gh-pulls
-    :ensure git-gutter+)
+  :commands magit-status
+  :ensure git-gutter+
+  :ensure github-clone
+  :ensure yagist
+  :ensure github-browse-file
+  :ensure bug-reference-github
+  :ensure magit-gh-pulls)
+
+(use-package git-gutter+
+  :config (progn
+            (global-git-gutter+-mode)
+            (global-git-gutter-mode)))
 
 (use-package twittering-mode
   :defer t)
