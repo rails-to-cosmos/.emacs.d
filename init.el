@@ -365,6 +365,18 @@
   (keyfreq-autosave-mode t)
   :ensure t)
 
+(use-package helm
+  :config
+  (setq helm-M-x-fuzzy-match t
+        helm-recentf-fuzzy-match t
+        helm-buffers-fuzzy-matching t
+        helm-imenu-fuzzy-match t
+        helm-apropos-fuzzy-match t
+        helm-lisp-fuzzy-completion t)
+  :ensure t)
+
+
+
 (provide 'init)
 
 ;;; init.el ends here
