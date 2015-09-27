@@ -222,23 +222,24 @@
     (insert "import ipdb; ipdb.set_trace()")
     (python-highlight-breakpoints))
   (add-hook 'python-mode-hook 'linum-mode)
-  (add-hook 'python-mode-hook 'jedi-mode)
-  (add-hook 'python-mode-hook 'jedi:install-server)
-  (add-hook 'python-mode-hook 'jedi:ac-setup)
+  ;; (add-hook 'python-mode-hook 'jedi-mode)
+  ;; (add-hook 'python-mode-hook 'jedi:install-server)
+  ;; (add-hook 'python-mode-hook 'jedi:ac-setup)
   (add-hook 'python-mode-hook 'jedi:setup)
   (add-hook 'python-mode-hook 'yas-minor-mode)
   (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-  (add-hook 'jedi-mode-hook 'jedi-direx:setup)
+  ;; (add-hook 'jedi-mode-hook 'jedi-direx:setup)
   (setq python-indent-offset 4)
   :bind (("C-c C-b" . python-add-breakpoint)
-         ("C-c x" . jedi-direx:pop-to-buffer))
+         ;; ("C-c x" . jedi-direx:pop-to-buffer)
+         )
   :ensure jedi
   :ensure cinspect
-  :ensure jedi-direx
+  ;; :ensure jedi-direx
   :ensure py-isort
   :ensure py-yapf
   :ensure pungi
-  :ensure company-jedi
+  ;; :ensure company-jedi
   ;; :ensure pyenv-mode
   ;; :ensure virtualenvwrapper
   ;; :ensure py-autopep8
@@ -304,36 +305,36 @@
         flycheck-idle-change-delay 0.8
         flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
 
-;; (use-package ido
-;;   :config
-;;   (ido-mode t)
-;;   (ido-vertical-mode t)
-;;   (ido-everywhere t)
-;;   (ido-ubiquitous-mode t)
-;;   (setq ido-enable-flex-matching t
-;;         ido-use-filename-at-point nil
-;;         ido-auto-merge-work-directories-length 0
-;;         ido-use-virtual-buffers t
-;;         smex-save-file (concat emacs-persistence-directory ".smex-items")
-;;         ido-default-buffer-method 'selected-window
-;;         ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
-;;   (global-set-key [remap execute-extended-command] 'smex)
-;;   (defadvice ido-find-file (after find-file-sudo activate)
-;;     "Find file as root if necessary."
-;;     (unless (and buffer-file-name
-;;                  (file-writable-p buffer-file-name))
-;;       (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-;;   (defun bind-ido-keys ()
-;;     "Keybindings for ido mode."
-;;     (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-;;     (define-key ido-completion-map (kbd "C-p")   'ido-prev-match))
-;;   (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-;;   (add-hook 'ido-setup-hook #'bind-ido-keys)
-;;   :ensure ido-vertical-mode
-;;   :ensure idomenu
-;;   :ensure ido-completing-read+
-;;   :ensure ido-ubiquitous
-;;   :ensure smex)
+(use-package ido
+  :config
+  (ido-mode t)
+  (ido-vertical-mode t)
+  (ido-everywhere t)
+  (ido-ubiquitous-mode t)
+  (setq ido-enable-flex-matching t
+        ido-use-filename-at-point nil
+        ido-auto-merge-work-directories-length 0
+        ido-use-virtual-buffers t
+        smex-save-file (concat emacs-persistence-directory ".smex-items")
+        ido-default-buffer-method 'selected-window
+        ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+  (global-set-key [remap execute-extended-command] 'smex)
+  (defadvice ido-find-file (after find-file-sudo activate)
+    "Find file as root if necessary."
+    (unless (and buffer-file-name
+                 (file-writable-p buffer-file-name))
+      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+  (defun bind-ido-keys ()
+    "Keybindings for ido mode."
+    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+    (define-key ido-completion-map (kbd "C-p")   'ido-prev-match))
+  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+  (add-hook 'ido-setup-hook #'bind-ido-keys)
+  :ensure ido-vertical-mode
+  :ensure idomenu
+  :ensure ido-completing-read+
+  :ensure ido-ubiquitous
+  :ensure smex)
 
 (require 'init-hippie-expand)
 
@@ -403,9 +404,6 @@
 (use-package hl-line+
   :config (set-face-background hl-line-face "#363636"))
 
-(use-package imenu-anywhere
-  :bind (("C-." . imenu-anywhere)))
-
 (setq frame-title-format
       '((:eval (if (buffer-file-name)
                    (abbreviate-file-name (buffer-file-name))
@@ -446,9 +444,10 @@
   (keyfreq-autosave-mode t))
 
 (use-package magit
-  :bind (("C-x m" . magit-status)
-         ("C-c g b" . magit-blame)
-         ("C-c g l" . magit-log-buffer-file))
+  :bind (("C-x g s" . magit-status)
+         ("C-x g b" . magit-blame)
+         ("C-x g l" . magit-log-buffer-file)
+         ("C-x g c" . magit-commit))
   :commands magit-status
   :ensure git-gutter+
   :ensure github-clone
@@ -461,45 +460,94 @@
   :config (progn
             (global-git-gutter+-mode)))
 
-(use-package twittering-mode
-  :ensure t
-  :defer t)
+(use-package twittering-mode)
 
-(use-package helm
-  :config
-  (setq helm-M-x-fuzzy-match t
-        helm-recentf-fuzzy-match t
-        helm-buffers-fuzzy-matching t
-        helm-imenu-fuzzy-match t
-        helm-apropos-fuzzy-match t
-        helm-lisp-fuzzy-completion t)
+;; (use-package helm
+;;   :config
+;;   (require 'helm)
+;;   (require 'helm-config)
+;;   (require 'helm-files)
 
-  (require 'helm-files)
-  (defun fu/helm-find-files-navigate-forward (orig-fun &rest args)
-    (if (file-directory-p (helm-get-selection))
-        (apply orig-fun args)
-      (helm-maybe-exit-minibuffer)))
-  (advice-add 'helm-execute-persistent-action :around #'fu/helm-find-files-navigate-forward)
-  (define-key helm-find-files-map (kbd "RET") 'helm-execute-persistent-action)
-  (defun fu/helm-find-files-navigate-back (orig-fun &rest args)
-    (if (= (length helm-pattern) (length (helm-find-files-initial-input)))
-        (helm-find-files-up-one-level 1)
-      (apply orig-fun args)))
-  (advice-add 'helm-ff-delete-char-backward :around #'fu/helm-find-files-navigate-back)
+;;   (setq helm-M-x-fuzzy-match t
+;;         helm-recentf-fuzzy-match t
+;;         helm-buffers-fuzzy-matching t
+;;         helm-imenu-fuzzy-match t
+;;         helm-apropos-fuzzy-match t
+;;         helm-lisp-fuzzy-completion t
+;;         helm-completion-in-region-fuzzy-match t
+;;         helm-ff-fuzzy-matching t
+;;         helm-ff-search-library-in-sexp t
+;;         helm-ff-file-name-history-use-recentf t
+;;         helm-ff-transformer-show-only-basename nil
+;;         helm-file-cache-fuzzy-match t
+;;         helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+;;         helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+;;         helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+;;         helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+;;         helm-candidate-number-limit 100
+;;         helm-idle-delay 0.0                     ; update fast sources immediately (doesn't).
+;;         helm-input-idle-delay 0.01              ; this actually updates things
+;;                                                 ; reeeelatively quickly.
+;;         helm-yas-display-key-on-candidate t
+;;         helm-quick-update t
+;;         helm-M-x-requires-pattern nil)
 
-  :bind (("M-x" . helm-M-x)
-         ("C-x C-f" . helm-find-files)
-         ("C-x b" . helm-buffers-list)
-         ("C-x j j" . helm-bookmarks))
+;;   (defun ublt/helm-enable-fuzzy (sources-and-classes)
+;;     (dolist (setting sources-and-classes)
+;;       (destructuring-bind (s class) setting
+;;         (let ((source (symbol-value s)))
+;;           (set s (helm-make-source (helm-attr 'name source) class
+;;                    :fuzzy-match t))))))
 
-  :ensure helm-dictionary
-  :ensure helm-core
-  :ensure helm-bind-key
-  :ensure esqlite-helm
-  :ensure ace-isearch
-  :ensure ac-html-bootstrap
-  :ensure ac-helm
-  :ensure helm-fuzzy-find)
+;;   (use-package helm-swoop
+;;     :defer t
+;;     :bind
+;;     (("C-S-s" . helm-swoop)
+;;      ("M-i" . helm-swoop)
+;;      ("M-s s" . helm-swoop)
+;;      ("M-s M-s" . helm-swoop)
+;;      ("M-I" . helm-swoop-back-to-last-point)
+;;      ("C-c M-i" . helm-multi-swoop)
+;;      ("C-x M-i" . helm-multi-swoop-all)
+;;      )
+;;     :config
+;;     (progn
+;;       (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+;;       (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)))
+
+;;   (ublt/helm-enable-fuzzy
+;;    '((helm-source-bookmarks helm-source-basic-bookmarks)))
+
+;;   (defun fu/helm-find-files-navigate-forward (orig-fun &rest args)
+;;     (if (file-directory-p (helm-get-selection))
+;;         (apply orig-fun args)
+;;       (helm-maybe-exit-minibuffer)))
+;;   (advice-add 'helm-execute-persistent-action :around #'fu/helm-find-files-navigate-forward)
+;;   (define-key helm-find-files-map (kbd "RET") 'helm-execute-persistent-action)
+;;   (defun fu/helm-find-files-navigate-back (orig-fun &rest args)
+;;     (if (= (length helm-pattern) (length (helm-find-files-initial-input)))
+;;         (helm-find-files-up-one-level 1)
+;;       (apply orig-fun args)))
+;;   (advice-add 'helm-ff-delete-char-backward :around #'fu/helm-find-files-navigate-back)
+
+;;   :bind (("M-x" . helm-M-x)
+;;          ("C-x C-f" . helm-find-files)
+;;          ("C-x b" . helm-buffers-list)
+;;          ("C-x b" . helm-buffers-list)
+;;          ("C-x j j" . helm-bookmarks))
+
+;;   :ensure helm-dictionary
+;;   :ensure helm-core
+;;   :ensure helm-bind-key
+;;   :ensure esqlite-helm
+;;   :ensure ace-isearch
+;;   :ensure ac-html-bootstrap
+;;   :ensure ac-helm
+;;   :ensure helm-fuzzy-find)
+
+;; (use-package helm-descbinds
+;;   :defer t
+;;   :bind (("C-h b" . helm-descbinds)))
 
 
 (provide 'init)
