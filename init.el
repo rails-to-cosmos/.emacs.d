@@ -36,6 +36,7 @@
 ;;
 ;;; Code:
 
+
 ;;----------------------------------------------------------------------------
 ;; Use-package initialization
 ;;----------------------------------------------------------------------------
@@ -54,6 +55,7 @@
 (use-package diminish)
 (use-package bind-key)
 
+
 ;;----------------------------------------------------------------------------
 ;; Paths
 ;;----------------------------------------------------------------------------
@@ -67,7 +69,7 @@
       bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
       desktop-path (list emacs-persistence-directory)
       recentf-save-file (concat emacs-persistence-directory ".recentf")
-      ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last")
+
       custom-file (concat emacs-persistence-directory ".custom")
       eshell-directory-name (concat emacs-persistence-directory "eshell")
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
@@ -75,12 +77,12 @@
 (make-directory emacs-persistence-directory t)
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+(let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+  (normal-top-level-add-subdirs-to-load-path))
 
 ;;----------------------------------------------------------------------------
 ;; Env vars
 ;;----------------------------------------------------------------------------
-
-;;(setenv "PATH" (shell-command-to-string "source ~/.bash_profile; echo -n $PATH"))
 
 (let ((path-from-shell (replace-regexp-in-string "^.*\n.*shell\n" "" (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
   (setenv "PATH" path-from-shell)
@@ -89,6 +91,7 @@
 (setenv "LC_ALL" "en_US.UTF-8")
 (setenv "LC_CTYPE" "en_US.UTF-8")
 
+
 ;;----------------------------------------------------------------------------
 ;; System constants
 ;;----------------------------------------------------------------------------
@@ -96,16 +99,88 @@
 (defconst *is-a-mac* (eq system-type 'darwin))
 (setq mac-command-modifier 'meta)
 
+
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
+
 (load-theme 'zerodark t)
+
+;;----------------------------------------------------------------------------
+;; elisp utils
+;;----------------------------------------------------------------------------
+
+(defmacro after-load (feature &rest body)
+  "After FEATURE is loaded, evaluate BODY."
+  (declare (indent defun))
+  `(eval-after-load ,feature
+     '(progn ,@body)))
+
+(defun add-auto-mode (mode &rest patterns)
+  "Add entries to `auto-mode-alist' to use `MODE' for all given file `PATTERNS'."
+  (dolist (pattern patterns)
+    (add-to-list 'auto-mode-alist (cons pattern mode))))
+
+(defun delete-this-file ()
+  "Delete the current file, and kill the buffer."
+  (interactive)
+  (or (buffer-file-name) (error "No file is currently being edited"))
+  (when (yes-or-no-p (format "Really delete '%s'?"
+                             (file-name-nondirectory buffer-file-name)))
+    (delete-file (buffer-file-name))
+    (kill-this-buffer)))
+
+(defun rename-this-file-and-buffer (new-name)
+  "Renames both current buffer and file it's visiting to NEW-NAME."
+  (interactive "sNew name: ")
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (unless filename
+      (error "Buffer '%s' is not visiting a file!" name))
+    (if (get-buffer new-name)
+        (message "A buffer named '%s' already exists!" new-name)
+      (progn
+        (when (file-exists-p filename)
+         (rename-file filename new-name 1))
+        (rename-buffer new-name)
+        (set-visited-file-name new-name)))))
+
+(use-package google-translate
+  :config (defun translate-text (sentence)
+            "Google translate without specifying language"
+            (interactive "sTranslate sentence: ")
+            (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                 ("[а-яА-Я]" . ("ru" "en"))))
+            (dolist (lang-regex lang-regexes)
+              (if (string-match (car lang-regex) sentence)
+                  (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
+  :bind ("C-x y t t" . translate-text) ;; C-x C-y C-Translate C-Text
+  :ensure t)
+
+(defun save-macro (name)
+  "save a macro. Take a name as argument
+        and save the last defined macro under
+        this name at the end of your .emacs"
+  (interactive "SName of the macro:") ; ask for the name of the macro
+  (kmacro-name-last-macro name)        ; use this name for the macro
+  (find-file user-init-file)   ; open ~/.emacs or other user init file
+  (goto-char (point-max))      ; go to the end of the .emacs
+  (newline)                    ; insert a newline
+  (insert-kbd-macro name)      ; copy the macro
+  (newline)                    ; insert a newline
+  (switch-to-buffer nil))
+
+(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (flet ((process-list ())) ad-do-it))
+
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function
+            kill-buffer-query-functions))
 
 ;;----------------------------------------------------------------------------
 ;; Text editing utils
 ;;----------------------------------------------------------------------------
-
-(require 'init-utils)
 
 (use-package wgrep)
 
@@ -121,7 +196,11 @@
 
 (use-package bookmark+)
 (use-package scratch)
-(use-package yasnippet)
+(use-package yasnippet
+  :config
+  (progn
+    (yas-global-mode 1)
+    (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
 (use-package emmet-mode)
 (use-package impatient-mode)
 
@@ -132,6 +211,8 @@
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
+  ;; :init (after (:yasnippet)
+  ;;         (require 'yasnippet))
   :config
   (defun python-highlight-breakpoints ()
     (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
@@ -145,10 +226,10 @@
   (add-hook 'python-mode-hook 'jedi:install-server)
   (add-hook 'python-mode-hook 'jedi:ac-setup)
   (add-hook 'python-mode-hook 'jedi:setup)
-  ;; (add-hook 'python-mode-hook 'elpy-enable)
-  ;; (add-hook 'python-mode-hook 'elpy-mode)
+  (add-hook 'python-mode-hook 'yas-minor-mode)
   (add-hook 'python-mode-hook 'python-highlight-breakpoints)
   (add-hook 'jedi-mode-hook 'jedi-direx:setup)
+  (setq python-indent-offset 4)
   :bind (("C-c C-b" . python-add-breakpoint)
          ("C-c x" . jedi-direx:pop-to-buffer))
   :ensure jedi
@@ -223,35 +304,36 @@
         flycheck-idle-change-delay 0.8
         flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
 
-(use-package ido
-  :config
-  (ido-mode t)
-  (ido-vertical-mode t)
-  (ido-everywhere t)
-  (ido-ubiquitous-mode t)
-  (setq ido-enable-flex-matching t
-        ido-use-filename-at-point nil
-        ido-auto-merge-work-directories-length 0
-        ido-use-virtual-buffers t
-        smex-save-file (concat emacs-persistence-directory ".smex-items")
-        ido-default-buffer-method 'selected-window)
-  (global-set-key [remap execute-extended-command] 'smex)
-  (defadvice ido-find-file (after find-file-sudo activate)
-    "Find file as root if necessary."
-    (unless (and buffer-file-name
-                 (file-writable-p buffer-file-name))
-      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-  (defun bind-ido-keys ()
-    "Keybindings for ido mode."
-    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-    (define-key ido-completion-map (kbd "C-p")   'ido-prev-match))
-  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-  (add-hook 'ido-setup-hook #'bind-ido-keys)
-  :ensure ido-vertical-mode
-  :ensure idomenu
-  :ensure ido-completing-read+
-  :ensure ido-ubiquitous
-  :ensure smex)
+;; (use-package ido
+;;   :config
+;;   (ido-mode t)
+;;   (ido-vertical-mode t)
+;;   (ido-everywhere t)
+;;   (ido-ubiquitous-mode t)
+;;   (setq ido-enable-flex-matching t
+;;         ido-use-filename-at-point nil
+;;         ido-auto-merge-work-directories-length 0
+;;         ido-use-virtual-buffers t
+;;         smex-save-file (concat emacs-persistence-directory ".smex-items")
+;;         ido-default-buffer-method 'selected-window
+;;         ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+;;   (global-set-key [remap execute-extended-command] 'smex)
+;;   (defadvice ido-find-file (after find-file-sudo activate)
+;;     "Find file as root if necessary."
+;;     (unless (and buffer-file-name
+;;                  (file-writable-p buffer-file-name))
+;;       (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+;;   (defun bind-ido-keys ()
+;;     "Keybindings for ido mode."
+;;     (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+;;     (define-key ido-completion-map (kbd "C-p")   'ido-prev-match))
+;;   (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+;;   (add-hook 'ido-setup-hook #'bind-ido-keys)
+;;   :ensure ido-vertical-mode
+;;   :ensure idomenu
+;;   :ensure ido-completing-read+
+;;   :ensure ido-ubiquitous
+;;   :ensure smex)
 
 (require 'init-hippie-expand)
 
@@ -351,20 +433,17 @@
 (use-package camcorder
   :commands camcorder-mode)
 
-(use-package nhexl-mode
-  :ensure t)
+(use-package nhexl-mode)
 
 ;; https://github.com/kiwanami/emacs-calfw
 (use-package calfw
   :config
-  (require 'calfw-org)
-  :ensure t)
+  (require 'calfw-org))
 
 (use-package keyfreq
   :config
   (keyfreq-mode t)
-  (keyfreq-autosave-mode t)
-  :ensure t)
+  (keyfreq-autosave-mode t))
 
 (use-package magit
   :bind (("C-x m" . magit-status)
@@ -380,12 +459,44 @@
 
 (use-package git-gutter+
   :config (progn
-            (global-git-gutter+-mode)
-            (global-git-gutter-mode)))
+            (global-git-gutter+-mode)))
 
 (use-package twittering-mode
+  :ensure t
   :defer t)
+
+(use-package helm
+  :config
+  (setq helm-M-x-fuzzy-match t
+        helm-recentf-fuzzy-match t
+        helm-buffers-fuzzy-matching t
+        helm-imenu-fuzzy-match t
+        helm-apropos-fuzzy-match t
+        helm-lisp-fuzzy-completion t)
+
+  (require 'helm-files)
+  (defun fu/helm-find-files-navigate-forward (orig-fun &rest args)
+    (if (file-directory-p (helm-get-selection))
+        (apply orig-fun args)
+      (helm-maybe-exit-minibuffer)))
+  (advice-add 'helm-execute-persistent-action :around #'fu/helm-find-files-navigate-forward)
+  (define-key helm-find-files-map (kbd "RET") 'helm-execute-persistent-action)
+
+  :bind (("M-x" . helm-M-x)
+         ("C-x C-f" . helm-find-files)
+         ("C-x b" . helm-buffers-list))
+
+  :ensure helm-dictionary
+  :ensure helm-core
+  :ensure helm-bind-key
+  :ensure esqlite-helm
+  :ensure ace-isearch
+  :ensure ac-html-bootstrap
+  :ensure ac-helm
+  :ensure helm-fuzzy-find)
+
 
 (provide 'init)
 
 ;;; init.el ends here
+(put 'set-goal-column 'disabled nil)
