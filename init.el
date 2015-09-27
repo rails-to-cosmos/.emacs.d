@@ -481,10 +481,16 @@
       (helm-maybe-exit-minibuffer)))
   (advice-add 'helm-execute-persistent-action :around #'fu/helm-find-files-navigate-forward)
   (define-key helm-find-files-map (kbd "RET") 'helm-execute-persistent-action)
+  (defun fu/helm-find-files-navigate-back (orig-fun &rest args)
+    (if (= (length helm-pattern) (length (helm-find-files-initial-input)))
+        (helm-find-files-up-one-level 1)
+      (apply orig-fun args)))
+  (advice-add 'helm-ff-delete-char-backward :around #'fu/helm-find-files-navigate-back)
 
   :bind (("M-x" . helm-M-x)
          ("C-x C-f" . helm-find-files)
-         ("C-x b" . helm-buffers-list))
+         ("C-x b" . helm-buffers-list)
+         ("C-x j j" . helm-bookmarks))
 
   :ensure helm-dictionary
   :ensure helm-core
@@ -497,6 +503,4 @@
 
 
 (provide 'init)
-
 ;;; init.el ends here
-(put 'set-goal-column 'disabled nil)
