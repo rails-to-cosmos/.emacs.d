@@ -83,6 +83,12 @@
 ;; Env vars
 ;;----------------------------------------------------------------------------
 
+(defun eshell-init-aliases()
+  (add-to-list 'eshell-command-aliases-list '("l" "ls"))
+  (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
+  (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
+
+(add-hook 'eshell-mode-hook 'eshell-init-aliases)
 
 (use-package exec-path-from-shell
   :config
@@ -91,6 +97,8 @@
     (setenv "LANG" "en_US.UTF-8")
     (setenv "LC_ALL" "en_US.UTF-8")
     (setenv "LC_CTYPE" "en_US.UTF-8")))
+
+
 
 
 ;;----------------------------------------------------------------------------
