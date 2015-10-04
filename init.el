@@ -264,8 +264,6 @@
     (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
 (use-package emmet-mode)
 (use-package impatient-mode)
-(use-package imenu-anywhere
-  :bind (("C-." . imenu-anywhere)))
 
 (use-package restclient
   :mode ("\\.rest\\'" . restclient-mode))
@@ -299,6 +297,8 @@
   :ensure pyvenv
   :ensure pungi)
 
+(use-package imenu-anywhere
+  :bind (("C-." . imenu-anywhere)))
 
 (require 'init-dired)
 (require 'init-isearch)
