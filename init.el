@@ -83,12 +83,14 @@
 ;; Env vars
 ;;----------------------------------------------------------------------------
 
-(let ((path-from-shell (replace-regexp-in-string "^.*\n.*shell\n" "" (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
-  (setenv "PATH" path-from-shell)
-  (setq exec-path (split-string path-from-shell path-separator)))
-(setenv "LANG" "en_US.UTF-8")
-(setenv "LC_ALL" "en_US.UTF-8")
-(setenv "LC_CTYPE" "en_US.UTF-8")
+
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize)
+    (setenv "LANG" "en_US.UTF-8")
+    (setenv "LC_ALL" "en_US.UTF-8")
+    (setenv "LC_CTYPE" "en_US.UTF-8")))
 
 
 ;;----------------------------------------------------------------------------
@@ -120,7 +122,8 @@
          (cons 'height (/ (- (x-display-pixel-height) 80)
                              (frame-char-height)))))))
 
-(set-frame-size-according-to-resolution)
+(when window-system
+  (set-frame-size-according-to-resolution))
 
 (load-theme 'zerodark t)
 (require 'init-gui-frames)
@@ -275,23 +278,19 @@
     (insert "import ipdb; ipdb.set_trace()")
     (python-highlight-breakpoints))
   (add-hook 'python-mode-hook 'linum-mode)
-  ;; (add-hook 'python-mode-hook 'jedi-mode)
-  ;; (add-hook 'python-mode-hook 'jedi:install-server)
-  ;; (add-hook 'python-mode-hook 'jedi:ac-setup)
   (add-hook 'python-mode-hook 'jedi:setup)
   (add-hook 'python-mode-hook 'yas-minor-mode)
   (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-  ;; (add-hook 'jedi-mode-hook 'jedi-direx:setup)
   (setq python-indent-offset 4)
-  :bind (("C-c C-b" . python-add-breakpoint)
-         ;; ("C-c x" . jedi-direx:pop-to-buffer)
-         )
+  :bind (("C-c C-b" . python-add-breakpoint))
   :ensure jedi
   :ensure cinspect
-  ;; :ensure jedi-direx
   :ensure py-isort
   :ensure py-yapf
+  :ensure pyenv-mode
+  :ensure pyvenv
   :ensure pungi)
+
 
 (require 'init-dired)
 (require 'init-isearch)
