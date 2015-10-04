@@ -56,10 +56,11 @@
   (global-prettify-symbols-mode))
 
 (use-package undo-tree
-  :init
-  (global-undo-tree-mode)
-  (diminish 'undo-tree-mode)
-  :ensure t)
+  :config
+  (progn
+    (global-undo-tree-mode)
+    (setq undo-tree-visualizer-timestamps t)
+    (setq undo-tree-visualizer-diff t)))
 
 (use-package highlight-symbol
   :init
@@ -70,12 +71,18 @@
     '(diminish 'highlight-symbol-mode))
   :ensure t)
 
+(defadvice kill-region (before slick-cut activate compile)
+  "When called interactively with no active region, kill a single line instead."
+  (interactive
+    (if mark-active (list (region-beginning) (region-end))
+      (list (line-beginning-position)
+        (line-beginning-position 2)))))
+
 ;;----------------------------------------------------------------------------
 ;; Zap *up* to char is a handy pair for zap-to-char
 ;;----------------------------------------------------------------------------
 (autoload 'zap-up-to-char "misc" "Kill up to, but not including ARGth occurrence of CHAR.")
 (global-set-key (kbd "M-Z") 'zap-up-to-char)
-
 
 (use-package browse-kill-ring
   :ensure t)

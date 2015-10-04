@@ -19,11 +19,21 @@
  line-spacing 5
  indent-tabs-mode nil)
 
+
+;;----------------------------------------------------------------------------
+;; Suppress GUI features
+;;----------------------------------------------------------------------------
+
 (setq scroll-conservatively 50
       scroll-margin 4
       inhibit-splash-screen t
       inhibit-startup-message t
-      save-abbrevs t)
+      save-abbrevs t
+      use-file-dialog nil
+      use-dialog-box nil
+      inhibit-startup-screen t
+      inhibit-startup-echo-area-message t
+      indicate-empty-lines t)
 
 (blink-cursor-mode -1)
 (menu-bar-mode -1)
@@ -31,16 +41,7 @@
 (delete-selection-mode t)
 (fringe-mode '(10 . 0))
 (global-visual-line-mode 1)
-(toggle-frame-fullscreen)
 
-;;----------------------------------------------------------------------------
-;; Suppress GUI features
-;;----------------------------------------------------------------------------
-(setq use-file-dialog nil
-      use-dialog-box nil
-      inhibit-startup-screen t
-      inhibit-startup-echo-area-message t
-      indicate-empty-lines t)
 
 ;;----------------------------------------------------------------------------
 ;; Window size and features

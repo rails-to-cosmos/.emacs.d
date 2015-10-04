@@ -55,7 +55,6 @@
 (use-package diminish)
 (use-package bind-key)
 
-
 ;;----------------------------------------------------------------------------
 ;; Paths
 ;;----------------------------------------------------------------------------
@@ -69,7 +68,6 @@
       bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
       desktop-path (list emacs-persistence-directory)
       recentf-save-file (concat emacs-persistence-directory ".recentf")
-
       custom-file (concat emacs-persistence-directory ".custom")
       eshell-directory-name (concat emacs-persistence-directory "eshell")
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
@@ -79,6 +77,7 @@
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
   (normal-top-level-add-subdirs-to-load-path))
+
 
 ;;----------------------------------------------------------------------------
 ;; Env vars
@@ -104,7 +103,55 @@
 ;; User interface
 ;;----------------------------------------------------------------------------
 
+(defun set-frame-size-according-to-resolution ()
+  (interactive)
+  (if window-system
+  (progn
+    ;; use 120 char wide window for largeish displays
+    ;; and smaller 80 column windows for smaller displays
+    ;; pick whatever numbers make sense for you
+    (if (> (x-display-pixel-width) 1280)
+           (add-to-list 'default-frame-alist (cons 'width 160)))
+    ;; for the height, subtract a couple hundred pixels
+    ;; from the screen height (for panels, menubars and
+    ;; whatnot), then divide by the height of a char to
+    ;; get the height we want
+    (add-to-list 'default-frame-alist
+         (cons 'height (/ (- (x-display-pixel-height) 80)
+                             (frame-char-height)))))))
+
+(set-frame-size-according-to-resolution)
+
 (load-theme 'zerodark t)
+(require 'init-gui-frames)
+
+(use-package smart-mode-line
+  :defer t
+  :config
+  (progn
+    (setq-default
+     mode-line-format
+     '("%e"
+       mode-line-front-space
+       mode-line-mule-info
+       mode-line-client
+       mode-line-modified
+       mode-line-remote
+       mode-line-frame-identification
+       mode-line-buffer-identification
+       "   "
+       mode-line-position
+       (vc-mode vc-mode)
+       "  "
+       mode-line-modes
+       mode-line-misc-info
+       mode-line-end-spaces))))
+
+(use-package miniedit
+  :defer t
+  :ensure t
+  :commands minibuffer-edit
+  :init (miniedit-install))
 
 ;;----------------------------------------------------------------------------
 ;; elisp utils
@@ -178,17 +225,20 @@
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
 
+
 ;;----------------------------------------------------------------------------
 ;; Text editing utils
 ;;----------------------------------------------------------------------------
 
 (use-package wgrep)
 
+
 ;;----------------------------------------------------------------------------
 ;; Logging
 ;;----------------------------------------------------------------------------
 
 (use-package mwe-log-commands)
+
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
@@ -203,16 +253,19 @@
     (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
 (use-package emmet-mode)
 (use-package impatient-mode)
+(use-package imenu-anywhere
+  :bind (("C-." . imenu-anywhere)))
 
 (use-package restclient
   :mode ("\\.rest\\'" . restclient-mode))
+
+(use-package emacsql
+  :ensure pg)
 
 (use-package python
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
-  ;; :init (after (:yasnippet)
-  ;;         (require 'yasnippet))
   :config
   (defun python-highlight-breakpoints ()
     (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
@@ -238,16 +291,8 @@
   ;; :ensure jedi-direx
   :ensure py-isort
   :ensure py-yapf
-  :ensure pungi
-  ;; :ensure company-jedi
-  ;; :ensure pyenv-mode
-  ;; :ensure virtualenvwrapper
-  ;; :ensure py-autopep8
-  ;; :ensure ob-ipython
-  ;; :ensure pip-requirements
-  )
+  :ensure pungi)
 
-(require 'init-gui-frames)
 (require 'init-dired)
 (require 'init-isearch)
 
@@ -305,6 +350,10 @@
         flycheck-idle-change-delay 0.8
         flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
 
+(use-package js
+  :config
+  (setq js-indent-level 4))
+
 (use-package ido
   :config
   (ido-mode t)
@@ -335,6 +384,9 @@
   :ensure ido-completing-read+
   :ensure ido-ubiquitous
   :ensure smex)
+
+(use-package imenu-anywhere
+  :bind (("C-." . imenu-anywhere)))
 
 (require 'init-hippie-expand)
 
@@ -447,7 +499,8 @@
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
-         ("C-x g c" . magit-commit))
+         ("C-x g c" . magit-commit)
+         ("C-x g p c" . magit-push-current))
   :commands magit-status
   :ensure git-gutter+
   :ensure github-clone
@@ -462,93 +515,9 @@
 
 (use-package twittering-mode)
 
-;; (use-package helm
-;;   :config
-;;   (require 'helm)
-;;   (require 'helm-config)
-;;   (require 'helm-files)
-
-;;   (setq helm-M-x-fuzzy-match t
-;;         helm-recentf-fuzzy-match t
-;;         helm-buffers-fuzzy-matching t
-;;         helm-imenu-fuzzy-match t
-;;         helm-apropos-fuzzy-match t
-;;         helm-lisp-fuzzy-completion t
-;;         helm-completion-in-region-fuzzy-match t
-;;         helm-ff-fuzzy-matching t
-;;         helm-ff-search-library-in-sexp t
-;;         helm-ff-file-name-history-use-recentf t
-;;         helm-ff-transformer-show-only-basename nil
-;;         helm-file-cache-fuzzy-match t
-;;         helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
-;;         helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
-;;         helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
-;;         helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
-;;         helm-candidate-number-limit 100
-;;         helm-idle-delay 0.0                     ; update fast sources immediately (doesn't).
-;;         helm-input-idle-delay 0.01              ; this actually updates things
-;;                                                 ; reeeelatively quickly.
-;;         helm-yas-display-key-on-candidate t
-;;         helm-quick-update t
-;;         helm-M-x-requires-pattern nil)
-
-;;   (defun ublt/helm-enable-fuzzy (sources-and-classes)
-;;     (dolist (setting sources-and-classes)
-;;       (destructuring-bind (s class) setting
-;;         (let ((source (symbol-value s)))
-;;           (set s (helm-make-source (helm-attr 'name source) class
-;;                    :fuzzy-match t))))))
-
-;;   (use-package helm-swoop
-;;     :defer t
-;;     :bind
-;;     (("C-S-s" . helm-swoop)
-;;      ("M-i" . helm-swoop)
-;;      ("M-s s" . helm-swoop)
-;;      ("M-s M-s" . helm-swoop)
-;;      ("M-I" . helm-swoop-back-to-last-point)
-;;      ("C-c M-i" . helm-multi-swoop)
-;;      ("C-x M-i" . helm-multi-swoop-all)
-;;      )
-;;     :config
-;;     (progn
-;;       (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
-;;       (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)))
-
-;;   (ublt/helm-enable-fuzzy
-;;    '((helm-source-bookmarks helm-source-basic-bookmarks)))
-
-;;   (defun fu/helm-find-files-navigate-forward (orig-fun &rest args)
-;;     (if (file-directory-p (helm-get-selection))
-;;         (apply orig-fun args)
-;;       (helm-maybe-exit-minibuffer)))
-;;   (advice-add 'helm-execute-persistent-action :around #'fu/helm-find-files-navigate-forward)
-;;   (define-key helm-find-files-map (kbd "RET") 'helm-execute-persistent-action)
-;;   (defun fu/helm-find-files-navigate-back (orig-fun &rest args)
-;;     (if (= (length helm-pattern) (length (helm-find-files-initial-input)))
-;;         (helm-find-files-up-one-level 1)
-;;       (apply orig-fun args)))
-;;   (advice-add 'helm-ff-delete-char-backward :around #'fu/helm-find-files-navigate-back)
-
-;;   :bind (("M-x" . helm-M-x)
-;;          ("C-x C-f" . helm-find-files)
-;;          ("C-x b" . helm-buffers-list)
-;;          ("C-x b" . helm-buffers-list)
-;;          ("C-x j j" . helm-bookmarks))
-
-;;   :ensure helm-dictionary
-;;   :ensure helm-core
-;;   :ensure helm-bind-key
-;;   :ensure esqlite-helm
-;;   :ensure ace-isearch
-;;   :ensure ac-html-bootstrap
-;;   :ensure ac-helm
-;;   :ensure helm-fuzzy-find)
-
-;; (use-package helm-descbinds
-;;   :defer t
-;;   :bind (("C-h b" . helm-descbinds)))
-
+(use-package term+
+  :config
+  (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
 
 (provide 'init)
 ;;; init.el ends here
