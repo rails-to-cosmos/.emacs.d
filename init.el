@@ -99,8 +99,6 @@
     (setenv "LC_CTYPE" "en_US.UTF-8")))
 
 
-
-
 ;;----------------------------------------------------------------------------
 ;; System constants
 ;;----------------------------------------------------------------------------
@@ -133,7 +131,6 @@
 (when window-system
   (set-frame-size-according-to-resolution))
 
-(load-theme 'zerodark t)
 (require 'init-gui-frames)
 
 (use-package smart-mode-line
@@ -268,14 +265,16 @@
 (use-package restclient
   :mode ("\\.rest\\'" . restclient-mode))
 
-(use-package emacsql
-  :ensure pg)
+;; (use-package emacsql
+;;   :ensure pg)
 
 (use-package python
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
   :config
+  (make-directory "~/.virtualenvs" t)
+  (jedi:install-server)
   (defun python-highlight-breakpoints ()
     (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
   (defun python-add-breakpoint ()
@@ -289,6 +288,7 @@
   (add-hook 'python-mode-hook 'python-highlight-breakpoints)
   (setq python-indent-offset 4)
   :bind (("C-c C-b" . python-add-breakpoint))
+  :ensure virtualenv
   :ensure jedi
   :ensure cinspect
   :ensure py-isort
@@ -525,6 +525,8 @@
 (use-package term+
   :config
   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+
+(load-theme 'zerodark t)
 
 (provide 'init)
 ;;; init.el ends here

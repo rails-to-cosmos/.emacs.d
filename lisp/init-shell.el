@@ -14,24 +14,18 @@
   (goto-char (point-max)))
 
 (use-package eshell-prompt-extras
-  :init
-  (use-package virtualenvwrapper
-    :ensure t)
-
   :config
   (venv-initialize-eshell)
   (autoload 'epe-theme-lambda "eshell-prompt-extras")
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-dakrone)
+  :ensure virtualenvwrapper)
 
-  :ensure t)
-
-;; (with-eval-after-load "esh-opt"
-;;   (require 'virtualenvwrapper)
-;;   (venv-initialize-eshell)
-;;   (autoload 'epe-theme-lambda "eshell-prompt-extras")
-;;   (setq eshell-highlight-prompt nil
-;;         eshell-prompt-function 'epe-theme-dakrone)
-;;   )
+(with-eval-after-load "esh-opt"
+  (require 'virtualenvwrapper)
+  (venv-initialize-eshell)
+  (autoload 'epe-theme-lambda "eshell-prompt-extras")
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-dakrone))
 
 (provide 'init-shell)
