@@ -108,6 +108,61 @@
 
 
 ;;----------------------------------------------------------------------------
+;; User interface
+;;----------------------------------------------------------------------------
+
+(defun set-frame-size-according-to-resolution ()
+  (interactive)
+  (if window-system
+  (progn
+    ;; use 120 char wide window for largeish displays
+    ;; and smaller 80 column windows for smaller displays
+    ;; pick whatever numbers make sense for you
+    (if (> (x-display-pixel-width) 1280)
+           (add-to-list 'default-frame-alist (cons 'width 160)))
+    ;; for the height, subtract a couple hundred pixels
+    ;; from the screen height (for panels, menubars and
+    ;; whatnot), then divide by the height of a char to
+    ;; get the height we want
+    (add-to-list 'default-frame-alist
+         (cons 'height (/ (- (x-display-pixel-height) 80)
+                             (frame-char-height)))))))
+
+(when window-system
+  (set-frame-size-according-to-resolution))
+
+(require 'init-gui-frames)
+
+(use-package smart-mode-line
+  :defer t
+  :config
+  (progn
+    (setq-default
+     mode-line-format
+     '("%e"
+       mode-line-front-space
+       mode-line-mule-info
+       mode-line-client
+       mode-line-modified
+       mode-line-remote
+       mode-line-frame-identification
+       mode-line-buffer-identification
+       "   "
+       mode-line-position
+       (vc-mode vc-mode)
+       "  "
+       mode-line-modes
+       mode-line-misc-info
+       mode-line-end-spaces))))
+
+(use-package miniedit
+  :defer t
+  :ensure t
+  :commands minibuffer-edit
+  :init (miniedit-install))
+
+;;----------------------------------------------------------------------------
+>>>>>>> b1bbae1054ff24bdd11923991ec54ea4dca05032
 ;; elisp utils
 ;;----------------------------------------------------------------------------
 
@@ -211,6 +266,7 @@
   :mode ("\\.rest\\'" . restclient-mode))
 (use-package emacsql
   :ensure pg)
+
 (use-package python
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
@@ -228,8 +284,11 @@
     (add-hook 'python-mode-hook 'jedi:setup)
     (add-hook 'python-mode-hook 'yas-minor-mode)
     (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-    (setq python-indent-offset 4))
+    (setq python-indent-offset 4)
+    (make-directory "~/.virtualenvs" t)
+    (jedi:install-server))
   :bind (("C-c C-b" . python-add-breakpoint))
+  :ensure virtualenv
   :ensure jedi
   :ensure cinspect
   :ensure py-isort
@@ -477,6 +536,7 @@
   :config
   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
 
+<<<<<<< HEAD
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
