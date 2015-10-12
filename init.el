@@ -38,7 +38,7 @@
 
 
 ;;----------------------------------------------------------------------------
-;; Use-package initialization
+;; Init use-package
 ;;----------------------------------------------------------------------------
 
 (require 'package)
@@ -99,8 +99,6 @@
     (setenv "LC_CTYPE" "en_US.UTF-8")))
 
 
-
-
 ;;----------------------------------------------------------------------------
 ;; System constants
 ;;----------------------------------------------------------------------------
@@ -108,61 +106,6 @@
 (defconst *is-a-mac* (eq system-type 'darwin))
 (setq mac-command-modifier 'meta)
 
-
-;;----------------------------------------------------------------------------
-;; User interface
-;;----------------------------------------------------------------------------
-
-(defun set-frame-size-according-to-resolution ()
-  (interactive)
-  (if window-system
-  (progn
-    ;; use 120 char wide window for largeish displays
-    ;; and smaller 80 column windows for smaller displays
-    ;; pick whatever numbers make sense for you
-    (if (> (x-display-pixel-width) 1280)
-           (add-to-list 'default-frame-alist (cons 'width 160)))
-    ;; for the height, subtract a couple hundred pixels
-    ;; from the screen height (for panels, menubars and
-    ;; whatnot), then divide by the height of a char to
-    ;; get the height we want
-    (add-to-list 'default-frame-alist
-         (cons 'height (/ (- (x-display-pixel-height) 80)
-                             (frame-char-height)))))))
-
-(when window-system
-  (set-frame-size-according-to-resolution))
-
-(load-theme 'zerodark t)
-(require 'init-gui-frames)
-
-(use-package smart-mode-line
-  :defer t
-  :config
-  (progn
-    (setq-default
-     mode-line-format
-     '("%e"
-       mode-line-front-space
-       mode-line-mule-info
-       mode-line-client
-       mode-line-modified
-       mode-line-remote
-       mode-line-frame-identification
-       mode-line-buffer-identification
-       "   "
-       mode-line-position
-       (vc-mode vc-mode)
-       "  "
-       mode-line-modes
-       mode-line-misc-info
-       mode-line-end-spaces))))
-
-(use-package miniedit
-  :defer t
-  :ensure t
-  :commands minibuffer-edit
-  :init (miniedit-install))
 
 ;;----------------------------------------------------------------------------
 ;; elisp utils
@@ -199,7 +142,7 @@
         (message "A buffer named '%s' already exists!" new-name)
       (progn
         (when (file-exists-p filename)
-         (rename-file filename new-name 1))
+          (rename-file filename new-name 1))
         (rename-buffer new-name)
         (set-visited-file-name new-name)))))
 
@@ -264,30 +207,28 @@
     (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
 (use-package emmet-mode)
 (use-package impatient-mode)
-
 (use-package restclient
   :mode ("\\.rest\\'" . restclient-mode))
-
 (use-package emacsql
   :ensure pg)
-
 (use-package python
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
   :config
-  (defun python-highlight-breakpoints ()
-    (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
-  (defun python-add-breakpoint ()
-    "Add a break point"
-    (interactive)
-    (insert "import ipdb; ipdb.set_trace()")
-    (python-highlight-breakpoints))
-  (add-hook 'python-mode-hook 'linum-mode)
-  (add-hook 'python-mode-hook 'jedi:setup)
-  (add-hook 'python-mode-hook 'yas-minor-mode)
-  (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-  (setq python-indent-offset 4)
+  (progn
+    (defun python-highlight-breakpoints ()
+      (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+    (defun python-add-breakpoint ()
+      "Add a break point"
+      (interactive)
+      (insert "import ipdb; ipdb.set_trace()")
+      (python-highlight-breakpoints))
+    (add-hook 'python-mode-hook 'linum-mode)
+    (add-hook 'python-mode-hook 'jedi:setup)
+    (add-hook 'python-mode-hook 'yas-minor-mode)
+    (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+    (setq python-indent-offset 4))
   :bind (("C-c C-b" . python-add-breakpoint))
   :ensure jedi
   :ensure cinspect
@@ -295,10 +236,8 @@
   :ensure py-yapf
   :ensure pyenv-mode
   :ensure pyvenv
-  :ensure pungi)
-
-(use-package imenu-anywhere
-  :bind (("C-." . imenu-anywhere)))
+  :ensure pungi
+  :ensure yasnippet)
 
 (require 'init-dired)
 (require 'init-isearch)
@@ -361,72 +300,84 @@
   :config
   (setq js-indent-level 4))
 
+(use-package imenu-anywhere
+  :config
+  (progn
+    (after-load 'imenu-anywhere (global-set-key (kbd "C-.") 'imenu-anywhere))
+    (bind-key "C-x i" 'imenu-anywhere)))
+
+
 (use-package ido
   :config
-  (ido-mode t)
-  (ido-vertical-mode t)
-  (ido-everywhere t)
-  (ido-ubiquitous-mode t)
-  (setq ido-enable-flex-matching t
-        ido-use-filename-at-point nil
-        ido-auto-merge-work-directories-length 0
-        ido-use-virtual-buffers t
-        smex-save-file (concat emacs-persistence-directory ".smex-items")
-        ido-default-buffer-method 'selected-window
-        ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
-  (global-set-key [remap execute-extended-command] 'smex)
-  (defadvice ido-find-file (after find-file-sudo activate)
-    "Find file as root if necessary."
-    (unless (and buffer-file-name
-                 (file-writable-p buffer-file-name))
-      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-  (defun bind-ido-keys ()
-    "Keybindings for ido mode."
-    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-    (define-key ido-completion-map (kbd "C-p")   'ido-prev-match))
-  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-  (add-hook 'ido-setup-hook #'bind-ido-keys)
+  (progn
+    (ido-mode)
+    (ido-vertical-mode)
+    (ido-everywhere)
+    (ido-ubiquitous-mode)
+    (setq ido-enable-flex-matching t
+          ido-use-filename-at-point nil
+          ido-auto-merge-work-directories-length 0
+          ido-use-virtual-buffers t
+          smex-save-file (concat emacs-persistence-directory ".smex-items")
+          ido-default-buffer-method 'selected-window
+          ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+    (global-set-key [remap execute-extended-command] 'smex)
+    (defadvice ido-find-file (after find-file-sudo activate)
+      "Find file as root if necessary."
+      (unless (and buffer-file-name
+                   (file-writable-p buffer-file-name))
+        (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+    (defun bind-ido-keys ()
+      "Keybindings for ido mode."
+      (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+      (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
+    (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+    (add-hook 'ido-setup-hook #'bind-ido-keys))
+  :ensure imenu-anywhere
   :ensure ido-vertical-mode
   :ensure idomenu
   :ensure ido-completing-read+
   :ensure ido-ubiquitous
   :ensure smex)
 
-(use-package imenu-anywhere
-  :bind (("C-." . imenu-anywhere)))
-
 (require 'init-hippie-expand)
 
 (use-package switch-window
   :config
-  (setq switch-window-shortcut-style 'alphabet)
-  ;;----------------------------------------------------------------------------
-  ;; When splitting window, show (other-buffer) in the new window
-  ;;----------------------------------------------------------------------------
-  (defun split-window-func-with-other-buffer (split-function)
-    (lexical-let ((s-f split-function))
-      (lambda ()
-        (interactive)
-        (funcall s-f)
-        (set-window-buffer (next-window) (other-buffer)))))
-  ;;----------------------------------------------------------------------------
-  ;; Rearrange split windows
-  ;;----------------------------------------------------------------------------
-  (defun split-window-horizontally-instead ()
-    (interactive)
-    (save-excursion
-      (delete-other-windows)
+  (progn
+    (setq switch-window-shortcut-style 'alphabet)
+    ;;----------------------------------------------------------------------------
+    ;; When splitting window, show (other-buffer) in the new window
+    ;;----------------------------------------------------------------------------
+    (defun split-window-func-with-other-buffer (split-function)
+      (lexical-let ((s-f split-function))
+        (lambda ()
+          (interactive)
+          (funcall s-f)
+          (set-window-buffer (next-window) (other-buffer)))))
+    ;;----------------------------------------------------------------------------
+    ;; Rearrange split windows
+    ;;----------------------------------------------------------------------------
+    (defun split-window-horizontally-instead ()
+      (interactive)
+      (save-excursion
+        (delete-other-windows)
+        (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
+    (defun split-window-vertically-instead ()
+      (interactive)
+      (save-excursion
+        (delete-other-windows)
+        (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
+    (defun my-split-vertically ()
+      (interactive)
+      (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
+    (defun my-split-horizontally ()
+      (interactive)
       (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-
-  (defun split-window-vertically-instead ()
-    (interactive)
-    (save-excursion
-      (delete-other-windows)
-      (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
-  (global-set-key "\C-x2" (split-window-func-with-other-buffer 'split-window-vertically))
-  (global-set-key "\C-x3" (split-window-func-with-other-buffer 'split-window-horizontally))
-  (global-set-key "\C-x1" 'delete-other-windows)
   :bind (("C-x o" . switch-window)
+         ("C-x 1" . delete-other-windows)
+         ("C-x 2" . my-split-vertically)
+         ("C-x 3" . my-split-horizontally)
          ("\C-x|" . split-window-horizontally-instead)
          ("\C-x_" . split-window-vertically-instead)))
 
@@ -485,7 +436,7 @@
 (use-package list-processes+)
 
 (use-package symon
-  :config (symon-mode t))
+  :config (symon-mode))
 
 (use-package camcorder
   :commands camcorder-mode)
@@ -525,6 +476,61 @@
 (use-package term+
   :config
   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+
+;;----------------------------------------------------------------------------
+;; User interface
+;;----------------------------------------------------------------------------
+
+(use-package smart-mode-line
+  :defer t
+  :config
+  (progn
+    (setq-default
+     mode-line-format
+     '("%e"
+       mode-line-front-space
+       mode-line-mule-info
+       mode-line-client
+       mode-line-modified
+       mode-line-remote
+       mode-line-frame-identification
+       mode-line-buffer-identification
+       "   "
+       mode-line-position
+       (vc-mode vc-mode)
+       "  "
+       mode-line-modes
+       mode-line-misc-info
+       mode-line-end-spaces))))
+
+(use-package miniedit
+  :defer t
+  :ensure t
+  :commands minibuffer-edit
+  :init (miniedit-install))
+
+(defun set-frame-size-according-to-resolution ()
+  (interactive)
+  (if window-system
+      (progn
+        ;; use 120 char wide window for largeish displays
+        ;; and smaller 80 column windows for smaller displays
+        ;; pick whatever numbers make sense for you
+        (if (> (x-display-pixel-width) 1280)
+            (add-to-list 'default-frame-alist (cons 'width 160)))
+        ;; for the height, subtract a couple hundred pixels
+        ;; from the screen height (for panels, menubars and
+        ;; whatnot), then divide by the height of a char to
+        ;; get the height we want
+        (add-to-list 'default-frame-alist
+                     (cons 'height (/ (- (x-display-pixel-height) 80)
+                                      (frame-char-height)))))))
+
+(when window-system
+  (set-frame-size-according-to-resolution))
+
+(load-theme 'zerodark t)
+(require 'init-gui-frames)
 
 (provide 'init)
 ;;; init.el ends here

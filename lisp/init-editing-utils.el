@@ -1,7 +1,5 @@
-(use-package unfill
-  :ensure t)
-(use-package whole-line-or-region
-  :ensure t)
+(use-package unfill)
+(use-package whole-line-or-region)
 
 (when (fboundp 'electric-pair-mode)
   (electric-pair-mode))
@@ -13,29 +11,14 @@
 (setq global-auto-revert-non-file-buffers t
       auto-revert-verbose nil)
 
-(transient-mark-mode t)
+(transient-mark-mode)
 
 ;;; Whitespace
-
-(defun sanityinc/no-trailing-whitespace ()
-  "Turn off display of trailing whitespace in this buffer."
-  (setq show-trailing-whitespace nil))
-
-;; But don't show trailing whitespace in SQLi, inf-ruby etc.
-(dolist (hook '(special-mode-hook
-                eww-mode
-                term-mode-hook
-                comint-mode-hook
-                compilation-mode-hook
-                twittering-mode-hook
-                minibuffer-setup-hook))
-  (add-hook hook #'sanityinc/no-trailing-whitespace))
-
+(setq show-trailing-whitespace nil)
 
 (use-package whitespace-cleanup-mode
-  :init (global-whitespace-cleanup-mode t)
-  :bind (("RET" . newline-and-indent))
-  :ensure t)
+  :config (global-whitespace-cleanup-mode t)
+  :bind (("RET" . newline-and-indent)))
 
 ;;; Newline behaviour
 
@@ -68,8 +51,7 @@
     (add-hook hook 'highlight-symbol-mode)
     (add-hook hook 'highlight-symbol-nav-mode))
   (eval-after-load 'highlight-symbol
-    '(diminish 'highlight-symbol-mode))
-  :ensure t)
+    '(diminish 'highlight-symbol-mode)))
 
 (defadvice kill-region (before slick-cut activate compile)
   "When called interactively with no active region, kill a single line instead."
@@ -77,15 +59,6 @@
     (if mark-active (list (region-beginning) (region-end))
       (list (line-beginning-position)
         (line-beginning-position 2)))))
-
-;;----------------------------------------------------------------------------
-;; Zap *up* to char is a handy pair for zap-to-char
-;;----------------------------------------------------------------------------
-(autoload 'zap-up-to-char "misc" "Kill up to, but not including ARGth occurrence of CHAR.")
-(global-set-key (kbd "M-Z") 'zap-up-to-char)
-
-(use-package browse-kill-ring
-  :ensure t)
 
 
 ;;----------------------------------------------------------------------------
@@ -118,7 +91,7 @@
 ;;----------------------------------------------------------------------------
 ;; Rectangle selections, and overwrite text when the selection is active
 ;;----------------------------------------------------------------------------
-(cua-selection-mode t)                  ; for rectangles, CUA is nice
+;; (cua-selection-mode t)                  ; for rectangles, CUA is nice
 
 
 ;;----------------------------------------------------------------------------
@@ -131,8 +104,8 @@
 (global-set-key (kbd "C-c j") 'join-line)
 (global-set-key (kbd "C-c J") (lambda () (interactive) (join-line 1)))
 
-(global-set-key (kbd "C-.") 'set-mark-command)
-(global-set-key (kbd "C-x C-.") 'pop-global-mark)
+;; (global-set-key (kbd "C-.") 'set-mark-command)
+;; (global-set-key (kbd "C-x C-.") 'pop-global-mark)
 
 (use-package ace-jump-mode
   :ensure t)
