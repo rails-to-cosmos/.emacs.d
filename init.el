@@ -80,8 +80,10 @@
 
 
 ;;----------------------------------------------------------------------------
-;; Env vars
+;; Init shell
 ;;----------------------------------------------------------------------------
+
+(require 'init-shell)
 
 (defun eshell-init-aliases()
   (add-to-list 'eshell-command-aliases-list '("l" "ls"))
@@ -227,7 +229,7 @@
 
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (flet ((process-list ())) ad-do-it))
+  (cl-flet ((process-list ())) ad-do-it))
 
 (setq kill-buffer-query-functions
       (remq 'process-kill-buffer-query-function
@@ -477,7 +479,6 @@
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
 
-(require 'init-shell)
 (require 'init-local nil t)
 
 (use-package hackernews)
