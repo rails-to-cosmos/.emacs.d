@@ -19,13 +19,13 @@
   (autoload 'epe-theme-lambda "eshell-prompt-extras")
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-dakrone)
+  (with-eval-after-load "esh-opt"
+    (require 'virtualenvwrapper)
+    (venv-initialize-eshell)
+    (autoload 'epe-theme-lambda "eshell-prompt-extras")
+    (setq eshell-highlight-prompt nil
+          eshell-prompt-function 'epe-theme-dakrone))
+  :ensure t
   :ensure virtualenvwrapper)
-
-(with-eval-after-load "esh-opt"
-  (require 'virtualenvwrapper)
-  (venv-initialize-eshell)
-  (autoload 'epe-theme-lambda "eshell-prompt-extras")
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-dakrone))
 
 (provide 'init-shell)
