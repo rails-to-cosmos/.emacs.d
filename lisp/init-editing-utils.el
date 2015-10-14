@@ -14,7 +14,10 @@
 (transient-mark-mode)
 
 ;;; Whitespace
-(setq show-trailing-whitespace nil)
+
+(use-package whitespace-cleanup-mode
+  :config (global-whitespace-cleanup-mode t)
+  :bind (("RET" . newline-and-indent)))
 
 (defun sanityinc/no-trailing-whitespace ()
   "Turn off display of trailing whitespace in this buffer."
@@ -28,12 +31,10 @@
                 comint-mode-hook
                 compilation-mode-hook
                 twittering-mode-hook
-                minibuffer-setup-hook))
+                minibuffer-setup-hook
+                python-mode-hook
+                eshell-mode-hook))
   (add-hook hook #'sanityinc/no-trailing-whitespace))
-
-(use-package whitespace-cleanup-mode
-  :config (global-whitespace-cleanup-mode t)
-  :bind (("RET" . newline-and-indent)))
 
 ;;; Newline behaviour
 
