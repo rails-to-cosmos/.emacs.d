@@ -409,7 +409,8 @@ point reaches the beginning or end of the buffer, stop there."
 
 (use-package vimish-fold
   :config (vimish-fold-global-mode t)
-  :bind (("C-c v f" . vimish-fold)
-         ("C-c v r" . vimish-fold-refold)))
+  :bind (("C-c v f f" . vimish-fold)
+         ("C-c v f r" . vimish-fold-refold)
+         ("C-c v f u" . vimish-fold-unfold)))
 
 (provide 'init-editing-utils)
