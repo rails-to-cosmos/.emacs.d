@@ -113,25 +113,25 @@
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-(defun set-frame-size-according-to-resolution ()
-  (interactive)
-  (if window-system
-  (progn
-    ;; use 120 char wide window for largeish displays
-    ;; and smaller 80 column windows for smaller displays
-    ;; pick whatever numbers make sense for you
-    (if (> (x-display-pixel-width) 1280)
-           (add-to-list 'default-frame-alist (cons 'width 160)))
-    ;; for the height, subtract a couple hundred pixels
-    ;; from the screen height (for panels, menubars and
-    ;; whatnot), then divide by the height of a char to
-    ;; get the height we want
-    (add-to-list 'default-frame-alist
-         (cons 'height (/ (- (x-display-pixel-height) 80)
-                             (frame-char-height)))))))
+;; (defun set-frame-size-according-to-resolution ()
+;;   (interactive)
+;;   (if window-system
+;;   (progn
+;;     ;; use 120 char wide window for largeish displays
+;;     ;; and smaller 80 column windows for smaller displays
+;;     ;; pick whatever numbers make sense for you
+;;     (if (> (x-display-pixel-width) 1280)
+;;            (add-to-list 'default-frame-alist (cons 'width 160)))
+;;     ;; for the height, subtract a couple hundred pixels
+;;     ;; from the screen height (for panels, menubars and
+;;     ;; whatnot), then divide by the height of a char to
+;;     ;; get the height we want
+;;     (add-to-list 'default-frame-alist
+;;          (cons 'height (/ (- (x-display-pixel-height) 80)
+;;                              (frame-char-height)))))))
 
-(when window-system
-  (set-frame-size-according-to-resolution))
+;; (when window-system
+;;   (set-frame-size-according-to-resolution))
 
 (require 'init-gui-frames)
 
@@ -265,8 +265,8 @@
 (use-package impatient-mode)
 (use-package restclient
   :mode ("\\.rest\\'" . restclient-mode))
-(use-package emacsql
-  :ensure pg)
+;; (use-package emacsql
+;;   :ensure pg)
 
 (use-package python
   :mode ("\\.py\\'" . python-mode)
@@ -286,10 +286,10 @@
     (add-hook 'python-mode-hook 'yas-minor-mode)
     (add-hook 'python-mode-hook 'python-highlight-breakpoints)
     (setq python-indent-offset 4)
-    (make-directory "~/.virtualenvs" t)
+    ;; (make-directory "~/.virtualenvs" t)
     (jedi:install-server))
   :bind (("C-c C-b" . python-add-breakpoint))
-  :ensure virtualenv
+  ;; :ensure virtualenv
   :ensure jedi
   :ensure cinspect
   :ensure py-isort
@@ -479,8 +479,6 @@
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
 
-(require 'init-local nil t)
-
 (use-package hackernews)
 
 (use-package avy
@@ -491,7 +489,6 @@
          ("M-g e" . avy-goto-word-0)))
 
 (use-package dizzee)
-
 (use-package list-processes+)
 
 (use-package symon
@@ -568,28 +565,29 @@
   :commands minibuffer-edit
   :init (miniedit-install))
 
-(defun set-frame-size-according-to-resolution ()
-  (interactive)
-  (if window-system
-      (progn
-        ;; use 120 char wide window for largeish displays
-        ;; and smaller 80 column windows for smaller displays
-        ;; pick whatever numbers make sense for you
-        (if (> (x-display-pixel-width) 1280)
-            (add-to-list 'default-frame-alist (cons 'width 160)))
-        ;; for the height, subtract a couple hundred pixels
-        ;; from the screen height (for panels, menubars and
-        ;; whatnot), then divide by the height of a char to
-        ;; get the height we want
-        (add-to-list 'default-frame-alist
-                     (cons 'height (/ (- (x-display-pixel-height) 80)
-                                      (frame-char-height)))))))
+;; (defun set-frame-size-according-to-resolution ()
+;;   (interactive)
+;;   (if window-system
+;;       (progn
+;;         ;; use 120 char wide window for largeish displays
+;;         ;; and smaller 80 column windows for smaller displays
+;;         ;; pick whatever numbers make sense for you
+;;         (if (> (x-display-pixel-width) 1280)
+;;             (add-to-list 'default-frame-alist (cons 'width 160)))
+;;         ;; for the height, subtract a couple hundred pixels
+;;         ;; from the screen height (for panels, menubars and
+;;         ;; whatnot), then divide by the height of a char to
+;;         ;; get the height we want
+;;         (add-to-list 'default-frame-alist
+;;                      (cons 'height (/ (- (x-display-pixel-height) 80)
+;;                                       (frame-char-height)))))))
 
-(when window-system
-  (set-frame-size-according-to-resolution))
+;; (when window-system
+;;   (set-frame-size-according-to-resolution))
 
 (load-theme 'zerodark t)
 (require 'init-gui-frames)
 
+(require 'init-local nil t)
 (provide 'init)
 ;;; init.el ends here
