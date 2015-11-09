@@ -299,6 +299,8 @@
   :ensure pungi
   :ensure yasnippet)
 
+(use-package live-py-mode)
+
 (require 'init-dired)
 (require 'init-isearch)
 
