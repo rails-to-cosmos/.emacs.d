@@ -535,6 +535,8 @@
   :config
   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
 
+(use-package itail)
+
 (use-package frame-cmds)
 
 ;;----------------------------------------------------------------------------
@@ -568,4 +570,5 @@
 
 (require 'init-local nil t)
 (provide 'init)
+
 ;;; init.el ends here
