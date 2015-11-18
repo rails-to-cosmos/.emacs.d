@@ -539,6 +539,10 @@
 
 (use-package frame-cmds)
 
+(use-package goto-chg
+  :bind (("C-c b ," . goto-last-change)
+         ("C-c b ." . goto-last-change-reverse)))
+
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
