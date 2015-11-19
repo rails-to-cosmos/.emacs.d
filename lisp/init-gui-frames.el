@@ -1,25 +1,3 @@
-(setq-default
- buffers-menu-max-size 30
- case-fold-search t
- compilation-scroll-output t
- ediff-split-window-function 'split-window-horizontally
- ediff-window-setup-function 'ediff-setup-windows-plain
- grep-highlight-matches t
- grep-scroll-output t
- make-backup-files nil
- mouse-yank-at-point t
- save-interprogram-paste-before-kill t
- scroll-preserve-screen-position 'always
- set-mark-command-repeat-pop t
- show-trailing-whitespace t
- tooltip-delay 1.5
- truncate-lines nil
- truncate-partial-width-windows nil
- visible-bell t
- line-spacing 5
- indent-tabs-mode nil)
-
-
 ;;----------------------------------------------------------------------------
 ;; Suppress GUI features
 ;;----------------------------------------------------------------------------
