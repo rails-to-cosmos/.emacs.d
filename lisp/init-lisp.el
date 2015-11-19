@@ -208,10 +208,8 @@
   (let ((sanityinc/vc-reverting t))
     ad-do-it))
 
-
-(use-package macrostep
-  :ensure t)
-
+(when (eval-when-compile (> emacs-major-version 24.3))
+  (use-package macrostep))
 
 (after-load 'lisp-mode
   (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))

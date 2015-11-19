@@ -212,7 +212,7 @@
             (dolist (lang-regex lang-regexes)
               (if (string-match (car lang-regex) sentence)
                   (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind ("C-x y t t" . translate-text) ;; C-x C-y C-Translate C-Text
+  :bind ("C-x y t t" . translate-text)
   :ensure t)
 
 (defun save-macro (name)
@@ -512,23 +512,24 @@
   (keyfreq-mode t)
   (keyfreq-autosave-mode t))
 
-(use-package magit
-  :bind (("C-x g s" . magit-status)
-         ("C-x g b" . magit-blame)
-         ("C-x g l" . magit-log-buffer-file)
-         ("C-x g c" . magit-commit)
-         ("C-x g p c" . magit-push-current))
-  :commands magit-status
-  :ensure git-gutter+
-  :ensure github-clone
-  :ensure yagist
-  :ensure github-browse-file
-  :ensure bug-reference-github
-  :ensure magit-gh-pulls)
+(when (eval-when-compile (>= emacs-major-version 24.4))
+  (use-package magit
+    :bind (("C-x g s" . magit-status)
+	   ("C-x g b" . magit-blame)
+	   ("C-x g l" . magit-log-buffer-file)
+	   ("C-x g c" . magit-commit)
+	   ("C-x g p c" . magit-push-current))
+    :commands magit-status
+    :ensure git-gutter+
+    :ensure github-clone
+    :ensure yagist
+    :ensure github-browse-file
+    :ensure bug-reference-github
+    :ensure magit-gh-pulls)
 
-(use-package git-gutter+
-  :config (progn
-            (global-git-gutter+-mode)))
+  (use-package git-gutter+
+    :config (progn
+	      (global-git-gutter+-mode))))
 
 (use-package twittering-mode)
 
