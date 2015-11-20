@@ -94,9 +94,9 @@
    `(font-lock-warning-face ((,class (:foreground ,red :weight bold :background ,background-red))))
 
    ;; Mode line faces
-   `(mode-line ((,class (:background ,background-darker :height 0.9 :foreground ,blue
+   `(mode-line ((,class (:background ,background :height 0.9 :foreground ,blue
                                      :box ,(when zerodark-use-paddings-in-mode-line
-					     (list :line-width 4 :color background-darker
+					     (list :line-width 4 :color background
                                                    ))))))
    `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,default
                                               :box ,(when zerodark-use-paddings-in-mode-line
