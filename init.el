@@ -494,8 +494,7 @@
 (use-package dizzee)
 (use-package list-processes+)
 
-(use-package symon
-  :config (symon-mode))
+(use-package symon)
 
 (use-package camcorder
   :commands camcorder-mode)

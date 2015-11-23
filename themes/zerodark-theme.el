@@ -38,9 +38,9 @@
 (let ((class '((class color) (min-colors 89)))
       ;; (default "#cccccc")
       ;; (default "#abb2bf")
-      ;;(background "#282c34")
+      (background "#282c34")
       (default "#F8F8F2")
-      (background "#272822")
+      ;;(background "#272822")
       (background-darker "#21252b")
       (background-lighter "#3a3f4b")
       (background-red "#4c3840")
@@ -50,8 +50,8 @@
       (background-orange "#4a473d")
       (grey "#cccccc")
       (grey-dark "#666666")
-      ;; (highlight "#3e4451")
-      (highlight "#49483E")
+      (highlight "#3e4451")
+      ;;(highlight "#49483E")
       ;; (hl-line "#2c323b")
       (hl-line "#3E3D32")
       (comment "#687080")
@@ -66,6 +66,7 @@
       ;; (green "#98be65")
       (green "#A6E22E")
       (peach "PeachPuff3")
+      (black "#000")
       (diff-added-background "#284437")
       (diff-added-refined-background "#198754")
       (diff-removed-background "#553333")
@@ -73,10 +74,20 @@
       (diff-current-background "#3e4d58")
       (diff-current-refined-background "#456981"))
 
+  (dolist (buf '(" *Echo Area 0*" " *Echo Area 1*"))
+    (with-current-buffer (get-buffer buf)
+      (make-local-variable 'face-remapping-alist)
+      (add-to-list 'face-remapping-alist '(default (:foreground "#F8F8F2" :weight bold :height 0.9)))))
+
   (custom-theme-set-faces
    'zerodark
    `(default ((,class (:background ,background :foreground ,default))))
    `(cursor ((,class (:background ,default))))
+   `(vertical-border ((,class (:foreground ,comment))))
+
+   ;; (set-face-attribute 'vertical-border
+   ;;                     nil
+   ;;                     :foreground "#282a2e")
 
    ;; Highlighting faces
    `(fringe ((,class (:background ,background))))
@@ -103,13 +114,19 @@
    `(font-lock-warning-face ((,class (:foreground ,red :weight bold :background ,background-red))))
 
    ;; Mode line faces
-   `(mode-line ((,class (:background ,background :height 0.9 :foreground ,comment
+   `(mode-line ((,class (:background ,comment :height 0.9 :foreground ,black
                                      :box ,(when zerodark-use-paddings-in-mode-line
-					     (list :line-width 4 :color background
-                                                   ))))))
-   `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,comment
+					     (list :line-width 4 :color comment))))))
+
+   `(mode-line-inactive ((,class (:background ,background-lighter :height 0.9 :foreground "#FFF"
                                               :box ,(when zerodark-use-paddings-in-mode-line
-						      (list :line-width 4 :color background))))))
+        					      (list :line-width 4 :color background-lighter))))))
+
+   ;; `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,background
+   ;;                                            :box ,(when zerodark-use-paddings-in-mode-line
+   ;;      					      (list :line-width 4 :color background))))))
+
+
    `(header-line ((,class (:inherit mode-line-inactive))))
 
    ;; powerline
@@ -123,8 +140,8 @@
    `(org-mode-line-clock ((,class (:background unspecified (:inherit mode-line)))))
 
    ;; Escape and prompt faces
-   `(minibuffer-prompt ((,class (:foreground ,comment :weight bold))))
-   `(escape-glyph ((,class (:foreground ,comment :weight bold))))
+   `(minibuffer-prompt ((,class (:foreground ,default :weight bold))))
+   `(escape-glyph ((,class (:foreground ,default :weight bold))))
 
    ;; linum
    `(linum ((,class (:foreground ,comment :background ,background))))
