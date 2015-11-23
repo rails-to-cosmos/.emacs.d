@@ -36,10 +36,11 @@
   :group 'zerodark)
 
 (let ((class '((class color) (min-colors 89)))
-      (default "#cccccc")
+      ;; (default "#cccccc")
       ;; (default "#abb2bf")
-      ;; (background "#282c34")
-      (background "#000000")
+      ;;(background "#282c34")
+      (default "#F8F8F2")
+      (background "#272822")
       (background-darker "#21252b")
       (background-lighter "#3a3f4b")
       (background-red "#4c3840")
@@ -49,14 +50,21 @@
       (background-orange "#4a473d")
       (grey "#cccccc")
       (grey-dark "#666666")
-      (highlight "#3e4451")
-      (hl-line "#2c323b")
+      ;; (highlight "#3e4451")
+      (highlight "#49483E")
+      ;; (hl-line "#2c323b")
+      (hl-line "#3E3D32")
       (comment "#687080")
-      (orange "#da8548")
-      (red "#ff6c6b")
-      (purple "#c678dd")
-      (blue "#61afef")
-      (green "#98be65")
+      ;; (orange "#da8548")
+      (orange "#FFE792")
+      ;; (red "#ff6c6b")
+      (red "#F92672")
+      ;; (purple "#c678dd")
+      (purple "#AE81FF")
+      ;; (blue "#61afef")
+      (blue "#66D9EF")
+      ;; (green "#98be65")
+      (green "#A6E22E")
       (peach "PeachPuff3")
       (diff-added-background "#284437")
       (diff-added-refined-background "#198754")
@@ -82,8 +90,9 @@
    `(match ((,class (:background ,background-green))))
 
    ;; Font lock faces
-   `(font-lock-builtin-face ((,class (:foreground ,blue :weight bold))))
-   ;; `(font-lock-comment-face ((,class (:foreground ,comment :slant italic))))
+   ;; `(font-lock-builtin-face ((,class (:foreground ,blue :weight bold))))
+   `(font-lock-builtin-face ((,class (:foreground ,green :weight bold))))
+   `(font-lock-comment-face ((,class (:foreground ,comment :slant italic))))
    `(font-lock-constant-face ((,class (:foreground ,orange :weight bold))))
    `(font-lock-function-name-face ((,class (:foreground ,blue))))
    `(font-lock-keyword-face ((,class (:foreground ,purple :weight bold))))
@@ -94,11 +103,11 @@
    `(font-lock-warning-face ((,class (:foreground ,red :weight bold :background ,background-red))))
 
    ;; Mode line faces
-   `(mode-line ((,class (:background ,background :height 0.9 :foreground ,blue
+   `(mode-line ((,class (:background ,background :height 0.9 :foreground ,comment
                                      :box ,(when zerodark-use-paddings-in-mode-line
 					     (list :line-width 4 :color background
                                                    ))))))
-   `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,default
+   `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,comment
                                               :box ,(when zerodark-use-paddings-in-mode-line
 						      (list :line-width 4 :color background))))))
    `(header-line ((,class (:inherit mode-line-inactive))))
@@ -114,8 +123,8 @@
    `(org-mode-line-clock ((,class (:background unspecified (:inherit mode-line)))))
 
    ;; Escape and prompt faces
-   `(minibuffer-prompt ((,class (:foreground ,blue :weight bold))))
-   `(escape-glyph ((,class (:foreground ,blue :weight bold))))
+   `(minibuffer-prompt ((,class (:foreground ,comment :weight bold))))
+   `(escape-glyph ((,class (:foreground ,comment :weight bold))))
 
    ;; linum
    `(linum ((,class (:foreground ,comment :background ,background))))
@@ -266,8 +275,8 @@
    `(org-agenda-done ((,class (:foreground ,comment))))
 
    ;; Gnus faces -- from wombat, feel free to improve :)
-   `(gnus-group-news-1 ((,class (:weight bold :foreground "#95e454"))))
-   `(gnus-group-news-1-low ((,class (:foreground "#95e454"))))
+   `(gnus-group-news-1 ((,class (:weight bold :foreground ,green))))
+   `(gnus-group-news-1-low ((,class (:foreground ,green))))
    `(gnus-group-news-2 ((,class (:weight bold :foreground "#cae682"))))
    `(gnus-group-news-2-low ((,class (:foreground "#cae682"))))
    `(gnus-group-news-3 ((,class (:weight bold :foreground "#ccaa8f"))))
@@ -340,8 +349,7 @@
 
    ;; visible mark
    `(visible-mark-face1 ((,class (:foreground ,red :inverse-video t))))
-   `(visible-mark-face2 ((,class (:foreground ,orange :inverse-video t))))
-   ))
+   `(visible-mark-face2 ((,class (:foreground ,orange :inverse-video t))))))
 
 (custom-set-faces
  '(default ((t (
