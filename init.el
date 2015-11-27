@@ -44,7 +44,6 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
-;; (add-to-list 'package-archives '("SC" . "http://joseito.republika.pl/sunrise-commander/") t)
 (package-initialize)
 (if (not (package-installed-p 'use-package))
     (progn
@@ -574,6 +573,7 @@
 
 (load-theme 'zerodark t)
 (require 'init-gui-frames)
+(require 'ej-autocomplete)
 
 (require 'init-local nil t)
 (provide 'init)

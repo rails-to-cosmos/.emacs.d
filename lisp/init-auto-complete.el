@@ -13,8 +13,7 @@
   (setq completion-cycle-threshold 5)
   ;; TODO: find solution for php, haskell and other modes where TAB always does something
   (setq c-tab-always-indent nil
-        c-insert-tab-function 'indent-for-tab-command)
-  :ensure t)
+        c-insert-tab-function 'indent-for-tab-command))
 
 (use-package auto-complete-config)
 ;; hook AC into completion-at-point
