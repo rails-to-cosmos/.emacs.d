@@ -551,29 +551,36 @@
 
 (use-package smart-mode-line
   :defer t
-  :config
-  (progn
-    (setq-default
-     mode-line-format
-     '("%e"
-       mode-line-front-space
-       mode-line-mule-info
-       mode-line-client
-       mode-line-modified
-       mode-line-remote
-       mode-line-frame-identification
-       mode-line-buffer-identification
-       "   "
-       mode-line-position
-       (vc-mode vc-mode)
-       "  "
-       mode-line-modes
-       mode-line-misc-info
-       mode-line-end-spaces))))
+  :config (progn
+            (setq-default
+             mode-line-format
+             '("%e"
+               mode-line-front-space
+               mode-line-mule-info
+               mode-line-client
+               mode-line-modified
+               mode-line-remote
+               mode-line-frame-identification
+               mode-line-buffer-identification
+               "   "
+               mode-line-position
+               (vc-mode vc-mode)
+               "  "
+               mode-line-modes
+               mode-line-misc-info
+               mode-line-end-spaces))))
+
+(use-package elscreen
+  :config (progn
+            (elscreen-start)
+            (setq elscreen-display-tab nil)))
+
+;; https://github.com/tkf/emacs-request
+;; (use-package emacs-request)
 
 (load-theme 'zerodark t)
 (require 'init-gui-frames)
-(require 'ej-autocomplete)
+;; (require 'ej-autocomplete)
 
 (require 'init-local nil t)
 (provide 'init)

@@ -46,6 +46,10 @@
 
 (global-set-key (kbd "S-<return>") 'sanityinc/newline-at-end-of-line)
 
+;; walk
+(define-key key-translation-map (kbd "M-n") (kbd "<C-down>"))
+(define-key key-translation-map (kbd "M-p") (kbd "<C-up>"))
+
 (when (eval-when-compile (string< "24.3.1" emacs-version))
   ;; https://github.com/purcell/emacs.d/issues/138
   (after-load 'subword
