@@ -46,6 +46,10 @@
 
 (global-set-key (kbd "S-<return>") 'sanityinc/newline-at-end-of-line)
 
+;; walk
+(define-key key-translation-map (kbd "M-n") (kbd "<C-down>"))
+(define-key key-translation-map (kbd "M-p") (kbd "<C-up>"))
+
 (when (eval-when-compile (string< "24.3.1" emacs-version))
   ;; https://github.com/purcell/emacs.d/issues/138
   (after-load 'subword
@@ -407,5 +411,17 @@ point reaches the beginning or end of the buffer, stop there."
         (setq mark-ring (nbutlast mark-ring))
         (goto-char (marker-position (car (last mark-ring))))))))
 (global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
+
+
+;; kill buffers without ask process
+(setq kill-buffer-query-functions
+ (remq 'process-kill-buffer-query-function
+ kill-buffer-query-functions))
+(use-package cl)
+(defun kill-matching-buffers-not-ask (regexp)
+ "Kill buffers matching REGEXP without asking for confirmation."
+ (interactive "sKill buffers matching this regular expression: ")
+ (flet ((kill-buffer-ask (buffer) (kill-buffer buffer)))
+ (kill-matching-buffers regexp)))
 
 (provide 'init-editing-utils)
