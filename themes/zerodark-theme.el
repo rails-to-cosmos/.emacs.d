@@ -51,9 +51,8 @@
       (grey "#cccccc")
       (grey-dark "#666666")
       (highlight "#3e4451")
-      ;;(highlight "#49483E")
       ;; (hl-line "#2c323b")
-      (hl-line "#3E3D32")
+      (hl-line "#21252b")
       (comment "#687080")
       ;; (orange "#da8548")
       (orange "#FFE792")
@@ -97,6 +96,7 @@
    `(isearch ((,class (:background ,orange :foreground ,highlight))))
    `(lazy-highlight ((,class (:background ,peach :foreground ,highlight))))
    `(hl-line ((,class (:background ,hl-line :underline unspecified :inherit nil))))
+   `(indent-guide-face ((,class (:foreground "#2c323b" :height 0.9))))
 
    `(match ((,class (:background ,background-green))))
 
@@ -125,6 +125,7 @@
    ;; `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,background
    ;;                                            :box ,(when zerodark-use-paddings-in-mode-line
    ;;      					      (list :line-width 4 :color background))))))
+
 
 
    `(header-line ((,class (:inherit mode-line-inactive))))

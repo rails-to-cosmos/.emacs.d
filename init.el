@@ -257,10 +257,9 @@
 (use-package bookmark+)
 (use-package scratch)
 (use-package yasnippet
-  :config
-  (progn
-    (yas-global-mode 1)
-    (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
+  :config (progn
+            (yas-global-mode 1)
+            (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
 (use-package emmet-mode)
 (use-package impatient-mode)
 (use-package restclient
@@ -272,22 +271,21 @@
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
-  :config
-  (progn
-    (defun python-highlight-breakpoints ()
-      (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
-    (defun python-add-breakpoint ()
-      "Add a break point"
-      (interactive)
-      (insert "import ipdb; ipdb.set_trace()")
-      (python-highlight-breakpoints))
-    (add-hook 'python-mode-hook 'linum-mode)
-    (add-hook 'python-mode-hook 'jedi:setup)
-    (add-hook 'python-mode-hook 'yas-minor-mode)
-    (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-    (setq python-indent-offset 4)
-    ;; (make-directory "~/.virtualenvs" t)
-    (jedi:install-server))
+  :config (progn
+            (defun python-highlight-breakpoints ()
+              (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+            (defun python-add-breakpoint ()
+              "Add a break point"
+              (interactive)
+              (insert "import ipdb; ipdb.set_trace()")
+              (python-highlight-breakpoints))
+            (add-hook 'python-mode-hook 'linum-mode)
+            (add-hook 'python-mode-hook 'jedi:setup)
+            (add-hook 'python-mode-hook 'yas-minor-mode)
+            (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+            (setq python-indent-offset 4)
+            (make-directory "~/.virtualenvs" t)
+            (jedi:install-server))
   :bind (("C-c C-b" . python-add-breakpoint))
   ;; :ensure virtualenv
   :ensure jedi
@@ -301,7 +299,6 @@
 
 (use-package live-py-mode)
 
-(require 'init-dired)
 (require 'init-isearch)
 
 (use-package uniquify
@@ -313,39 +310,39 @@
         uniquify-ignore-buffers-re "^\\*"))
 
 (use-package ibuffer
-  :config
-  (setq ibuffer-formats
-        '((mark modified read-only vc-status-mini " "
-                (name 18 18 :left :elide)
-                " "
-                (size-h 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " "
-                filename-and-process)
-          (mark modified read-only vc-status-mini " "
-                (name 18 18 :left :elide)
-                " "
-                (size-h 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " "
-                (vc-status 16 16 :left)
-                " "
-                filename-and-process))
-        ibuffer-filter-group-name-face 'font-lock-doc-face)
-  (define-ibuffer-column size-h
-    (:name "Size" :inline t)
-    (cond
-     ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
-     ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
-     (t (format "%8d" (buffer-size)))))
-  (defun ibuffer-set-up-preferred-filters ()
-    (ibuffer-vc-set-filter-groups-by-vc-root)
-    (unless (eq ibuffer-sorting-mode 'filename/process)
-      (ibuffer-do-sort-by-filename/process)))
-  (after-load 'ibuffer
-    (fullframe ibuffer ibuffer-quit))
+  :config (progn
+            (setq ibuffer-formats
+                  '((mark modified read-only vc-status-mini " "
+                          (name 18 18 :left :elide)
+                          " "
+                          (size-h 9 -1 :right)
+                          " "
+                          (mode 16 16 :left :elide)
+                          " "
+                          filename-and-process)
+                    (mark modified read-only vc-status-mini " "
+                          (name 18 18 :left :elide)
+                          " "
+                          (size-h 9 -1 :right)
+                          " "
+                          (mode 16 16 :left :elide)
+                          " "
+                          (vc-status 16 16 :left)
+                          " "
+                          filename-and-process))
+                  ibuffer-filter-group-name-face 'font-lock-doc-face)
+            (define-ibuffer-column size-h
+              (:name "Size" :inline t)
+              (cond
+               ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+               ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+               (t (format "%8d" (buffer-size)))))
+            (defun ibuffer-set-up-preferred-filters ()
+              (ibuffer-vc-set-filter-groups-by-vc-root)
+              (unless (eq ibuffer-sorting-mode 'filename/process)
+                (ibuffer-do-sort-by-filename/process)))
+            (after-load 'ibuffer
+              (fullframe ibuffer ibuffer-quit)))
   :bind ("C-x C-b" . ibuffer)
   :ensure fullframe
   :ensure ibuffer-vc
@@ -548,6 +545,12 @@
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
+
+(use-package indent-guide
+  :config (progn
+            (setq indent-guide-recursive t
+                  indent-guide-char "|")
+            (indent-guide-global-mode)))
 
 (use-package smart-mode-line
   :defer t
