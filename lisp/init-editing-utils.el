@@ -408,4 +408,16 @@ point reaches the beginning or end of the buffer, stop there."
         (goto-char (marker-position (car (last mark-ring))))))))
 (global-set-key (kbd "C-c C-n C-n") 'unpop-to-mark-command)
 
+
+;; kill buffers without ask process
+(setq kill-buffer-query-functions
+ (remq 'process-kill-buffer-query-function
+ kill-buffer-query-functions))
+(use-package cl)
+(defun kill-matching-buffers-not-ask (regexp)
+ "Kill buffers matching REGEXP without asking for confirmation."
+ (interactive "sKill buffers matching this regular expression: ")
+ (flet ((kill-buffer-ask (buffer) (kill-buffer buffer)))
+ (kill-matching-buffers regexp)))
+
 (provide 'init-editing-utils)
