@@ -573,10 +573,10 @@
                mode-line-misc-info
                mode-line-end-spaces))))
 
-(use-package elscreen
+(use-package persp-mode
   :config (progn
-            (elscreen-start)
-            (setq elscreen-display-tab nil)))
+            (setq persp-nil-name "def")
+            (persp-mode t)))
 
 ;; https://github.com/tkf/emacs-request
 ;; (use-package emacs-request)
