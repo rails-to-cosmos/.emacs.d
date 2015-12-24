@@ -96,7 +96,7 @@
    `(isearch ((,class (:background ,orange :foreground ,highlight))))
    `(lazy-highlight ((,class (:background ,peach :foreground ,highlight))))
    `(hl-line ((,class (:background ,hl-line :underline unspecified :inherit nil))))
-   `(indent-guide-face ((,class (:foreground "#2c323b" :height 0.9))))
+   `(indent-guide-face ((,class (:foreground ,background-lighter))))
 
    `(match ((,class (:background ,background-green))))
 

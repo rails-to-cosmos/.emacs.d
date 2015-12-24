@@ -507,7 +507,9 @@
   (keyfreq-mode t)
   (keyfreq-autosave-mode t))
 
-(when (eval-when-compile (>= emacs-major-version 24.4))
+;; (when (eval-when-compile (>= emacs-major-version 24.4))
+;;   )
+
   (use-package magit
     :bind (("C-x g s" . magit-status)
 	   ("C-x g b" . magit-blame)
@@ -524,7 +526,7 @@
 
   (use-package git-gutter+
     :config (progn
-	      (global-git-gutter+-mode))))
+	      (global-git-gutter+-mode)))
 
 (use-package twittering-mode)
 
@@ -546,11 +548,11 @@
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-(use-package indent-guide
-  :config (progn
-            (setq indent-guide-recursive t
-                  indent-guide-char "|")
-            (indent-guide-global-mode)))
+;; (use-package indent-guide
+;;   :config (progn
+;;             (setq indent-guide-recursive t
+;;                   indent-guide-char "|")
+;;             (indent-guide-global-mode)))
 
 (use-package smart-mode-line
   :defer t
@@ -577,6 +579,21 @@
   :config (progn
             (setq persp-nil-name "def")
             (persp-mode t)))
+
+;; (use-package eproject)
+;; (use-package anything)
+;; (use-package org-mu4e)
+
+(use-package swiper)
+(use-package string-edit)
+(use-package highlight-leading-spaces
+  :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode))
+
+(setq read-file-name-completion-ignore-case t)
+(setq read-buffer-completion-ignore-case t)
+(mapc (lambda (x)
+        (add-to-list 'completion-ignored-extensions x))
+      '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc"))
 
 ;; https://github.com/tkf/emacs-request
 ;; (use-package emacs-request)
