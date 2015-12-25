@@ -129,56 +129,38 @@
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-;; (defun set-frame-size-according-to-resolution ()
-;;   (interactive)
-;;   (if window-system
-;;   (progn
-;;     ;; use 120 char wide window for largeish displays
-;;     ;; and smaller 80 column windows for smaller displays
-;;     ;; pick whatever numbers make sense for you
-;;     (if (> (x-display-pixel-width) 1280)
-;;            (add-to-list 'default-frame-alist (cons 'width 160)))
-;;     ;; for the height, subtract a couple hundred pixels
-;;     ;; from the screen height (for panels, menubars and
-;;     ;; whatnot), then divide by the height of a char to
-;;     ;; get the height we want
-;;     (add-to-list 'default-frame-alist
-;;          (cons 'height (/ (- (x-display-pixel-height) 80)
-;;                              (frame-char-height)))))))
+(when window-system
+  (toggle-max-frame))
 
-;; (when window-system
-;;   (set-frame-size-according-to-resolution))
-
-(require 'init-gui-frames)
+(use-package init-gui-frames
+  :if window-system)
 
 (use-package smart-mode-line
+  :config (progn
+            (setq-default
+             mode-line-format
+             '("%e"
+               mode-line-front-space
+               mode-line-mule-info
+               mode-line-client
+               mode-line-modified
+               mode-line-remote
+               mode-line-frame-identification
+               mode-line-buffer-identification
+               "   "
+               mode-line-position
+               (vc-mode vc-mode)
+               "  "
+               mode-line-modes
+               mode-line-misc-info
+               mode-line-end-spaces)))
   :ensure t
-  :defer t
-  :config
-  (progn
-    (setq-default
-     mode-line-format
-     '("%e"
-       mode-line-front-space
-       mode-line-mule-info
-       mode-line-client
-       mode-line-modified
-       mode-line-remote
-       mode-line-frame-identification
-       mode-line-buffer-identification
-       "   "
-       mode-line-position
-       (vc-mode vc-mode)
-       "  "
-       mode-line-modes
-       mode-line-misc-info
-       mode-line-end-spaces))))
+  :defer t)
 
 (use-package miniedit
-  :ensure t
-  :defer t
-  :commands minibuffer-edit
-  :init (miniedit-install))
+  :init (progn
+          (miniedit-install))
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; elisp utils
@@ -220,7 +202,6 @@
         (set-visited-file-name new-name)))))
 
 (use-package google-translate
-  :ensure t
   :config (defun translate-text (sentence)
             "Google translate without specifying language"
             (interactive "sTranslate sentence: ")
@@ -278,22 +259,31 @@
   :ensure t)
 (use-package scratch
   :ensure t)
-(use-package yasnippet
-  :ensure t
-  :config (progn
-            (yas-global-mode 1)
-            (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
+;; (use-package yasnippet
+;;   :config (progn
+;;             (yas-global-mode 1)
+;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
+;;   :ensure t)
 (use-package emmet-mode
+  :commands emmet-mode
+  :mode ("\\.html\\'" . emmet-mode)
+  :mode ("\\.htm\\'" . emmet-mode)
   :ensure t)
 (use-package impatient-mode
+  :commands impatient-mode
   :ensure t)
 (use-package restclient
+  :commands restclient-mode
   :mode ("\\.rest\\'" . restclient-mode)
   :ensure t)
 ;; (use-package emacsql
 ;;   :ensure pg)
 
 (use-package python
+  :commands python-mode
+  :mode ("\\.py\\'" . python-mode)
+  :interpreter ("ipython" . python-mode)
+  :load-path "python/"
   :init (progn
           (use-package jedi
             :ensure t)
@@ -311,9 +301,6 @@
             :ensure t)
           (use-package live-py-mode
             :ensure t))
-  :mode ("\\.py\\'" . python-mode)
-  :interpreter ("ipython" . python-mode)
-  :load-path "python/"
   :config (progn
             (defun python-highlight-breakpoints ()
               (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
@@ -330,18 +317,17 @@
             (make-directory "~/.virtualenvs" t)
             (jedi:install-server))
   :bind (("C-c C-b" . python-add-breakpoint))
-  ;; :ensure virtualenv
   :ensure t)
 
 (require 'init-isearch)
 
 (use-package uniquify
   :disabled t
-  :init
-  (setq uniquify-buffer-name-style 'reverse
-        uniquify-separator " • "
-        uniquify-after-kill-buffer-p t
-        uniquify-ignore-buffers-re "^\\*"))
+  :init (progn
+          (setq uniquify-buffer-name-style 'reverse
+                uniquify-separator " • "
+                uniquify-after-kill-buffer-p t
+                uniquify-ignore-buffers-re "^\\*")))
 
 (use-package ibuffer
   :init (progn
@@ -441,37 +427,36 @@
 (require 'init-hippie-expand)
 
 (use-package switch-window
-  :config
-  (progn
-    (setq switch-window-shortcut-style 'alphabet)
-    ;;----------------------------------------------------------------------------
-    ;; When splitting window, show (other-buffer) in the new window
-    ;;----------------------------------------------------------------------------
-    (defun split-window-func-with-other-buffer (split-function)
-      (lexical-let ((s-f split-function))
-        (lambda ()
-          (interactive)
-          (funcall s-f)
-          (set-window-buffer (next-window) (other-buffer)))))
-    ;;----------------------------------------------------------------------------
-    ;; Rearrange split windows
-    ;;----------------------------------------------------------------------------
-    (defun split-window-horizontally-instead ()
-      (interactive)
-      (save-excursion
-        (delete-other-windows)
-        (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-    (defun split-window-vertically-instead ()
-      (interactive)
-      (save-excursion
-        (delete-other-windows)
-        (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
-    (defun my-split-vertically ()
-      (interactive)
-      (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
-    (defun my-split-horizontally ()
-      (interactive)
-      (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
+  :config (progn
+            (setq switch-window-shortcut-style 'alphabet)
+            ;;----------------------------------------------------------------------------
+            ;; When splitting window, show (other-buffer) in the new window
+            ;;----------------------------------------------------------------------------
+            (defun split-window-func-with-other-buffer (split-function)
+              (lexical-let ((s-f split-function))
+                (lambda ()
+                  (interactive)
+                  (funcall s-f)
+                  (set-window-buffer (next-window) (other-buffer)))))
+            ;;----------------------------------------------------------------------------
+            ;; Rearrange split windows
+            ;;----------------------------------------------------------------------------
+            (defun split-window-horizontally-instead ()
+              (interactive)
+              (save-excursion
+                (delete-other-windows)
+                (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
+            (defun split-window-vertically-instead ()
+              (interactive)
+              (save-excursion
+                (delete-other-windows)
+                (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
+            (defun my-split-vertically ()
+              (interactive)
+              (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
+            (defun my-split-horizontally ()
+              (interactive)
+              (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . my-split-vertically)
@@ -501,23 +486,30 @@
 ;; Extra packages which don't require any configuration
 
 (use-package multiple-cursors
+  :commands (mc/mark-next-like-this
+             mc/mark-previous-like-this
+             mc/mark-all-like-this)
   :bind (("C->" . mc/mark-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
-(use-package regex-tool)
+(use-package regex-tool
+  :commands regex-tool)
 
-(use-package pdf-tools)
+(use-package pdf-tools
+  :commands pdf-tools-install)
 
 (use-package hl-line+
-  :config (set-face-background hl-line-face "#363636"))
+  :config (progn
+            (set-face-background hl-line-face "#363636")))
 
 (setq frame-title-format
       '((:eval (if (buffer-file-name)
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
 
-(use-package hackernews)
+(use-package hackernews
+  :commands hackernews)
 
 (use-package avy
   :bind (("C-;" . avy-goto-char)
@@ -526,10 +518,14 @@
          ("M-g w" . avy-goto-word-1)
          ("M-g e" . avy-goto-word-0)))
 
-(use-package dizzee)
-(use-package list-processes+)
+(use-package dizzee
+  :commands (dz-defservice dz-defservice-group))
 
-(use-package symon)
+(use-package list-processes+
+  :commands list-processes+)
+
+(use-package symon
+  :commands symon-mode)
 
 (use-package camcorder
   :commands camcorder-mode)
@@ -555,7 +551,7 @@
 	   ("C-x g l" . magit-log-buffer-file)
 	   ("C-x g c" . magit-commit)
 	   ("C-x g p c" . magit-push-current))
-    :commands magit-status
+    :commands (magit-status)
     :ensure git-gutter+
     :ensure github-clone
     :ensure yagist
@@ -614,22 +610,32 @@
                mode-line-misc-info
                mode-line-end-spaces))))
 
-(use-package persp-mode
-  :config (progn
-            (setq persp-nil-name "def")
-            (persp-mode t)))
+(use-package swiper
+  :commands swiper
+  :bind ("C-c s" . swiper))
 
-;; (use-package eproject)
-;; (use-package anything)
-;; (use-package org-mu4e)
+(use-package string-edit
+  :commands string-edit)
 
-(use-package swiper)
-(use-package string-edit)
 (use-package highlight-leading-spaces
   :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode))
 
-(setq read-file-name-completion-ignore-case t)
-(setq read-buffer-completion-ignore-case t)
+(use-package projectile
+  :config (progn
+            (setq projectile-indexing-method 'native
+                  projectile-enable-caching t
+                  projectile-file-exists-remote-cache-expire (* 10 60)
+                  projectile-require-project-root nil)
+            (projectile-global-mode))
+  :ensure t)
+
+(use-package elscreen
+  :config (progn
+            (elscreen-start)
+            (setq elscreen-display-tab nil)))
+
+(setq read-file-name-completion-ignore-case t
+      read-buffer-completion-ignore-case t)
 (mapc (lambda (x)
         (add-to-list 'completion-ignored-extensions x))
       '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc"))
