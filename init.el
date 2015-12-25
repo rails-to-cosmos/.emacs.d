@@ -49,11 +49,12 @@
     (progn
       (package-refresh-contents)
       (package-install 'use-package)))
-(setq use-package-always-ensure t)
 (eval-when-compile
   (require 'use-package))
-(use-package diminish)
-(use-package bind-key)
+(use-package diminish
+  :ensure t)
+(use-package bind-key
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Paths
@@ -69,7 +70,6 @@
       desktop-path (list emacs-persistence-directory)
       recentf-save-file (concat emacs-persistence-directory ".recentf")
       custom-file (concat emacs-persistence-directory ".custom")
-      eshell-directory-name (concat emacs-persistence-directory "eshell")
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
       abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
 (make-directory emacs-persistence-directory t)
@@ -83,9 +83,25 @@
 ;; Init shell
 ;;----------------------------------------------------------------------------
 
-(require 'init-shell)
+(defun spawn-shell (name &rest commands)
+  "Invoke shell with commands"
+  (interactive "MName of shell buffer to spawn: ")
+  (pop-to-buffer (get-buffer-create name))
+  (setq default-eshell-buffer-name
+        (if (string= (boundp 'eshell-buffer-name) nil)
+            "*eshell*"
+          eshell-buffer-name))
+  (setq eshell-buffer-name name)
+  (eshell)
+  (setq eshell-buffer-name default-eshell-buffer-name)
+  (loop for command in commands
+        do (insert (concat command "\n")))
+  (eshell-send-input)
+  (goto-char (point-max)))
 
 (defun eshell-init-aliases()
+  (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
+  (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
   (add-to-list 'eshell-command-aliases-list '("l" "ls"))
   (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
   (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
@@ -93,13 +109,13 @@
 (add-hook 'eshell-mode-hook 'eshell-init-aliases)
 
 (use-package exec-path-from-shell
-  :config
-  (when (memq window-system '(mac ns))
-    (exec-path-from-shell-initialize)
-    (setenv "LANG" "en_US.UTF-8")
-    (setenv "LC_ALL" "en_US.UTF-8")
-    (setenv "LC_CTYPE" "en_US.UTF-8")))
-
+  :ensure t
+  :config (progn
+            (when (memq window-system '(mac ns))
+              (exec-path-from-shell-initialize)
+              (setenv "LANG" "en_US.UTF-8")
+              (setenv "LC_ALL" "en_US.UTF-8")
+              (setenv "LC_CTYPE" "en_US.UTF-8"))))
 
 ;;----------------------------------------------------------------------------
 ;; System constants
@@ -136,6 +152,7 @@
 (require 'init-gui-frames)
 
 (use-package smart-mode-line
+  :ensure t
   :defer t
   :config
   (progn
@@ -158,8 +175,8 @@
        mode-line-end-spaces))))
 
 (use-package miniedit
-  :defer t
   :ensure t
+  :defer t
   :commands minibuffer-edit
   :init (miniedit-install))
 
@@ -203,6 +220,7 @@
         (set-visited-file-name new-name)))))
 
 (use-package google-translate
+  :ensure t
   :config (defun translate-text (sentence)
             "Google translate without specifying language"
             (interactive "sTranslate sentence: ")
@@ -240,34 +258,59 @@
 ;; Text editing utils
 ;;----------------------------------------------------------------------------
 
-(use-package wgrep)
+(use-package wgrep
+  :ensure t)
 
 
 ;;----------------------------------------------------------------------------
 ;; Logging
 ;;----------------------------------------------------------------------------
 
-(use-package mwe-log-commands)
+(use-package mwe-log-commands
+  :ensure t)
 
 
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 
-(use-package bookmark+)
-(use-package scratch)
+(use-package bookmark+
+  :ensure t)
+(use-package scratch
+  :ensure t)
 (use-package yasnippet
+  :ensure t
   :config (progn
             (yas-global-mode 1)
             (bind-key "C-j" 'yas-expand yas-minor-mode-map)))
-(use-package emmet-mode)
-(use-package impatient-mode)
+(use-package emmet-mode
+  :ensure t)
+(use-package impatient-mode
+  :ensure t)
 (use-package restclient
-  :mode ("\\.rest\\'" . restclient-mode))
+  :mode ("\\.rest\\'" . restclient-mode)
+  :ensure t)
 ;; (use-package emacsql
 ;;   :ensure pg)
 
 (use-package python
+  :init (progn
+          (use-package jedi
+            :ensure t)
+          (use-package cinspect
+            :ensure t)
+          (use-package py-isort
+            :ensure t)
+          (use-package py-yapf
+            :ensure t)
+          (use-package pyenv-mode
+            :ensure t)
+          (use-package pyvenv
+            :ensure t)
+          (use-package yasnippet
+            :ensure t)
+          (use-package live-py-mode
+            :ensure t))
   :mode ("\\.py\\'" . python-mode)
   :interpreter ("ipython" . python-mode)
   :load-path "python/"
@@ -288,16 +331,7 @@
             (jedi:install-server))
   :bind (("C-c C-b" . python-add-breakpoint))
   ;; :ensure virtualenv
-  :ensure jedi
-  :ensure cinspect
-  :ensure py-isort
-  :ensure py-yapf
-  :ensure pyenv-mode
-  :ensure pyvenv
-  :ensure pungi
-  :ensure yasnippet)
-
-(use-package live-py-mode)
+  :ensure t)
 
 (require 'init-isearch)
 
@@ -310,6 +344,13 @@
         uniquify-ignore-buffers-re "^\\*"))
 
 (use-package ibuffer
+  :init (progn
+          (use-package fullframe
+            :ensure t)
+          (use-package ibuffer-vc
+            :ensure t)
+          (use-package ibuffer-git
+            :ensure t))
   :config (progn
             (setq ibuffer-formats
                   '((mark modified read-only vc-status-mini " "
@@ -344,54 +385,52 @@
             (after-load 'ibuffer
               (fullframe ibuffer ibuffer-quit)))
   :bind ("C-x C-b" . ibuffer)
-  :ensure fullframe
-  :ensure ibuffer-vc
-  :ensure ibuffer-git)
+  :ensure t)
 
 (use-package flycheck
-  :config
-  (add-hook 'after-init-hook 'global-flycheck-mode)
-  (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-        flycheck-idle-change-delay 0.8
-        flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+  :ensure t
+  :config (progn
+            (add-hook 'after-init-hook 'global-flycheck-mode)
+            (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+                  flycheck-idle-change-delay 0.8
+                  flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)))
 
 (use-package js
-  :config
-  (setq js-indent-level 4))
+  :config (progn
+            (setq js-indent-level 4))
+  :ensure t)
 
 (use-package imenu-anywhere
-  :config
-  (progn
-    (after-load 'imenu-anywhere (global-set-key (kbd "C-.") 'imenu-anywhere))
-    (bind-key "C-x i" 'imenu-anywhere)))
-
+  :config (progn
+            (after-load 'imenu-anywhere (global-set-key (kbd "C-.") 'imenu-anywhere))
+            (bind-key "C-x i" 'imenu-anywhere))
+  :ensure t)
 
 (use-package ido
-  :config
-  (progn
-    (ido-mode)
-    (ido-vertical-mode)
-    (ido-everywhere)
-    (ido-ubiquitous-mode)
-    (setq ido-enable-flex-matching t
-          ido-use-filename-at-point nil
-          ido-auto-merge-work-directories-length 0
-          ido-use-virtual-buffers t
-          smex-save-file (concat emacs-persistence-directory ".smex-items")
-          ido-default-buffer-method 'selected-window
-          ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
-    (global-set-key [remap execute-extended-command] 'smex)
-    (defadvice ido-find-file (after find-file-sudo activate)
-      "Find file as root if necessary."
-      (unless (and buffer-file-name
-                   (file-writable-p buffer-file-name))
-        (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-    (defun bind-ido-keys ()
-      "Keybindings for ido mode."
-      (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-      (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
-    (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-    (add-hook 'ido-setup-hook #'bind-ido-keys))
+  :config (progn
+            (ido-mode)
+            (ido-vertical-mode)
+            (ido-everywhere)
+            (ido-ubiquitous-mode)
+            (setq ido-enable-flex-matching t
+                  ido-use-filename-at-point nil
+                  ido-auto-merge-work-directories-length 0
+                  ido-use-virtual-buffers t
+                  smex-save-file (concat emacs-persistence-directory ".smex-items")
+                  ido-default-buffer-method 'selected-window
+                  ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+            (global-set-key [remap execute-extended-command] 'smex)
+            (defadvice ido-find-file (after find-file-sudo activate)
+              "Find file as root if necessary."
+              (unless (and buffer-file-name
+                           (file-writable-p buffer-file-name))
+                (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+            (defun bind-ido-keys ()
+              "Keybindings for ido mode."
+              (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+              (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
+            (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+            (add-hook 'ido-setup-hook #'bind-ido-keys))
   :ensure imenu-anywhere
   :ensure ido-vertical-mode
   :ensure idomenu
