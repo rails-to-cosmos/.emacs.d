@@ -618,7 +618,8 @@
   :commands string-edit)
 
 (use-package highlight-leading-spaces
-  :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode))
+  :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode)
+  :ensure t)
 
 (use-package projectile
   :config (progn
@@ -632,7 +633,22 @@
 (use-package elscreen
   :config (progn
             (elscreen-start)
-            (setq elscreen-display-tab nil)))
+            (setq elscreen-display-tab nil))
+  :ensure t)
+
+(use-package super-save
+  :config (progn
+            (super-save-initialize))
+  :ensure t)
+
+(use-package clean-buffers
+  :config (progn
+            (defvar my-useless-buffer-names '("*Compile-Log*" "*Pp Eval Output*"))
+            (setq clean-buffers-useless-buffer-names (append clean-buffers-useless-buffer-names my-useless-buffer-names)))
+  :ensure t)
+
+(use-package lice
+  :ensure t)
 
 (setq read-file-name-completion-ignore-case t
       read-buffer-completion-ignore-case t)
