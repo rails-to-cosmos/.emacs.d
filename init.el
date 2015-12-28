@@ -620,13 +620,17 @@
 (use-package highlight-leading-spaces
   :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode))
 
-(use-package projectile
-  :config (progn
-            (setq projectile-indexing-method 'native
-                  projectile-enable-caching t
-                  projectile-file-exists-remote-cache-expire (* 10 60)
-                  projectile-require-project-root nil)
-            (projectile-global-mode))
+;; (use-package projectile
+;;   :config (progn
+;;             (setq projectile-indexing-method 'native
+;;                   projectile-enable-caching t
+;;                   projectile-file-exists-remote-cache-expire (* 10 60)
+;;                   projectile-require-project-root nil)
+;;             (projectile-global-mode))
+;;   :ensure t)
+
+(use-package prosjekt
+  :bind (("C-x y p o r e" . prosjekt-open-recent))
   :ensure t)
 
 (use-package elscreen
