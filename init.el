@@ -630,6 +630,9 @@
 ;;             (projectile-global-mode))
 ;;   :ensure t)
 
+(use-package codesearch
+  :ensure t)
+
 (use-package prosjekt
   :bind (("C-x y p o r e" . prosjekt-open-recent))
   :ensure t)
@@ -652,6 +655,12 @@
   :ensure t)
 
 (use-package lice
+  :commands lice
+  :ensure t)
+
+(use-package neotree
+  :commands neotree-toggle
+  :bind ("<f8>" . neotree-toggle)
   :ensure t)
 
 (setq read-file-name-completion-ignore-case t
