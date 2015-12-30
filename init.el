@@ -52,6 +52,7 @@
 (eval-when-compile
   (require 'use-package))
 (use-package diminish
+  :commands diminish
   :ensure t)
 (use-package bind-key
   :ensure t)
@@ -78,44 +79,40 @@
 (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
   (normal-top-level-add-subdirs-to-load-path))
 
-
-;;----------------------------------------------------------------------------
-;; Init shell
-;;----------------------------------------------------------------------------
-
-(defun spawn-shell (name &rest commands)
-  "Invoke shell with commands"
-  (interactive "MName of shell buffer to spawn: ")
-  (pop-to-buffer (get-buffer-create name))
-  (setq default-eshell-buffer-name
-        (if (string= (boundp 'eshell-buffer-name) nil)
-            "*eshell*"
-          eshell-buffer-name))
-  (setq eshell-buffer-name name)
-  (eshell)
-  (setq eshell-buffer-name default-eshell-buffer-name)
-  (loop for command in commands
-        do (insert (concat command "\n")))
-  (eshell-send-input)
-  (goto-char (point-max)))
-
-(defun eshell-init-aliases()
-  (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
-  (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
-  (add-to-list 'eshell-command-aliases-list '("l" "ls"))
-  (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
-  (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
-
-(add-hook 'eshell-mode-hook 'eshell-init-aliases)
-
-(use-package exec-path-from-shell
-  :ensure t
+(use-package eshell
+  :init (progn
+          (use-package exec-path-from-shell
+            :ensure t
+            :config (progn
+                      (when (memq window-system '(mac ns))
+                        (exec-path-from-shell-initialize)
+                        (setenv "LANG" "en_US.UTF-8")
+                        (setenv "LC_ALL" "en_US.UTF-8")
+                        (setenv "LC_CTYPE" "en_US.UTF-8")))))
   :config (progn
-            (when (memq window-system '(mac ns))
-              (exec-path-from-shell-initialize)
-              (setenv "LANG" "en_US.UTF-8")
-              (setenv "LC_ALL" "en_US.UTF-8")
-              (setenv "LC_CTYPE" "en_US.UTF-8"))))
+            (defun spawn-shell (name &rest commands)
+              "Invoke shell with commands"
+              (interactive "MName of shell buffer to spawn: ")
+              (pop-to-buffer (get-buffer-create name))
+              (setq default-eshell-buffer-name
+                    (if (string= (boundp 'eshell-buffer-name) nil)
+                        "*eshell*"
+                      eshell-buffer-name))
+              (setq eshell-buffer-name name)
+              (eshell)
+              (setq eshell-buffer-name default-eshell-buffer-name)
+              (loop for command in commands
+                    do (insert (concat command "\n")))
+              (eshell-send-input)
+              (goto-char (point-max)))
+
+            (defun eshell-init-aliases()
+              (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
+              (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
+              (add-to-list 'eshell-command-aliases-list '("l" "ls"))
+              (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
+              (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
+            (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
 
 ;;----------------------------------------------------------------------------
 ;; System constants
@@ -124,16 +121,14 @@
 (defconst *is-a-mac* (eq system-type 'darwin))
 (setq mac-command-modifier 'meta)
 
-
 ;;----------------------------------------------------------------------------
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-(when window-system
-  (toggle-max-frame))
-
 (use-package init-gui-frames
-  :if window-system)
+  :if window-system
+  :config (progn
+            (toggle-max-frame)))
 
 (use-package smart-mode-line
   :config (progn
@@ -154,8 +149,7 @@
                mode-line-modes
                mode-line-misc-info
                mode-line-end-spaces)))
-  :ensure t
-  :defer t)
+  :ensure t)
 
 (use-package miniedit
   :init (progn
@@ -240,6 +234,13 @@
 ;;----------------------------------------------------------------------------
 
 (use-package wgrep
+  :ensure t)
+
+(use-package loccur
+  :commands (loccur loccur-current loccur-previous-match)
+  :bind (("C-o" . loccur-current)
+         ("C-M-o" . loccur)
+         ("C-S-o" . loccur-previous-match))
   :ensure t)
 
 
@@ -583,12 +584,6 @@
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-;; (use-package indent-guide
-;;   :config (progn
-;;             (setq indent-guide-recursive t
-;;                   indent-guide-char "|")
-;;             (indent-guide-global-mode)))
-
 (use-package smart-mode-line
   :defer t
   :config (progn
@@ -656,11 +651,6 @@
 
 (use-package lice
   :commands lice
-  :ensure t)
-
-(use-package neotree
-  :commands neotree-toggle
-  :bind ("<f8>" . neotree-toggle)
   :ensure t)
 
 (setq read-file-name-completion-ignore-case t
