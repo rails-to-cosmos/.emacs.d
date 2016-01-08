@@ -18,7 +18,7 @@
 (column-number-mode t)
 (delete-selection-mode t)
 (fringe-mode '(10 . 0))
-(global-visual-line-mode 1)
+;; (global-visual-line-mode 1)
 
 
 ;;----------------------------------------------------------------------------

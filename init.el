@@ -1,7 +1,7 @@
-;;; init.el --- Dmitry Akatov's emacs configuration
+;;; init.el --- emacs configuration by Dmitry Akatov
 ;;
 ;; Filename: init.el
-;; Description: Dmitry Akatov's emacs configuration
+;; Description: my emacs configuration
 ;; Author: Dmitry Akatov
 ;; Created: Sun Aug 09 21:49:00 2015 (-0400)
 ;; Version: 1.0.0
@@ -37,10 +37,7 @@
 ;;; Code:
 
 
-;;----------------------------------------------------------------------------
 ;; Init use-package
-;;----------------------------------------------------------------------------
-
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
@@ -57,14 +54,12 @@
 (use-package bind-key
   :ensure t)
 
-;;----------------------------------------------------------------------------
-;; Paths
-;;----------------------------------------------------------------------------
+;; TODO specify paths
+(defvar emacs-persistence-directory (concat user-emacs-directory "persistence/"))
+(make-directory emacs-persistence-directory t)
+(defvar savehist-file (concat emacs-persistence-directory ".minibuffer-history"))
 
-(setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
-      savehist-file (concat emacs-persistence-directory ".minibuffer-history")
-      ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
-      session-save-file (concat emacs-persistence-directory ".session")
+(setq session-save-file (concat emacs-persistence-directory ".session")
       frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
       bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")
       bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
@@ -73,11 +68,33 @@
       custom-file (concat emacs-persistence-directory ".custom")
       mc/list-file (concat emacs-persistence-directory ".mc-lists")
       abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
-(make-directory emacs-persistence-directory t)
+
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
   (normal-top-level-add-subdirs-to-load-path))
+
+(use-package autocomplete
+  :config (progn
+          (use-package popup)
+          (use-package pos-tip)
+          (use-package popup-kill-ring)
+          (use-package auto-complete-config)
+          (ac-config-default)
+          (defvar ac-comphist-file (concat emacs-persistence-directory ".ac-comphist"))
+          (defvar ac-use-menu-map t)
+          (defvar hippie-expand-verbose t)
+          (defvar smart-tab-using-hippie-expand t
+            "turn this on if you want to use hippie-expand completion.")
+          (setq hippie-expand-try-functions-list
+                '(yas/hippie-try-expand
+                  try-complete-file-name-partially
+                  try-expand-all-abbrevs
+                  try-expand-dabbrev
+                  try-expand-dabbrev-all-buffers
+                  try-expand-dabbrev-from-kill
+                  try-complete-lisp-symbol-partially
+                  try-complete-lisp-symbol))))
 
 (use-package eshell
   :init (progn
@@ -243,6 +260,19 @@
          ("C-S-o" . loccur-previous-match))
   :ensure t)
 
+(use-package mmm-mode
+  :config (progn
+            (setq mmm-global-mode 'maybe)
+            (mmm-add-classes
+             '((python-rst
+                :submode rst-mode
+                :front "^ *[ru]?\"\"\"[^\"]*$"
+                :back "^ *\"\"\""
+                :include-front t
+                :include-back t
+                :end-not-begin t)))
+            (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Logging
@@ -539,30 +569,36 @@
   (require 'calfw-org))
 
 (use-package keyfreq
-  :config
-  (keyfreq-mode t)
-  (keyfreq-autosave-mode t))
+  :config (progn
+            (keyfreq-mode t)
+            (keyfreq-autosave-mode t)))
 
-;; (when (eval-when-compile (>= emacs-major-version 24.4))
-;;   )
-
-  (use-package magit
-    :bind (("C-x g s" . magit-status)
-	   ("C-x g b" . magit-blame)
-	   ("C-x g l" . magit-log-buffer-file)
-	   ("C-x g c" . magit-commit)
-	   ("C-x g p c" . magit-push-current))
-    :commands (magit-status)
-    :ensure git-gutter+
-    :ensure github-clone
-    :ensure yagist
-    :ensure github-browse-file
-    :ensure bug-reference-github
-    :ensure magit-gh-pulls)
-
-  (use-package git-gutter+
-    :config (progn
-	      (global-git-gutter+-mode)))
+(use-package magit
+  :commands (magit-status
+             magit-blame
+             magit-commit
+             magit-push-current
+             magit-log-buffer-file)
+  :config (progn
+            (use-package git-gutter+
+              :config (progn
+                        (global-git-gutter+-mode))
+              :ensure t)
+            (use-package github-clone
+              :ensure t)
+            (use-package yagist
+              :ensure t)
+            (use-package github-browse-file
+              :ensure t)
+            (use-package bug-reference-github
+              :ensure t)
+            (use-package magit-gh-pulls
+              :ensure t))
+  :bind (("C-x g s" . magit-status)
+         ("C-x g b" . magit-blame)
+         ("C-x g l" . magit-log-buffer-file)
+         ("C-x g c" . magit-commit)
+         ("C-x g p c" . magit-push-current)))
 
 (use-package twittering-mode)
 
@@ -607,7 +643,8 @@
 
 (use-package swiper
   :commands swiper
-  :bind ("C-c s" . swiper))
+  :bind ("C-c s" . swiper)
+  :ensure t)
 
 (use-package string-edit
   :commands string-edit)
