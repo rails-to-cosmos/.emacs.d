@@ -36,11 +36,8 @@
   :group 'zerodark)
 
 (let ((class '((class color) (min-colors 89)))
-      ;; (default "#cccccc")
-      ;; (default "#abb2bf")
       (background "#282c34")
       (default "#F8F8F2")
-      ;;(background "#272822")
       (background-darker "#21252b")
       (background-lighter "#3a3f4b")
       (background-red "#4c3840")
@@ -51,18 +48,12 @@
       (grey "#cccccc")
       (grey-dark "#666666")
       (highlight "#3e4451")
-      ;; (hl-line "#2c323b")
       (hl-line "#21252b")
       (comment "#687080")
-      ;; (orange "#da8548")
       (orange "#FFE792")
-      ;; (red "#ff6c6b")
       (red "#F92672")
-      ;; (purple "#c678dd")
       (purple "#AE81FF")
-      ;; (blue "#61afef")
       (blue "#66D9EF")
-      ;; (green "#98be65")
       (green "#A6E22E")
       (peach "PeachPuff3")
       (black "#000")
@@ -84,10 +75,6 @@
    `(cursor ((,class (:background ,default))))
    `(vertical-border ((,class (:foreground ,comment))))
 
-   ;; (set-face-attribute 'vertical-border
-   ;;                     nil
-   ;;                     :foreground "#282a2e")
-
    ;; Highlighting faces
    `(fringe ((,class (:background ,background))))
    `(highlight ((,class (:background ,highlight :foreground ,default :underline nil))))
@@ -102,6 +89,7 @@
 
    ;; Font lock faces
    ;; `(font-lock-builtin-face ((,class (:foreground ,blue :weight bold))))
+   `(highlight-symbol-face ((,class (:background ,background))))
    `(font-lock-builtin-face ((,class (:foreground ,green :weight bold))))
    `(font-lock-comment-face ((,class (:foreground ,comment :slant italic))))
    `(font-lock-constant-face ((,class (:foreground ,orange :weight bold))))
@@ -111,7 +99,7 @@
    `(font-lock-doc-face ((,class (:foreground ,comment))))
    `(font-lock-type-face ((,class (:foreground ,blue))))
    `(font-lock-variable-name-face ((,class (:foreground ,blue))))
-   `(font-lock-warning-face ((,class (:foreground ,red :weight bold :background ,background-red))))
+   `(font-lock-warning-face ((,class (:foreground ,red :weight bold))))
 
    ;; Mode line faces
    `(mode-line ((,class (:background ,comment :height 0.9 :foreground ,black
@@ -121,12 +109,6 @@
    `(mode-line-inactive ((,class (:background ,background-lighter :height 0.9 :foreground "#FFF"
                                               :box ,(when zerodark-use-paddings-in-mode-line
         					      (list :line-width 4 :color background-lighter))))))
-
-   ;; `(mode-line-inactive ((,class (:background ,background :height 0.9 :foreground ,background
-   ;;                                            :box ,(when zerodark-use-paddings-in-mode-line
-   ;;      					      (list :line-width 4 :color background))))))
-
-
 
    `(header-line ((,class (:inherit mode-line-inactive))))
 
@@ -227,6 +209,8 @@
    `(message-cited-text ((,class (:foreground ,comment))))
    `(message-separator ((,class (:foreground ,red :weight bold))))
 
+   `(mmm-default-submode-face ((,class (:foreground ,green :background ,background-darker))))
+
    ;; ido faces
    `(ido-first-match ((,class (:foreground ,purple :weight bold))))
    `(ido-only-match ((,class (:foreground ,purple :weight bold))))
@@ -262,7 +246,7 @@
 
    ;; flycheck
    `(flycheck-fringe-error ((,class (:foreground ,red :background ,background-red :weight bold :inverse-video t))))
-   `(flycheck-fringe-warning ((,class (:background ,background-orange :foreground ,orange :weight bold :inverse-video t))))
+   `(flycheck-fringe-warning ((,class (:background ,background-darker :foreground ,orange :weight bold :inverse-video t))))
    `(flycheck-fringe-info ((,class (:background ,background-blue :foreground ,blue :weight bold :inverse-video t))))
    `(flycheck-warning ((,class (:underline (:color ,red :style wave)))))
    `(flycheck-error ((,class (:underline (:color ,red :style wave)))))
