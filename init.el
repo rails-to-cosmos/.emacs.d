@@ -556,7 +556,14 @@
          ("M-g e" . avy-goto-word-0)))
 
 (use-package dizzee
-  :commands (dz-defservice dz-defservice-group))
+  :commands (dz-defservice dz-defservice-group)
+  :init (progn
+            (defun dz-restart-current ()
+              (interactive)
+              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+              (funcall (intern dz-restart-expr)))
+            (global-set-key (kbd "<f5>") 'dz-restart-current)))
 
 (use-package list-processes+
   :commands list-processes+)
