@@ -70,7 +70,6 @@
       abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
   (normal-top-level-add-subdirs-to-load-path))
 
@@ -707,13 +706,49 @@
       read-buffer-completion-ignore-case t)
 (mapc (lambda (x)
         (add-to-list 'completion-ignored-extensions x))
-      '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc"))
+      '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls"))
 
 ;; https://github.com/tkf/emacs-request
 ;; (use-package emacs-request)
 
-(load-theme 'zerodark t)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+;; (load-theme 'zerodark t)
+(load-theme 'heroku t)
 (require 'init-gui-frames)
+(custom-set-faces
+ '(default ((t (
+		:inherit nil
+			 :stipple nil
+			 :inverse-video nil
+			 :box nil
+			 :strike-through nil
+			 :overline nil
+			 :underline nil
+			 :slant normal
+			 :weight normal
+			 :height 120
+			 :width normal
+			 :foundry nil
+			 :family "Inconsolata")))))
+(setq-default buffers-menu-max-size 30
+              case-fold-search t
+              compilation-scroll-output t
+              ediff-split-window-function 'split-window-horizontally
+              ediff-window-setup-function 'ediff-setup-windows-plain
+              grep-highlight-matches t
+              grep-scroll-output t
+              make-backup-files nil
+              mouse-yank-at-point t
+              save-interprogram-paste-before-kill t
+              scroll-preserve-screen-position 'always
+              set-mark-command-repeat-pop t
+              show-trailing-whitespace t
+              tooltip-delay 1.5
+              truncate-lines nil
+              truncate-partial-width-windows nil
+              visible-bell t
+              line-spacing 7
+              indent-tabs-mode nil)
 ;; (require 'ej-autocomplete)
 
 (require 'init-local nil t)

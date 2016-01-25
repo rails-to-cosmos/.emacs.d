@@ -17,8 +17,11 @@
 (menu-bar-mode -1)
 (column-number-mode t)
 (delete-selection-mode t)
-(fringe-mode '(10 . 0))
-;; (global-visual-line-mode 1)
+
+(use-package fringe
+  :if window-system
+  :config (progn
+            (fringe-mode '(10 . 0))))
 
 
 ;;----------------------------------------------------------------------------
