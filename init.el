@@ -95,6 +95,9 @@
                   try-complete-lisp-symbol-partially
                   try-complete-lisp-symbol))))
 
+;; Set global config for bpr.
+;; Variables below are applied to all processes.
+
 (use-package eshell
   :init (progn
           (use-package exec-path-from-shell
@@ -373,6 +376,21 @@
             (make-directory "~/.virtualenvs" t)
             (jedi:install-server))
   :bind (("C-c C-b" . python-add-breakpoint))
+  :ensure t)
+
+
+;; https://github.com/davidmiller/pony-mode
+(use-package pony-mode
+  :config ;; (progn
+          ;;   ;; Pony mode config for the megacorp project
+          ;;   ((nil . ;; This applies these settings regardless of major mode
+
+          ;;         ((pony-settings (make-pony-project
+          ;;                          :python "/home/david/virtualenvs/megacorp/production/bin/python"
+          ;;                          :pythonpath "/home/david/megacorp/libs/projectzero"
+          ;;                          :settings "local_settings_file"
+          ;;                          :appsdir "testproject/apps/")
+          ;;                         )))))
   :ensure t)
 
 (require 'init-isearch)
@@ -770,6 +788,19 @@
               line-spacing 7
               indent-tabs-mode nil)
 ;; (require 'ej-autocomplete)
+
+;; https://github.com/emacs-pe/http.el
+(use-package http
+  :ensure t)
+
+(use-package bpr
+  :config (progn
+            (setq bpr-colorize-output t
+                  bpr-close-after-success t))
+  :ensure t)
+
+(use-package fabric
+  :ensure t)
 
 (require 'init-local nil t)
 (provide 'init)
