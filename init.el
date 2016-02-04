@@ -476,6 +476,7 @@
                   ido-use-filename-at-point nil
                   ido-auto-merge-work-directories-length 0
                   ido-use-virtual-buffers t
+                  ido-confirm-unique-completion t
                   smex-save-file (concat emacs-persistence-directory ".smex-items")
                   ido-default-buffer-method 'selected-window
                   ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
@@ -800,8 +801,7 @@
                   bpr-close-after-success t))
   :ensure t)
 
-(use-package fabric
-  :ensure t)
+(setq ido-auto-merge-work-directories-length -1)
 
 (require 'init-local nil t)
 (provide 'init)
