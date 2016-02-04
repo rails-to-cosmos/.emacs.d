@@ -793,6 +793,7 @@
 (use-package http
   :ensure t)
 
+;; https://github.com/ilya-babanov/emacs-bpr
 (use-package bpr
   :config (progn
             (setq bpr-colorize-output t
