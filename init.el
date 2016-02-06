@@ -57,7 +57,20 @@
 (use-package my-global-settings
   :init (progn
           (defvar emacs-persistence-directory (concat user-emacs-directory "persistence/"))
-          (make-directory emacs-persistence-directory t)))
+          (defvar savehist-file (concat emacs-persistence-directory ".minibuffer-history"))
+          (make-directory emacs-persistence-directory t)
+          (setq session-save-file (concat emacs-persistence-directory ".session")
+                frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
+                desktop-path (list emacs-persistence-directory)
+                recentf-save-file (concat emacs-persistence-directory ".recentf")
+                custom-file (concat emacs-persistence-directory ".custom")
+                mc/list-file (concat emacs-persistence-directory ".mc-lists")
+                abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs")
+                mac-command-modifier 'meta)
+          (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+          (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+            (normal-top-level-add-subdirs-to-load-path))
+          (defconst *is-a-mac* (eq system-type 'darwin))))
 
 (use-package use-package
   :init (progn
@@ -66,20 +79,6 @@
             :ensure t)
           (use-package bind-key
             :ensure t)))
-
-(defvar savehist-file (concat emacs-persistence-directory ".minibuffer-history"))
-
-(setq session-save-file (concat emacs-persistence-directory ".session")
-      frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
-      desktop-path (list emacs-persistence-directory)
-      recentf-save-file (concat emacs-persistence-directory ".recentf")
-      custom-file (concat emacs-persistence-directory ".custom")
-      mc/list-file (concat emacs-persistence-directory ".mc-lists")
-      abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs"))
-
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-  (normal-top-level-add-subdirs-to-load-path))
 
 (use-package autocomplete
   :config (progn
@@ -103,7 +102,7 @@
                   try-complete-lisp-symbol-partially
                   try-complete-lisp-symbol))))
 
-(use-package eshell
+(use-package shell
   :init (progn
           (use-package exec-path-from-shell
             :config (progn
@@ -113,6 +112,7 @@
                         (setenv "LC_ALL" "en_US.UTF-8")
                         (setenv "LC_CTYPE" "en_US.UTF-8")))
             :ensure t))
+
   :config (progn
             (use-package term+
               :config
@@ -141,13 +141,6 @@
               (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
               (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
             (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
-
-;;----------------------------------------------------------------------------
-;; System constants
-;;----------------------------------------------------------------------------
-
-(defconst *is-a-mac* (eq system-type 'darwin))
-(setq mac-command-modifier 'meta)
 
 ;;----------------------------------------------------------------------------
 ;; User interface
