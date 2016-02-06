@@ -102,8 +102,8 @@
                   try-complete-lisp-symbol-partially
                   try-complete-lisp-symbol)
                 ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
-123
-(use-package shell
+
+(use-package my-shell
   :init (progn
           (use-package exec-path-from-shell
             :config (progn
@@ -142,10 +142,6 @@
               (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
               (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
             (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
-
-;;----------------------------------------------------------------------------
-;; User interface
-;;----------------------------------------------------------------------------
 
 (use-package my-user-interface
   :init (progn
@@ -193,10 +189,12 @@
             (declare (indent defun))
             `(eval-after-load ,feature
                '(progn ,@body)))
+
           (defun add-auto-mode (mode &rest patterns)
             "Add entries to `auto-mode-alist' to use `MODE' for all given file `PATTERNS'."
             (dolist (pattern patterns)
               (add-to-list 'auto-mode-alist (cons pattern mode))))
+
           (defun delete-this-file ()
             "Delete the current file, and kill the buffer."
             (interactive)
@@ -205,6 +203,7 @@
                                        (file-name-nondirectory buffer-file-name)))
               (delete-file (buffer-file-name))
               (kill-this-buffer)))
+
           (defun rename-this-file-and-buffer (new-name)
             "Renames both current buffer and file it's visiting to NEW-NAME."
             (interactive "sNew name: ")
@@ -219,9 +218,11 @@
                     (rename-file filename new-name 1))
                   (rename-buffer new-name)
                   (set-visited-file-name new-name)))))
+
           (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
             "Prevent annoying \"Active processes exist\" query when you quit Emacs."
             (cl-flet ((process-list ())) ad-do-it))
+
           (setq kill-buffer-query-functions
                 (remq 'process-kill-buffer-query-function
                       kill-buffer-query-functions))))
@@ -248,14 +249,17 @@
             :config (progn
                       (global-syntax-subword-mode t))
             :ensure t)
+
           (use-package wgrep
             :ensure t)
+
           (use-package loccur
             :commands (loccur loccur-current loccur-previous-match)
             :bind (("C-o" . loccur-current)
                    ("C-M-o" . loccur)
                    ("C-S-o" . loccur-previous-match))
             :ensure t)
+
           (use-package mmm-mode
             :config (progn
                       (setq mmm-global-mode 'maybe)
@@ -268,8 +272,7 @@
                           :include-back t
                           :end-not-begin t)))
                       (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
-            :ensure t)
-          ))
+            :ensure t)))
 
 (use-package my-log-utils
   :init (progn
