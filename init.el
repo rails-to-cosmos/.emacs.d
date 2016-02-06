@@ -223,6 +223,9 @@
             "Prevent annoying \"Active processes exist\" query when you quit Emacs."
             (cl-flet ((process-list ())) ad-do-it))
 
+          (defun project-buffer-name-by-feature (project-name feature-name)
+            (concatenate 'string "*" project-name "-" feature-name "*"))
+
           (setq kill-buffer-query-functions
                 (remq 'process-kill-buffer-query-function
                       kill-buffer-query-functions))))
@@ -466,7 +469,7 @@
             (ido-ubiquitous-mode)
             (setq ido-enable-flex-matching t
                   ido-use-filename-at-point nil
-                  ido-auto-merge-work-directories-length 0
+                  ido-auto-merge-work-directories-length -1
                   ido-use-virtual-buffers t
                   ido-confirm-unique-completion t
                   smex-save-file (concat emacs-persistence-directory ".smex-items")
@@ -681,10 +684,6 @@
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
-;;----------------------------------------------------------------------------
-;; User interface
-;;----------------------------------------------------------------------------
-
 (use-package smart-mode-line
   :defer t
   :config (progn
@@ -813,16 +812,13 @@
   :config (progn
             (setq bpr-colorize-output t
                   bpr-close-after-success t)
+            (spawn-shell)
             (defun emacs-push-config ()
               (interactive)
-              (let* ((bpr-process-directory user-emacs-directory)
-                     (bpr-close-after-success t)
-                     (bpr-open-after-error t)
-                     (bpr-show-progress nil)) ;; show progress messages once in 60 seconds
-                (bpr-spawn "fab push"))))
+              (spawn-shell "emacs-fabric"
+                           user-emacs-directory
+                           "fab push")))
   :ensure t)
-
-(setq ido-auto-merge-work-directories-length -1)
 
 (require 'init-local nil t)
 (provide 'init)
