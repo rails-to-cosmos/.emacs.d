@@ -26,3 +26,5 @@ vimish-fold/
 emacs-for-python/
 .python-environments/
 jordon/
+ac-comphist.dat
+*.pyc
