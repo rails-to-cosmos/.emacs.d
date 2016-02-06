@@ -812,7 +812,6 @@
   :config (progn
             (setq bpr-colorize-output t
                   bpr-close-after-success t)
-            (spawn-shell)
             (defun emacs-push-config ()
               (interactive)
               (spawn-shell "emacs-fabric"
