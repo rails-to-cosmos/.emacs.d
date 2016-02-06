@@ -1,9 +1,4 @@
-(use-package web-mode
-  :ensure t
-  :config (add-auto-mode 'web-mode "\\.html\\'")
-  (setq web-mode-markup-indent-offset 4)
-  (setq web-mode-css-indent-offset 4)
-  (setq web-mode-code-indent-offset 4))
+
 
 ;; (use-package php-mode
 ;;   :ensure t

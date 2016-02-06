@@ -36,33 +36,41 @@
 ;;
 ;;; Code:
 
-
 ;; Init use-package
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+
 (package-initialize)
+
+(when (not package-archive-contents)
+    (package-refresh-contents))
+
 (if (not (package-installed-p 'use-package))
     (progn
       (package-refresh-contents)
       (package-install 'use-package)))
+
 (eval-when-compile
   (require 'use-package))
-(use-package diminish
-  :commands diminish
-  :ensure t)
-(use-package bind-key
-  :ensure t)
 
-;; TODO specify paths
-(defvar emacs-persistence-directory (concat user-emacs-directory "persistence/"))
-(make-directory emacs-persistence-directory t)
+(use-package my-global-settings
+  :init (progn
+          (defvar emacs-persistence-directory (concat user-emacs-directory "persistence/"))
+          (make-directory emacs-persistence-directory t)))
+
+(use-package use-package
+  :init (progn
+          (use-package diminish
+            :commands diminish
+            :ensure t)
+          (use-package bind-key
+            :ensure t)))
+
 (defvar savehist-file (concat emacs-persistence-directory ".minibuffer-history"))
 
 (setq session-save-file (concat emacs-persistence-directory ".session")
       frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
-      bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")
-      bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
       desktop-path (list emacs-persistence-directory)
       recentf-save-file (concat emacs-persistence-directory ".recentf")
       custom-file (concat emacs-persistence-directory ".custom")
@@ -95,20 +103,21 @@
                   try-complete-lisp-symbol-partially
                   try-complete-lisp-symbol))))
 
-;; Set global config for bpr.
-;; Variables below are applied to all processes.
-
 (use-package eshell
   :init (progn
           (use-package exec-path-from-shell
-            :ensure t
             :config (progn
                       (when (memq window-system '(mac ns))
                         (exec-path-from-shell-initialize)
                         (setenv "LANG" "en_US.UTF-8")
                         (setenv "LC_ALL" "en_US.UTF-8")
-                        (setenv "LC_CTYPE" "en_US.UTF-8")))))
+                        (setenv "LC_CTYPE" "en_US.UTF-8")))
+            :ensure t))
   :config (progn
+            (use-package term+
+              :config
+              (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+
             (defun spawn-shell (name &rest commands)
               "Invoke shell with commands"
               (interactive "MName of shell buffer to spawn: ")
@@ -144,158 +153,141 @@
 ;; User interface
 ;;----------------------------------------------------------------------------
 
-(defun what-face (pos)
-  (interactive "d")
-  (let ((face (or (get-char-property (point) 'read-face-name)
-                  (get-char-property (point) 'face))))
-    (if face (message "Face: %s" face) (message "No face at %d" pos))))
-
-(use-package init-gui-frames
-  :if window-system
-  :config (progn
-            (toggle-max-frame)))
-
-(use-package smart-mode-line
-  :config (progn
-            (setq-default
-             mode-line-format
-             '("%e"
-               mode-line-front-space
-               mode-line-mule-info
-               mode-line-client
-               mode-line-modified
-               mode-line-remote
-               mode-line-frame-identification
-               mode-line-buffer-identification
-               "   "
-               mode-line-position
-               (vc-mode vc-mode)
-               "  "
-               mode-line-modes
-               mode-line-misc-info
-               mode-line-end-spaces)))
-  :ensure t)
-
-(use-package miniedit
+(use-package my-user-interface
   :init (progn
-          (miniedit-install))
-  :ensure t)
+          (use-package init-gui-frames
+            :if window-system
+            :config (progn
+                      (toggle-max-frame)))
 
-;;----------------------------------------------------------------------------
-;; elisp utils
-;;----------------------------------------------------------------------------
+          (use-package mode-icons
+            :config (progn
+                      (mode-icons-mode t))
+            :ensure t)
 
-(defmacro after-load (feature &rest body)
-  "After FEATURE is loaded, evaluate BODY."
-  (declare (indent defun))
-  `(eval-after-load ,feature
-     '(progn ,@body)))
+          (use-package smart-mode-line
+            :config (progn
+                      (setq-default
+                       mode-line-format
+                       '("%e"
+                         mode-line-front-space
+                         mode-line-mule-info
+                         mode-line-client
+                         mode-line-modified
+                         mode-line-remote
+                         mode-line-frame-identification
+                         mode-line-buffer-identification
+                         "   "
+                         mode-line-position
+                         (vc-mode vc-mode)
+                         "  "
+                         mode-line-modes
+                         mode-line-misc-info
+                         mode-line-end-spaces)))
+            :ensure t)
 
-(defun add-auto-mode (mode &rest patterns)
-  "Add entries to `auto-mode-alist' to use `MODE' for all given file `PATTERNS'."
-  (dolist (pattern patterns)
-    (add-to-list 'auto-mode-alist (cons pattern mode))))
+          (defun what-face (pos)
+            (interactive "d")
+            (let ((face (or (get-char-property (point) 'read-face-name)
+                            (get-char-property (point) 'face))))
+              (if face (message "Face: %s" face) (message "No face at %d" pos))))))
 
-(defun delete-this-file ()
-  "Delete the current file, and kill the buffer."
-  (interactive)
-  (or (buffer-file-name) (error "No file is currently being edited"))
-  (when (yes-or-no-p (format "Really delete '%s'?"
-                             (file-name-nondirectory buffer-file-name)))
-    (delete-file (buffer-file-name))
-    (kill-this-buffer)))
+(use-package my-elisp-utils
+  :init (progn
+          (defmacro after-load (feature &rest body)
+            "After FEATURE is loaded, evaluate BODY."
+            (declare (indent defun))
+            `(eval-after-load ,feature
+               '(progn ,@body)))
+          (defun add-auto-mode (mode &rest patterns)
+            "Add entries to `auto-mode-alist' to use `MODE' for all given file `PATTERNS'."
+            (dolist (pattern patterns)
+              (add-to-list 'auto-mode-alist (cons pattern mode))))
+          (defun delete-this-file ()
+            "Delete the current file, and kill the buffer."
+            (interactive)
+            (or (buffer-file-name) (error "No file is currently being edited"))
+            (when (yes-or-no-p (format "Really delete '%s'?"
+                                       (file-name-nondirectory buffer-file-name)))
+              (delete-file (buffer-file-name))
+              (kill-this-buffer)))
+          (defun rename-this-file-and-buffer (new-name)
+            "Renames both current buffer and file it's visiting to NEW-NAME."
+            (interactive "sNew name: ")
+            (let ((name (buffer-name))
+                  (filename (buffer-file-name)))
+              (unless filename
+                (error "Buffer '%s' is not visiting a file!" name))
+              (if (get-buffer new-name)
+                  (message "A buffer named '%s' already exists!" new-name)
+                (progn
+                  (when (file-exists-p filename)
+                    (rename-file filename new-name 1))
+                  (rename-buffer new-name)
+                  (set-visited-file-name new-name)))))
+          (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+            "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+            (cl-flet ((process-list ())) ad-do-it))
+          (setq kill-buffer-query-functions
+                (remq 'process-kill-buffer-query-function
+                      kill-buffer-query-functions))))
 
-(defun rename-this-file-and-buffer (new-name)
-  "Renames both current buffer and file it's visiting to NEW-NAME."
-  (interactive "sNew name: ")
-  (let ((name (buffer-name))
-        (filename (buffer-file-name)))
-    (unless filename
-      (error "Buffer '%s' is not visiting a file!" name))
-    (if (get-buffer new-name)
-        (message "A buffer named '%s' already exists!" new-name)
-      (progn
-        (when (file-exists-p filename)
-          (rename-file filename new-name 1))
-        (rename-buffer new-name)
-        (set-visited-file-name new-name)))))
-
-(use-package google-translate
-  :config (defun translate-text (sentence)
-            "Google translate without specifying language"
-            (interactive "sTranslate sentence: ")
-            (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
-                                 ("[а-яА-Я]" . ("ru" "en"))))
-            (dolist (lang-regex lang-regexes)
-              (if (string-match (car lang-regex) sentence)
-                  (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-  :bind ("C-x y t t" . translate-text)
-  :ensure t)
-
-(defun save-macro (name)
-  "save a macro. Take a name as argument
+(use-package my-macros-utils
+  :commands (save-macro)
+  :init (progn
+          (defun save-macro (name)
+            "save a macro. Take a name as argument
         and save the last defined macro under
         this name at the end of your .emacs"
-  (interactive "SName of the macro:") ; ask for the name of the macro
-  (kmacro-name-last-macro name)        ; use this name for the macro
-  (find-file user-init-file)   ; open ~/.emacs or other user init file
-  (goto-char (point-max))      ; go to the end of the .emacs
-  (newline)                    ; insert a newline
-  (insert-kbd-macro name)      ; copy the macro
-  (newline)                    ; insert a newline
-  (switch-to-buffer nil))
+            (interactive "SName of the macro:") ; ask for the name of the macro
+            (kmacro-name-last-macro name)        ; use this name for the macro
+            (find-file user-init-file)   ; open ~/.emacs or other user init file
+            (goto-char (point-max))      ; go to the end of the .emacs
+            (newline)                    ; insert a newline
+            (insert-kbd-macro name)      ; copy the macro
+            (newline)                    ; insert a newline
+            (switch-to-buffer nil))))
 
-(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (cl-flet ((process-list ())) ad-do-it))
+(use-package my-text-editing-utils
+  :init (progn
+          (use-package syntax-subword
+            :config (progn
+                      (global-syntax-subword-mode t))
+            :ensure t)
+          (use-package wgrep
+            :ensure t)
+          (use-package loccur
+            :commands (loccur loccur-current loccur-previous-match)
+            :bind (("C-o" . loccur-current)
+                   ("C-M-o" . loccur)
+                   ("C-S-o" . loccur-previous-match))
+            :ensure t)
+          (use-package mmm-mode
+            :config (progn
+                      (setq mmm-global-mode 'maybe)
+                      (mmm-add-classes
+                       '((python-rst
+                          :submode rst-mode
+                          :front "^ *[ru]?\"\"\"[^\"]*$"
+                          :back "^ *\"\"\""
+                          :include-front t
+                          :include-back t
+                          :end-not-begin t)))
+                      (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
+            :ensure t)
+          ))
 
-(setq kill-buffer-query-functions
-      (remq 'process-kill-buffer-query-function
-            kill-buffer-query-functions))
-
-
-;;----------------------------------------------------------------------------
-;; Text editing utils
-;;----------------------------------------------------------------------------
-
-(use-package wgrep
-  :ensure t)
-
-(use-package loccur
-  :commands (loccur loccur-current loccur-previous-match)
-  :bind (("C-o" . loccur-current)
-         ("C-M-o" . loccur)
-         ("C-S-o" . loccur-previous-match))
-  :ensure t)
-
-(use-package mmm-mode
-  :config (progn
-            (setq mmm-global-mode 'maybe)
-            (mmm-add-classes
-             '((python-rst
-                :submode rst-mode
-                :front "^ *[ru]?\"\"\"[^\"]*$"
-                :back "^ *\"\"\""
-                :include-front t
-                :include-back t
-                :end-not-begin t)))
-            (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
-  :ensure t)
-
-;;----------------------------------------------------------------------------
-;; Logging
-;;----------------------------------------------------------------------------
-
-(use-package mwe-log-commands
-  :ensure t)
-
-
-;;----------------------------------------------------------------------------
-;; Load configs for specific features and modes
-;;----------------------------------------------------------------------------
+(use-package my-log-utils
+  :init (progn
+          (use-package mwe-log-commands
+            :ensure t)))
 
 (use-package bookmark+
+  :config (progn
+            (setq bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
+                  bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
   :ensure t)
+
 (use-package scratch
   :ensure t)
 ;; (use-package yasnippet
@@ -303,11 +295,6 @@
 ;;             (yas-global-mode 1)
 ;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
 ;;   :ensure t)
-(use-package emmet-mode
-  :commands emmet-mode
-  :mode ("\\.html\\'" . emmet-mode)
-  :mode ("\\.htm\\'" . emmet-mode)
-  :ensure t)
 (use-package impatient-mode
   :commands impatient-mode
   :ensure t)
@@ -315,10 +302,18 @@
   :commands restclient-mode
   :mode ("\\.rest\\'" . restclient-mode)
   :ensure t)
-(use-package pg)
-(use-package sql-indent
-  :ensure t)
+
+(use-package my-databases
+  :init (progn
+          (use-package redis
+            :ensure t)))
+
 (use-package emacsql
+  :init (progn
+          (use-package pg
+            :ensure t)
+          (use-package sql-indent
+            :ensure t))
   :config (progn
             (defun sql-indent-string ()
               "Indents the string under the cursor as SQL."
@@ -539,13 +534,26 @@
          ("\C-x|" . split-window-horizontally-instead)
          ("\C-x_" . split-window-vertically-instead)))
 
-;; (require 'init-sessions)
-(require 'init-fonts)
+(use-package web-mode
+  :init (progn
+          (use-package emmet-mode
+            :config (progn
+                      (add-hook 'web-mode-hook 'emmet-mode))
+            :commands emmet-mode
+            :ensure t))
+  :config (progn
+            (add-auto-mode 'web-mode "\\.html\\'")
+            (add-auto-mode 'web-mode "\\.htm\\'")
+            (setq web-mode-markup-indent-offset 4
+                  web-mode-css-indent-offset 4
+                  web-mode-code-indent-offset 4))
+  :ensure t)
+
+;; (require 'init-fonts)
 (require 'init-editing-utils)
 (require 'init-darcs)
 (require 'init-csv)
 (require 'init-javascript)
-(require 'init-web)
 (require 'init-org)
 (require 'init-nxml)
 (require 'init-haml)
@@ -651,11 +659,20 @@
          ("C-x g c" . magit-commit)
          ("C-x g p c" . magit-push-current)))
 
-(use-package twittering-mode)
-
-(use-package term+
-  :config
-  (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+(use-package my-internet-services
+  :init (progn
+          (use-package google-translate
+            :config (defun translate-text (sentence)
+                      "Google translate without specifying language"
+                      (interactive "sTranslate sentence: ")
+                      (setq lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                           ("[а-яА-Я]" . ("ru" "en"))))
+                      (dolist (lang-regex lang-regexes)
+                        (if (string-match (car lang-regex) sentence)
+                            (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
+            :bind ("C-x y t t" . translate-text)
+            :ensure t)
+          (use-package twittering-mode)))
 
 (use-package itail)
 
