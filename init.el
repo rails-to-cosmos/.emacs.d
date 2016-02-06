@@ -100,8 +100,9 @@
                   try-expand-dabbrev-all-buffers
                   try-expand-dabbrev-from-kill
                   try-complete-lisp-symbol-partially
-                  try-complete-lisp-symbol))))
-
+                  try-complete-lisp-symbol)
+                ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
+123
 (use-package shell
   :init (progn
           (use-package exec-path-from-shell
