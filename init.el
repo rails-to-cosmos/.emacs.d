@@ -808,7 +808,11 @@
 (use-package bpr
   :config (progn
             (setq bpr-colorize-output t
-                  bpr-close-after-success t))
+                  bpr-close-after-success t)
+            (defun emacs-push-config ()
+              (interactive)
+              (let* ((bpr-process-directory user-emacs-directory)) ;; show progress messages once in 60 seconds
+                (bpr-spawn "fab push"))))
   :ensure t)
 
 (setq ido-auto-merge-work-directories-length -1)
