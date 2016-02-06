@@ -811,7 +811,9 @@
                   bpr-close-after-success t)
             (defun emacs-push-config ()
               (interactive)
-              (let* ((bpr-process-directory user-emacs-directory)) ;; show progress messages once in 60 seconds
+              (let* ((bpr-process-directory user-emacs-directory)
+                     (bpr-close-after-success t)
+                     (bpr-show-progress nil)) ;; show progress messages once in 60 seconds
                 (bpr-spawn "fab push"))))
   :ensure t)
 
