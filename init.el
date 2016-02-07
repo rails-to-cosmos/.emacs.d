@@ -718,17 +718,10 @@
   :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode)
   :ensure t)
 
-;; (use-package my-project-management
-;;   :init (progn
-;;           (use-package projectile
-;;             :config (progn
-;;                       (setq projectile-indexing-method 'native
-;;                             projectile-enable-caching t
-;;                             projectile-sort-order 'recentf
-;;                             projectile-file-exists-remote-cache-expire (* 10 60)
-;;                             projectile-require-project-root t)
-;;                       (projectile-global-mode))
-;;             :ensure t)))
+(use-package my-project-management
+  :init (progn
+          (use-package icicles
+            :ensure t)))
 
 (use-package codesearch
   :ensure t)
