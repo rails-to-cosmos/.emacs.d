@@ -673,7 +673,8 @@
                             (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
             :bind ("C-x y t t" . translate-text)
             :ensure t)
-          (use-package twittering-mode)))
+          ;; (use-package twittering-mode)
+          ))
 
 (use-package itail)
 
