@@ -723,13 +723,6 @@
           (use-package icicles
             :ensure t)))
 
-(use-package codesearch
-  :ensure t)
-
-(use-package prosjekt
-  :bind (("C-x y p o r e" . prosjekt-open-recent))
-  :ensure t)
-
 (use-package elscreen
   :config (progn
             (elscreen-start)
