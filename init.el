@@ -54,6 +54,14 @@
 (eval-when-compile
   (require 'use-package))
 
+(use-package use-package
+  :init (progn
+          (use-package diminish
+            :commands diminish
+            :ensure t)
+          (use-package bind-key
+            :ensure t)))
+
 (use-package my-global-settings
   :init (progn
           (defvar emacs-persistence-directory (concat user-emacs-directory "persistence/"))
@@ -71,14 +79,6 @@
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
             (normal-top-level-add-subdirs-to-load-path))
           (defconst *is-a-mac* (eq system-type 'darwin))))
-
-(use-package use-package
-  :init (progn
-          (use-package diminish
-            :commands diminish
-            :ensure t)
-          (use-package bind-key
-            :ensure t)))
 
 (use-package autocomplete
   :config (progn
@@ -112,36 +112,36 @@
                         (setenv "LANG" "en_US.UTF-8")
                         (setenv "LC_ALL" "en_US.UTF-8")
                         (setenv "LC_CTYPE" "en_US.UTF-8")))
-            :ensure t))
+            :ensure t)
 
-  :config (progn
-            (use-package term+
-              :config
-              (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+          (defun spawn-shell (name &rest commands)
+            "Invoke shell with commands"
+            (interactive "MName of shell buffer to spawn: ")
+            (pop-to-buffer (get-buffer-create name))
+            (setq default-eshell-buffer-name
+                  (if (string= (boundp 'eshell-buffer-name) nil)
+                      "*eshell*"
+                    eshell-buffer-name))
+            (setq eshell-buffer-name name)
+            (eshell)
+            (setq eshell-buffer-name default-eshell-buffer-name)
+            (loop for command in commands
+                  do (insert (concat command "\n")))
+            (eshell-send-input)
+            (goto-char (point-max)))
 
-            (defun spawn-shell (name &rest commands)
-              "Invoke shell with commands"
-              (interactive "MName of shell buffer to spawn: ")
-              (pop-to-buffer (get-buffer-create name))
-              (setq default-eshell-buffer-name
-                    (if (string= (boundp 'eshell-buffer-name) nil)
-                        "*eshell*"
-                      eshell-buffer-name))
-              (setq eshell-buffer-name name)
-              (eshell)
-              (setq eshell-buffer-name default-eshell-buffer-name)
-              (loop for command in commands
-                    do (insert (concat command "\n")))
-              (eshell-send-input)
-              (goto-char (point-max)))
+          (use-package term+
+            :config
+            (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
 
-            (defun eshell-init-aliases()
-              (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
-              (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
-              (add-to-list 'eshell-command-aliases-list '("l" "ls"))
-              (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
-              (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
-            (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
+          (defun eshell-init-aliases()
+            (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
+            (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
+            (add-to-list 'eshell-command-aliases-list '("l" "ls"))
+            (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
+            (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
+
+          (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
 
 (use-package my-user-interface
   :init (progn
@@ -283,8 +283,9 @@
             :ensure t)))
 
 (use-package bookmark+
-  :config (progn
+  :init (progn
             (setq bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
+                  bookmark-file (concat emacs-persistence-directory ".bookmarks")
                   bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
   :ensure t)
 
@@ -717,14 +718,17 @@
   :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode)
   :ensure t)
 
-;; (use-package projectile
-;;   :config (progn
-;;             (setq projectile-indexing-method 'native
-;;                   projectile-enable-caching t
-;;                   projectile-file-exists-remote-cache-expire (* 10 60)
-;;                   projectile-require-project-root nil)
-;;             (projectile-global-mode))
-;;   :ensure t)
+;; (use-package my-project-management
+;;   :init (progn
+;;           (use-package projectile
+;;             :config (progn
+;;                       (setq projectile-indexing-method 'native
+;;                             projectile-enable-caching t
+;;                             projectile-sort-order 'recentf
+;;                             projectile-file-exists-remote-cache-expire (* 10 60)
+;;                             projectile-require-project-root t)
+;;                       (projectile-global-mode))
+;;             :ensure t)))
 
 (use-package codesearch
   :ensure t)
