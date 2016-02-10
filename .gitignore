@@ -19,10 +19,11 @@ emacs.org
 .smex-items
 *.elc
 url/
-*.py
 request/curl-cookie-jar
 edu/
 vimish-fold/
 emacs-for-python/
 .python-environments/
 jordon/
+ac-comphist.dat
+*.pyc
