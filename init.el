@@ -541,7 +541,7 @@
 
 ;; (require 'init-sessions)
 (require 'init-fonts)
-(require 'init-editing-utils)
+
 (require 'init-darcs)
 (require 'init-csv)
 (require 'init-javascript)
@@ -601,7 +601,13 @@
               (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
               (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
               (funcall (intern dz-restart-expr)))
-            (global-set-key (kbd "<f5>") 'dz-restart-current)))
+            (defun dz-stop-current ()
+              (interactive)
+              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+              (funcall (intern dz-restart-expr)))
+            (global-set-key (kbd "<f5>") 'dz-restart-current)
+            (global-set-key (kbd "<f4>") 'dz-stop-current)))
 
 (use-package list-processes+
   :commands list-processes+)
@@ -644,7 +650,8 @@
             (use-package bug-reference-github
               :ensure t)
             (use-package magit-gh-pulls
-              :ensure t))
+              :ensure t)
+            (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
