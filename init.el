@@ -248,6 +248,64 @@
 
 (use-package my-text-editing-utils
   :init (progn
+          ;; Align command
+          ;; from http://stackoverflow.com/questions/3633120/emacs-hotkey-to-align-equal-signs
+          ;; another information: https://gist.github.com/700416
+          ;; use rx function http://www.emacswiki.org/emacs/rx
+          (defun align-to-colon (begin end)
+            "Align region to colon (:) signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) ":") 1 1 ))
+
+          (defun align-to-comma (begin end)
+            "Align region to comma  signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx "," (group (zero-or-more (syntax whitespace))) ) 1 1 ))
+
+          (defun align-to-equals (begin end)
+            "Align region to equal signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) "=") 1 1 ))
+
+          (defun align-to-hash (begin end)
+            "Align region to hash ( => ) signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) "=>") 1 1 ))
+
+          ;; work with this
+          (defun align-to-comma-before (begin end)
+            "Align region to equal signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) ",") 1 1 ))
+
+          (defun align-to-whitespace (start end)
+            "Align columns by whitespace"
+            (interactive "r")
+            (align-regexp start end
+                          "\\(\\s-*\\)\\s-" 1 0 t))
+
+          (defun remove-dos-eol ()
+            "Do not show ^M in files containing mixed UNIX and DOS line endings."
+            (interactive)
+            (setq buffer-display-table (make-display-table))
+            (aset buffer-display-table ?\^M []))
+          (defun bjm/align-whitespace (start end)
+            "Align columns by whitespace"
+            (interactive "r")
+            (align-regexp start end
+                          "\\(\\s-*\\)\\s-" 1 0 t))
+
+          (defun align-to-ampersand (start end)
+            "Align columns by ampersand"
+            (interactive "r")
+            (align-regexp start end
+                          "\\(\\s-*\\)&" 1 1 t))
+
           (use-package syntax-subword
             :config (progn
                       (global-syntax-subword-mode t))
