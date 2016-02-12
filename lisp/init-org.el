@@ -45,7 +45,7 @@
 (setq org-outline-path-complete-in-steps t)
 
 (setq org-todo-keywords
-      (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "|" "DONE(d!/!)")
+      (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "|" "DONE(d!/!)")
               (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
 
 (setq org-ellipsis "..." )
