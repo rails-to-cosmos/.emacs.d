@@ -869,9 +869,8 @@
                   bpr-close-after-success t)
             (defun emacs-push-config (cm)
               (interactive "MCommit message: ")
-              (spawn-shell "emacs-fabric"
-                           user-emacs-directory
-                           (concatenate 'string "fab push:cm=\'" cm "\'"))))
+              (let* ((bpr-process-directory user-emacs-directory))
+                (bpr-spawn (concatenate 'string "fab push:cm=\'" cm "\'")))))
   :ensure t)
 
 (require 'init-local nil t)
