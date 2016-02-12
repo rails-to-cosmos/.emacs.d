@@ -861,11 +861,11 @@
   :config (progn
             (setq bpr-colorize-output t
                   bpr-close-after-success t)
-            (defun emacs-push-config ()
-              (interactive)
+            (defun emacs-push-config (cm)
+              (interactive "MCommit message: ")
               (spawn-shell "emacs-fabric"
                            user-emacs-directory
-                           "fab push")))
+                           (concatenate 'string "fab push:cm=\'" cm "\'"))))
   :ensure t)
 
 (require 'init-local nil t)
