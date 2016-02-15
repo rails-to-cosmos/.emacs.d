@@ -60,7 +60,9 @@
             :commands diminish
             :ensure t)
           (use-package bind-key
-            :ensure t)))
+            :ensure t))
+  :config (progn
+            (setq use-package-verbose t)))
 
 (use-package my-global-settings
   :init (progn
