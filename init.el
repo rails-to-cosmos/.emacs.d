@@ -785,8 +785,9 @@
 
 (use-package my-project-management
   :init (progn
-          (use-package icicles
-            :ensure t)))
+          ;; (use-package icicles
+          ;;   :ensure t)
+          ))
 
 (use-package elscreen
   :config (progn
@@ -837,6 +838,7 @@
 			 :width normal
 			 :foundry nil
 			 :family "Inconsolata")))))
+
 (setq-default buffers-menu-max-size 30
               case-fold-search t
               compilation-scroll-output t
@@ -849,7 +851,7 @@
               save-interprogram-paste-before-kill t
               scroll-preserve-screen-position 'always
               set-mark-command-repeat-pop t
-              show-trailing-whitespace t
+              show-trailing-whitespace nil
               tooltip-delay 1.5
               truncate-lines nil
               truncate-partial-width-windows nil
@@ -871,6 +873,16 @@
               (interactive "MCommit message: ")
               (let* ((bpr-process-directory user-emacs-directory))
                 (bpr-spawn (concatenate 'string "fab push:cm=\'" cm "\'")))))
+  :ensure t)
+
+(use-package prodigy
+  :config (progn
+            (prodigy-define-tag
+              :name 'django
+              :ready-message "Quit the server with CONTROL-C")
+            (prodigy-define-tag
+              :name 'rabbitmq
+              :ready-message "completed"))
   :ensure t)
 
 (require 'init-local nil t)
