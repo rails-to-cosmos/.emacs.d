@@ -176,6 +176,41 @@
                          mode-line-end-spaces)))
             :ensure t)
 
+          (use-package split-window
+            :init (progn
+                    (defun split-window-multiple-ways (x y)
+                      "Split the current frame into a grid of X columns and Y rows."
+                      (interactive "nColumns: \nnRows: ")
+                      ;; one window
+                      (delete-other-windows)
+                      (dotimes (i (1- x))
+                        (split-window-horizontally)
+                        (dotimes (j (1- y))
+                          (split-window-vertically))
+                        (other-window y))
+                      (dotimes (j (1- y))
+                        (split-window-vertically))
+                      (balance-windows))
+                    (autoload 'windmove-find-other-window "windmove"
+                      "Return the window object in direction DIR. fn dir &optional arg window)")
+                    (declare-function windmove-find-other-window "windmove" (dir &optional arg window))
+                    (defun get-window-in-frame (x y &optional frame)
+                      "Find Xth horizontal and Yth vertical window from top-left of FRAME."
+                      (let ((orig-x x) (orig-y y)
+                            (w (frame-first-window frame)))
+                        (while (and (windowp w) (> x 0))
+                          (setq w (windmove-find-other-window 'right 1 w)
+                                x (1- x)))
+                        (while (and (windowp w) (> y 0))
+                          (setq w (windmove-find-other-window 'down 1 w)
+                                y (1- y)))
+                        (unless (windowp w)
+                          (error "No window at (%d, %d)" orig-x orig-y))
+                        w))
+                    (defun set-window-buffer-in-frame (x y buffer &optional frame)
+                      "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
+                      (set-window-buffer (get-window-in-frame x y frame) buffer))))
+
           (defun what-face (pos)
             (interactive "d")
             (let ((face (or (get-char-property (point) 'read-face-name)
@@ -820,3 +855,6 @@
 (provide 'init)
 
 ;;; init.el ends here
+
+(fset 'mstrd-add-comment-block
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([escape 60 19 99 111 110 116 101 110 116 return 5 2 67108925 24 24 1 6 escape 119 44 return 34 99 111 109 109 101 110 116 115 5 58 32 123 return 34 42 5 58 32 123 return 34 99 111 109 109 101 110 116 115 5 58 32 91] 0 "%d")) arg)))
