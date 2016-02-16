@@ -60,7 +60,9 @@
             :commands diminish
             :ensure t)
           (use-package bind-key
-            :ensure t)))
+            :ensure t))
+  :config (progn
+            (setq use-package-verbose t)))
 
 (use-package my-global-settings
   :init (progn
@@ -283,6 +285,64 @@
 
 (use-package my-text-editing-utils
   :init (progn
+          ;; Align command
+          ;; from http://stackoverflow.com/questions/3633120/emacs-hotkey-to-align-equal-signs
+          ;; another information: https://gist.github.com/700416
+          ;; use rx function http://www.emacswiki.org/emacs/rx
+          (defun align-to-colon (begin end)
+            "Align region to colon (:) signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) ":") 1 1 ))
+
+          (defun align-to-comma (begin end)
+            "Align region to comma  signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx "," (group (zero-or-more (syntax whitespace))) ) 1 1 ))
+
+          (defun align-to-equals (begin end)
+            "Align region to equal signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) "=") 1 1 ))
+
+          (defun align-to-hash (begin end)
+            "Align region to hash ( => ) signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) "=>") 1 1 ))
+
+          ;; work with this
+          (defun align-to-comma-before (begin end)
+            "Align region to equal signs"
+            (interactive "r")
+            (align-regexp begin end
+                          (rx (group (zero-or-more (syntax whitespace))) ",") 1 1 ))
+
+          (defun align-to-whitespace (start end)
+            "Align columns by whitespace"
+            (interactive "r")
+            (align-regexp start end
+                          "\\(\\s-*\\)\\s-" 1 0 t))
+
+          (defun remove-dos-eol ()
+            "Do not show ^M in files containing mixed UNIX and DOS line endings."
+            (interactive)
+            (setq buffer-display-table (make-display-table))
+            (aset buffer-display-table ?\^M []))
+          (defun bjm/align-whitespace (start end)
+            "Align columns by whitespace"
+            (interactive "r")
+            (align-regexp start end
+                          "\\(\\s-*\\)\\s-" 1 0 t))
+
+          (defun align-to-ampersand (start end)
+            "Align columns by ampersand"
+            (interactive "r")
+            (align-regexp start end
+                          "\\(\\s-*\\)&" 1 1 t))
+
           (use-package syntax-subword
             :config (progn
                       (global-syntax-subword-mode t))
@@ -762,8 +822,9 @@
 
 (use-package my-project-management
   :init (progn
-          (use-package icicles
-            :ensure t)))
+          ;; (use-package icicles
+          ;;   :ensure t)
+          ))
 
 (use-package elscreen
   :config (progn
@@ -814,6 +875,7 @@
 			 :width normal
 			 :foundry nil
 			 :family "Inconsolata")))))
+
 (setq-default buffers-menu-max-size 30
               case-fold-search t
               compilation-scroll-output t
@@ -826,7 +888,7 @@
               save-interprogram-paste-before-kill t
               scroll-preserve-screen-position 'always
               set-mark-command-repeat-pop t
-              show-trailing-whitespace t
+              show-trailing-whitespace nil
               tooltip-delay 1.5
               truncate-lines nil
               truncate-partial-width-windows nil
@@ -844,11 +906,20 @@
   :config (progn
             (setq bpr-colorize-output t
                   bpr-close-after-success t)
-            (defun emacs-push-config ()
-              (interactive)
-              (spawn-shell "emacs-fabric"
-                           user-emacs-directory
-                           "fab push")))
+            (defun emacs-push-config (cm)
+              (interactive "MCommit message: ")
+              (let* ((bpr-process-directory user-emacs-directory))
+                (bpr-spawn (concatenate 'string "fab push:cm=\'" cm "\'")))))
+  :ensure t)
+
+(use-package prodigy
+  :config (progn
+            (prodigy-define-tag
+              :name 'django
+              :ready-message "Quit the server with CONTROL-C")
+            (prodigy-define-tag
+              :name 'rabbitmq
+              :ready-message "completed"))
   :ensure t)
 
 (require 'init-local nil t)
