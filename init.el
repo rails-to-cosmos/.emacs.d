@@ -879,9 +879,53 @@
 
 (use-package prodigy
   :config (progn
+            (defun ido-prodigy-menu ()
+              (interactive)
+              (let* ((ido-prodigy-choices (mapcar (lambda (serv)
+                                                    (let* ((status (prodigy-service-started-p serv))
+                                                           (service-name (cadr serv))
+                                                           (stopped-label service-name)
+                                                           (started-label  service-name))
+                                                      (if status started-label
+                                                        stopped-label)))
+                                                  prodigy-services)))
+                (ido-completing-read "Service: " ido-prodigy-choices)))
+
+            (defun find-prodigy-service-with-name (service-name)
+              (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
+                                      prodigy-services)))
+                (car matches)))
+
+            (defun prodigy-apply-to-services (services fn)
+              (prodigy-with-refresh
+               (-each services fn)))
+
+            (defun prodigy-start-all-services ()
+              (interactive)
+              (prodigy-apply-to-services prodigy-services
+                                         'prodigy-start-service))
+
+            (defun prodigy-stop-all-services ()
+              (interactive)
+              (prodigy-apply-to-services prodigy-services
+                                         'prodigy-stop-service))
+
+            (defun prodigy-stop-services-with-tag (tag)
+              (prodigy-apply-to-services
+               (prodigy-services-tagged-with (intern tag))
+               'prodigy-stop-service))
+
+            (defun prodigy-start-services-with-tag (tag)
+              (prodigy-apply-to-services
+               (prodigy-services-tagged-with (intern tag))
+               'prodigy-start-service))
+            (prodigy-define-default-status-list)
             (prodigy-define-tag
               :name 'django
               :ready-message "Quit the server with CONTROL-C")
+            (prodigy-define-tag
+              :name 'redis
+              :ready-message "The server is now ready")
             (prodigy-define-tag
               :name 'rabbitmq
               :ready-message "completed"))
