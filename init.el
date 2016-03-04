@@ -60,9 +60,8 @@
             :commands diminish
             :ensure t)
           (use-package bind-key
-            :ensure t))
-  :config (progn
-            (setq use-package-verbose t)))
+            :ensure t)
+          (setq use-package-verbose t)))
 
 (use-package my-global-settings
   :init (progn
@@ -107,6 +106,11 @@
 
 (use-package my-shell
   :init (progn
+          (setq eshell-buffer-maximum-lines 100
+                password-cache t
+                password-cache-expiry 3600)
+
+          (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
           (use-package exec-path-from-shell
             :config (progn
                       (when (memq window-system '(mac ns))
@@ -123,8 +127,8 @@
             (setq default-eshell-buffer-name
                   (if (string= (boundp 'eshell-buffer-name) nil)
                       "*eshell*"
-                    eshell-buffer-name))
-            (setq eshell-buffer-name name)
+                    eshell-buffer-name)
+                  eshell-buffer-name name)
             (eshell)
             (setq eshell-buffer-name default-eshell-buffer-name)
             (loop for command in commands
@@ -133,8 +137,9 @@
             (goto-char (point-max)))
 
           (use-package term+
-            :config
-            (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+            :config (progn
+                      (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+            :ensure t)
 
           (defun eshell-init-aliases()
             (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
@@ -142,7 +147,6 @@
             (add-to-list 'eshell-command-aliases-list '("l" "ls"))
             (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
             (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
-
           (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
 
 (use-package my-user-interface
