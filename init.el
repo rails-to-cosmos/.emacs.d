@@ -66,10 +66,10 @@
 
 (use-package my-global-settings
   :init (progn
-          (defvar emacs-persistence-directory (concat user-emacs-directory "persistence/"))
-          (defvar savehist-file (concat emacs-persistence-directory ".minibuffer-history"))
-          (make-directory emacs-persistence-directory t)
-          (setq session-save-file (concat emacs-persistence-directory ".session")
+          (defconst *is-a-mac* (eq system-type 'darwin))
+          (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
+                savehist-file (concat emacs-persistence-directory ".minibuffer-history")
+                session-save-file (concat emacs-persistence-directory ".session")
                 frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
                 desktop-path (list emacs-persistence-directory)
                 recentf-save-file (concat emacs-persistence-directory ".recentf")
@@ -77,33 +77,34 @@
                 mc/list-file (concat emacs-persistence-directory ".mc-lists")
                 abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs")
                 mac-command-modifier 'meta)
+          (make-directory emacs-persistence-directory t)
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-            (normal-top-level-add-subdirs-to-load-path))
-          (defconst *is-a-mac* (eq system-type 'darwin))))
+            (normal-top-level-add-subdirs-to-load-path))))
 
 (use-package autocomplete
   :config (progn
-          (use-package popup)
-          (use-package pos-tip)
-          (use-package popup-kill-ring)
-          (use-package auto-complete-config)
-          (ac-config-default)
-          (defvar ac-comphist-file (concat emacs-persistence-directory ".ac-comphist"))
-          (defvar ac-use-menu-map t)
-          (defvar hippie-expand-verbose t)
-          (defvar smart-tab-using-hippie-expand t
-            "turn this on if you want to use hippie-expand completion.")
-          (setq hippie-expand-try-functions-list
-                '(yas/hippie-try-expand
-                  try-complete-file-name-partially
-                  try-expand-all-abbrevs
-                  try-expand-dabbrev
-                  try-expand-dabbrev-all-buffers
-                  try-expand-dabbrev-from-kill
-                  try-complete-lisp-symbol-partially
-                  try-complete-lisp-symbol)
-                ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
+            (use-package auto-complete-nxml
+              :ensure t)
+            (use-package popup)
+            (use-package pos-tip)
+            (use-package popup-kill-ring)
+            (use-package auto-complete-config)
+            (ac-config-default)
+            (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
+                  ac-use-menu-map t
+                  hippie-expand-verbose t
+                  smart-tab-using-hippie-expand t ;; turn this on if you want to use hippie-expand completion.
+                  hippie-expand-try-functions-list
+                  '(yas/hippie-try-expand
+                    try-complete-file-name-partially
+                    try-expand-all-abbrevs
+                    try-expand-dabbrev
+                    try-expand-dabbrev-all-buffers
+                    try-expand-dabbrev-from-kill
+                    try-complete-lisp-symbol-partially
+                    try-complete-lisp-symbol)
+                  ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
 
 (use-package my-shell
   :init (progn
@@ -149,8 +150,18 @@
   :init (progn
           (use-package init-gui-frames
             :if window-system
-            :config (progn
-                      (toggle-max-frame)))
+            :init (progn
+                    (defun set-frame-alpha (arg &optional active)
+                      (interactive "nEnter alpha value (1-100): \np")
+                      (let* ((elt (assoc 'alpha default-frame-alist))
+                             (old (frame-parameter nil 'alpha))
+                             (new (cond ((atom old)     `(,arg ,arg))
+                                        ((eql 1 active) `(,arg ,(cadr old)))
+                                        (t              `(,(car old) ,arg)))))
+                        (if elt (setcdr elt new) (push `(alpha ,@new) default-frame-alist))
+                        (set-frame-parameter nil 'alpha new)))
+                    (global-set-key (kbd "C-c t") 'set-frame-alpha)
+                    (toggle-max-frame)))
 
           (use-package mode-icons
             :config (progn
@@ -546,11 +557,6 @@
                   flycheck-idle-change-delay 0.8
                   flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)))
 
-(use-package js
-  :config (progn
-            (setq js-indent-level 4))
-  :ensure t)
-
 (use-package imenu-anywhere
   :config (progn
             (after-load 'imenu-anywhere (global-set-key (kbd "C-.") 'imenu-anywhere))
@@ -632,6 +638,10 @@
 
 (use-package web-mode
   :init (progn
+          (use-package js
+            :config (progn
+                      (setq js-indent-level 4))
+            :ensure t)
           (use-package emmet-mode
             :config (progn
                       (add-hook 'web-mode-hook 'emmet-mode))
@@ -640,6 +650,7 @@
   :config (progn
             (add-auto-mode 'web-mode "\\.html\\'")
             (add-auto-mode 'web-mode "\\.htm\\'")
+            (add-auto-mode 'web-mode "\\.jsx\\'")
             (setq web-mode-markup-indent-offset 4
                   web-mode-css-indent-offset 4
                   web-mode-code-indent-offset 4))
@@ -696,21 +707,21 @@
          ("M-g w" . avy-goto-word-1)
          ("M-g e" . avy-goto-word-0)))
 
-(use-package dizzee
-  :commands (dz-defservice dz-defservice-group)
-  :init (progn
-            (defun dz-restart-current ()
-              (interactive)
-              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-              (funcall (intern dz-restart-expr)))
-            (defun dz-stop-current ()
-              (interactive)
-              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-              (funcall (intern dz-restart-expr)))
-            (global-set-key (kbd "<f5>") 'dz-restart-current)
-            (global-set-key (kbd "<f4>") 'dz-stop-current)))
+;; (use-package dizzee
+;;   :commands (dz-defservice dz-defservice-group)
+;;   :init (progn
+;;             (defun dz-restart-current ()
+;;               (interactive)
+;;               (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+;;               (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+;;               (funcall (intern dz-restart-expr)))
+;;             (defun dz-stop-current ()
+;;               (interactive)
+;;               (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+;;               (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+;;               (funcall (intern dz-restart-expr)))
+;;             (global-set-key (kbd "<f5>") 'dz-restart-current)
+;;             (global-set-key (kbd "<f4>") 'dz-stop-current)))
 
 (use-package list-processes+
   :commands list-processes+)
@@ -905,7 +916,8 @@
 (use-package bpr
   :config (progn
             (setq bpr-colorize-output t
-                  bpr-close-after-success t)
+                  bpr-close-after-success t
+                  bpr-erase-process-buffer t)
             (defun emacs-push-config (cm)
               (interactive "MCommit message: ")
               (let* ((bpr-process-directory user-emacs-directory))
@@ -913,6 +925,9 @@
   :ensure t)
 
 (use-package prodigy
+  :commands (prodigy
+             prodigy-start-all-services)
+  :bind ("C-x y p" . prodigy)
   :config (progn
             (defun ido-prodigy-menu ()
               (interactive)
@@ -957,19 +972,10 @@
             (prodigy-define-default-status-list)
             (prodigy-define-tag
               :name 'django
-              :ready-message "Quit the server with CONTROL-C")
-            (prodigy-define-tag
-              :name 'redis
-              :ready-message "The server is now ready")
-            (prodigy-define-tag
-              :name 'rabbitmq
-              :ready-message "completed"))
+              :ready-message "Quit the server with CONTROL-C"))
   :ensure t)
 
 (require 'init-local nil t)
 (provide 'init)
 
 ;;; init.el ends here
-
-(fset 'mstrd-add-comment-block
-   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([escape 60 19 99 111 110 116 101 110 116 return 5 2 67108925 24 24 1 6 escape 119 44 return 34 99 111 109 109 101 110 116 115 5 58 32 123 return 34 42 5 58 32 123 return 34 99 111 109 109 101 110 116 115 5 58 32 91] 0 "%d")) arg)))
