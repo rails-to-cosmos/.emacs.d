@@ -389,6 +389,10 @@
 
 (use-package my-log-utils
   :init (progn
+          (use-package interaction-log
+            :config (progn
+                      (interaction-log-mode t))
+            :ensure t)
           (use-package mwe-log-commands
             :ensure t)))
 
