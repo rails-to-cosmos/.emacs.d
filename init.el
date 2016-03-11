@@ -107,9 +107,16 @@
 
 (use-package my-shell
   :init (progn
+<<<<<<< HEAD
           (setq eshell-buffer-maximum-lines 100
                 password-cache t
                 password-cache-expiry 3600)
+=======
+          ;; (setq eshell-buffer-maximum-lines 100
+          ;;       password-cache t
+          ;;       password-cache-expiry 3600)
+          ;; (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+>>>>>>> e5f2e512c2662ae4676dabf3df778696de632d42
           (use-package exec-path-from-shell
             :config (progn
                       (when (memq window-system '(mac ns))
@@ -234,6 +241,10 @@
 
 (use-package my-elisp-utils
   :init (progn
+          (bind-key "<f1>" 'help-command)
+          (bind-key "C-h" 'delete-backward-char)
+          (bind-key "C-M-h" 'backward-kill-word)
+
           (defmacro after-load (feature &rest body)
             "After FEATURE is loaded, evaluate BODY."
             (declare (indent defun))
@@ -453,6 +464,11 @@
   :load-path "python/"
   :init (progn
           (use-package jedi
+            :config (progn
+                    (add-hook 'python-mode-hook 'jedi:setup))
+                    (jedi:install-server)
+            :ensure t)
+          (use-package pungi
             :ensure t)
           (use-package cinspect
             :ensure t)
@@ -466,8 +482,9 @@
             :ensure t)
           (use-package yasnippet
             :ensure t)
-          (use-package live-py-mode
-            :ensure t))
+          ;; (use-package live-py-mode
+          ;;   :ensure t)
+          )
   :config (progn
             (defun python-highlight-breakpoints ()
               (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
@@ -477,12 +494,11 @@
               (insert "import ipdb; ipdb.set_trace()")
               (python-highlight-breakpoints))
             (add-hook 'python-mode-hook 'linum-mode)
-            (add-hook 'python-mode-hook 'jedi:setup)
             (add-hook 'python-mode-hook 'yas-minor-mode)
             (add-hook 'python-mode-hook 'python-highlight-breakpoints)
             (setq python-indent-offset 4)
             (make-directory "~/.virtualenvs" t)
-            (jedi:install-server))
+            )
   :bind (("C-c C-b" . python-add-breakpoint))
   :ensure t)
 
@@ -713,21 +729,21 @@
          ("M-g w" . avy-goto-word-1)
          ("M-g e" . avy-goto-word-0)))
 
-;; (use-package dizzee
-;;   :commands (dz-defservice dz-defservice-group)
-;;   :init (progn
-;;             (defun dz-restart-current ()
-;;               (interactive)
-;;               (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-;;               (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-;;               (funcall (intern dz-restart-expr)))
-;;             (defun dz-stop-current ()
-;;               (interactive)
-;;               (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-;;               (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-;;               (funcall (intern dz-restart-expr)))
-;;             (global-set-key (kbd "<f5>") 'dz-restart-current)
-;;             (global-set-key (kbd "<f4>") 'dz-stop-current)))
+(use-package dizzee
+  :commands (dz-defservice dz-defservice-group)
+  :init (progn
+            (defun dz-restart-current ()
+              (interactive)
+              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+              (funcall (intern dz-restart-expr)))
+            (defun dz-stop-current ()
+              (interactive)
+              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+              (funcall (intern dz-restart-expr)))
+            (global-set-key (kbd "<f5>") 'dz-restart-current)
+            (global-set-key (kbd "<f4>") 'dz-stop-current)))
 
 (use-package list-processes+
   :commands list-processes+)
@@ -833,6 +849,7 @@
 (use-package string-edit
   :commands string-edit)
 
+<<<<<<< HEAD
 ;; (use-package highlight-leading-spaces
 ;;   :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode)
 ;;   :ensure t)
@@ -842,6 +859,10 @@
           ;; (use-package icicles
           ;;   :ensure t)
           ))
+=======
+;; (use-package my-project-management
+;;   :init (progn))
+>>>>>>> e5f2e512c2662ae4676dabf3df778696de632d42
 
 (use-package elscreen
   :config (progn
@@ -874,7 +895,6 @@
 ;; (use-package emacs-request)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-;; (load-theme 'zerodark t)
 (load-theme 'heroku t)
 (require 'init-gui-frames)
 (custom-set-faces
