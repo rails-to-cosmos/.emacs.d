@@ -214,9 +214,6 @@
 (after-load 'lisp-mode
   (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))
 
-;; A quick way to jump to the definition of a function given its key binding
-(global-set-key (kbd "C-h K") 'find-function-on-key)
-
 (when (eval-when-compile (>= emacs-major-version 24))
   ;; rainbow-mode needs color.el, bundled with Emacs >= 24.
   (use-package rainbow-mode
