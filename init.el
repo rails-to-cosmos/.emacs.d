@@ -110,8 +110,6 @@
           (setq eshell-buffer-maximum-lines 100
                 password-cache t
                 password-cache-expiry 3600)
-
-          (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
           (use-package exec-path-from-shell
             :config (progn
                       (when (memq window-system '(mac ns))
@@ -835,9 +833,9 @@
 (use-package string-edit
   :commands string-edit)
 
-(use-package highlight-leading-spaces
-  :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode)
-  :ensure t)
+;; (use-package highlight-leading-spaces
+;;   :init (add-hook 'prog-mode-hook 'highlight-leading-spaces-mode)
+;;   :ensure t)
 
 (use-package my-project-management
   :init (progn
