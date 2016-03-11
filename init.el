@@ -235,6 +235,10 @@
 
 (use-package my-elisp-utils
   :init (progn
+          (bind-key "<f1>" 'help-command)
+          (bind-key "C-h" 'delete-backward-char)
+          (bind-key "C-M-h" 'backward-kill-word)
+
           (defmacro after-load (feature &rest body)
             "After FEATURE is loaded, evaluate BODY."
             (declare (indent defun))
