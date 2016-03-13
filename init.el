@@ -903,18 +903,6 @@
                        ;; :family "Inconsolata"
                        )))))
 
-;; (set-face-attribute
-;;  'mode-line nil
-;;  :box (list
-;;        :line-width 4
-;;        :color (face-attribute 'mode-line :background)))
-
-;; (set-face-attribute
-;;  'mode-line-inactive nil
-;;  :box (list
-;;        :line-width 4
-;;        :color (face-attribute 'mode-line-inactive :background)))
-
 (setq-default buffers-menu-max-size 30
               case-fold-search t
               compilation-scroll-output t
