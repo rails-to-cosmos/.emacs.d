@@ -78,6 +78,7 @@
                 mac-command-modifier 'meta)
           (make-directory emacs-persistence-directory t)
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+          (add-to-list 'load-path (expand-file-name "dist-packages" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "themes" user-emacs-directory))
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
             (normal-top-level-add-subdirs-to-load-path))))
@@ -302,6 +303,12 @@
             (insert-kbd-macro name)      ; copy the macro
             (newline)                    ; insert a newline
             (switch-to-buffer nil))))
+
+(use-package my-games
+  :init (progn
+          (use-package steam
+            :config (progn
+                      (setq steam-username "bezdnaskov")))))
 
 (use-package my-text-editing-utils
   :init (progn
