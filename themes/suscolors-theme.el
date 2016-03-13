@@ -65,6 +65,7 @@
    `(linum ((t (:foreground ,grey))))
 
    `(widget-field ((t (:foreground ,fg :background ,grey3))))
+   `(widget-button ((t (:foreground ,orange))))
 
    ;; Highlight quoted mode-line
    `(highlight-quoted-symbol ((t (:foreground ,pink))))
