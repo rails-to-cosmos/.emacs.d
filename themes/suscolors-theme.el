@@ -24,7 +24,7 @@
       (green "#B3DE81")
       (blue "#D0E1F9" )
       (pink "#FF87BA")
-      (red "#AF4425")
+      (red "#F34A4A")
       (purple "#4CB5F5"))
 
   (custom-theme-set-faces
