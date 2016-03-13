@@ -63,7 +63,7 @@
             :ensure t)
           (setq use-package-verbose t)))
 
-(use-package my-global-settings
+(use-package my/global-settings
   :init (progn
           (defconst *is-a-mac* (eq system-type 'darwin))
           (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
@@ -83,37 +83,8 @@
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
             (normal-top-level-add-subdirs-to-load-path))))
 
-(use-package autocomplete
-  ;; (require 'ej-autocomplete)
-  :config (progn
-            (use-package auto-complete-nxml
-              :ensure t)
-            (use-package popup)
-            (use-package pos-tip)
-            (use-package popup-kill-ring)
-            (use-package auto-complete-config)
-            (ac-config-default)
-            (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
-                  ac-use-menu-map t
-                  hippie-expand-verbose t
-                  smart-tab-using-hippie-expand t
-                  hippie-expand-try-functions-list
-                  '(yas/hippie-try-expand
-                    try-complete-file-name-partially
-                    try-expand-all-abbrevs
-                    try-expand-dabbrev
-                    try-expand-dabbrev-all-buffers
-                    try-expand-dabbrev-from-kill
-                    try-complete-lisp-symbol-partially
-                    try-complete-lisp-symbol)
-                  ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
-
-(use-package my-shell
+(use-package my/shell
   :init (progn
-          (setq eshell-buffer-maximum-lines 100
-                password-cache t
-                password-cache-expiry 3600)
-
           (use-package exec-path-from-shell
             :config (progn
                       (when (memq window-system '(mac ns))
@@ -150,9 +121,18 @@
             (add-to-list 'eshell-command-aliases-list '("l" "ls"))
             (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
             (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
-          (add-hook 'eshell-mode-hook 'eshell-init-aliases)))
 
-(use-package my-user-interface
+          (add-hook 'eshell-mode-hook 'eshell-init-aliases)
+          (setq eshell-buffer-maximum-lines 500
+                password-cache t
+                password-cache-expiry 3600
+                eshell-output-filter-functions '(eshell-truncate-buffer
+                                                 eshell-postoutput-scroll-to-bottom
+                                                 eshell-handle-control-codes
+                                                 eshell-handle-ansi-color
+                                                 eshell-watch-for-password-prompt))))
+
+(use-package my/user-interface
   :init (progn
           (use-package init-gui-frames
             :if window-system
@@ -236,7 +216,7 @@
                             (get-char-property (point) 'face))))
               (if face (message "Face: %s" face) (message "No face at %d" pos))))))
 
-(use-package my-elisp-utils
+(use-package my/elisp-utils
   :init (progn
           (bind-key "<f1>" 'help-command)
           (bind-key "C-h" 'delete-backward-char)
@@ -288,7 +268,7 @@
                 (remq 'process-kill-buffer-query-function
                       kill-buffer-query-functions))))
 
-(use-package my-macros-utils
+(use-package my/macros-utils
   :commands (save-macro)
   :init (progn
           (defun save-macro (name)
@@ -304,14 +284,44 @@
             (newline)                    ; insert a newline
             (switch-to-buffer nil))))
 
-(use-package my-games
+(use-package my/games
   :init (progn
           (use-package steam
             :config (progn
                       (setq steam-username "bezdnaskov")))))
 
-(use-package my-text-editing-utils
+(use-package my/keybinding-presuppositions
   :init (progn
+          (dolist (key '("\C-l"))
+            (global-unset-key key))))
+
+(use-package my/text-editing-utils
+  :init (progn
+          (use-package autocomplete
+            ;; (require 'ej-autocomplete)
+            :config (progn
+                      (use-package auto-complete-nxml
+                        :ensure t)
+                      (use-package popup)
+                      (use-package pos-tip)
+                      (use-package popup-kill-ring)
+                      (use-package auto-complete-config)
+                      (ac-config-default)
+                      (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
+                            ac-use-menu-map t
+                            hippie-expand-verbose t
+                            smart-tab-using-hippie-expand t
+                            hippie-expand-try-functions-list
+                            '(yas/hippie-try-expand
+                              try-complete-file-name-partially
+                              try-expand-all-abbrevs
+                              try-expand-dabbrev
+                              try-expand-dabbrev-all-buffers
+                              try-expand-dabbrev-from-kill
+                              try-complete-lisp-symbol-partially
+                              try-complete-lisp-symbol)
+                            ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
+
           ;; Align command
           ;; from http://stackoverflow.com/questions/3633120/emacs-hotkey-to-align-equal-signs
           ;; another information: https://gist.github.com/700416
@@ -358,6 +368,7 @@
             (interactive)
             (setq buffer-display-table (make-display-table))
             (aset buffer-display-table ?\^M []))
+
           (defun bjm/align-whitespace (start end)
             "Align columns by whitespace"
             (interactive "r")
@@ -378,12 +389,11 @@
           (use-package wgrep
             :ensure t)
 
-          (use-package loccur
-            :commands (loccur loccur-current loccur-previous-match)
-            :bind (("C-o" . loccur-current)
-                   ("C-M-o" . loccur)
-                   ("C-S-o" . loccur-previous-match))
-            :ensure t)
+          (setq read-file-name-completion-ignore-case t
+                read-buffer-completion-ignore-case t)
+          (mapc (lambda (x)
+                  (add-to-list 'completion-ignored-extensions x))
+                '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls"))
 
           (use-package mmm-mode
             :config (progn
@@ -399,7 +409,7 @@
                       (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
             :ensure t)))
 
-(use-package my-log-utils
+(use-package my/log-utils
   :init (progn
           (use-package interaction-log
             :config (progn
@@ -430,7 +440,7 @@
   :mode ("\\.rest\\'" . restclient-mode)
   :ensure t)
 
-(use-package my-databases
+(use-package my/databases
   :init (progn
           (use-package redis
             :ensure t)))
@@ -468,23 +478,44 @@
   :init (progn
           (use-package jedi
             :config (progn
-                    (add-hook 'python-mode-hook 'jedi:setup))
-                    (jedi:install-server)
+                      (add-hook 'python-mode-hook 'jedi:setup))
+            (jedi:install-server)
             :ensure t)
+
           (use-package pungi
             :ensure t)
+
           (use-package cinspect
             :ensure t)
+
           (use-package py-isort
             :ensure t)
+
           (use-package py-yapf
             :ensure t)
+
           (use-package pyenv-mode
             :ensure t)
+
           (use-package pyvenv
             :ensure t)
-          (use-package yasnippet
+
+          ;; https://github.com/davidmiller/pony-mode
+          (use-package pony-mode
+            :config ;; (progn
+            ;;   ;; Pony mode config for the megacorp project
+            ;;   ((nil . ;; This applies these settings regardless of major mode
+
+            ;;         ((pony-settings (make-pony-project
+            ;;                          :python "/home/david/virtualenvs/megacorp/production/bin/python"
+            ;;                          :pythonpath "/home/david/megacorp/libs/projectzero"
+            ;;                          :settings "local_settings_file"
+            ;;                          :appsdir "testproject/apps/")
+            ;;                         )))))
             :ensure t)
+
+          ;; (use-package yasnippet
+          ;;   :ensure t)
           ;; (use-package live-py-mode
           ;;   :ensure t)
           )
@@ -498,91 +529,24 @@
               (interactive)
               (insert "import ipdb; ipdb.set_trace()")
               (python-highlight-breakpoints))
+            (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
             (add-hook 'python-mode-hook 'linum-mode)
-            (add-hook 'python-mode-hook 'yas-minor-mode)
-            (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+            ;; (add-hook 'python-mode-hook 'yas-minor-mode)
+            ;; (add-hook 'python-mode-hook 'python-highlight-breakpoints)
             (setq python-indent-offset 4)
-            (make-directory "~/.virtualenvs" t)
-            )
+            (make-directory "~/.virtualenvs" t))
   :bind (("C-c C-b" . python-add-breakpoint))
-  :ensure t)
-
-
-;; https://github.com/davidmiller/pony-mode
-(use-package pony-mode
-  :config ;; (progn
-          ;;   ;; Pony mode config for the megacorp project
-          ;;   ((nil . ;; This applies these settings regardless of major mode
-
-          ;;         ((pony-settings (make-pony-project
-          ;;                          :python "/home/david/virtualenvs/megacorp/production/bin/python"
-          ;;                          :pythonpath "/home/david/megacorp/libs/projectzero"
-          ;;                          :settings "local_settings_file"
-          ;;                          :appsdir "testproject/apps/")
-          ;;                         )))))
   :ensure t)
 
 (require 'init-isearch)
 
-(use-package uniquify
-  :disabled t
-  :init (progn
-          (setq uniquify-buffer-name-style 'reverse
-                uniquify-separator " • "
-                uniquify-after-kill-buffer-p t
-                uniquify-ignore-buffers-re "^\\*")))
-
-(use-package ibuffer
-  :init (progn
-          (use-package fullframe
-            :ensure t)
-          (use-package ibuffer-vc
-            :ensure t)
-          (use-package ibuffer-git
-            :ensure t))
-  :config (progn
-            (setq ibuffer-formats
-                  '((mark modified read-only vc-status-mini " "
-                          (name 18 18 :left :elide)
-                          " "
-                          (size-h 9 -1 :right)
-                          " "
-                          (mode 16 16 :left :elide)
-                          " "
-                          filename-and-process)
-                    (mark modified read-only vc-status-mini " "
-                          (name 18 18 :left :elide)
-                          " "
-                          (size-h 9 -1 :right)
-                          " "
-                          (mode 16 16 :left :elide)
-                          " "
-                          (vc-status 16 16 :left)
-                          " "
-                          filename-and-process))
-                  ibuffer-filter-group-name-face 'font-lock-doc-face)
-            (define-ibuffer-column size-h
-              (:name "Size" :inline t)
-              (cond
-               ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
-               ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
-               (t (format "%8d" (buffer-size)))))
-            (defun ibuffer-set-up-preferred-filters ()
-              (ibuffer-vc-set-filter-groups-by-vc-root)
-              (unless (eq ibuffer-sorting-mode 'filename/process)
-                (ibuffer-do-sort-by-filename/process)))
-            (after-load 'ibuffer
-              (fullframe ibuffer ibuffer-quit)))
-  :bind ("C-x C-b" . ibuffer)
-  :ensure t)
-
 (use-package flycheck
-  :ensure t
   :config (progn
             (add-hook 'after-init-hook 'global-flycheck-mode)
             (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
                   flycheck-idle-change-delay 0.8
-                  flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)))
+                  flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+  :ensure t)
 
 (use-package imenu-anywhere
   :config (progn
@@ -650,16 +614,16 @@
               (save-excursion
                 (delete-other-windows)
                 (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
-            (defun my-split-vertically ()
+            (defun my/split-vertically ()
               (interactive)
               (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
-            (defun my-split-horizontally ()
+            (defun my/split-horizontally ()
               (interactive)
               (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
-         ("C-x 2" . my-split-vertically)
-         ("C-x 3" . my-split-horizontally)
+         ("C-x 2" . my/split-vertically)
+         ("C-x 3" . my/split-horizontally)
          ("\C-x|" . split-window-horizontally-instead)
          ("\C-x_" . split-window-vertically-instead)))
 
@@ -799,7 +763,7 @@
          ("C-x g c" . magit-commit)
          ("C-x g p c" . magit-push-current)))
 
-(use-package my-internet-services
+(use-package my/internet-services
   :init (progn
           (use-package google-translate
             :config (defun translate-text (sentence)
@@ -846,51 +810,151 @@
                mode-line-misc-info
                mode-line-end-spaces))))
 
-(use-package swiper
-  :commands swiper
-  :bind ("C-c s" . swiper)
-  :ensure t)
+(use-package my/process-management
+  :init (progn
+          (use-package elscreen
+            :config (progn
+                      (elscreen-start)
+                      (setq elscreen-display-tab nil))
+            :ensure t)
 
-(use-package string-edit
-  :commands string-edit)
+          (use-package lice
+            :commands lice
+            :ensure t)
 
-;; (use-package my-project-management
-;;   :init (progn
-;;   ))
+          ;; https://github.com/ilya-babanov/emacs-bpr
+          (use-package bpr
+            :config (progn
+                      (setq bpr-colorize-output t
+                            bpr-close-after-success t
+                            bpr-erase-process-buffer t)
+                      (defun emacs-push-config (cm)
+                        (interactive "MCommit message: ")
+                        (let* ((bpr-process-directory user-emacs-directory))
+                          (bpr-spawn (concatenate 'string "fab push:cm=\'" cm "\'")))))
+            :ensure t)
 
-(use-package elscreen
-  :config (progn
-            (elscreen-start)
-            (setq elscreen-display-tab nil))
-  :ensure t)
+          (use-package prodigy
+            :commands (prodigy
+                       prodigy-start-all-services)
+            :bind ("C-x y p" . prodigy)
+            :config (progn
+                      (defun ido-prodigy-menu ()
+                        (interactive)
+                        (let* ((ido-prodigy-choices (mapcar (lambda (serv)
+                                                              (let* ((status (prodigy-service-started-p serv))
+                                                                     (service-name (cadr serv))
+                                                                     (stopped-label service-name)
+                                                                     (started-label  service-name))
+                                                                (if status started-label
+                                                                  stopped-label)))
+                                                            prodigy-services)))
+                          (ido-completing-read "Service: " ido-prodigy-choices)))
 
-(use-package super-save
-  :config (progn
-            (super-save-initialize))
-  :ensure t)
+                      (defun find-prodigy-service-with-name (service-name)
+                        (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
+                                                prodigy-services)))
+                          (car matches)))
 
-(use-package clean-buffers
-  :config (progn
-            (defvar my-useless-buffer-names '("*Compile-Log*" "*Pp Eval Output*"))
-            (setq clean-buffers-useless-buffer-names (append clean-buffers-useless-buffer-names my-useless-buffer-names)))
-  :ensure t)
+                      (defun prodigy-apply-to-services (services fn)
+                        (prodigy-with-refresh
+                         (-each services fn)))
 
-(use-package lice
-  :commands lice
-  :ensure t)
+                      (defun prodigy-start-all-services ()
+                        (interactive)
+                        (prodigy-apply-to-services prodigy-services
+                                                   'prodigy-start-service))
 
-(setq read-file-name-completion-ignore-case t
-      read-buffer-completion-ignore-case t)
-(mapc (lambda (x)
-        (add-to-list 'completion-ignored-extensions x))
-      '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls"))
+                      (defun prodigy-stop-all-services ()
+                        (interactive)
+                        (prodigy-apply-to-services prodigy-services
+                                                   'prodigy-stop-service))
 
-;; https://github.com/tkf/emacs-request
-;; (use-package emacs-request)
+                      (defun prodigy-stop-services-with-tag (tag)
+                        (prodigy-apply-to-services
+                         (prodigy-services-tagged-with (intern tag))
+                         'prodigy-stop-service))
+
+                      (defun prodigy-start-services-with-tag (tag)
+                        (prodigy-apply-to-services
+                         (prodigy-services-tagged-with (intern tag))
+                         'prodigy-start-service))
+                      (prodigy-define-default-status-list)
+                      (prodigy-define-tag
+                        :name 'django
+                        :ready-message "Quit the server with CONTROL-C"))
+            :ensure t)))
+
+(use-package my/buffer-management
+  :init (progn
+          (use-package uniquify
+            :disabled t
+            :init (progn
+                    (setq uniquify-buffer-name-style 'reverse
+                          uniquify-separator " • "
+                          uniquify-after-kill-buffer-p t
+                          uniquify-ignore-buffers-re "^\\*")))
+
+          (use-package ibuffer
+            :init (progn
+                    (use-package fullframe
+                      :ensure t)
+                    (use-package ibuffer-vc
+                      :ensure t)
+                    (use-package ibuffer-git
+                      :ensure t))
+            :config (progn
+                      (setq ibuffer-formats
+                            '((mark modified read-only vc-status-mini " "
+                                    (name 18 18 :left :elide)
+                                    " "
+                                    (size-h 9 -1 :right)
+                                    " "
+                                    (mode 16 16 :left :elide)
+                                    " "
+                                    filename-and-process)
+                              (mark modified read-only vc-status-mini " "
+                                    (name 18 18 :left :elide)
+                                    " "
+                                    (size-h 9 -1 :right)
+                                    " "
+                                    (mode 16 16 :left :elide)
+                                    " "
+                                    (vc-status 16 16 :left)
+                                    " "
+                                    filename-and-process))
+                            ibuffer-filter-group-name-face 'font-lock-doc-face)
+                      (define-ibuffer-column size-h
+                        (:name "Size" :inline t)
+                        (cond
+                         ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+                         ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+                         (t (format "%8d" (buffer-size)))))
+                      (defun ibuffer-set-up-preferred-filters ()
+                        (ibuffer-vc-set-filter-groups-by-vc-root)
+                        (unless (eq ibuffer-sorting-mode 'filename/process)
+                          (ibuffer-do-sort-by-filename/process)))
+                      (after-load 'ibuffer
+                        (fullframe ibuffer ibuffer-quit)))
+            :bind ("C-x C-b" . ibuffer)
+            :ensure t)
+
+          (use-package super-save
+            :config (progn
+                      (super-save-initialize))
+            :ensure t)))
+
+(use-package my/http
+  :init (progn
+          ;; https://github.com/tkf/emacs-request
+          ;; (use-package emacs-request)
+
+          ;; https://github.com/emacs-pe/http.el
+          (use-package http
+            :ensure t)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 (load-theme 'suscolors t)
-
 (require 'init-gui-frames)
 (custom-set-faces
  '(default ((t
@@ -929,73 +993,6 @@
               visible-bell t
               line-spacing 7
               indent-tabs-mode nil)
-
-;; https://github.com/emacs-pe/http.el
-(use-package http
-  :ensure t)
-
-;; https://github.com/ilya-babanov/emacs-bpr
-(use-package bpr
-  :config (progn
-            (setq bpr-colorize-output t
-                  bpr-close-after-success t
-                  bpr-erase-process-buffer t)
-            (defun emacs-push-config (cm)
-              (interactive "MCommit message: ")
-              (let* ((bpr-process-directory user-emacs-directory))
-                (bpr-spawn (concatenate 'string "fab push:cm=\'" cm "\'")))))
-  :ensure t)
-
-(use-package prodigy
-  :commands (prodigy
-             prodigy-start-all-services)
-  :bind ("C-x y p" . prodigy)
-  :config (progn
-            (defun ido-prodigy-menu ()
-              (interactive)
-              (let* ((ido-prodigy-choices (mapcar (lambda (serv)
-                                                    (let* ((status (prodigy-service-started-p serv))
-                                                           (service-name (cadr serv))
-                                                           (stopped-label service-name)
-                                                           (started-label  service-name))
-                                                      (if status started-label
-                                                        stopped-label)))
-                                                  prodigy-services)))
-                (ido-completing-read "Service: " ido-prodigy-choices)))
-
-            (defun find-prodigy-service-with-name (service-name)
-              (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
-                                      prodigy-services)))
-                (car matches)))
-
-            (defun prodigy-apply-to-services (services fn)
-              (prodigy-with-refresh
-               (-each services fn)))
-
-            (defun prodigy-start-all-services ()
-              (interactive)
-              (prodigy-apply-to-services prodigy-services
-                                         'prodigy-start-service))
-
-            (defun prodigy-stop-all-services ()
-              (interactive)
-              (prodigy-apply-to-services prodigy-services
-                                         'prodigy-stop-service))
-
-            (defun prodigy-stop-services-with-tag (tag)
-              (prodigy-apply-to-services
-               (prodigy-services-tagged-with (intern tag))
-               'prodigy-stop-service))
-
-            (defun prodigy-start-services-with-tag (tag)
-              (prodigy-apply-to-services
-               (prodigy-services-tagged-with (intern tag))
-               'prodigy-start-service))
-            (prodigy-define-default-status-list)
-            (prodigy-define-tag
-              :name 'django
-              :ready-message "Quit the server with CONTROL-C"))
-  :ensure t)
 
 (require 'init-local nil t)
 (provide 'init)
