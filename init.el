@@ -78,10 +78,12 @@
                 mac-command-modifier 'meta)
           (make-directory emacs-persistence-directory t)
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+          (add-to-list 'load-path (expand-file-name "themes" user-emacs-directory))
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
             (normal-top-level-add-subdirs-to-load-path))))
 
 (use-package autocomplete
+  ;; (require 'ej-autocomplete)
   :config (progn
             (use-package auto-complete-nxml
               :ensure t)
@@ -93,7 +95,7 @@
             (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
                   ac-use-menu-map t
                   hippie-expand-verbose t
-                  smart-tab-using-hippie-expand t ;; turn this on if you want to use hippie-expand completion.
+                  smart-tab-using-hippie-expand t
                   hippie-expand-try-functions-list
                   '(yas/hippie-try-expand
                     try-complete-file-name-partially
@@ -480,6 +482,8 @@
           ;;   :ensure t)
           )
   :config (progn
+            (defvar python-indent-offset)
+            (setq python-indent-offset 4)
             (defun python-highlight-breakpoints ()
               (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
             (defun python-add-breakpoint ()
@@ -878,23 +882,38 @@
 ;; (use-package emacs-request)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'heroku t)
+(load-theme 'suscolors t)
+
 (require 'init-gui-frames)
 (custom-set-faces
- '(default ((t (
-		:inherit nil
-			 :stipple nil
-			 :inverse-video nil
-			 :box nil
-			 :strike-through nil
-			 :overline nil
-			 :underline nil
-			 :slant normal
-			 :weight normal
-			 :height 120
-			 :width normal
-			 :foundry nil
-			 :family "Inconsolata")))))
+ '(default ((t
+             (:inherit nil
+                       :stipple nil
+                       :inverse-video nil
+                       :box nil
+                       :strike-through nil
+                       :overline nil
+                       :underline nil
+                       :slant normal
+                       :weight normal
+                       :height 120
+                       :width normal
+                       :foundry nil
+                       :family "Menlo"
+                       ;; :family "Inconsolata"
+                       )))))
+
+;; (set-face-attribute
+;;  'mode-line nil
+;;  :box (list
+;;        :line-width 4
+;;        :color (face-attribute 'mode-line :background)))
+
+;; (set-face-attribute
+;;  'mode-line-inactive nil
+;;  :box (list
+;;        :line-width 4
+;;        :color (face-attribute 'mode-line-inactive :background)))
 
 (setq-default buffers-menu-max-size 30
               case-fold-search t
@@ -915,7 +934,6 @@
               visible-bell t
               line-spacing 7
               indent-tabs-mode nil)
-;; (require 'ej-autocomplete)
 
 ;; https://github.com/emacs-pe/http.el
 (use-package http
