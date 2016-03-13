@@ -124,6 +124,23 @@
    `(eshell-ls-executable ((t (:foreground ,green))))
    `(eshell-ls-directory ((t (:foreground ,blue))))
 
+   ;; dired
+   `(dired-directory ((t (:foreground ,purple))))
+   `(dired-git-face ((t (:foreground ,red))))
+   `(dired-ignored ((t (:foreground ,grey))))
+   `(dired-filetype-omit ((t (:foreground ,grey))))
+   `(dired-filetype-common ((t (:foreground ,orange))))
+   `(dired-filetype-execute ((t (:foreground ,green))))
+   `(dired-filetype-source ((t (:foreground ,pink))))
+   `(dired-filetype-plain ((t (:foreground ,comment))))
+   `(dired-filetype-link ((t (:foreground ,purple :underline t))))
+   `(dired-flagged ((t (:foreground ,red :underline t))))
+   `(dired-marked ((t (:foreground ,orange :underline t))))
+
+   `(dired-subtree-depth-1-face ((t (:background ,"#21252b"))))
+   `(dired-subtree-depth-2-face ((t (:background ,"#282c34"))))
+   `(dired-subtree-depth-3-face ((t (:background ,bg))))
+
    ;; ido
    `(minibuffer-prompt ((t (:foreground ,comment))))
    `(ido-first-match ((t (:foreground ,blue))))
@@ -132,9 +149,7 @@
    `(ido-vertical-match-face ((t (:foreground ,purple))))
 
    ;; vertical-border
-   `(vertical-border ((t (:foreground "#282a2e"))))
-   `()
-   ))
+   `(vertical-border ((t (:foreground "#282a2e"))))))
 
 ;;;###autoload
 (when load-file-name

@@ -393,7 +393,7 @@
                 read-buffer-completion-ignore-case t)
           (mapc (lambda (x)
                   (add-to-list 'completion-ignored-extensions x))
-                '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls"))
+                '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))
 
           (use-package mmm-mode
             :config (progn
@@ -884,6 +884,42 @@
                         :name 'django
                         :ready-message "Quit the server with CONTROL-C"))
             :ensure t)))
+
+(use-package my/dired
+  :init (progn
+          ;; (use-package dired+
+          ;;   :config (progn
+          ;;              (diredp-make-find-file-keys-reuse-dirs))
+          ;;   :ensure t)
+
+          (use-package dired-subtree
+            :ensure t)
+
+          (use-package dired-filetype-face
+            :config (progn
+                      ;; (deffiletype-face-regexp dired-git-face
+                      ;;   :extensions '("git")
+                      ;;   :type-for-docstring "dired-git-face")
+                      ;; (deffiletype-setup "dired-git-face" "dired-git-face")
+                      )
+            :ensure t)
+
+          (defun mydired-sort ()
+            "Sort dired listings with directories first."
+            (save-excursion
+              (let (buffer-read-only)
+                (forward-line 2) ;; beyond dir. header
+                (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
+              (set-buffer-modified-p nil)))
+
+          (add-hook 'dired-after-readin-hook 'hl-line-mode)
+          (add-hook 'dired-after-readin-hook 'mydired-sort)
+          (add-hook 'dired-after-readin-hook 'dired-omit-mode)
+
+          (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
+          (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory)
+          ;; (define-key dired-mode-map (kbd "<return>") 'dired-subtree-toggle)
+          (define-key dired-mode-map (kbd "<tab>") 'dired-subtree-toggle)))
 
 (use-package my/buffer-management
   :init (progn
