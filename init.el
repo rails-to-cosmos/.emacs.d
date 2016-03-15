@@ -470,6 +470,12 @@
                   (goto-char pos)
                   (insert formatted-text))))))
 
+(use-package my/prog-mode
+  :init (progn
+          (use-package fixmee
+            :ensure t)
+          (add-hook 'prog-mode-hook 'fixmee-mode)))
+
 (use-package python
   :commands python-mode
   :mode ("\\.py\\'" . python-mode)
@@ -871,11 +877,13 @@
                                                    'prodigy-stop-service))
 
                       (defun prodigy-stop-services-with-tag (tag)
+                        (interactive "MTag: ")
                         (prodigy-apply-to-services
                          (prodigy-services-tagged-with (intern tag))
                          'prodigy-stop-service))
 
                       (defun prodigy-start-services-with-tag (tag)
+                        (interactive "MTag: ")
                         (prodigy-apply-to-services
                          (prodigy-services-tagged-with (intern tag))
                          'prodigy-start-service))
@@ -990,45 +998,45 @@
             :ensure t)))
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'suscolors t)
+(load-theme 'rtc t)
 (require 'init-gui-frames)
-(custom-set-faces
- '(default ((t
-             (:inherit nil
-                       :stipple nil
-                       :inverse-video nil
-                       :box nil
-                       :strike-through nil
-                       :overline nil
-                       :underline nil
-                       :slant normal
-                       :weight normal
-                       :height 120
-                       :width normal
-                       :foundry nil
-                       :family "Menlo"
-                       ;; :family "Inconsolata"
-                       )))))
+;; (custom-set-faces
+;;  '(default ((t
+;;              (:inherit nil
+;;                        :stipple nil
+;;                        :inverse-video nil
+;;                        :box nil
+;;                        :strike-through nil
+;;                        :overline nil
+;;                        :underline nil
+;;                        :slant normal
+;;                        :weight normal
+;;                        :height 120
+;;                        :width normal
+;;                        :foundry nil
+;;                        :family "Menlo"
+;;                        ;; :family "Inconsolata"
+;;                        )))))
 
-(setq-default buffers-menu-max-size 30
-              case-fold-search t
-              compilation-scroll-output t
-              ediff-split-window-function 'split-window-horizontally
-              ediff-window-setup-function 'ediff-setup-windows-plain
-              grep-highlight-matches t
-              grep-scroll-output t
-              make-backup-files nil
-              mouse-yank-at-point t
-              save-interprogram-paste-before-kill t
-              scroll-preserve-screen-position 'always
-              set-mark-command-repeat-pop t
-              show-trailing-whitespace nil
-              tooltip-delay 1.5
-              truncate-lines nil
-              truncate-partial-width-windows nil
-              visible-bell t
-              line-spacing 7
-              indent-tabs-mode nil)
+;; (setq-default buffers-menu-max-size 30
+;;               case-fold-search t
+;;               compilation-scroll-output t
+;;               ediff-split-window-function 'split-window-horizontally
+;;               ediff-window-setup-function 'ediff-setup-windows-plain
+;;               grep-highlight-matches t
+;;               grep-scroll-output t
+;;               make-backup-files nil
+;;               mouse-yank-at-point t
+;;               save-interprogram-paste-before-kill t
+;;               scroll-preserve-screen-position 'always
+;;               set-mark-command-repeat-pop t
+;;               show-trailing-whitespace nil
+;;               tooltip-delay 1.5
+;;               truncate-lines nil
+;;               truncate-partial-width-windows nil
+;;               visible-bell t
+;;               line-spacing 7
+;;               indent-tabs-mode nil)
 
 (require 'init-local nil t)
 (provide 'init)
