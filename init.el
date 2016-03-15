@@ -38,6 +38,13 @@
 
 ;; Init use-package
 (require 'package)
+
+(setq dist-packages-dir (concat user-emacs-directory "dist-packages/")
+      package-user-dir (concat dist-packages-dir "elpa/"))
+
+(make-directory dist-packages-dir t)
+(make-directory package-user-dir t)
+
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
 
@@ -79,7 +86,7 @@
           (make-directory emacs-persistence-directory t)
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "dist-packages" user-emacs-directory))
-          (add-to-list 'load-path (expand-file-name "themes" user-emacs-directory))
+
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
             (normal-top-level-add-subdirs-to-load-path))))
 
@@ -134,6 +141,16 @@
 
 (use-package my/user-interface
   :init (progn
+	  (use-package my/themes
+	    :init (progn
+		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
+		    (add-to-list 'custom-theme-load-path custom-themes-dir)
+		    (make-directory custom-themes-dir t)))
+
+	  (use-package frame-cmds
+	    :commands toggle-max-frame
+	    :ensure t)
+
           (use-package init-gui-frames
             :if window-system
             :init (progn
@@ -631,7 +648,8 @@
          ("C-x 2" . my/split-vertically)
          ("C-x 3" . my/split-horizontally)
          ("\C-x|" . split-window-horizontally-instead)
-         ("\C-x_" . split-window-vertically-instead)))
+         ("\C-x_" . split-window-vertically-instead))
+  :ensure t)
 
 (use-package web-mode
   :init (progn
@@ -767,7 +785,8 @@
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
          ("C-x g c" . magit-commit)
-         ("C-x g p c" . magit-push-current)))
+         ("C-x g p c" . magit-push-current))
+  :ensure t)
 
 (use-package my/internet-services
   :init (progn
@@ -996,47 +1015,6 @@
           ;; https://github.com/emacs-pe/http.el
           (use-package http
             :ensure t)))
-
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'rtc t)
-(require 'init-gui-frames)
-;; (custom-set-faces
-;;  '(default ((t
-;;              (:inherit nil
-;;                        :stipple nil
-;;                        :inverse-video nil
-;;                        :box nil
-;;                        :strike-through nil
-;;                        :overline nil
-;;                        :underline nil
-;;                        :slant normal
-;;                        :weight normal
-;;                        :height 120
-;;                        :width normal
-;;                        :foundry nil
-;;                        :family "Menlo"
-;;                        ;; :family "Inconsolata"
-;;                        )))))
-
-;; (setq-default buffers-menu-max-size 30
-;;               case-fold-search t
-;;               compilation-scroll-output t
-;;               ediff-split-window-function 'split-window-horizontally
-;;               ediff-window-setup-function 'ediff-setup-windows-plain
-;;               grep-highlight-matches t
-;;               grep-scroll-output t
-;;               make-backup-files nil
-;;               mouse-yank-at-point t
-;;               save-interprogram-paste-before-kill t
-;;               scroll-preserve-screen-position 'always
-;;               set-mark-command-repeat-pop t
-;;               show-trailing-whitespace nil
-;;               tooltip-delay 1.5
-;;               truncate-lines nil
-;;               truncate-partial-width-windows nil
-;;               visible-bell t
-;;               line-spacing 7
-;;               indent-tabs-mode nil)
 
 (require 'init-local nil t)
 (provide 'init)

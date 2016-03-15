@@ -59,19 +59,19 @@
   (global-prettify-symbols-mode))
 
 (use-package undo-tree
-  :config
-  (progn
+  :config (progn
     (global-undo-tree-mode)
     (setq undo-tree-visualizer-timestamps t)
-    (setq undo-tree-visualizer-diff t)))
+    (setq undo-tree-visualizer-diff t))
+  :ensure t)
 
 (use-package highlight-symbol
-  :init
-  (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
-    (add-hook hook 'highlight-symbol-mode)
-    (add-hook hook 'highlight-symbol-nav-mode))
-  (eval-after-load 'highlight-symbol
-    '(diminish 'highlight-symbol-mode)))
+  :config (progn
+	    (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
+	      (add-hook hook 'highlight-symbol-mode)
+	      (add-hook hook 'highlight-symbol-nav-mode))
+	    (eval-after-load 'highlight-symbol
+	      '(diminish 'highlight-symbol-mode))))
 
 (defadvice kill-region (before slick-cut activate compile)
   "When called interactively with no active region, kill a single line instead."
@@ -259,9 +259,12 @@ forward N lines; otherwise backward."
 ;;----------------------------------------------------------------------------
 ;; Cut/copy the current line if no region is active
 ;;----------------------------------------------------------------------------
-(whole-line-or-region-mode t)
-(diminish 'whole-line-or-region-mode)
-(make-variable-buffer-local 'whole-line-or-region-mode)
+(use-package whole-line-or-region
+  :config (progn
+	    (whole-line-or-region-mode t)
+	    (diminish 'whole-line-or-region-mode)
+	    (make-variable-buffer-local 'whole-line-or-region-mode))
+  :ensure t)
 
 (defun suspend-mode-during-cua-rect-selection (mode-name)
   "Add an advice to suspend `MODE-NAME' while selecting a CUA rectangle."
