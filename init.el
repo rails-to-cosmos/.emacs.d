@@ -51,7 +51,7 @@
 (package-initialize)
 
 (when (not package-archive-contents)
-    (package-refresh-contents))
+  (package-refresh-contents))
 
 (if (not (package-installed-p 'use-package))
     (progn
@@ -437,9 +437,9 @@
 
 (use-package bookmark+
   :init (progn
-            (setq bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
-                  bookmark-file (concat emacs-persistence-directory ".bookmarks")
-                  bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
+          (setq bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
+                bookmark-file (concat emacs-persistence-directory ".bookmarks")
+                bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
   :ensure t)
 
 (use-package scratch
@@ -712,37 +712,11 @@
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
 
-(use-package hackernews
-  :commands hackernews)
+;; (use-package hackernews
+;;   :commands hackernews)
 
-(use-package avy
-  :bind (("C-;" . avy-goto-char)
-         ("C-'" . avy-goto-char-2)
-         ("M-g l" . avy-goto-line)
-         ("M-g w" . avy-goto-word-1)
-         ("M-g e" . avy-goto-word-0)))
-
-(use-package dizzee
-  :commands (dz-defservice dz-defservice-group)
-  :init (progn
-            (defun dz-restart-current ()
-              (interactive)
-              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-              (funcall (intern dz-restart-expr)))
-            (defun dz-stop-current ()
-              (interactive)
-              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-              (funcall (intern dz-restart-expr)))
-            (global-set-key (kbd "<f5>") 'dz-restart-current)
-            (global-set-key (kbd "<f4>") 'dz-stop-current)))
-
-(use-package list-processes+
-  :commands list-processes+)
-
-(use-package symon
-  :commands symon-mode)
+;; (use-package list-processes+
+;;   :commands list-processes+)
 
 (use-package camcorder
   :commands camcorder-mode)
