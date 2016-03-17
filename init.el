@@ -302,11 +302,11 @@
             (newline)                    ; insert a newline
             (switch-to-buffer nil))))
 
-(use-package my/games
-  :init (progn
-          (use-package steam
-            :config (progn
-                      (setq steam-username "bezdnaskov")))))
+;; (use-package my/games
+;;   :init (progn
+;;           (use-package steam
+;;             :config (progn
+;;                       (setq steam-username "bezdnaskov")))))
 
 (use-package my/keybinding-presuppositions
   :init (progn
@@ -318,6 +318,14 @@
           (use-package autocomplete
             ;; (require 'ej-autocomplete)
             :config (progn
+                      ;; (use-package bash-completion
+                      ;;   :commands bash-completion-dynamic-complete
+                      ;;   :init (progn
+                      ;;           (add-hook 'shell-dynamic-complete-functions
+                      ;;                     'bash-completion-dynamic-complete))
+                      ;;   :config (progn
+                      ;;             (bash-completion-setup))
+                      ;;   :ensure t)
                       (use-package auto-complete-nxml
                         :ensure t)
                       (use-package popup)
