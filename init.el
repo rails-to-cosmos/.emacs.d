@@ -145,7 +145,8 @@
 	    :init (progn
 		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
 		    (add-to-list 'custom-theme-load-path custom-themes-dir)
-		    (make-directory custom-themes-dir t)))
+		    (make-directory custom-themes-dir t)
+                    ))
 
 	  (use-package frame-cmds
 	    :commands toggle-max-frame
@@ -435,13 +436,6 @@
           (use-package mwe-log-commands
             :ensure t)))
 
-(use-package bookmark+
-  :init (progn
-          (setq bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
-                bookmark-file (concat emacs-persistence-directory ".bookmarks")
-                bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
-  :ensure t)
-
 (use-package scratch
   :ensure t)
 ;; (use-package yasnippet
@@ -517,10 +511,12 @@
           (use-package py-yapf
             :ensure t)
 
-          (use-package pyenv-mode
-            :ensure t)
+          ;; (use-package pyenv-mode
+          ;;   :ensure t)
 
           (use-package pyvenv
+            :config (progn
+                      (make-directory "~/.virtualenvs" t))
             :ensure t)
 
           ;; https://github.com/davidmiller/pony-mode
@@ -556,8 +552,7 @@
             (add-hook 'python-mode-hook 'linum-mode)
             ;; (add-hook 'python-mode-hook 'yas-minor-mode)
             ;; (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-            (setq python-indent-offset 4)
-            (make-directory "~/.virtualenvs" t))
+            (setq python-indent-offset 4))
   :bind (("C-c C-b" . python-add-breakpoint))
   :ensure t)
 
@@ -809,6 +804,15 @@
                mode-line-misc-info
                mode-line-end-spaces))))
 
+(use-package my/project-management
+  :init (progn
+          (use-package bookmark+
+            :init (progn
+                    (setq-default bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
+                                  bookmark-file (concat emacs-persistence-directory ".bookmarks")
+                                  bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
+            :ensure t)))
+
 (use-package my/process-management
   :init (progn
           (use-package elscreen
@@ -869,12 +873,14 @@
                         (prodigy-apply-to-services prodigy-services
                                                    'prodigy-stop-service))
 
+                      ;; TODO pull this feature
                       (defun prodigy-stop-services-with-tag (tag)
                         (interactive "MTag: ")
                         (prodigy-apply-to-services
                          (prodigy-services-tagged-with (intern tag))
                          'prodigy-stop-service))
 
+                      ;; TODO pull this feature
                       (defun prodigy-start-services-with-tag (tag)
                         (interactive "MTag: ")
                         (prodigy-apply-to-services
@@ -892,6 +898,8 @@
           ;;   :config (progn
           ;;              (diredp-make-find-file-keys-reuse-dirs))
           ;;   :ensure t)
+
+          (use-package dired)
 
           (use-package dired-subtree
             :ensure t)
@@ -917,7 +925,10 @@
           (add-hook 'dired-after-readin-hook 'mydired-sort)
           (add-hook 'dired-after-readin-hook 'dired-omit-mode)
 
+          (require 'dired-x)
+          (dired-omit-mode 1)
           (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
+
           (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory)
           ;; (define-key dired-mode-map (kbd "<return>") 'dired-subtree-toggle)
           (define-key dired-mode-map (kbd "<tab>") 'dired-subtree-toggle)))
@@ -991,6 +1002,7 @@
             :ensure t)))
 
 (require 'init-local nil t)
+
 (provide 'init)
 
 ;;; init.el ends here
