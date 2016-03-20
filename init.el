@@ -141,12 +141,47 @@
 
 (use-package my/user-interface
   :init (progn
+          (setq-default buffers-menu-max-size 30
+                        case-fold-search t
+                        compilation-scroll-output t
+                        ediff-split-window-function 'split-window-horizontally
+                        ediff-window-setup-function 'ediff-setup-windows-plain
+                        grep-highlight-matches t
+                        grep-scroll-output t
+                        make-backup-files nil
+                        mouse-yank-at-point t
+                        save-interprogram-paste-before-kill t
+                        scroll-preserve-screen-position 'always
+                        set-mark-command-repeat-pop t
+                        show-trailing-whitespace nil
+                        tooltip-delay 1.5
+                        truncate-lines nil
+                        truncate-partial-width-windows nil
+                        visible-bell t
+                        line-spacing 7
+                        indent-tabs-mode nil)
+
+          (custom-set-faces
+           '(default ((t (:inherit nil
+                                   :stipple nil
+                                   :inverse-video nil
+                                   :box nil
+                                   :strike-through nil
+                                   :overline nil
+                                   :underline nil
+                                   :slant normal
+                                   :weight normal
+                                   :height 120
+                                   :width normal
+                                   ;; :family "Inconsolata"
+                                   :foundry nil
+                                   :family "Menlo")))))
+
 	  (use-package my/themes
 	    :init (progn
 		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
 		    (add-to-list 'custom-theme-load-path custom-themes-dir)
-		    (make-directory custom-themes-dir t)
-                    ))
+		    (make-directory custom-themes-dir t)))
 
 	  (use-package frame-cmds
 	    :commands toggle-max-frame
@@ -328,10 +363,11 @@
                       ;;   :ensure t)
                       (use-package auto-complete-nxml
                         :ensure t)
-                      (use-package popup)
-                      (use-package pos-tip)
-                      (use-package popup-kill-ring)
-                      (use-package auto-complete-config)
+                      ;; (use-package popup
+                      ;;   :ensure t)
+                      ;; (use-package pos-tip)
+                      ;; (use-package popup-kill-ring)
+                      ;; (use-package auto-complete-config)
                       (ac-config-default)
                       (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
                             ac-use-menu-map t
@@ -491,6 +527,8 @@
 
 (use-package my/prog-mode
   :init (progn
+          (use-package lorem-ipsum
+            :ensure t)
           (use-package fixmee
             :ensure t)
           (add-hook 'prog-mode-hook 'fixmee-mode)))
