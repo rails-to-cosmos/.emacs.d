@@ -173,7 +173,6 @@
                                    :weight normal
                                    :height 120
                                    :width normal
-                                   ;; :family "Inconsolata"
                                    :foundry nil
                                    :family "Menlo")))))
 
@@ -181,7 +180,10 @@
 	    :init (progn
 		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
 		    (add-to-list 'custom-theme-load-path custom-themes-dir)
-		    (make-directory custom-themes-dir t)))
+		    (make-directory custom-themes-dir t)
+
+                    (use-package danneskjold-theme
+                      :ensure t)))
 
 	  (use-package frame-cmds
 	    :commands toggle-max-frame
@@ -702,6 +704,8 @@
             :config (progn
                       (add-hook 'web-mode-hook 'emmet-mode))
             :commands emmet-mode
+            :ensure t)
+          (use-package web-beautify
             :ensure t))
   :config (progn
             (add-auto-mode 'web-mode "\\.html\\'")
