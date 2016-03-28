@@ -181,7 +181,6 @@
 		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
 		    (add-to-list 'custom-theme-load-path custom-themes-dir)
 		    (make-directory custom-themes-dir t)
-
                     (use-package danneskjold-theme
                       :ensure t)))
 
@@ -201,8 +200,7 @@
                                         (t              `(,(car old) ,arg)))))
                         (if elt (setcdr elt new) (push `(alpha ,@new) default-frame-alist))
                         (set-frame-parameter nil 'alpha new)))
-                    (global-set-key (kbd "C-c t") 'set-frame-alpha)
-                    (toggle-max-frame)))
+                    (global-set-key (kbd "C-c t") 'set-frame-alpha)))
 
           (use-package mode-icons
             :config (progn
@@ -484,14 +482,17 @@
 
 (use-package scratch
   :ensure t)
+
 ;; (use-package yasnippet
 ;;   :config (progn
 ;;             (yas-global-mode 1)
 ;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
 ;;   :ensure t)
+
 (use-package impatient-mode
   :commands impatient-mode
   :ensure t)
+
 (use-package restclient
   :commands restclient-mode
   :mode ("\\.rest\\'" . restclient-mode)
@@ -557,6 +558,12 @@
             :ensure t)
 
           (use-package py-yapf
+            :ensure t)
+
+          (use-package virtualenv
+            :ensure t)
+
+          (use-package virtualenvwrapper
             :ensure t)
 
           ;; (use-package pyenv-mode
@@ -806,6 +813,11 @@
          ("C-x g c" . magit-commit)
          ("C-x g p c" . magit-push-current))
   :ensure t)
+
+(use-package my/project-management
+  :init (progn
+          (use-package dizzee
+            :ensure t)))
 
 (use-package my/internet-services
   :init (progn
