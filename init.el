@@ -559,13 +559,16 @@
           (use-package py-yapf
             :ensure t)
 
-          ;; (use-package pyenv-mode
-          ;;   :ensure t)
-
-          (use-package pyvenv
-            :config (progn
-                      (make-directory "~/.virtualenvs" t))
+          (use-package virtualenv
+            :init (progn
+                    (use-package virtualenvwrapper
+                      :ensure t))
             :ensure t)
+
+          ;; (use-package pyvenv
+          ;;   :config (progn
+          ;;             (make-directory "~/.virtualenvs" t))
+          ;;   :ensure t)
 
           ;; https://github.com/davidmiller/pony-mode
           (use-package pony-mode
@@ -587,10 +590,11 @@
           ;;   :ensure t)
           )
   :config (progn
-            (defvar python-indent-offset)
-            (setq python-indent-offset 4)
+            (setq-default python-indent-offset 4)
+
             (defun python-highlight-breakpoints ()
               (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+
             (defun python-add-breakpoint ()
               "Add a break point"
               (interactive)
@@ -600,7 +604,7 @@
             (add-hook 'python-mode-hook 'linum-mode)
             ;; (add-hook 'python-mode-hook 'yas-minor-mode)
             ;; (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-            (setq python-indent-offset 4))
+            )
   :bind (("C-c C-b" . python-add-breakpoint))
   :ensure t)
 
