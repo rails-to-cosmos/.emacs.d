@@ -181,7 +181,6 @@
 		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
 		    (add-to-list 'custom-theme-load-path custom-themes-dir)
 		    (make-directory custom-themes-dir t)
-
                     (use-package danneskjold-theme
                       :ensure t)))
 
@@ -201,8 +200,7 @@
                                         (t              `(,(car old) ,arg)))))
                         (if elt (setcdr elt new) (push `(alpha ,@new) default-frame-alist))
                         (set-frame-parameter nil 'alpha new)))
-                    (global-set-key (kbd "C-c t") 'set-frame-alpha)
-                    (toggle-max-frame)))
+                    (global-set-key (kbd "C-c t") 'set-frame-alpha)))
 
           (use-package mode-icons
             :config (progn
@@ -484,14 +482,17 @@
 
 (use-package scratch
   :ensure t)
+
 ;; (use-package yasnippet
 ;;   :config (progn
 ;;             (yas-global-mode 1)
 ;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
 ;;   :ensure t)
+
 (use-package impatient-mode
   :commands impatient-mode
   :ensure t)
+
 (use-package restclient
   :commands restclient-mode
   :mode ("\\.rest\\'" . restclient-mode)
@@ -532,8 +533,9 @@
           (use-package lorem-ipsum
             :ensure t)
           (use-package fixmee
-            :ensure t)
-          (add-hook 'prog-mode-hook 'fixmee-mode)))
+            :config (progn
+                      (add-hook 'prog-mode-hook 'fixmee-mode))
+            :ensure t)))
 
 (use-package python
   :commands python-mode
@@ -562,13 +564,16 @@
           (use-package virtualenv
             :init (progn
                     (use-package virtualenvwrapper
+                      :ensure t)
+
+                    ;; (use-package pyenv-mode
+                    ;;   :ensure t)
+
+                    (use-package pyvenv
+                      :config (progn
+                                (make-directory "~/.virtualenvs" t))
                       :ensure t))
             :ensure t)
-
-          ;; (use-package pyvenv
-          ;;   :config (progn
-          ;;             (make-directory "~/.virtualenvs" t))
-          ;;   :ensure t)
 
           ;; https://github.com/davidmiller/pony-mode
           (use-package pony-mode
@@ -810,6 +815,11 @@
          ("C-x g c" . magit-commit)
          ("C-x g p c" . magit-push-current))
   :ensure t)
+
+(use-package my/project-management
+  :init (progn
+          (use-package dizzee
+            :ensure t)))
 
 (use-package my/internet-services
   :init (progn
