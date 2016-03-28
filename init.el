@@ -533,8 +533,9 @@
           (use-package lorem-ipsum
             :ensure t)
           (use-package fixmee
-            :ensure t)
-          (add-hook 'prog-mode-hook 'fixmee-mode)))
+            :config (progn
+                      (add-hook 'prog-mode-hook 'fixmee-mode))
+            :ensure t)))
 
 (use-package python
   :commands python-mode
