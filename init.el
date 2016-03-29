@@ -819,7 +819,20 @@
 (use-package my/project-management
   :init (progn
           (use-package dizzee
-            :ensure t)))
+            :commands (dz-defservice dz-defservice-group)
+            :config (progn
+                      (defun dz-restart-current ()
+                        (interactive)
+                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+                        (funcall (intern dz-restart-expr)))
+                      (defun dz-stop-current ()
+                        (interactive)
+                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+                        (funcall (intern dz-restart-expr)))
+                      (global-set-key (kbd "<f5>") 'dz-restart-current)
+                      (global-set-key (kbd "<f4>") 'dz-stop-current)))))
 
 (use-package my/internet-services
   :init (progn
