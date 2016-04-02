@@ -729,12 +729,104 @@
 (require 'init-darcs)
 (require 'init-csv)
 (require 'init-javascript)
-(require 'init-org)
 (require 'init-nxml)
 (require 'init-haml)
 (require 'init-paredit)
 (require 'init-lisp)
 (require 'init-misc)
+
+(use-package org
+  :config (progn
+            (use-package org-fstree
+              :ensure t)
+
+            (when *is-a-mac*
+              (use-package org-mac-link
+                :ensure t)
+              (autoload 'org-mac-grab-link "org-mac-link" nil t)
+              (use-package org-mac-iCal
+                :ensure t))
+
+            (use-package org-crypt
+              :disabled t
+              :config
+              (org-crypt-use-before-save-magic)
+              (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+              (setq org-crypt-key nil))
+
+            (define-key global-map (kbd "C-c l") 'org-store-link)
+            (define-key global-map (kbd "C-c a") 'org-agenda)
+            (define-key global-map (kbd "C-c c") 'org-capture)
+            (define-key org-mode-map (kbd "C-M-n") 'org-forward-heading-same-level)
+            (define-key org-mode-map (kbd "C-M-p") 'org-backward-heading-same-level)
+
+            (setq org-log-done t
+                  org-completion-use-ido t
+                  org-edit-timestamp-down-means-later t
+                  org-agenda-start-on-weekday nil
+                  org-agenda-span 14
+                  org-agenda-include-diary t
+                  org-agenda-window-setup 'current-window
+                  org-fast-tag-selection-single-key 'expert
+                  org-export-kill-product-buffer-when-displayed t
+                  org-tags-column 80)
+            ;; Refile targets include this file and any file contributing to the agenda - up to 5 levels deep
+            (setq org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5))))
+            ;; Targets start with the file name - allows creating level 1 tasks
+            (setq org-refile-use-outline-path (quote file))
+            ;; Targets complete in steps so we start with filename, TAB shows the next level of targets etc
+            (setq org-outline-path-complete-in-steps t)
+            (setq org-todo-keywords
+                  (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "|" "DONE(d!/!)")
+                          (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
+
+            (setq org-ellipsis "..." )
+            (setq org-hide-leading-stars t)
+            (setq org-startup-indented t)
+
+            (use-package org-clock
+              :init (progn
+                      (setq org-clock-persistence-insinuate t
+                            org-clock-persist t
+                            org-clock-in-resume t
+                            org-clock-in-switch-to-state "STARTED"
+                            org-clock-out-remove-zero-time-clocks t)
+                      (defun sanityinc/show-org-clock-in-header-line ()
+                        (setq-default header-line-format '((" " org-mode-line-string " "))))
+                      (defun sanityinc/hide-org-clock-from-header-line ()
+                        (setq-default header-line-format nil))
+                      (add-hook 'org-clock-in-hook 'sanityinc/show-org-clock-in-header-line)
+                      (add-hook 'org-clock-out-hook 'sanityinc/hide-org-clock-from-header-line)
+                      (add-hook 'org-clock-cancel-hook 'sanityinc/hide-org-clock-from-header-line)
+                      (after-load 'org-clock
+                        (define-key org-clock-mode-line-map [header-line mouse-2] 'org-clock-goto)
+                        (define-key org-clock-mode-line-map [header-line mouse-1] 'org-clock-menu))))
+
+            (use-package org-babel
+              :init (progn
+                      (org-babel-do-load-languages
+                       'org-babel-load-languages
+                       '((python . t)))
+                      (setq org-src-fontify-natively t)))
+
+            (use-package org-pomodoro
+              :config (progn
+                        (after-load 'org-agenda
+                          (define-key org-agenda-mode-map (kbd "P") 'org-pomodoro)))
+              :ensure t)
+
+            (after-load 'org
+              (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
+              (when *is-a-mac*
+                (define-key org-mode-map (kbd "M-h") nil))
+              (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
+              (when *is-a-mac*
+                (define-key org-mode-map (kbd "C-c g") 'org-mac-grab-link))
+              (setq org-imenu-depth 10))
+
+            (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
+            (setq org-startup-align-all-tables "align"))
+  :ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; Locales (setting them earlier in this file doesn't work in X)
