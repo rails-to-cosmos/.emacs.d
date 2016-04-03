@@ -104,18 +104,20 @@
           (defun spawn-shell (name &rest commands)
             "Invoke shell with commands"
             (interactive "MName of shell buffer to spawn: ")
-            (pop-to-buffer (get-buffer-create name))
-            (setq default-eshell-buffer-name
-                  (if (string= (boundp 'eshell-buffer-name) nil)
-                      "*eshell*"
-                    eshell-buffer-name)
-                  eshell-buffer-name name)
-            (eshell)
-            (setq eshell-buffer-name default-eshell-buffer-name)
-            (loop for command in commands
-                  do (insert (concat command "\n")))
-            (eshell-send-input)
-            (goto-char (point-max)))
+            (defvar spawn-shell/old-buffer (current-buffer))
+            (with-current-buffer (get-buffer-create name)
+              (setq default-eshell-buffer-name
+                    (if (string= (boundp 'eshell-buffer-name) nil)
+                        "*eshell*"
+                      eshell-buffer-name)
+                    eshell-buffer-name name)
+              (eshell)
+              (setq eshell-buffer-name default-eshell-buffer-name)
+              (loop for command in commands
+                    do (insert (concat command "\n")))
+              (eshell-send-input)
+              (goto-char (point-max)))
+            (switch-to-buffer spawn-shell/old-buffer))
 
           (use-package term+
             :config (progn
