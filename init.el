@@ -163,7 +163,8 @@
                         line-spacing 7
                         indent-tabs-mode nil
                         x-use-underline-position-properties t
-                        underline-minimum-offset 3)
+                        underline-minimum-offset 3
+                        cursor-type 'box)
 
           (custom-set-faces
            '(default ((t (:inherit nil
@@ -179,6 +180,8 @@
                                    :width normal
                                    :foundry nil
                                    :family "Menlo")))))
+
+          (set-cursor-color "#D0E1F9")
 
 	  (use-package my/themes
 	    :init (progn
