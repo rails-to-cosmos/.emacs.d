@@ -161,7 +161,9 @@
                         truncate-partial-width-windows nil
                         visible-bell t
                         line-spacing 7
-                        indent-tabs-mode nil)
+                        indent-tabs-mode nil
+                        x-use-underline-position-properties t
+                        underline-minimum-offset 3)
 
           (custom-set-faces
            '(default ((t (:inherit nil
@@ -385,6 +387,16 @@
                               try-complete-lisp-symbol-partially
                               try-complete-lisp-symbol)
                             ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
+
+          (use-package key-chord
+            :config (progn
+                      (key-chord-define-global
+                       "--"
+                       (lambda ()
+                         "Insert an underscore."
+                         (interactive)
+                         (insert "_"))))
+            :ensure t)
 
           ;; Align command
           ;; from http://stackoverflow.com/questions/3633120/emacs-hotkey-to-align-equal-signs
