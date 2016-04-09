@@ -391,14 +391,10 @@
                               try-complete-lisp-symbol)
                             ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
 
-          (use-package key-chord
+          (use-package key-combo
             :config (progn
-                      (key-chord-define-global
-                       "--"
-                       (lambda ()
-                         "Insert an underscore."
-                         (interactive)
-                         (insert "_"))))
+                      (global-key-combo-mode t)
+                      (key-combo-define-global "-" '("-" "–" "—" )))
             :ensure t)
 
           ;; Align command
@@ -917,7 +913,11 @@
               :ensure t)
             (use-package magit-gh-pulls
               :ensure t)
-            (setq magit-completing-read-function 'magit-ido-completing-read))
+            (setq magit-completing-read-function 'magit-ido-completing-read)
+            ;; (magit-add-section-hook 'magit-status-sections-hook
+            ;;                         'magit-insert-unpulled-module-commits
+            ;;                         'magit-insert-unpulled-from-pushremote)
+            )
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
