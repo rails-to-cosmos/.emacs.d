@@ -27,3 +27,4 @@ emacs-for-python/
 jordon/
 ac-comphist.dat
 *.pyc
+*flycheck*
