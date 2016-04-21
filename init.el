@@ -495,7 +495,21 @@
             :ensure t)))
 
 (use-package scratch
+  :config (progn
+            (defun immortal-scratch ()
+              (if (eq (current-buffer) (get-buffer "*scratch*"))
+                  (progn (bury-buffer)
+                         nil)
+                t))
+            (add-hook 'kill-buffer-query-functions 'immortal-scratch))
   :ensure t)
+
+;; (use-package deft
+;;   :config (progn
+;;             (setq deft-extensions '("txt" "org")
+;;                   deft-directory "~/Sync/Dropbox/Deft/"
+;;                   deft-recursive t))
+;;   :ensure t)
 
 ;; (use-package yasnippet
 ;;   :config (progn
