@@ -101,6 +101,8 @@
                         (setenv "LC_CTYPE" "en_US.UTF-8")))
             :ensure t)
 
+          (add-to-list 'display-buffer-alist '("^*Async Shell Command*" . (display-buffer-no-window)))
+
           (defun spawn-shell (name &rest commands)
             "Invoke shell with commands"
             (interactive "MName of shell buffer to spawn: ")
@@ -798,6 +800,18 @@
                   org-fast-tag-selection-single-key 'expert
                   org-export-kill-product-buffer-when-displayed t
                   org-tags-column 80)
+
+            ;; org as word processor
+            ;; (use-package my/org-word-processor
+            ;;   :init (progn
+            ;;           (setq org-hide-emphasis-markers t)
+            ;;           (font-lock-add-keywords 'org-mode
+            ;;                                   '(("^ +\\([-*]\\) "
+            ;;                                      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+            ;;           (use-package org-bullets
+            ;;             :ensure t)
+            ;;           (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))))
+
             ;; Refile targets include this file and any file contributing to the agenda - up to 5 levels deep
             (setq org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5))))
             ;; Targets start with the file name - allows creating level 1 tasks
