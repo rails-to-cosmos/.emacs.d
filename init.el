@@ -394,7 +394,8 @@
           (use-package key-combo
             :config (progn
                       (global-key-combo-mode t)
-                      (key-combo-load-default))
+                      ;; (key-combo-load-default)
+                      )
             :ensure t)
 
           ;; Align command
@@ -803,17 +804,7 @@
                             org-clock-persist t
                             org-clock-in-resume t
                             org-clock-in-switch-to-state "STARTED"
-                            org-clock-out-remove-zero-time-clocks t)
-                      (defun sanityinc/show-org-clock-in-header-line ()
-                        (setq-default header-line-format '((" " org-mode-line-string " "))))
-                      (defun sanityinc/hide-org-clock-from-header-line ()
-                        (setq-default header-line-format nil))
-                      (add-hook 'org-clock-in-hook 'sanityinc/show-org-clock-in-header-line)
-                      (add-hook 'org-clock-out-hook 'sanityinc/hide-org-clock-from-header-line)
-                      (add-hook 'org-clock-cancel-hook 'sanityinc/hide-org-clock-from-header-line)
-                      (after-load 'org-clock
-                        (define-key org-clock-mode-line-map [header-line mouse-2] 'org-clock-goto)
-                        (define-key org-clock-mode-line-map [header-line mouse-1] 'org-clock-menu))))
+                            org-clock-out-remove-zero-time-clocks t)))
 
             (use-package org-babel
               :init (progn
