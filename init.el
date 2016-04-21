@@ -209,10 +209,10 @@
                         (set-frame-parameter nil 'alpha new)))
                     (global-set-key (kbd "C-c t") 'set-frame-alpha)))
 
-          (use-package mode-icons
-            :config (progn
-                      (mode-icons-mode t))
-            :ensure t)
+          ;; (use-package mode-icons
+          ;;   :config (progn
+          ;;             (mode-icons-mode t))
+          ;;   :ensure t)
 
           (use-package smart-mode-line
             :config (progn
