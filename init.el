@@ -838,7 +838,8 @@
               :init (progn
                       (org-babel-do-load-languages
                        'org-babel-load-languages
-                       '((python . t)))
+                       '((python . t)
+                         (sql . t)))
                       (setq org-src-fontify-natively t)))
 
             (use-package org-pomodoro
