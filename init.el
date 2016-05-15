@@ -107,6 +107,7 @@
             "Invoke shell with commands"
             (interactive "MName of shell buffer to spawn: ")
             (defvar spawn-shell/old-buffer (current-buffer))
+            (setq spawn-shell/old-buffer (current-buffer))
             (with-current-buffer (get-buffer-create name)
               (setq default-eshell-buffer-name
                     (if (string= (boundp 'eshell-buffer-name) nil)
@@ -398,6 +399,9 @@
                       (global-key-combo-mode t)
                       ;; (key-combo-load-default)
                       )
+            :ensure t)
+
+          (use-package yaml-mode
             :ensure t)
 
           ;; Align command
@@ -847,7 +851,8 @@
               :init (progn
                       (org-babel-do-load-languages
                        'org-babel-load-languages
-                       '((python . t)))
+                       '((python . t)
+                         (sql . t)))
                       (setq org-src-fontify-natively t)))
 
             (use-package org-pomodoro
