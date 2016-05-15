@@ -519,6 +519,15 @@
 ;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
 ;;   :ensure t)
 
+(use-package skeleton
+  :config (progn
+            ;; (define-skeleton test-skeleton
+            ;;   "Write test message"
+            ;;   "Type: "
+            ;;   "test, " str "!")
+            )
+  :ensure t)
+
 (use-package impatient-mode
   :commands impatient-mode
   :ensure t)
