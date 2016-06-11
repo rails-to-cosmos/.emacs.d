@@ -761,6 +761,7 @@
             :ensure t))
   :config (progn
             (add-auto-mode 'web-mode "\\.html\\'")
+            (add-auto-mode 'web-mode "\\.ejs\\'")
             (add-auto-mode 'web-mode "\\.htm\\'")
             (add-auto-mode 'web-mode "\\.jsx\\'")
             (setq web-mode-markup-indent-offset 4
