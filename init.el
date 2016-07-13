@@ -96,6 +96,8 @@
             :config (progn
                       (when (memq window-system '(mac ns))
                         (exec-path-from-shell-initialize)
+                        (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+                        (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")
                         (setenv "LANG" "en_US.UTF-8")
                         (setenv "LC_ALL" "en_US.UTF-8")
                         (setenv "LC_CTYPE" "en_US.UTF-8")))
