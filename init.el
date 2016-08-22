@@ -552,9 +552,8 @@
 
 (use-package my/databases
   :init (progn
-          (use-package redis
-            :ensure t)
-
+          ;; (use-package redis
+          ;;   :ensure t)
           ;; (use-package emacsql
           ;;   :init (progn
           ;;           (use-package pg
@@ -1214,9 +1213,6 @@
 
 (use-package my/http
   :init (progn
-          ;; https://github.com/tkf/emacs-request
-          ;; (use-package emacs-request)
-
           ;; https://github.com/emacs-pe/http.el
           (use-package http
             :ensure t)))
