@@ -39,7 +39,7 @@
 ;; Init use-package
 (require 'package)
 
-(setq dist-packages-dir (concat user-emacs-directory "dist-packages/")
+(setq dist-packages-dir (concat user-emacs-directory "packages/")
       package-user-dir (concat dist-packages-dir "elpa/"))
 
 (make-directory dist-packages-dir t)
@@ -85,7 +85,8 @@
                 mac-command-modifier 'meta)
           (make-directory emacs-persistence-directory t)
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-          (add-to-list 'load-path (expand-file-name "dist-packages" user-emacs-directory))
+          (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+          (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
 
           (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
             (normal-top-level-add-subdirs-to-load-path))))
@@ -219,26 +220,26 @@
           ;;             (mode-icons-mode t))
           ;;   :ensure t)
 
-          (use-package smart-mode-line
-            :config (progn
-                      (setq-default
-                       mode-line-format
-                       '("%e"
-                         mode-line-front-space
-                         mode-line-mule-info
-                         mode-line-client
-                         mode-line-modified
-                         mode-line-remote
-                         mode-line-frame-identification
-                         mode-line-buffer-identification
-                         "   "
-                         mode-line-position
-                         (vc-mode vc-mode)
-                         "  "
-                         mode-line-modes
-                         mode-line-misc-info
-                         mode-line-end-spaces)))
-            :ensure t)
+          ;; (use-package smart-mode-line
+          ;;   :config (progn
+          ;;             (setq-default
+          ;;              mode-line-format
+          ;;              '("%e"
+          ;;                mode-line-front-space
+          ;;                mode-line-mule-info
+          ;;                mode-line-client
+          ;;                mode-line-modified
+          ;;                mode-line-remote
+          ;;                mode-line-frame-identification
+          ;;                mode-line-buffer-identification
+          ;;                "   "
+          ;;                mode-line-position
+          ;;                (vc-mode vc-mode)
+          ;;                "  "
+          ;;                mode-line-modes
+          ;;                mode-line-misc-info
+          ;;                mode-line-end-spaces)))
+          ;;   :ensure t)
 
           (use-package split-window
             :init (progn
@@ -275,31 +276,30 @@
                       "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
                       (set-window-buffer (get-window-in-frame x y frame) buffer))))
 
-          (defun toggle-transparency ()
-            (interactive)
-            (let ((alpha (frame-parameter nil 'alpha)))
-              (set-frame-parameter
-               nil 'alpha
-               (if (eql (cond ((numberp alpha) alpha)
-                              ((numberp (cdr alpha)) (cdr alpha))
-                              ;; Also handle undocumented (<active> <inactive>) form.
-                              ((numberp (cadr alpha)) (cadr alpha)))
-                        100)
-                   '(85 . 50) '(100 . 100)))))
-          (global-set-key (kbd "C-c t") 'toggle-transparency)
+          ;; (defun toggle-transparency ()
+          ;;   (interactive)
+          ;;   (let ((alpha (frame-parameter nil 'alpha)))
+          ;;     (set-frame-parameter
+          ;;      nil 'alpha
+          ;;      (if (eql (cond ((numberp alpha) alpha)
+          ;;                     ((numberp (cdr alpha)) (cdr alpha))
+          ;;                     ;; Also handle undocumented (<active> <inactive>) form.
+          ;;                     ((numberp (cadr alpha)) (cadr alpha)))
+          ;;               100)
+          ;;          '(85 . 50) '(100 . 100)))))
+          ;; (global-set-key (kbd "C-c t") 'toggle-transparency)
 
-          (defun what-face (pos)
-            (interactive "d")
-            (let ((face (or (get-char-property (point) 'read-face-name)
-                            (get-char-property (point) 'face))))
-              (if face (message "Face: %s" face) (message "No face at %d" pos))))))
+          (use-package my/what-face
+            :commands (what-face)
+            :init (progn
+                    (defun what-face (pos)
+                      (interactive "d")
+                      (let ((face (or (get-char-property (point) 'read-face-name)
+                                      (get-char-property (point) 'face))))
+                        (if face (message "Face: %s" face) (message "No face at %d" pos))))))))
 
 (use-package my/elisp-utils
   :init (progn
-          (bind-key "<f1>" 'help-command)
-          (bind-key "C-h" 'delete-backward-char)
-          (bind-key "C-M-h" 'backward-kill-word)
-
           (defmacro after-load (feature &rest body)
             "After FEATURE is loaded, evaluate BODY."
             (declare (indent defun))
@@ -362,12 +362,6 @@
             (newline)                    ; insert a newline
             (switch-to-buffer nil))))
 
-;; (use-package my/games
-;;   :init (progn
-;;           (use-package steam
-;;             :config (progn
-;;                       (setq steam-username "bezdnaskov")))))
-
 (use-package my/keybinding-presuppositions
   :init (progn
           (dolist (key '("\C-l"))
@@ -375,6 +369,15 @@
 
 (use-package my/text-editing-utils
   :init (progn
+          (use-package skeleton
+            :config (progn
+                      ;; (define-skeleton test-skeleton
+                      ;;   "Write test message"
+                      ;;   "Type: "
+                      ;;   "test, " str "!")
+                      )
+            :ensure t)
+
           (use-package autocomplete
             ;; (require 'ej-autocomplete)
             :config (progn
@@ -538,15 +541,6 @@
 ;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
 ;;   :ensure t)
 
-(use-package skeleton
-  :config (progn
-            ;; (define-skeleton test-skeleton
-            ;;   "Write test message"
-            ;;   "Type: "
-            ;;   "test, " str "!")
-            )
-  :ensure t)
-
 (use-package impatient-mode
   :commands impatient-mode
   :ensure t)
@@ -559,41 +553,42 @@
 (use-package my/databases
   :init (progn
           (use-package redis
-            :ensure t)))
-
-(use-package emacsql
-  :init (progn
-          (use-package pg
             :ensure t)
-          (use-package sql-indent
-            :ensure t))
-  :config (progn
-            (defun sql-indent-string ()
-              "Indents the string under the cursor as SQL."
-              (interactive)
-              (save-excursion
-                (er/mark-inside-quotes)
-                (let* ((text (buffer-substring-no-properties (region-beginning) (region-end)))
-                       (pos (region-beginning))
-                       (column (progn (goto-char pos) (current-column)))
-                       (formatted-text (with-temp-buffer
-                                         (insert text)
-                                         (delete-trailing-whitespace)
-                                         (sql-indent-buffer)
-                                         (replace-string "\n" (concat "\n" (make-string column (string-to-char " "))) nil (point-min) (point-max))
-                                         (buffer-string))))
-                  (delete-region (region-beginning) (region-end))
-                  (goto-char pos)
-                  (insert formatted-text))))))
 
-(use-package my/prog-mode
-  :init (progn
-          (use-package lorem-ipsum
-            :ensure t)
-          (use-package fixmee
-            :config (progn
-                      (add-hook 'prog-mode-hook 'fixmee-mode))
-            :ensure t)))
+          ;; (use-package emacsql
+          ;;   :init (progn
+          ;;           (use-package pg
+          ;;             :ensure t)
+          ;;           (use-package sql-indent
+          ;;             :ensure t))
+          ;;   :config (progn
+          ;;             (defun sql-indent-string ()
+          ;;               "Indents the string under the cursor as SQL."
+          ;;               (interactive)
+          ;;               (save-excursion
+          ;;                 (er/mark-inside-quotes)
+          ;;                 (let* ((text (buffer-substring-no-properties (region-beginning) (region-end)))
+          ;;                        (pos (region-beginning))
+          ;;                        (column (progn (goto-char pos) (current-column)))
+          ;;                        (formatted-text (with-temp-buffer
+          ;;                                          (insert text)
+          ;;                                          (delete-trailing-whitespace)
+          ;;                                          (sql-indent-buffer)
+          ;;                                          (replace-string "\n" (concat "\n" (make-string column (string-to-char " "))) nil (point-min) (point-max))
+          ;;                                          (buffer-string))))
+          ;;                   (delete-region (region-beginning) (region-end))
+          ;;                   (goto-char pos)
+          ;;                   (insert formatted-text))))))
+          ))
+
+;; (use-package my/prog-mode
+;;   :init (progn
+;;           (use-package lorem-ipsum
+;;             :ensure t)
+;;           (use-package fixmee
+;;             :config (progn
+;;                       (add-hook 'prog-mode-hook 'fixmee-mode))
+;;             :ensure t)))
 
 (use-package python
   :commands python-mode
@@ -620,18 +615,29 @@
             :ensure t)
 
           (use-package virtualenv
-            :init (progn
-                    (use-package virtualenvwrapper
-                      :ensure t)
-
-                    ;; (use-package pyenv-mode
-                    ;;   :ensure t)
-
-                    (use-package pyvenv
-                      :config (progn
-                                (make-directory "~/.virtualenvs" t))
-                      :ensure t))
             :ensure t)
+          (use-package virtualenvwrapper
+            :config (progn
+                      (venv-initialize-interactive-shells)
+                      (venv-initialize-eshell))
+            :ensure t)
+
+          ;; (use-package pyvenv
+          ;;   :ensure t)
+
+          ;; (use-package virtualenv
+          ;;   :init (progn
+          ;;           (use-package virtualenvwrapper
+          ;;             :ensure t)
+
+          ;;           ;; (use-package pyenv-mode
+          ;;           ;;   :ensure t)
+
+          ;;           (use-package pyvenv
+          ;;             :config (progn
+          ;;                       (make-directory "~/.virtualenvs" t))
+          ;;             :ensure t))
+          ;;   :ensure t)
 
           ;; https://github.com/davidmiller/pony-mode
           (use-package pony-mode
@@ -1214,6 +1220,10 @@
           ;; https://github.com/emacs-pe/http.el
           (use-package http
             :ensure t)))
+
+(use-package auto-rsync
+  :config (progn
+            (auto-rsync-mode t)))
 
 (require 'init-local nil t)
 
