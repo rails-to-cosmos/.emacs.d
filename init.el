@@ -141,6 +141,7 @@
                                                  eshell-watch-for-password-prompt))))
 
 (use-package my/user-interface
+  :bind ("C-x y f f" . toggle-frame-fullscreen)
   :init (progn
           (setq-default buffers-menu-max-size 30
                         case-fold-search t
@@ -190,9 +191,9 @@
                     (use-package danneskjold-theme
                       :ensure t)))
 
-	  (use-package frame-cmds
-	    :commands toggle-max-frame
-	    :ensure t)
+	  ;; (use-package frame-cmds
+	  ;;   :commands toggle-max-frame
+	  ;;   :ensure t)
 
           (use-package init-gui-frames
             :if window-system
@@ -208,6 +209,30 @@
                         (set-frame-parameter nil 'alpha new)))
                     (global-set-key (kbd "C-c t") 'set-frame-alpha)))
 
+<<<<<<< HEAD
+=======
+          ;; (use-package smart-mode-line
+          ;;   :config (progn
+          ;;             (setq-default
+          ;;              mode-line-format
+          ;;              '("%e"
+          ;;                mode-line-front-space
+          ;;                mode-line-mule-info
+          ;;                mode-line-client
+          ;;                mode-line-modified
+          ;;                mode-line-remote
+          ;;                mode-line-frame-identification
+          ;;                mode-line-buffer-identification
+          ;;                "   "
+          ;;                mode-line-position
+          ;;                (vc-mode vc-mode)
+          ;;                "  "
+          ;;                mode-line-modes
+          ;;                mode-line-misc-info
+          ;;                mode-line-end-spaces)))
+          ;;   :ensure t)
+
+>>>>>>> abb88b24b2321aa6ade9a6138b6d370fb46ce100
           (use-package split-window
             :init (progn
                     (defun split-window-multiple-ways (x y)
@@ -379,13 +404,6 @@
                               try-complete-lisp-symbol)
                             ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
 
-          (use-package key-combo
-            :config (progn
-                      (global-key-combo-mode t)
-                      ;; (key-combo-load-default)
-                      )
-            :ensure t)
-
           (use-package yaml-mode
             :ensure t)
 
@@ -458,6 +476,7 @@
 
           (setq read-file-name-completion-ignore-case t
                 read-buffer-completion-ignore-case t)
+
           (mapc (lambda (x)
                   (add-to-list 'completion-ignored-extensions x))
                 '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))
@@ -495,12 +514,15 @@
             (add-hook 'kill-buffer-query-functions 'immortal-scratch))
   :ensure t)
 
-;; (use-package deft
-;;   :config (progn
-;;             (setq deft-extensions '("txt" "org")
-;;                   deft-directory "~/Sync/Dropbox/Deft/"
-;;                   deft-recursive t))
-;;   :ensure t)
+(use-package deft
+  :commands (deft)
+  :config (progn
+            (setq deft-extensions '("txt" "org")
+                  deft-directory "~/Documents/Stuff/Rails to Cosmos/"
+                  deft-recursive t
+                  deft-use-filter-string-for-filename t))
+  :bind ("C-x y RET" . deft)
+  :ensure t)
 
 ;; (use-package yasnippet
 ;;   :config (progn
@@ -770,13 +792,6 @@
   :config (progn
             (use-package org-fstree
               :ensure t)
-
-            (when *is-a-mac*
-              (use-package org-mac-link
-                :ensure t)
-              (autoload 'org-mac-grab-link "org-mac-link" nil t)
-              (use-package org-mac-iCal
-                :ensure t))
 
             (use-package org-crypt
               :disabled t
