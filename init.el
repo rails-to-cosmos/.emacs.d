@@ -104,8 +104,6 @@
                         (setenv "LC_CTYPE" "en_US.UTF-8")))
             :ensure t)
 
-          (add-to-list 'display-buffer-alist '("^*Async Shell Command*" . (display-buffer-no-window)))
-
           (defun spawn-shell (name &rest commands)
             "Invoke shell with commands"
             (interactive "MName of shell buffer to spawn: ")
@@ -124,11 +122,6 @@
               (eshell-send-input)
               (goto-char (point-max)))
             (switch-to-buffer spawn-shell/old-buffer))
-
-          (use-package term+
-            :config (progn
-                      (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
-            :ensure t)
 
           (defun eshell-init-aliases()
             (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
@@ -214,32 +207,6 @@
                         (if elt (setcdr elt new) (push `(alpha ,@new) default-frame-alist))
                         (set-frame-parameter nil 'alpha new)))
                     (global-set-key (kbd "C-c t") 'set-frame-alpha)))
-
-          ;; (use-package mode-icons
-          ;;   :config (progn
-          ;;             (mode-icons-mode t))
-          ;;   :ensure t)
-
-          ;; (use-package smart-mode-line
-          ;;   :config (progn
-          ;;             (setq-default
-          ;;              mode-line-format
-          ;;              '("%e"
-          ;;                mode-line-front-space
-          ;;                mode-line-mule-info
-          ;;                mode-line-client
-          ;;                mode-line-modified
-          ;;                mode-line-remote
-          ;;                mode-line-frame-identification
-          ;;                mode-line-buffer-identification
-          ;;                "   "
-          ;;                mode-line-position
-          ;;                (vc-mode vc-mode)
-          ;;                "  "
-          ;;                mode-line-modes
-          ;;                mode-line-misc-info
-          ;;                mode-line-end-spaces)))
-          ;;   :ensure t)
 
           (use-package split-window
             :init (progn
