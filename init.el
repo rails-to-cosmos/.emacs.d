@@ -1046,10 +1046,10 @@
                       (setq bpr-colorize-output t
                             bpr-close-after-success t
                             bpr-erase-process-buffer t)
-                      (defun emacs-push-config (cm)
-                        (interactive "MCommit message: ")
+                      (defun emacs-push-config ()
+                        (interactive)
                         (let* ((bpr-process-directory user-emacs-directory))
-                          (bpr-spawn (concatenate 'string "fab push:cm=\'" cm "\'")))))
+                          (bpr-spawn (concatenate 'string "fab push:cm=\'Sync.\'")))))
             :ensure t)
 
           (use-package prodigy
