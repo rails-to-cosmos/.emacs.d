@@ -518,15 +518,15 @@
             (add-hook 'kill-buffer-query-functions 'immortal-scratch))
   :ensure t)
 
-(use-package deft
-  :commands (deft)
-  :config (progn
-            (setq deft-extensions '("txt" "org")
-                  deft-directory "~/Documents/Stuff/Rails to Cosmos/"
-                  deft-recursive t
-                  deft-use-filter-string-for-filename t))
-  :bind ("C-x y RET" . deft)
-  :ensure t)
+;; (use-package deft
+;;   :commands (deft)
+;;   :config (progn
+;;             (setq deft-extensions '("txt" "org")
+;;                   deft-directory "~/Sync/Dropbox/Deft"
+;;                   deft-recursive t
+;;                   deft-use-filename-as-title t))
+;;   :bind ("C-x y RET" . deft)
+;;   :ensure t)
 
 ;; (use-package yasnippet
 ;;   :config (progn
@@ -573,14 +573,16 @@
           ;;                   (insert formatted-text))))))
           ))
 
-;; (use-package my/prog-mode
-;;   :init (progn
-;;           (use-package lorem-ipsum
-;;             :ensure t)
-;;           (use-package fixmee
-;;             :config (progn
-;;                       (add-hook 'prog-mode-hook 'fixmee-mode))
-;;             :ensure t)))
+(use-package my/prog-mode
+  :init (progn
+          ;; (use-package lorem-ipsum
+          ;;   :ensure t)
+
+          ;; (use-package fixmee
+          ;;   :config (progn
+          ;;             (add-hook 'prog-mode-hook 'fixmee-mode))
+          ;;   :ensure t)
+          ))
 
 (use-package python
   :commands python-mode
