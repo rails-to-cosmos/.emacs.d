@@ -589,10 +589,14 @@
             :interpreter ("ipython" . python-mode)
             :load-path "python/"
             :init (progn
-                    (use-package jedi
+                    ;; (use-package jedi
+                    ;;   :config (progn
+                    ;;             (add-hook 'python-mode-hook 'jedi:setup))
+                    ;;   (jedi:install-server)
+                    ;;   :ensure t)
+                    (use-package elpy
                       :config (progn
-                                (add-hook 'python-mode-hook 'jedi:setup))
-                      (jedi:install-server)
+                                (elpy-enable))
                       :ensure t)
 
                     (use-package pungi
@@ -608,43 +612,26 @@
                       :ensure t)
 
                     (use-package virtualenv
-                      :ensure t)
-                    (use-package virtualenvwrapper
                       :config (progn
-                                (venv-initialize-interactive-shells)
-                                (venv-initialize-eshell))
+                                (use-package virtualenvwrapper
+                                  :config (progn
+                                            (venv-initialize-interactive-shells)
+                                            (venv-initialize-eshell))
+                                  :ensure t))
                       :ensure t)
-
-                    ;; (use-package pyvenv
-                    ;;   :ensure t)
-
-                    ;; (use-package virtualenv
-                    ;;   :init (progn
-                    ;;           (use-package virtualenvwrapper
-                    ;;             :ensure t)
-
-                    ;;           ;; (use-package pyenv-mode
-                    ;;           ;;   :ensure t)
-
-                    ;;           (use-package pyvenv
-                    ;;             :config (progn
-                    ;;                       (make-directory "~/.virtualenvs" t))
-                    ;;             :ensure t))
-                    ;;   :ensure t)
 
                     ;; https://github.com/davidmiller/pony-mode
-                    (use-package pony-mode
-                      :config ;; (progn
-                      ;;   ;; Pony mode config for the megacorp project
-                      ;;   ((nil . ;; This applies these settings regardless of major mode
-
-                      ;;         ((pony-settings (make-pony-project
-                      ;;                          :python "/home/david/virtualenvs/megacorp/production/bin/python"
-                      ;;                          :pythonpath "/home/david/megacorp/libs/projectzero"
-                      ;;                          :settings "local_settings_file"
-                      ;;                          :appsdir "testproject/apps/")
-                      ;;                         )))))
-                      :ensure t)
+                    ;; (use-package pony-mode
+                    ;;   :config (progn
+                    ;;     ;; Pony mode config for the megacorp project
+                    ;;     ((nil . ;; This applies these settings regardless of major mode
+                    ;;           ((pony-settings (make-pony-project
+                    ;;                            :python "/home/david/virtualenvs/megacorp/production/bin/python"
+                    ;;                            :pythonpath "/home/david/megacorp/libs/projectzero"
+                    ;;                            :settings "local_settings_file"
+                    ;;                            :appsdir "testproject/apps/")
+                    ;;                           )))))
+                    ;;   :ensure t)
 
                     ;; (use-package yasnippet
                     ;;   :ensure t)
@@ -662,6 +649,7 @@
                         (interactive)
                         (insert "import ipdb; ipdb.set_trace()")
                         (python-highlight-breakpoints))
+
                       (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
                       (add-hook 'python-mode-hook 'linum-mode)
                       ;; (add-hook 'python-mode-hook 'yas-minor-mode)
