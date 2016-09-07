@@ -181,6 +181,8 @@
                                    :foundry nil
                                    :family "Menlo")))))
 
+          (tool-bar-mode -1)
+          (menu-bar-mode -1)
           (set-cursor-color "#D0E1F9")
 
 	  (use-package my/themes
