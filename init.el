@@ -209,30 +209,6 @@
                         (set-frame-parameter nil 'alpha new)))
                     (global-set-key (kbd "C-c t") 'set-frame-alpha)))
 
-<<<<<<< HEAD
-=======
-          ;; (use-package smart-mode-line
-          ;;   :config (progn
-          ;;             (setq-default
-          ;;              mode-line-format
-          ;;              '("%e"
-          ;;                mode-line-front-space
-          ;;                mode-line-mule-info
-          ;;                mode-line-client
-          ;;                mode-line-modified
-          ;;                mode-line-remote
-          ;;                mode-line-frame-identification
-          ;;                mode-line-buffer-identification
-          ;;                "   "
-          ;;                mode-line-position
-          ;;                (vc-mode vc-mode)
-          ;;                "  "
-          ;;                mode-line-modes
-          ;;                mode-line-misc-info
-          ;;                mode-line-end-spaces)))
-          ;;   :ensure t)
-
->>>>>>> abb88b24b2321aa6ade9a6138b6d370fb46ce100
           (use-package split-window
             :init (progn
                     (defun split-window-multiple-ways (x y)
@@ -497,9 +473,7 @@
 
 (use-package my/log-utils
   :init (progn
-          (use-package interaction-log
-            :config (progn
-                      (interaction-log-mode t))
+          (use-package itail
             :ensure t)
           (use-package mwe-log-commands
             :ensure t)))
@@ -511,24 +485,7 @@
                   (progn (bury-buffer)
                          nil)
                 t))
-            (add-hook 'kill-buffer-query-functions 'immortal-scratch))
-  :ensure t)
-
-;; (use-package deft
-;;   :commands (deft)
-;;   :config (progn
-;;             (setq deft-extensions '("txt" "org")
-;;                   deft-directory "~/Sync/Dropbox/Deft"
-;;                   deft-recursive t
-;;                   deft-use-filename-as-title t))
-;;   :bind ("C-x y RET" . deft)
-;;   :ensure t)
-
-;; (use-package yasnippet
-;;   :config (progn
-;;             (yas-global-mode 1)
-;;             (bind-key "C-j" 'yas-expand yas-minor-mode-map))
-;;   :ensure t)
+            (add-hook 'kill-buffer-query-functions 'immortal-scratch)))
 
 (use-package impatient-mode
   :commands impatient-mode
@@ -580,7 +537,6 @@
           ;;   :ensure t)
 
           (use-package python
-            :commands python-mode
             :mode ("\\.py\\'" . python-mode)
             :interpreter ("ipython" . python-mode)
             :load-path "python/"
@@ -590,9 +546,10 @@
                     ;;             (add-hook 'python-mode-hook 'jedi:setup))
                     ;;   (jedi:install-server)
                     ;;   :ensure t)
+
                     (use-package elpy
-                      :config (progn
-                                (elpy-enable))
+                      :init (progn
+                              (elpy-enable))
                       :ensure t)
 
                     (use-package pungi
@@ -961,21 +918,17 @@
 
 (use-package my/project-management
   :init (progn
-          (use-package dizzee
-            :commands (dz-defservice dz-defservice-group)
+          (use-package fiplr
             :config (progn
-                      (defun dz-restart-current ()
-                        (interactive)
-                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-                        (funcall (intern dz-restart-expr)))
-                      (defun dz-stop-current ()
-                        (interactive)
-                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-                        (funcall (intern dz-restart-expr)))
-                      (global-set-key (kbd "<f5>") 'dz-restart-current)
-                      (global-set-key (kbd "<f4>") 'dz-stop-current)))))
+                      (setq fiplr-root-markers '(".git" ".svn")))
+            :ensure t)
+
+          (use-package bookmark+
+            :init (progn
+                    (setq-default bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
+                                  bookmark-file (concat emacs-persistence-directory ".bookmarks")
+                                  bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
+            :ensure t)))
 
 (use-package my/internet-services
   :init (progn
@@ -989,28 +942,11 @@
                         (if (string-match (car lang-regex) sentence)
                             (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
             :bind ("C-x y t t" . translate-text)
-            :ensure t)
-          ;; (use-package twittering-mode)
-          ))
-
-(use-package itail)
+            :ensure t)))
 
 (use-package frame-cmds)
 
-(use-package goto-chg
-  :bind (("C-c b ," . goto-last-change)
-         ("C-c b ." . goto-last-change-reverse)))
-
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-(use-package my/project-management
-  :init (progn
-          (use-package bookmark+
-            :init (progn
-                    (setq-default bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
-                                  bookmark-file (concat emacs-persistence-directory ".bookmarks")
-                                  bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
-            :ensure t)))
 
 (use-package my/process-management
   :init (progn
@@ -1035,6 +971,22 @@
                         (let* ((bpr-process-directory user-emacs-directory))
                           (bpr-spawn (concatenate 'string "fab push:cm=\'Sync.\'")))))
             :ensure t)
+
+          (use-package dizzee
+            :commands (dz-defservice dz-defservice-group)
+            :config (progn
+                      (defun dz-restart-current ()
+                        (interactive)
+                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+                        (funcall (intern dz-restart-expr)))
+                      (defun dz-stop-current ()
+                        (interactive)
+                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+                        (funcall (intern dz-restart-expr)))
+                      (global-set-key (kbd "<f5>") 'dz-restart-current)
+                      (global-set-key (kbd "<f4>") 'dz-stop-current)))
 
           (use-package prodigy
             :commands (prodigy
@@ -1206,3 +1158,6 @@
 (provide 'init)
 
 ;;; init.el ends here
+
+(fset 'wpp-adapt-config
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
