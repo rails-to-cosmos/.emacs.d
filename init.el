@@ -93,6 +93,34 @@
 
 (use-package my/shell
   :init (progn
+          (use-package iterm
+            :init (progn
+                    (defun get-file-dir-or-home ()
+                      "If inside a file buffer, return the directory, else return home"
+                      (interactive)
+                      (let ((filename (buffer-file-name)))
+                        (if (not (and filename (file-exists-p filename)))
+                            "~/"
+                          (file-name-directory filename))))
+
+                    (defun iterm-focus ()
+                      (interactive)
+                      (do-applescript
+                       " do shell script \"open -a iTerm\"\n"))
+
+                    (defun iterm-goto-filedir-or-home ()
+                      "Go to present working dir and focus iterm"
+                      (interactive)
+                      (iterm-focus)
+                      (do-applescript
+                       (concat
+                        " tell application \"iTerm2\"\n"
+                        "   tell the current session of current window\n"
+                        (format "     write text \"cd %s\" \n" (get-file-dir-or-home))
+                        "   end tell\n"
+                        " end tell\n"
+                        " do shell script \"open -a iTerm\"\n"
+                        )))))
           (use-package exec-path-from-shell
             :config (progn
                       (when (memq window-system '(mac ns))
@@ -141,7 +169,6 @@
                                                  eshell-watch-for-password-prompt))))
 
 (use-package my/user-interface
-  :bind ("C-x y f f" . toggle-frame-fullscreen)
   :init (progn
           (setq-default buffers-menu-max-size 30
                         case-fold-search t
@@ -331,11 +358,6 @@
             (insert-kbd-macro name)      ; copy the macro
             (newline)                    ; insert a newline
             (switch-to-buffer nil))))
-
-(use-package my/keybinding-presuppositions
-  :init (progn
-          (dolist (key '("\C-l"))
-            (global-unset-key key))))
 
 (use-package my/text-editing-utils
   :init (progn
@@ -549,10 +571,10 @@
                     ;;   (jedi:install-server)
                     ;;   :ensure t)
 
-                    (use-package elpy
-                      :init (progn
-                              (elpy-enable))
-                      :ensure t)
+                    ;; (use-package elpy
+                    ;;   :init (progn
+                    ;;           (elpy-enable))
+                    ;;   :ensure t)
 
                     (use-package pungi
                       :ensure t)
@@ -573,26 +595,7 @@
                                             (venv-initialize-interactive-shells)
                                             (venv-initialize-eshell))
                                   :ensure t))
-                      :ensure t)
-
-                    ;; https://github.com/davidmiller/pony-mode
-                    ;; (use-package pony-mode
-                    ;;   :config (progn
-                    ;;     ;; Pony mode config for the megacorp project
-                    ;;     ((nil . ;; This applies these settings regardless of major mode
-                    ;;           ((pony-settings (make-pony-project
-                    ;;                            :python "/home/david/virtualenvs/megacorp/production/bin/python"
-                    ;;                            :pythonpath "/home/david/megacorp/libs/projectzero"
-                    ;;                            :settings "local_settings_file"
-                    ;;                            :appsdir "testproject/apps/")
-                    ;;                           )))))
-                    ;;   :ensure t)
-
-                    ;; (use-package yasnippet
-                    ;;   :ensure t)
-                    ;; (use-package live-py-mode
-                    ;;   :ensure t)
-                    )
+                      :ensure t))
             :config (progn
                       (setq-default python-indent-offset 4)
 
@@ -610,17 +613,8 @@
                       ;; (add-hook 'python-mode-hook 'yas-minor-mode)
                       ;; (add-hook 'python-mode-hook 'python-highlight-breakpoints)
                       )
-            :bind (("C-c C-b" . python-add-breakpoint))
-            :ensure t)
-
-          ;; (use-package jenkins
-          ;;   :config (progn
-          ;;             (setq jenkins-api-token "<api token can be found on user's configure page>")
-          ;;             (setq jenkins-url "<jenkins url. Example: https://jenkins.company.com/ >")
-          ;;             (setq jenkins-username "<your user name>")
-          ;;             (setq jenkins-viewname "<viewname>"))
-          ;;   :ensure t)
-          ))
+            :bind ("C-c C-b" . python-add-breakpoint)
+            :ensure t)))
 
 (require 'init-isearch)
 
@@ -906,11 +900,7 @@
               :ensure t)
             (use-package magit-gh-pulls
               :ensure t)
-            (setq magit-completing-read-function 'magit-ido-completing-read)
-            ;; (magit-add-section-hook 'magit-status-sections-hook
-            ;;                         'magit-insert-unpulled-module-commits
-            ;;                         'magit-insert-unpulled-from-pushremote)
-            )
+            (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
@@ -943,7 +933,6 @@
                       (dolist (lang-regex lang-regexes)
                         (if (string-match (car lang-regex) sentence)
                             (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-            :bind ("C-x y t t" . translate-text)
             :ensure t)))
 
 (use-package frame-cmds)
@@ -993,7 +982,6 @@
           (use-package prodigy
             :commands (prodigy
                        prodigy-start-all-services)
-            :bind ("C-x y p" . prodigy)
             :config (progn
                       (defun ido-prodigy-menu ()
                         (interactive)
@@ -1155,6 +1143,24 @@
   :config (progn
             (auto-rsync-mode t)))
 
+(use-package my/keybindings
+  :init (progn
+          (use-package general
+            :config (progn
+                      (dolist (key '("\C-l" "\C-c C-b"))
+                        (global-unset-key key))
+
+                      (general-define-key :prefix "C-x y"
+                                          "t t" 'translate-text
+                                          "p" 'prodigy
+                                          "f f" 'toggle-frame-fullscreen
+                                          "t g" 'iterm-goto-filedir-or-home)
+                      (general-define-key :prefix "C-x l")
+                      (general-define-key :keymaps 'python-mode-map
+                                          :prefix "C-c"
+                                          "C-b" 'python-add-breakpoint))
+            :ensure t)))
+
 (require 'init-local nil t)
 
 (provide 'init)
@@ -1162,4 +1168,4 @@
 ;;; init.el ends here
 
 (fset 'wpp-adapt-config
-   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
+      (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
