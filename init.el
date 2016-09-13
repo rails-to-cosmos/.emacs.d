@@ -373,8 +373,7 @@
                               (mapcar 'copy-marker (reverse skeleton-positions))))
 
                       (defun skeleton-next-position (&optional reverse)
-                        "Jump to next position in skeleton.
-         REVERSE - Jump to previous position in skeleton"
+                        "Jump to next position in skeleton. REVERSE - Jump to previous position in skeleton"
                         (interactive "P")
                         (let* ((positions (mapcar 'marker-position *skeleton-markers*))
                                (positions (if reverse (reverse positions) positions))
@@ -392,7 +391,7 @@
                       (define-minor-mode skeleton-position-mode
                         "Set or toggle the Skeleton Position minor mode."
                         :init-value nil
-                        :lighter " SkeletonPosition"
+                        :lighter " __skpos__"
                         :keymap (let ((map (make-sparse-keymap)))
                                   (define-key map (kbd "TAB") 'skeleton-next-position)
                                   (define-key map (kbd "RET") 'skeleton-position-mode)
@@ -404,7 +403,7 @@
 
                       (define-skeleton skeleton:emacs-lisp-package-header
                         "Emacs Lisp Package Header"
-                        "Description: "
+                        nil
                         ";;; " (file-name-nondirectory (buffer-file-name (current-buffer))) \n
                         ";;" \n
                         ";; Filename: " (file-name-nondirectory (buffer-file-name (current-buffer))) \n
@@ -440,6 +439,7 @@
                       ;; (use-package popup-kill-ring)
                       ;; (use-package auto-complete-config)
                       ;; (ac-config-default)
+
                       (global-set-key (kbd "M-/") 'hippie-expand)
                       (setq hippie-expand-try-functions-list '(try-expand-dabbrev
                                                                try-expand-dabbrev-all-buffers
@@ -452,7 +452,6 @@
                                                                try-complete-lisp-symbol-partially
                                                                try-complete-lisp-symbol))
                       ;;;
-
                       ;; (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
                       ;;       ac-use-menu-map t
                       ;;       hippie-expand-verbose t
@@ -569,11 +568,11 @@
             :interpreter ("ipython" . python-mode)
             :load-path "python/"
             :init (progn
-                    ;; (use-package jedi
-                    ;;   :config (progn
-                    ;;             (add-hook 'python-mode-hook 'jedi:setup))
-                    ;;   (jedi:install-server)
-                    ;;   :ensure t)
+                    (use-package jedi
+                      :config (progn
+                                (jedi:setup)
+                                (jedi:install-server))
+                      :ensure t)
 
                     ;; (use-package elpy
                     ;;   :init (progn
