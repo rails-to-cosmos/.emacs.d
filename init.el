@@ -1154,7 +1154,7 @@
                                           "t t" 'translate-text
                                           "p" 'prodigy
                                           "f f" 'toggle-frame-fullscreen
-                                          "t g" 'iterm-goto-filedir-or-home)
+                                          "i t" 'iterm-goto-filedir-or-home)
                       (general-define-key :prefix "C-x l")
                       (general-define-key :keymaps 'python-mode-map
                                           :prefix "C-c"
@@ -1168,11 +1168,7 @@
 ;;; init.el ends here
 
 (fset 'wpp-adapt-config
-<<<<<<< HEAD
    (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
 
 (fset 'insert-debug-error
    (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([tab 116 104 114 111 119 32 110 101 119 32 69 114 114 111 114 40 41 59 2 2 39 49 50 51 5] 0 "%d")) arg)))
-=======
-      (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
->>>>>>> 55e7af7876f065c5cafb5f28a0efe62f6f42e981
