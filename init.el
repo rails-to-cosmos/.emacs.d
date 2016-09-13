@@ -370,106 +370,120 @@
                       )
             :ensure t)
 
-          (use-package autocomplete
-            ;; (require 'ej-autocomplete)
-            :config (progn
-                      ;; (use-package bash-completion
-                      ;;   :commands bash-completion-dynamic-complete
-                      ;;   :init (progn
-                      ;;           (add-hook 'shell-dynamic-complete-functions
-                      ;;                     'bash-completion-dynamic-complete))
-                      ;;   :config (progn
-                      ;;             (bash-completion-setup))
-                      ;;   :ensure t)
-                      (use-package auto-complete-nxml
-                        :ensure t)
-                      ;; (use-package popup
-                      ;;   :ensure t)
-                      ;; (use-package pos-tip)
-                      ;; (use-package popup-kill-ring)
-                      ;; (use-package auto-complete-config)
-                      (ac-config-default)
-                      (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
-                            ac-use-menu-map t
-                            hippie-expand-verbose t
-                            smart-tab-using-hippie-expand t
-                            hippie-expand-try-functions-list
-                            '(yas/hippie-try-expand
-                              try-complete-file-name-partially
-                              try-expand-all-abbrevs
-                              try-expand-dabbrev
-                              try-expand-dabbrev-all-buffers
-                              try-expand-dabbrev-from-kill
-                              try-complete-lisp-symbol-partially
-                              try-complete-lisp-symbol)
-                            ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))))
+              (use-package autocomplete
+                ;; (require 'ej-autocomplete)
+                :config (progn
+                          ;; (use-package bash-completion
+                          ;;   :commands bash-completion-dynamic-complete
+                          ;;   :init (progn
+                          ;;           (add-hook 'shell-dynamic-complete-functions
+                          ;;                     'bash-completion-dynamic-complete))
+                          ;;   :config (progn
+                          ;;             (bash-completion-setup))
+                          ;;   :ensure t)
+                          ;; (use-package auto-complete-nxml
+                          ;;   :ensure t)
+                          ;; (use-package popup
+                          ;;   :ensure t)
+                          ;; (use-package pos-tip)
+                          ;; (use-package popup-kill-ring)
+                          ;; (use-package auto-complete-config)
+                          ;; (ac-config-default)
+                          (global-set-key (kbd "M-/") 'hippie-expand)
+                          (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                                                   try-expand-dabbrev-all-buffers
+                                                                   try-expand-dabbrev-from-kill
+                                                                   try-complete-file-name-partially
+                                                                   try-complete-file-name
+                                                                   try-expand-all-abbrevs
+                                                                   try-expand-list
+                                                                   try-expand-line
+                                                                   try-complete-lisp-symbol-partially
+                                                                   try-complete-lisp-symbol))
+                      ;;;
 
-          (use-package yaml-mode
-            :ensure t)
+                          ;; (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
+                          ;;       ac-use-menu-map t
+                          ;;       hippie-expand-verbose t
+                          ;;       smart-tab-using-hippie-expand t
+                          ;;       hippie-expand-try-functions-list
+                          ;;       '(yas/hippie-try-expand
+                          ;;         try-complete-file-name-partially
+                          ;;         try-expand-all-abbrevs
+                          ;;         try-expand-dabbrev
+                          ;;         try-expand-dabbrev-all-buffers
+                          ;;         try-expand-dabbrev-from-kill
+                          ;;         try-complete-lisp-symbol-partially
+                          ;;         try-complete-lisp-symbol)
+                          ;;       ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))
+                          ))
+
+              ;; (use-package yaml-mode
+            ;; :ensure t)
 
           ;; Align command
           ;; from http://stackoverflow.com/questions/3633120/emacs-hotkey-to-align-equal-signs
           ;; another information: https://gist.github.com/700416
           ;; use rx function http://www.emacswiki.org/emacs/rx
-          (defun align-to-colon (begin end)
-            "Align region to colon (:) signs"
-            (interactive "r")
-            (align-regexp begin end
-                          (rx (group (zero-or-more (syntax whitespace))) ":") 1 1 ))
+          ;; (defun align-to-colon (begin end)
+          ;;   "Align region to colon (:) signs"
+          ;;   (interactive "r")
+          ;;   (align-regexp begin end
+          ;;                 (rx (group (zero-or-more (syntax whitespace))) ":") 1 1 ))
 
-          (defun align-to-comma (begin end)
-            "Align region to comma  signs"
-            (interactive "r")
-            (align-regexp begin end
-                          (rx "," (group (zero-or-more (syntax whitespace))) ) 1 1 ))
+          ;; (defun align-to-comma (begin end)
+          ;;   "Align region to comma  signs"
+          ;;   (interactive "r")
+          ;;   (align-regexp begin end
+          ;;                 (rx "," (group (zero-or-more (syntax whitespace))) ) 1 1 ))
 
-          (defun align-to-equals (begin end)
-            "Align region to equal signs"
-            (interactive "r")
-            (align-regexp begin end
-                          (rx (group (zero-or-more (syntax whitespace))) "=") 1 1 ))
+          ;; (defun align-to-equals (begin end)
+          ;;   "Align region to equal signs"
+          ;;   (interactive "r")
+          ;;   (align-regexp begin end
+          ;;                 (rx (group (zero-or-more (syntax whitespace))) "=") 1 1 ))
 
-          (defun align-to-hash (begin end)
-            "Align region to hash ( => ) signs"
-            (interactive "r")
-            (align-regexp begin end
-                          (rx (group (zero-or-more (syntax whitespace))) "=>") 1 1 ))
+          ;; (defun align-to-hash (begin end)
+          ;;   "Align region to hash ( => ) signs"
+          ;;   (interactive "r")
+          ;;   (align-regexp begin end
+          ;;                 (rx (group (zero-or-more (syntax whitespace))) "=>") 1 1 ))
 
           ;; work with this
-          (defun align-to-comma-before (begin end)
-            "Align region to equal signs"
-            (interactive "r")
-            (align-regexp begin end
-                          (rx (group (zero-or-more (syntax whitespace))) ",") 1 1 ))
+          ;; (defun align-to-comma-before (begin end)
+          ;;   "Align region to equal signs"
+          ;;   (interactive "r")
+          ;;   (align-regexp begin end
+          ;;                 (rx (group (zero-or-more (syntax whitespace))) ",") 1 1 ))
 
-          (defun align-to-whitespace (start end)
-            "Align columns by whitespace"
-            (interactive "r")
-            (align-regexp start end
-                          "\\(\\s-*\\)\\s-" 1 0 t))
+          ;; (defun align-to-whitespace (start end)
+          ;;   "Align columns by whitespace"
+          ;;   (interactive "r")
+          ;;   (align-regexp start end
+          ;;                 "\\(\\s-*\\)\\s-" 1 0 t))
 
-          (defun remove-dos-eol ()
-            "Do not show ^M in files containing mixed UNIX and DOS line endings."
-            (interactive)
-            (setq buffer-display-table (make-display-table))
-            (aset buffer-display-table ?\^M []))
+          ;; (defun remove-dos-eol ()
+          ;;   "Do not show ^M in files containing mixed UNIX and DOS line endings."
+          ;;   (interactive)
+          ;;   (setq buffer-display-table (make-display-table))
+          ;;   (aset buffer-display-table ?\^M []))
 
-          (defun bjm/align-whitespace (start end)
-            "Align columns by whitespace"
-            (interactive "r")
-            (align-regexp start end
-                          "\\(\\s-*\\)\\s-" 1 0 t))
+          ;; (defun bjm/align-whitespace (start end)
+          ;;   "Align columns by whitespace"
+          ;;   (interactive "r")
+          ;;   (align-regexp start end
+          ;;                 "\\(\\s-*\\)\\s-" 1 0 t))
 
-          (defun align-to-ampersand (start end)
-            "Align columns by ampersand"
-            (interactive "r")
-            (align-regexp start end
-                          "\\(\\s-*\\)&" 1 1 t))
+          ;; (defun align-to-ampersand (start end)
+          ;;   "Align columns by ampersand"
+          ;;   (interactive "r")
+          ;;   (align-regexp start end
+          ;;                 "\\(\\s-*\\)&" 1 1 t))
 
-          (use-package syntax-subword
-            :config (progn
-                      (global-syntax-subword-mode t))
-            :ensure t)
+          ;; (use-package syntax-subword
+          ;;   :config (progn
+          ;;             (global-syntax-subword-mode t))
+          ;;   :ensure t)
 
           (use-package wgrep
             :ensure t)
@@ -481,21 +495,24 @@
                   (add-to-list 'completion-ignored-extensions x))
                 '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))
 
-          (use-package mmm-mode
-            :config (progn
-                      (setq mmm-global-mode 'maybe)
-                      (mmm-add-classes
-                       '((python-rst
-                          :submode rst-mode
-                          :front "^ *[ru]?\"\"\"[^\"]*$"
-                          :back "^ *\"\"\""
-                          :include-front t
-                          :include-back t
-                          :end-not-begin t)))
-                      (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
-            :ensure t)))
+          ;; (use-package mmm-mode
+          ;;   :config (progn
+          ;;             (setq mmm-global-mode 'maybe)
+          ;;             (mmm-add-classes
+          ;;              '((python-rst
+          ;;                 :submode rst-mode
+          ;;                 :front "^ *[ru]?\"\"\"[^\"]*$"
+          ;;                 :back "^ *\"\"\""
+          ;;                 :include-front t
+          ;;                 :include-back t
+          ;;                 :end-not-begin t)))
+          ;;             (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
+          ;;   :ensure t)
+          ))
 
 (use-package my/log-utils
+  :commands (itail
+             mwe:log-keyboard-commands)
   :init (progn
           (use-package itail
             :ensure t)
@@ -503,7 +520,7 @@
             :ensure t)))
 
 (use-package scratch
-  :config (progn
+  :init (progn
             (defun immortal-scratch ()
               (if (eq (current-buffer) (get-buffer "*scratch*"))
                   (progn (bury-buffer)
@@ -613,7 +630,6 @@
                       ;; (add-hook 'python-mode-hook 'yas-minor-mode)
                       ;; (add-hook 'python-mode-hook 'python-highlight-breakpoints)
                       )
-            :bind ("C-c C-b" . python-add-breakpoint)
             :ensure t)))
 
 (require 'init-isearch)
@@ -626,16 +642,15 @@
                   flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
   :ensure t)
 
-(use-package imenu-anywhere
-  :config (progn
-            (after-load 'imenu-anywhere (global-set-key (kbd "C-.") 'imenu-anywhere))
-            (bind-key "C-x i" 'imenu-anywhere))
-  :ensure t)
-
 (use-package ido
   :config (progn
             (ido-mode)
-            (ido-vertical-mode)
+            (use-package ido-vertical-mode
+              :config (progn
+                        (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+                        (ido-vertical-mode))
+              :ensure t)
+
             (ido-everywhere)
             (ido-ubiquitous-mode)
             (setq ido-enable-flex-matching t
@@ -659,13 +674,13 @@
             (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
             (add-hook 'ido-setup-hook #'bind-ido-keys))
   :ensure imenu-anywhere
-  :ensure ido-vertical-mode
   :ensure idomenu
   :ensure ido-completing-read+
   :ensure ido-ubiquitous
-  :ensure smex)
-
-(require 'init-hippie-expand)
+  :ensure smex
+  ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
+  ;; your recently and most frequently used commands.
+  )
 
 (use-package switch-window
   :config (progn
@@ -993,7 +1008,7 @@
                                                                 (if status started-label
                                                                   stopped-label)))
                                                             prodigy-services)))
-                          (ido-completing-read "Service: " ido-prodigy-choices)))
+                          (message (ido-completing-read "Service: " ido-prodigy-choices))))
 
                       (defun find-prodigy-service-with-name (service-name)
                         (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
@@ -1143,23 +1158,26 @@
   :config (progn
             (auto-rsync-mode t)))
 
-(use-package my/keybindings
-  :init (progn
-          (use-package general
-            :config (progn
-                      (dolist (key '("\C-l" "\C-c C-b"))
-                        (global-unset-key key))
+(use-package general
+  :config (progn
+            (dolist (key '("\C-l" "\C-xi" "\C-cC-b"))
+              (global-unset-key key))
 
-                      (general-define-key :prefix "C-x y"
-                                          "t t" 'translate-text
-                                          "p" 'prodigy
-                                          "f f" 'toggle-frame-fullscreen
-                                          "i t" 'iterm-goto-filedir-or-home)
-                      (general-define-key :prefix "C-x l")
-                      (general-define-key :keymaps 'python-mode-map
-                                          :prefix "C-c"
-                                          "C-b" 'python-add-breakpoint))
-            :ensure t)))
+            (general-define-key :prefix "C-x y"
+                                "t t" 'translate-text
+                                "p" 'prodigy
+                                "f f" 'toggle-frame-fullscreen)
+
+            (general-define-key :prefix "C-x l")
+
+            (general-define-key :keymaps 'python-mode-map
+                                :prefix "C-c"
+                                "C-b" 'python-add-breakpoint)
+
+            (general-define-key :prefix "C-x i"
+                                "m" 'imenu-anywhere
+                                "t" 'iterm-goto-filedir-or-home))
+  :ensure t)
 
 (require 'init-local nil t)
 
