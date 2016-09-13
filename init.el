@@ -570,7 +570,8 @@
             :init (progn
                     (use-package jedi
                       :config (progn
-                                (jedi:setup)
+                                (add-hook 'python-mode-hook 'jedi:setup)
+                                (setq jedi:complete-on-dot t)
                                 (jedi:install-server))
                       :ensure t)
 
