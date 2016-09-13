@@ -28,3 +28,4 @@ jordon/
 ac-comphist.dat
 *.pyc
 *flycheck*
+/smex-items
