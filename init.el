@@ -363,127 +363,114 @@
   :init (progn
           (use-package skeleton
             :config (progn
-                      ;; (define-skeleton test-skeleton
-                      ;;   "Write test message"
-                      ;;   "Type: "
-                      ;;   "test, " str "!")
-                      )
+                      (defvar *skeleton-markers* nil
+                        "Markers for locations saved in skeleton-positions")
+
+                      (defun skeleton-make-markers ()
+                        (while *skeleton-markers*
+                          (set-marker (pop *skeleton-markers*) nil))
+                        (setq *skeleton-markers*
+                              (mapcar 'copy-marker (reverse skeleton-positions))))
+
+                      (defun skeleton-next-position (&optional reverse)
+                        "Jump to next position in skeleton.
+         REVERSE - Jump to previous position in skeleton"
+                        (interactive "P")
+                        (let* ((positions (mapcar 'marker-position *skeleton-markers*))
+                               (positions (if reverse (reverse positions) positions))
+                               (comp (if reverse '> '<))
+                               pos)
+                          (when positions
+                            (if (catch 'break
+                                  (while (setq pos (pop positions))
+                                    (when (funcall comp (point) pos)
+                                      (throw 'break t))))
+                                (goto-char pos)
+                              (goto-char (marker-position
+                                          (car *skeleton-markers*)))))))
+
+                      (define-minor-mode skeleton-position-mode
+                        "Set or toggle the Skeleton Position minor mode."
+                        :init-value nil
+                        :lighter " SkeletonPosition"
+                        :keymap (let ((map (make-sparse-keymap)))
+                                  (define-key map (kbd "TAB") 'skeleton-next-position)
+                                  (define-key map (kbd "RET") 'skeleton-position-mode)
+                                  map)
+                        :group skeleton)
+
+                      (add-hook 'skeleton-end-hook 'skeleton-make-markers)
+                      (add-hook 'skeleton-end-hook 'skeleton-position-mode)
+
+                      (define-skeleton skeleton:emacs-lisp-package-header
+                        "Emacs Lisp Package Header"
+                        "Description: "
+                        ";;; " (file-name-nondirectory (buffer-file-name (current-buffer))) \n
+                        ";;" \n
+                        ";; Filename: " (file-name-nondirectory (buffer-file-name (current-buffer))) \n
+                        ";; Description: " @ - \n
+                        ";; Created: " (current-time-string) \n
+                        ";; Version: 1.0.0" \n
+                        ";; URL: " @ _ \n
+                        ";; Keywords: " @ _ \n
+                        ";; Compatibility: " @ _ \n)
+
+                      (define-skeleton skeleton:use-package
+                        "Use package"
+                        "Type: " \n
+                        "(use-package " @ - ")"))
             :ensure t)
 
-              (use-package autocomplete
-                ;; (require 'ej-autocomplete)
-                :config (progn
-                          ;; (use-package bash-completion
-                          ;;   :commands bash-completion-dynamic-complete
-                          ;;   :init (progn
-                          ;;           (add-hook 'shell-dynamic-complete-functions
-                          ;;                     'bash-completion-dynamic-complete))
-                          ;;   :config (progn
-                          ;;             (bash-completion-setup))
-                          ;;   :ensure t)
-                          ;; (use-package auto-complete-nxml
-                          ;;   :ensure t)
-                          ;; (use-package popup
-                          ;;   :ensure t)
-                          ;; (use-package pos-tip)
-                          ;; (use-package popup-kill-ring)
-                          ;; (use-package auto-complete-config)
-                          ;; (ac-config-default)
-                          (global-set-key (kbd "M-/") 'hippie-expand)
-                          (setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                                                   try-expand-dabbrev-all-buffers
-                                                                   try-expand-dabbrev-from-kill
-                                                                   try-complete-file-name-partially
-                                                                   try-complete-file-name
-                                                                   try-expand-all-abbrevs
-                                                                   try-expand-list
-                                                                   try-expand-line
-                                                                   try-complete-lisp-symbol-partially
-                                                                   try-complete-lisp-symbol))
+          (use-package autocomplete
+            ;; (require 'ej-autocomplete)
+            :config (progn
+                      ;; (use-package bash-completion
+                      ;;   :commands bash-completion-dynamic-complete
+                      ;;   :init (progn
+                      ;;           (add-hook 'shell-dynamic-complete-functions
+                      ;;                     'bash-completion-dynamic-complete))
+                      ;;   :config (progn
+                      ;;             (bash-completion-setup))
+                      ;;   :ensure t)
+                      ;; (use-package auto-complete-nxml
+                      ;;   :ensure t)
+                      ;; (use-package popup
+                      ;;   :ensure t)
+                      ;; (use-package pos-tip)
+                      ;; (use-package popup-kill-ring)
+                      ;; (use-package auto-complete-config)
+                      ;; (ac-config-default)
+                      (global-set-key (kbd "M-/") 'hippie-expand)
+                      (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                                               try-expand-dabbrev-all-buffers
+                                                               try-expand-dabbrev-from-kill
+                                                               try-complete-file-name-partially
+                                                               try-complete-file-name
+                                                               try-expand-all-abbrevs
+                                                               try-expand-list
+                                                               try-expand-line
+                                                               try-complete-lisp-symbol-partially
+                                                               try-complete-lisp-symbol))
                       ;;;
 
-                          ;; (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
-                          ;;       ac-use-menu-map t
-                          ;;       hippie-expand-verbose t
-                          ;;       smart-tab-using-hippie-expand t
-                          ;;       hippie-expand-try-functions-list
-                          ;;       '(yas/hippie-try-expand
-                          ;;         try-complete-file-name-partially
-                          ;;         try-expand-all-abbrevs
-                          ;;         try-expand-dabbrev
-                          ;;         try-expand-dabbrev-all-buffers
-                          ;;         try-expand-dabbrev-from-kill
-                          ;;         try-complete-lisp-symbol-partially
-                          ;;         try-complete-lisp-symbol)
-                          ;;       ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))
-                          ))
+                      ;; (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
+                      ;;       ac-use-menu-map t
+                      ;;       hippie-expand-verbose t
+                      ;;       smart-tab-using-hippie-expand t
+                      ;;       hippie-expand-try-functions-list
+                      ;;       '(yas/hippie-try-expand
+                      ;;         try-complete-file-name-partially
+                      ;;         try-expand-all-abbrevs
+                      ;;         try-expand-dabbrev
+                      ;;         try-expand-dabbrev-all-buffers
+                      ;;         try-expand-dabbrev-from-kill
+                      ;;         try-complete-lisp-symbol-partially
+                      ;;         try-complete-lisp-symbol)
+                      ;;       ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))
+                      ))
 
               ;; (use-package yaml-mode
             ;; :ensure t)
-
-          ;; Align command
-          ;; from http://stackoverflow.com/questions/3633120/emacs-hotkey-to-align-equal-signs
-          ;; another information: https://gist.github.com/700416
-          ;; use rx function http://www.emacswiki.org/emacs/rx
-          ;; (defun align-to-colon (begin end)
-          ;;   "Align region to colon (:) signs"
-          ;;   (interactive "r")
-          ;;   (align-regexp begin end
-          ;;                 (rx (group (zero-or-more (syntax whitespace))) ":") 1 1 ))
-
-          ;; (defun align-to-comma (begin end)
-          ;;   "Align region to comma  signs"
-          ;;   (interactive "r")
-          ;;   (align-regexp begin end
-          ;;                 (rx "," (group (zero-or-more (syntax whitespace))) ) 1 1 ))
-
-          ;; (defun align-to-equals (begin end)
-          ;;   "Align region to equal signs"
-          ;;   (interactive "r")
-          ;;   (align-regexp begin end
-          ;;                 (rx (group (zero-or-more (syntax whitespace))) "=") 1 1 ))
-
-          ;; (defun align-to-hash (begin end)
-          ;;   "Align region to hash ( => ) signs"
-          ;;   (interactive "r")
-          ;;   (align-regexp begin end
-          ;;                 (rx (group (zero-or-more (syntax whitespace))) "=>") 1 1 ))
-
-          ;; work with this
-          ;; (defun align-to-comma-before (begin end)
-          ;;   "Align region to equal signs"
-          ;;   (interactive "r")
-          ;;   (align-regexp begin end
-          ;;                 (rx (group (zero-or-more (syntax whitespace))) ",") 1 1 ))
-
-          ;; (defun align-to-whitespace (start end)
-          ;;   "Align columns by whitespace"
-          ;;   (interactive "r")
-          ;;   (align-regexp start end
-          ;;                 "\\(\\s-*\\)\\s-" 1 0 t))
-
-          ;; (defun remove-dos-eol ()
-          ;;   "Do not show ^M in files containing mixed UNIX and DOS line endings."
-          ;;   (interactive)
-          ;;   (setq buffer-display-table (make-display-table))
-          ;;   (aset buffer-display-table ?\^M []))
-
-          ;; (defun bjm/align-whitespace (start end)
-          ;;   "Align columns by whitespace"
-          ;;   (interactive "r")
-          ;;   (align-regexp start end
-          ;;                 "\\(\\s-*\\)\\s-" 1 0 t))
-
-          ;; (defun align-to-ampersand (start end)
-          ;;   "Align columns by ampersand"
-          ;;   (interactive "r")
-          ;;   (align-regexp start end
-          ;;                 "\\(\\s-*\\)&" 1 1 t))
-
-          ;; (use-package syntax-subword
-          ;;   :config (progn
-          ;;             (global-syntax-subword-mode t))
-          ;;   :ensure t)
 
           (use-package wgrep
             :ensure t)
@@ -632,8 +619,6 @@
                       )
             :ensure t)))
 
-(require 'init-isearch)
-
 (use-package flycheck
   :config (progn
             (add-hook 'after-init-hook 'global-flycheck-mode)
@@ -643,24 +628,49 @@
   :ensure t)
 
 (use-package ido
-  :config (progn
-            (ido-mode)
-            (use-package ido-vertical-mode
-              :config (progn
-                        (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-                        (ido-vertical-mode))
-              :ensure t)
+  :init (progn
+          (use-package idomenu
+            :ensure t)
 
-            (ido-everywhere)
-            (ido-ubiquitous-mode)
+          (use-package ido-yes-or-no
+            :config (ido-yes-or-no-mode 1)
+            :ensure t)
+
+          (use-package crm-custom
+            :config (crm-custom-mode 1)
+            :ensure t)
+
+          (use-package ido-vertical-mode
+            :config (progn
+                      (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+                      (ido-vertical-mode))
+            :ensure t)
+
+          (use-package ido-completing-read+
+            :ensure t)
+
+          (use-package ido-ubiquitous
+            :config (ido-ubiquitous-mode))
+
+          (use-package smex
+            ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
+            ;; your recently and most frequently used commands.
+            :config (progn
+                      smex-save-file (concat emacs-persistence-directory ".smex-items"))
+            :ensure t)
+
+          (use-package imenu-anywhere
+            :config (ido-everywhere)
+            :ensure t)))
+  :config (progn
             (setq ido-enable-flex-matching t
                   ido-use-filename-at-point nil
                   ido-auto-merge-work-directories-length -1
                   ido-use-virtual-buffers t
                   ido-confirm-unique-completion t
-                  smex-save-file (concat emacs-persistence-directory ".smex-items")
                   ido-default-buffer-method 'selected-window
                   ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+
             (global-set-key [remap execute-extended-command] 'smex)
             (defadvice ido-find-file (after find-file-sudo activate)
               "Find file as root if necessary."
@@ -672,15 +682,8 @@
               (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
               (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
             (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-            (add-hook 'ido-setup-hook #'bind-ido-keys))
-  :ensure imenu-anywhere
-  :ensure idomenu
-  :ensure ido-completing-read+
-  :ensure ido-ubiquitous
-  :ensure smex
-  ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
-  ;; your recently and most frequently used commands.
-  )
+            (add-hook 'ido-setup-hook #'bind-ido-keys)
+            (ido-mode))
 
 (use-package switch-window
   :config (progn
