@@ -361,6 +361,12 @@
 
 (use-package my/text-editing-utils
   :init (progn
+          (use-package origami
+            :config (progn
+                      (add-hook 'prog-mode-hook 'origami-mode)
+                      (add-hook 'emacs-lisp-mode-hook 'origami-mode))
+            :ensure t)
+
           (use-package skeleton
             :config (progn
                       (defvar *skeleton-markers* nil
@@ -1186,7 +1192,7 @@
 
 (use-package general
   :config (progn
-            (dolist (key '("\C-l" "\C-xi" "\C-cC-b"))
+            (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
               (global-unset-key key))
 
             (general-define-key :prefix "C-x y"
@@ -1194,7 +1200,11 @@
                                 "p" 'prodigy
                                 "f f" 'toggle-frame-fullscreen)
 
-            (general-define-key :prefix "C-x l")
+            (general-define-key :keymaps 'origami-mode-map
+                                :prefix "C-t"
+                                "C-t" 'origami-toggle-node
+                                "C-r" 'origami-recursively-toggle-node
+                                "C-o" 'origami-show-only-node)
 
             (general-define-key :keymaps 'python-mode-map
                                 :prefix "C-c"
