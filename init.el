@@ -660,10 +660,6 @@
           (use-package idomenu
             :ensure t)
 
-          (use-package ido-yes-or-no
-            :config (ido-yes-or-no-mode 1)
-            :ensure t)
-
           (use-package crm-custom
             :config (crm-custom-mode 1)
             :ensure t)
@@ -678,13 +674,12 @@
             :ensure t)
 
           (use-package ido-ubiquitous
-            :config (ido-ubiquitous-mode))
+            :config (ido-ubiquitous-mode)
+            :ensure t)
 
           (use-package smex
             ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
             ;; your recently and most frequently used commands.
-            :config (progn
-                      smex-save-file (concat emacs-persistence-directory ".smex-items"))
             :ensure t)
 
           (use-package imenu-anywhere
