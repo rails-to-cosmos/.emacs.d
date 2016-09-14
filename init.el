@@ -1003,11 +1003,7 @@
             :config (progn
                       (setq bpr-colorize-output t
                             bpr-close-after-success t
-                            bpr-erase-process-buffer t)
-                      (defun emacs-push-config ()
-                        (interactive)
-                        (let* ((bpr-process-directory user-emacs-directory))
-                          (bpr-spawn (concatenate 'string "fab push:cm=\'Sync.\'")))))
+                            bpr-erase-process-buffer t))
             :ensure t)
 
           (use-package dizzee
