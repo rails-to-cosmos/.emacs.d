@@ -361,6 +361,12 @@
 
 (use-package my/text-editing-utils
   :init (progn
+          (use-package origami
+            :config (progn
+                      (add-hook 'prog-mode-hook 'origami-mode)
+                      (add-hook 'emacs-lisp-mode-hook 'origami-mode))
+            :ensure t)
+
           (use-package skeleton
             :config (progn
                       (defvar *skeleton-markers* nil
@@ -442,7 +448,30 @@
 
                       (use-package yasnippet
                         :config (progn
-                                  (yas-global-mode 1))
+                                  ;; Completing point by some yasnippet key
+                                  (defun yas-ido-expand ()
+                                    "Lets you select (and expand) a yasnippet key"
+                                    (interactive)
+                                    (let ((original-point (point)))
+                                      (while (and
+                                              (not (= (point) (point-min) ))
+                                              (not
+                                               (string-match "[[:space:]\n]" (char-to-string (char-before)))))
+                                        (backward-word 1))
+                                      (let* ((init-word (point))
+                                             (word (buffer-substring init-word original-point))
+                                             (list (yas-active-keys)))
+                                        (goto-char original-point)
+                                        (let ((key (remove-if-not
+                                                    (lambda (s) (string-match (concat "^" word) s)) list)))
+                                          (if (= (length key) 1)
+                                              (setq key (pop key))
+                                            (setq key (ido-completing-read "key: " list nil nil word)))
+                                          (delete-char (- init-word original-point))
+                                          (insert key)
+                                          (yas-expand)))))
+
+                                  (yas-global-mode t))
                         :ensure t)
 
                       (global-set-key (kbd "M-/") 'hippie-expand)
@@ -974,11 +1003,7 @@
             :config (progn
                       (setq bpr-colorize-output t
                             bpr-close-after-success t
-                            bpr-erase-process-buffer t)
-                      (defun emacs-push-config ()
-                        (interactive)
-                        (let* ((bpr-process-directory user-emacs-directory))
-                          (bpr-spawn (concatenate 'string "fab push:cm=\'Sync.\'")))))
+                            bpr-erase-process-buffer t))
             :ensure t)
 
           (use-package dizzee
@@ -1163,7 +1188,7 @@
 
 (use-package general
   :config (progn
-            (dolist (key '("\C-l" "\C-xi" "\C-cC-b"))
+            (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
               (global-unset-key key))
 
             (general-define-key :prefix "C-x y"
@@ -1171,7 +1196,11 @@
                                 "p" 'prodigy
                                 "f f" 'toggle-frame-fullscreen)
 
-            (general-define-key :prefix "C-x l")
+            (general-define-key :keymaps 'origami-mode-map
+                                :prefix "C-t"
+                                "C-t" 'origami-toggle-node
+                                "C-r" 'origami-recursively-toggle-node
+                                "C-o" 'origami-show-only-node)
 
             (general-define-key :keymaps 'python-mode-map
                                 :prefix "C-c"
