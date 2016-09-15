@@ -440,6 +440,11 @@
                       ;; (use-package auto-complete-config)
                       ;; (ac-config-default)
 
+                      (use-package yasnippet
+                        :config (progn
+                                  (yas-global-mode 1))
+                        :ensure t)
+
                       (global-set-key (kbd "M-/") 'hippie-expand)
                       (setq hippie-expand-try-functions-list '(try-expand-dabbrev
                                                                try-expand-dabbrev-all-buffers
