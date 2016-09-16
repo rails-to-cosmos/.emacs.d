@@ -502,8 +502,8 @@
                       ;;       ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))
                       ))
 
-              ;; (use-package yaml-mode
-            ;; :ensure t)
+          ;; (use-package yaml-mode
+          ;; :ensure t)
 
           (use-package wgrep
             :ensure t)
@@ -541,12 +541,12 @@
 
 (use-package scratch
   :init (progn
-            (defun immortal-scratch ()
-              (if (eq (current-buffer) (get-buffer "*scratch*"))
-                  (progn (bury-buffer)
-                         nil)
-                t))
-            (add-hook 'kill-buffer-query-functions 'immortal-scratch)))
+          (defun immortal-scratch ()
+            (if (eq (current-buffer) (get-buffer "*scratch*"))
+                (progn (bury-buffer)
+                       nil)
+              t))
+          (add-hook 'kill-buffer-query-functions 'immortal-scratch)))
 
 (use-package impatient-mode
   :commands impatient-mode
@@ -691,28 +691,28 @@
           (use-package imenu-anywhere
             :config (ido-everywhere)
             :ensure t)))
-  :config (progn
-            (setq ido-enable-flex-matching t
-                  ido-use-filename-at-point nil
-                  ido-auto-merge-work-directories-length -1
-                  ido-use-virtual-buffers t
-                  ido-confirm-unique-completion t
-                  ido-default-buffer-method 'selected-window
-                  ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+:config (progn
+          (setq ido-enable-flex-matching t
+                ido-use-filename-at-point nil
+                ido-auto-merge-work-directories-length -1
+                ido-use-virtual-buffers t
+                ido-confirm-unique-completion t
+                ido-default-buffer-method 'selected-window
+                ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
 
-            (global-set-key [remap execute-extended-command] 'smex)
-            (defadvice ido-find-file (after find-file-sudo activate)
-              "Find file as root if necessary."
-              (unless (and buffer-file-name
-                           (file-writable-p buffer-file-name))
-                (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-            (defun bind-ido-keys ()
-              "Keybindings for ido mode."
-              (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-              (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
-            (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-            (add-hook 'ido-setup-hook #'bind-ido-keys)
-            (ido-mode))
+          (global-set-key [remap execute-extended-command] 'smex)
+          (defadvice ido-find-file (after find-file-sudo activate)
+            "Find file as root if necessary."
+            (unless (and buffer-file-name
+                         (file-writable-p buffer-file-name))
+              (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+          (defun bind-ido-keys ()
+            "Keybindings for ido mode."
+            (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+            (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
+          (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+          (add-hook 'ido-setup-hook #'bind-ido-keys)
+          (ido-mode))
 
 (use-package switch-window
   :config (progn
@@ -1218,7 +1218,7 @@
 ;;; init.el ends here
 
 (fset 'wpp-adapt-config
-   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
+      (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
 
 (fset 'insert-debug-error
-   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([tab 116 104 114 111 119 32 110 101 119 32 69 114 114 111 114 40 41 59 2 2 39 49 50 51 5] 0 "%d")) arg)))
+      (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([tab 116 104 114 111 119 32 110 101 119 32 69 114 114 111 114 40 41 59 2 2 39 49 50 51 5] 0 "%d")) arg)))
