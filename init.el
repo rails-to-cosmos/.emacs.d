@@ -73,17 +73,6 @@
 (use-package my/global-settings
   :init (progn
           (defconst *is-a-mac* (eq system-type 'darwin))
-          (setq emacs-persistence-directory (concat user-emacs-directory "persistence/")
-                savehist-file (concat emacs-persistence-directory ".minibuffer-history")
-                session-save-file (concat emacs-persistence-directory ".session")
-                frame-restore-parameters-file (concat emacs-persistence-directory ".frame-restore-parameters")
-                desktop-path (list emacs-persistence-directory)
-                recentf-save-file (concat emacs-persistence-directory ".recentf")
-                custom-file (concat emacs-persistence-directory ".custom")
-                mc/list-file (concat emacs-persistence-directory ".mc-lists")
-                abbjrev-file-name (concat emacs-persistence-directory ".abbrev-defs")
-                mac-command-modifier 'meta)
-          (make-directory emacs-persistence-directory t)
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
@@ -486,8 +475,7 @@
                                                                try-complete-lisp-symbol-partially
                                                                try-complete-lisp-symbol))
                       ;;;
-                      ;; (setq ac-comphist-file (concat emacs-persistence-directory ".ac-comphist")
-                      ;;       ac-use-menu-map t
+                      ;; (setq ac-use-menu-map t
                       ;;       hippie-expand-verbose t
                       ;;       smart-tab-using-hippie-expand t
                       ;;       hippie-expand-try-functions-list
@@ -499,7 +487,7 @@
                       ;;         try-expand-dabbrev-from-kill
                       ;;         try-complete-lisp-symbol-partially
                       ;;         try-complete-lisp-symbol)
-                      ;;       ac-comphist-file (concat emacs-persistence-directory "ac-comphist.dat"))
+                      ;;       )
                       ))
 
           ;; (use-package yaml-mode
@@ -697,8 +685,7 @@
                 ido-auto-merge-work-directories-length -1
                 ido-use-virtual-buffers t
                 ido-confirm-unique-completion t
-                ido-default-buffer-method 'selected-window
-                ido-save-directory-list-file (concat emacs-persistence-directory ".ido-last"))
+                ido-default-buffer-method 'selected-window)
 
           (global-set-key [remap execute-extended-command] 'smex)
           (defadvice ido-find-file (after find-file-sudo activate)
@@ -777,8 +764,6 @@
   :ensure t)
 
 (require 'init-editing-utils)
-(require 'init-darcs)
-(require 'init-csv)
 (require 'init-javascript)
 (require 'init-nxml)
 (require 'init-haml)
@@ -963,10 +948,6 @@
             :ensure t)
 
           (use-package bookmark+
-            :init (progn
-                    (setq-default bookmark-default-file (concat emacs-persistence-directory ".bookmarks")
-                                  bookmark-file (concat emacs-persistence-directory ".bookmarks")
-                                  bmkp-bmenu-state-file (concat emacs-persistence-directory ".emacs-bmk-bmenu-state")))
             :ensure t)))
 
 (use-package my/internet-services
