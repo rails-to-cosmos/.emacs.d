@@ -1,4 +1,4 @@
-;;; init.el --- emacs configuration by Dmitry Akatov
+;;; init.el --- my emacs configuration
 ;;
 ;; Filename: init.el
 ;; Description: my emacs configuration
@@ -73,7 +73,6 @@
 (use-package my/global-settings
   :init (progn
           (defconst *is-a-mac* (eq system-type 'darwin))
-          (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
 
@@ -182,6 +181,8 @@
                         underline-minimum-offset 3
                         cursor-type 'box)
 
+          (fset 'yes-or-no-p 'y-or-n-p)
+
           (custom-set-faces
            '(default ((t (:inherit nil
                                    :stipple nil
@@ -200,6 +201,19 @@
           (tool-bar-mode -1)
           (menu-bar-mode -1)
           (set-cursor-color "#D0E1F9")
+
+          (defconst doom-fringe-size '3 "Default fringe width")
+          ;; standardize fringe width
+          (fringe-mode doom-fringe-size)
+          (push `(left-fringe  . ,doom-fringe-size) default-frame-alist)
+          (push `(right-fringe . ,doom-fringe-size) default-frame-alist)
+          ;; default frame size on startup
+          (push '(width . 120) default-frame-alist)
+          (push '(height . 40) default-frame-alist)
+          ;; Show tilde in margin on empty lines
+          (define-fringe-bitmap 'tilde [64 168 16] nil nil 'center)
+          (set-fringe-bitmap-face 'tilde 'fringe)
+          (setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
 
 	  (use-package my/themes
 	    :init (progn
@@ -765,11 +779,8 @@
 
 (require 'init-editing-utils)
 (require 'init-javascript)
-(require 'init-nxml)
-(require 'init-haml)
 (require 'init-paredit)
 (require 'init-lisp)
-(require 'init-misc)
 
 (use-package org
   :config (progn
@@ -871,15 +882,15 @@
   :commands (mc/mark-next-like-this
              mc/mark-previous-like-this
              mc/mark-all-like-this)
-  :bind (("C->" . mc/mark-next-like-this)
-         ("C-<" . mc/mark-previous-like-this)
-         ("C-c C-<" . mc/mark-all-like-this)))
+  :ensure t)
 
 (use-package regex-tool
-  :commands regex-tool)
+  :commands regex-tool
+  :ensure t)
 
 (use-package pdf-tools
-  :commands pdf-tools-install)
+  :commands pdf-tools-install
+  :ensure t)
 
 (use-package hl-line+
   :config (progn
@@ -889,9 +900,6 @@
       '((:eval (if (buffer-file-name)
                    (abbreviate-file-name (buffer-file-name))
                  "%b"))))
-
-;; (use-package hackernews
-;;   :commands hackernews)
 
 ;; (use-package list-processes+
 ;;   :commands list-processes+)
@@ -942,17 +950,17 @@
 
 (use-package my/project-management
   :init (progn
-          (use-package fiplr
-            :config (progn
-                      (setq fiplr-root-markers '(".git" ".svn")))
-            :ensure t)
-
           (use-package bookmark+
             :ensure t)))
 
 (use-package my/internet-services
   :init (progn
+          (use-package hackernews
+            :commands hackernews
+            :ensure t)
+
           (use-package google-translate
+            :commands translate-text
             :config (defun translate-text (sentence)
                       "Google translate without specifying language"
                       (interactive "sTranslate sentence: ")
@@ -1059,23 +1067,12 @@
 
 (use-package my/dired
   :init (progn
-          ;; (use-package dired+
-          ;;   :config (progn
-          ;;              (diredp-make-find-file-keys-reuse-dirs))
-          ;;   :ensure t)
-
           (use-package dired)
 
           (use-package dired-subtree
             :ensure t)
 
           (use-package dired-filetype-face
-            :config (progn
-                      ;; (deffiletype-face-regexp dired-git-face
-                      ;;   :extensions '("git")
-                      ;;   :type-for-docstring "dired-git-face")
-                      ;; (deffiletype-setup "dired-git-face" "dired-git-face")
-                      )
             :ensure t)
 
           (defun mydired-sort ()
@@ -1090,7 +1087,6 @@
           (add-hook 'dired-after-readin-hook 'mydired-sort)
           (add-hook 'dired-after-readin-hook 'dired-omit-mode)
 
-          (require 'dired-x)
           (dired-omit-mode 1)
           (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
 
@@ -1098,70 +1094,17 @@
           ;; (define-key dired-mode-map (kbd "<return>") 'dired-subtree-toggle)
           (define-key dired-mode-map (kbd "<tab>") 'dired-subtree-toggle)))
 
-(use-package my/buffer-management
-  :init (progn
-          (use-package uniquify
-            :disabled t
-            :init (progn
-                    (setq uniquify-buffer-name-style 'reverse
-                          uniquify-separator " • "
-                          uniquify-after-kill-buffer-p t
-                          uniquify-ignore-buffers-re "^\\*")))
-
-          (use-package ibuffer
-            :init (progn
-                    (use-package fullframe
-                      :ensure t)
-                    (use-package ibuffer-vc
-                      :ensure t)
-                    (use-package ibuffer-git
-                      :ensure t))
-            :config (progn
-                      (setq ibuffer-formats
-                            '((mark modified read-only vc-status-mini " "
-                                    (name 18 18 :left :elide)
-                                    " "
-                                    (size-h 9 -1 :right)
-                                    " "
-                                    (mode 16 16 :left :elide)
-                                    " "
-                                    filename-and-process)
-                              (mark modified read-only vc-status-mini " "
-                                    (name 18 18 :left :elide)
-                                    " "
-                                    (size-h 9 -1 :right)
-                                    " "
-                                    (mode 16 16 :left :elide)
-                                    " "
-                                    (vc-status 16 16 :left)
-                                    " "
-                                    filename-and-process))
-                            ibuffer-filter-group-name-face 'font-lock-doc-face)
-                      (define-ibuffer-column size-h
-                        (:name "Size" :inline t)
-                        (cond
-                         ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
-                         ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
-                         (t (format "%8d" (buffer-size)))))
-                      (defun ibuffer-set-up-preferred-filters ()
-                        (ibuffer-vc-set-filter-groups-by-vc-root)
-                        (unless (eq ibuffer-sorting-mode 'filename/process)
-                          (ibuffer-do-sort-by-filename/process)))
-                      (after-load 'ibuffer
-                        (fullframe ibuffer ibuffer-quit)))
-            :bind ("C-x C-b" . ibuffer)
-            :ensure t)
-
-          (use-package super-save
-            :config (progn
-                      (super-save-initialize))
-            :ensure t)))
-
 (use-package my/http
   :init (progn
           ;; https://github.com/emacs-pe/http.el
           (use-package http
             :ensure t)))
+
+(use-package super-save
+            :config (progn
+                      (super-save-initialize)
+                      (setq super-save-auto-save-when-idle t))
+            :ensure t)
 
 (use-package auto-rsync
   :config (progn
@@ -1169,37 +1112,57 @@
 
 (use-package general
   :config (progn
+            (setq mac-option-key-is-meta nil
+                  mac-command-key-is-meta t
+                  mac-command-modifier 'meta
+                  mac-option-modifier nil)
+
             (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
               (global-unset-key key))
 
-            (general-define-key :prefix "C-x y"
-                                "t t" 'translate-text
-                                "p" 'prodigy
-                                "f f" 'toggle-frame-fullscreen)
+            (general-define-key
+             :keymaps 'global
+             "C-<" 'mc/mark-previous-like-this
+             "C->" 'mc/mark-next-like-this
+             "C-+" 'mc/mark-all-like-this)
 
-            (general-define-key :keymaps 'origami-mode-map
-                                :prefix "C-t"
-                                "C-t" 'origami-toggle-node
-                                "C-r" 'origami-recursively-toggle-node
-                                "C-o" 'origami-show-only-node)
+            (general-define-key
+             :prefix "C-x i"
+             "m" 'imenu-anywhere
+             "t" 'iterm-goto-filedir-or-home)
 
-            (general-define-key :keymaps 'python-mode-map
-                                :prefix "C-c"
-                                "C-b" 'python-add-breakpoint)
+            (general-define-key
+             :prefix "C-x y"
+             "t t" 'translate-text
+             "p" 'prodigy
+             "f f" 'toggle-frame-fullscreen)
 
-            (general-define-key :prefix "C-x i"
-                                "m" 'imenu-anywhere
-                                "t" 'iterm-goto-filedir-or-home))
+            (general-define-key
+             :keymaps 'origami-mode-map
+             :prefix "C-t"
+             "C-t" 'origami-toggle-node
+             "C-r" 'origami-recursively-toggle-node
+             "C-o" 'origami-show-only-node)
+
+            (general-define-key
+             :keymaps 'python-mode-map
+             :prefix "C-c"
+             "C-b" 'python-add-breakpoint)
+
+            (general-define-key
+             :keymaps 'ido-completion-map
+             "C-n" 'ido-next-match
+             "C-p" 'ido-prev-match))
   :ensure t)
 
 (require 'init-local nil t)
-
-(provide 'init)
-
-;;; init.el ends here
 
 (fset 'wpp-adapt-config
       (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
 
 (fset 'insert-debug-error
       (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([tab 116 104 114 111 119 32 110 101 119 32 69 114 114 111 114 40 41 59 2 2 39 49 50 51 5] 0 "%d")) arg)))
+
+(provide 'init)
+
+;;; init.el ends here

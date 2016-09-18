@@ -29,3 +29,5 @@ ac-comphist.dat
 *.pyc
 *flycheck*
 /smex-items
+/bookmarks
+/ido.last
