@@ -370,68 +370,75 @@
                       (add-hook 'emacs-lisp-mode-hook 'origami-mode))
             :ensure t)
 
-          (use-package skeleton
+          (use-package yasnippet
             :config (progn
-                      (defvar *skeleton-markers* nil
-                        "Markers for locations saved in skeleton-positions")
+                      ;; Completing point by some yasnippet key
+                      (defun yas-ido-expand ()
+                        "Lets you select (and expand) a yasnippet key"
+                        (interactive)
+                        (let ((original-point (point)))
+                          (while (and
+                                  (not (= (point) (point-min) ))
+                                  (not
+                                   (string-match "[[:space:]\n]" (char-to-string (char-before)))))
+                            (backward-word 1))
+                          (let* ((init-word (point))
+                                 (word (buffer-substring init-word original-point))
+                                 (list (yas-active-keys)))
+                            (goto-char original-point)
+                            (let ((key (remove-if-not
+                                        (lambda (s) (string-match (concat "^" word) s)) list)))
+                              (if (= (length key) 1)
+                                  (setq key (pop key))
+                                (setq key (ido-completing-read "key: " list nil nil word)))
+                              (delete-char (- init-word original-point))
+                              (insert key)
+                              (yas-expand)))))
 
-                      (defun skeleton-make-markers ()
-                        (while *skeleton-markers*
-                          (set-marker (pop *skeleton-markers*) nil))
-                        (setq *skeleton-markers*
-                              (mapcar 'copy-marker (reverse skeleton-positions))))
+                      (yas-global-mode t))
+            :ensure t)
 
-                      (defun skeleton-next-position (&optional reverse)
-                        "Jump to next position in skeleton. REVERSE - Jump to previous position in skeleton"
-                        (interactive "P")
-                        (let* ((positions (mapcar 'marker-position *skeleton-markers*))
-                               (positions (if reverse (reverse positions) positions))
-                               (comp (if reverse '> '<))
-                               pos)
-                          (when positions
-                            (if (catch 'break
-                                  (while (setq pos (pop positions))
-                                    (when (funcall comp (point) pos)
-                                      (throw 'break t))))
-                                (goto-char pos)
-                              (goto-char (marker-position
-                                          (car *skeleton-markers*)))))))
+          (use-package hippie-expand
+            :init (progn
+                    (global-set-key (kbd "M-/") 'hippie-expand)
+                    (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                                             try-expand-dabbrev-all-buffers
+                                                             try-expand-dabbrev-from-kill
+                                                             try-complete-file-name-partially
+                                                             try-complete-file-name
+                                                             try-expand-all-abbrevs
+                                                             try-expand-list
+                                                             try-expand-line
+                                                             try-complete-lisp-symbol-partially
+                                                             try-complete-lisp-symbol))))
+          (use-package wgrep
+            :ensure t)
 
-                      (define-minor-mode skeleton-position-mode
-                        "Set or toggle the Skeleton Position minor mode."
-                        :init-value nil
-                        :lighter " __skpos__"
-                        :keymap (let ((map (make-sparse-keymap)))
-                                  (define-key map (kbd "TAB") 'skeleton-next-position)
-                                  (define-key map (kbd "RET") 'skeleton-position-mode)
-                                  map)
-                        :group skeleton)
-
-                      (add-hook 'skeleton-end-hook 'skeleton-make-markers)
-                      (add-hook 'skeleton-end-hook 'skeleton-position-mode)
-
-                      (define-skeleton skeleton:emacs-lisp-package-header
-                        "Emacs Lisp Package Header"
-                        nil
-                        ";;; " (file-name-nondirectory (buffer-file-name (current-buffer))) \n
-                        ";;" \n
-                        ";; Filename: " (file-name-nondirectory (buffer-file-name (current-buffer))) \n
-                        ";; Description: " @ - \n
-                        ";; Created: " (current-time-string) \n
-                        ";; Version: 1.0.0" \n
-                        ";; URL: " @ _ \n
-                        ";; Keywords: " @ _ \n
-                        ";; Compatibility: " @ _ \n)
-
-                      (define-skeleton skeleton:use-package
-                        "Use package"
-                        "Type: " \n
-                        "(use-package " @ - ")"))
+          (use-package flycheck
+            :config (progn
+                      (add-hook 'after-init-hook 'global-flycheck-mode)
+                      (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+                            flycheck-idle-change-delay 0.8
+                            flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
             :ensure t)
 
           (use-package autocomplete
             ;; (require 'ej-autocomplete)
             :config (progn
+                      ;; (setq ac-use-menu-map t
+                      ;;       hippie-expand-verbose t
+                      ;;       smart-tab-using-hippie-expand t
+                      ;;       hippie-expand-try-functions-list
+                      ;;       '(yas/hippie-try-expand
+                      ;;         try-complete-file-name-partially
+                      ;;         try-expand-all-abbrevs
+                      ;;         try-expand-dabbrev
+                      ;;         try-expand-dabbrev-all-buffers
+                      ;;         try-expand-dabbrev-from-kill
+                      ;;         try-complete-lisp-symbol-partially
+                      ;;         try-complete-lisp-symbol)
+                      ;;       )
+
                       ;; (use-package bash-completion
                       ;;   :commands bash-completion-dynamic-complete
                       ;;   :init (progn
@@ -448,89 +455,16 @@
                       ;; (use-package popup-kill-ring)
                       ;; (use-package auto-complete-config)
                       ;; (ac-config-default)
+                      )
+            ;; (use-package yaml-mode
+            ;; :ensure t)
 
-                      (use-package yasnippet
-                        :config (progn
-                                  ;; Completing point by some yasnippet key
-                                  (defun yas-ido-expand ()
-                                    "Lets you select (and expand) a yasnippet key"
-                                    (interactive)
-                                    (let ((original-point (point)))
-                                      (while (and
-                                              (not (= (point) (point-min) ))
-                                              (not
-                                               (string-match "[[:space:]\n]" (char-to-string (char-before)))))
-                                        (backward-word 1))
-                                      (let* ((init-word (point))
-                                             (word (buffer-substring init-word original-point))
-                                             (list (yas-active-keys)))
-                                        (goto-char original-point)
-                                        (let ((key (remove-if-not
-                                                    (lambda (s) (string-match (concat "^" word) s)) list)))
-                                          (if (= (length key) 1)
-                                              (setq key (pop key))
-                                            (setq key (ido-completing-read "key: " list nil nil word)))
-                                          (delete-char (- init-word original-point))
-                                          (insert key)
-                                          (yas-expand)))))
+            (setq read-file-name-completion-ignore-case t
+                  read-buffer-completion-ignore-case t)
 
-                                  (yas-global-mode t))
-                        :ensure t)
-
-                      (global-set-key (kbd "M-/") 'hippie-expand)
-                      (setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                                               try-expand-dabbrev-all-buffers
-                                                               try-expand-dabbrev-from-kill
-                                                               try-complete-file-name-partially
-                                                               try-complete-file-name
-                                                               try-expand-all-abbrevs
-                                                               try-expand-list
-                                                               try-expand-line
-                                                               try-complete-lisp-symbol-partially
-                                                               try-complete-lisp-symbol))
-                      ;;;
-                      ;; (setq ac-use-menu-map t
-                      ;;       hippie-expand-verbose t
-                      ;;       smart-tab-using-hippie-expand t
-                      ;;       hippie-expand-try-functions-list
-                      ;;       '(yas/hippie-try-expand
-                      ;;         try-complete-file-name-partially
-                      ;;         try-expand-all-abbrevs
-                      ;;         try-expand-dabbrev
-                      ;;         try-expand-dabbrev-all-buffers
-                      ;;         try-expand-dabbrev-from-kill
-                      ;;         try-complete-lisp-symbol-partially
-                      ;;         try-complete-lisp-symbol)
-                      ;;       )
-                      ))
-
-          ;; (use-package yaml-mode
-          ;; :ensure t)
-
-          (use-package wgrep
-            :ensure t)
-
-          (setq read-file-name-completion-ignore-case t
-                read-buffer-completion-ignore-case t)
-
-          (mapc (lambda (x)
-                  (add-to-list 'completion-ignored-extensions x))
-                '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))
-
-          ;; (use-package mmm-mode
-          ;;   :config (progn
-          ;;             (setq mmm-global-mode 'maybe)
-          ;;             (mmm-add-classes
-          ;;              '((python-rst
-          ;;                 :submode rst-mode
-          ;;                 :front "^ *[ru]?\"\"\"[^\"]*$"
-          ;;                 :back "^ *\"\"\""
-          ;;                 :include-front t
-          ;;                 :include-back t
-          ;;                 :end-not-begin t)))
-          ;;             (mmm-add-mode-ext-class 'python-mode nil 'python-rst))
-          ;;   :ensure t)
-          ))
+            (mapc (lambda (x)
+                    (add-to-list 'completion-ignored-extensions x))
+                  '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store")))))
 
 (use-package my/log-utils
   :commands (itail
@@ -559,7 +493,7 @@
   :mode ("\\.rest\\'" . restclient-mode)
   :ensure t)
 
-(use-package my/databases
+(use-package my/db-utils
   :init (progn
           ;; (use-package redis
           ;;   :ensure t)
@@ -589,7 +523,7 @@
           ;;                   (insert formatted-text))))))
           ))
 
-(use-package my/prog-mode
+(use-package prog-mode
   :init (progn
           ;; (use-package lorem-ipsum
           ;;   :ensure t)
@@ -598,6 +532,9 @@
           ;;   :config (progn
           ;;             (add-hook 'prog-mode-hook 'fixmee-mode))
           ;;   :ensure t)
+
+          (use-package scala-mode
+            :ensure t)
 
           (use-package python
             :mode ("\\.py\\'" . python-mode)
@@ -610,11 +547,6 @@
                                 (setq jedi:complete-on-dot t)
                                 (jedi:install-server))
                       :ensure t)
-
-                    ;; (use-package elpy
-                    ;;   :init (progn
-                    ;;           (elpy-enable))
-                    ;;   :ensure t)
 
                     (use-package pungi
                       :ensure t)
@@ -636,6 +568,7 @@
                                             (venv-initialize-eshell))
                                   :ensure t))
                       :ensure t))
+
             :config (progn
                       (setq-default python-indent-offset 4)
 
@@ -649,19 +582,8 @@
                         (python-highlight-breakpoints))
 
                       (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-                      (add-hook 'python-mode-hook 'linum-mode)
-                      ;; (add-hook 'python-mode-hook 'yas-minor-mode)
-                      ;; (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-                      )
+                      (add-hook 'python-mode-hook 'linum-mode))
             :ensure t)))
-
-(use-package flycheck
-  :config (progn
-            (add-hook 'after-init-hook 'global-flycheck-mode)
-            (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-                  flycheck-idle-change-delay 0.8
-                  flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
-  :ensure t)
 
 (use-package ido
   :init (progn
@@ -746,12 +668,6 @@
             (defun my/split-horizontally ()
               (interactive)
               (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-  :bind (("C-x o" . switch-window)
-         ("C-x 1" . delete-other-windows)
-         ("C-x 2" . my/split-vertically)
-         ("C-x 3" . my/split-horizontally)
-         ("\C-x|" . split-window-horizontally-instead)
-         ("\C-x_" . split-window-vertically-instead))
   :ensure t)
 
 (use-package web-mode
@@ -1096,15 +1012,14 @@
 
 (use-package my/http
   :init (progn
-          ;; https://github.com/emacs-pe/http.el
-          (use-package http
+          (use-package http  ;; https://github.com/emacs-pe/http.el
             :ensure t)))
 
 (use-package super-save
-            :config (progn
-                      (super-save-initialize)
-                      (setq super-save-auto-save-when-idle t))
-            :ensure t)
+  :config (progn
+            (super-save-initialize)
+            (setq super-save-auto-save-when-idle t))
+  :ensure t)
 
 (use-package auto-rsync
   :config (progn
@@ -1127,6 +1042,13 @@
              "C-+" 'mc/mark-all-like-this)
 
             (general-define-key
+             :prefix "C-x"
+             "o" 'switch-window
+             "1" 'delete-other-windows
+             "2" 'my/split-vertically
+             "3" 'my/split-horizontally)
+
+            (general-define-key
              :prefix "C-x i"
              "m" 'imenu-anywhere
              "t" 'iterm-goto-filedir-or-home)
@@ -1135,7 +1057,8 @@
              :prefix "C-x y"
              "t t" 'translate-text
              "p" 'prodigy
-             "f f" 'toggle-frame-fullscreen)
+             "f f" 'toggle-frame-fullscreen
+             "i" 'yas-ido-expand)
 
             (general-define-key
              :keymaps 'origami-mode-map
@@ -1166,3 +1089,17 @@
 (provide 'init)
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (scala-mode scala yaml-mode yagist whole-line-or-region which-key wgrep-ag web-mode web-beautify virtualenvwrapper virtualenv vc-darcs use-package undo-tree tidy term+ syntax-subword switch-window super-save smex scratch restclient regex-tool redshank rainbow-mode rainbow-delimiters py-yapf py-isort pungi prodigy pdf-tools paredit-everywhere page-break-lines origami org-pomodoro org-fstree nvm mwe-log-commands multiple-cursors move-dup mmm-mode magit-gh-pulls lively lice json-mode js-comint itail ipretty interaction-log impatient-mode imenu-anywhere idomenu ido-yes-or-no ido-vertical-mode ido-ubiquitous ibuffer-vc ibuffer-git http hl-sexp highlight-escape-sequences haml-mode hackernews guide-key google-translate github-clone github-browse-file git-gutter+ general fullframe flycheck fiplr fill-column-indicator expand-region exec-path-from-shell emmet-mode elscreen elpy elmacro elisp-slime-nav eldoc-eval dired-subtree dired-filetype-face darcsum danneskjold-theme csv-nav csv-mode crm-custom coffee-mode cl-lib-highlight cinspect bug-reference-github bpr bookmark+ auto-compile anzu ag ace-jump-mode ac-js2))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
