@@ -957,7 +957,9 @@
             :config (progn
                       (setq bpr-colorize-output t
                             bpr-close-after-success t
-                            bpr-erase-process-buffer t))
+                            bpr-erase-process-buffer t
+                            bpr-show-progress nil
+                            bpr-open-after-error nil))
             :ensure t)
 
           (use-package dizzee
