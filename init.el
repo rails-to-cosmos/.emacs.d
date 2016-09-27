@@ -39,8 +39,11 @@
 ;; Init use-package
 (require 'package)
 
-(setq dist-packages-dir (concat user-emacs-directory "packages/")
-      package-user-dir (concat dist-packages-dir "elpa/"))
+(defvar dist-packages-dir)
+(setq dist-packages-dir (concat user-emacs-directory "packages/"))
+
+(defvar package-user-dir)
+(setq package-user-dir (concat dist-packages-dir "elpa/"))
 
 (make-directory dist-packages-dir t)
 (make-directory package-user-dir t)
@@ -62,13 +65,10 @@
   (require 'use-package))
 
 (use-package use-package
-  :init (progn
-          (use-package diminish
-            :commands diminish
-            :ensure t)
-          (use-package bind-key
-            :ensure t)
-          (setq use-package-verbose t)))
+  :config (progn
+            (setq use-package-verbose t))
+  :ensure diminish
+  :ensure bind-key)
 
 (use-package my/global-settings
   :init (progn
@@ -76,8 +76,8 @@
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
           (setq inhibit-startup-screen t)
-          (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-            (normal-top-level-add-subdirs-to-load-path))
+          ;; (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+          ;;   (normal-top-level-add-subdirs-to-load-path))
           ))
 
 (use-package my/shell
@@ -156,8 +156,6 @@
                         tooltip-delay 1.5
                         truncate-lines nil
                         truncate-partial-width-windows nil
-                        visible-bell t
-                        line-spacing 7
                         indent-tabs-mode nil
                         x-use-underline-position-properties t
                         underline-minimum-offset 3)
@@ -170,6 +168,8 @@
 
           (use-package my/font
             :init (progn
+                    (setq-default line-spacing 7)
+
                     (custom-set-faces
                      '(default ((t (:inherit nil
                                              :stipple nil
