@@ -397,8 +397,6 @@
   :commands impatient-mode
   :ensure t)
 
-
-
 (use-package prog-mode
   :init (progn
           (use-package restclient
@@ -674,12 +672,34 @@
             (setq org-startup-align-all-tables "align"))
   :ensure t)
 
-;;----------------------------------------------------------------------------
-;; Locales (setting them earlier in this file doesn't work in X)
-;;----------------------------------------------------------------------------
-(require 'init-locales)
+(use-package locales
+  :init (progn
+          (defun sanityinc/utf8-locale-p (v)
+            "Return whether locale string V relates to a UTF-8 locale."
+            (and v (string-match "UTF-8" v)))
 
-;; Extra packages which don't require any configuration
+          (defun locale-is-utf8-p ()
+            "Return t iff the \"locale\" command or environment variables prefer UTF-8."
+            (or (sanityinc/utf8-locale-p (and (executable-find "locale") (shell-command-to-string "locale")))
+                (sanityinc/utf8-locale-p (getenv "LC_ALL"))
+                (sanityinc/utf8-locale-p (getenv "LC_CTYPE"))
+                (sanityinc/utf8-locale-p (getenv "LANG"))))
+
+          (when (or window-system (locale-is-utf8-p))
+            (setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
+            (set-language-environment 'utf-8)
+            (setq locale-coding-system 'utf-8)
+            (set-default-coding-systems 'utf-8)
+            (set-terminal-coding-system 'utf-8)
+            (unless (eq system-type 'windows-nt)
+              (set-selection-coding-system 'utf-8))
+            (prefer-coding-system 'utf-8))
+
+          (use-package ucs-utils)
+          (use-package unicode-fonts
+            :config (progn
+                      (unicode-fonts-setup)))
+          (use-package font-utils)))
 
 (use-package multiple-cursors
   :commands (mc/mark-next-like-this
@@ -950,12 +970,6 @@
   :ensure t)
 
 (require 'init-local nil t)
-
-(fset 'wpp-adapt-config
-      (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 104 escape 120 106 115 111 110 45 114 101 102 111 114 109 97 116 45 114 101 103 105 111 110 return 67108896 19 34 99 111 109 109 101 110 116 115 34 14 5 backspace 123 14 5 1 6 67108925 97 99 116 105 111 110 115 24 104 tab escape 62 16 16 1 11 11 11 11 11 escape 60] 0 "%d")) arg)))
-
-(fset 'insert-debug-error
-      (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([tab 116 104 114 111 119 32 110 101 119 32 69 114 114 111 114 40 41 59 2 2 39 49 50 51 5] 0 "%d")) arg)))
 
 (provide 'init)
 
