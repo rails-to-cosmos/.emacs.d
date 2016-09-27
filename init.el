@@ -1096,6 +1096,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
    (quote
     (scala-mode scala yaml-mode yagist whole-line-or-region which-key wgrep-ag web-mode web-beautify virtualenvwrapper virtualenv vc-darcs use-package undo-tree tidy term+ syntax-subword switch-window super-save smex scratch restclient regex-tool redshank rainbow-mode rainbow-delimiters py-yapf py-isort pungi prodigy pdf-tools paredit-everywhere page-break-lines origami org-pomodoro org-fstree nvm mwe-log-commands multiple-cursors move-dup mmm-mode magit-gh-pulls lively lice json-mode js-comint itail ipretty interaction-log impatient-mode imenu-anywhere idomenu ido-yes-or-no ido-vertical-mode ido-ubiquitous ibuffer-vc ibuffer-git http hl-sexp highlight-escape-sequences haml-mode hackernews guide-key google-translate github-clone github-browse-file git-gutter+ general fullframe flycheck fiplr fill-column-indicator expand-region exec-path-from-shell emmet-mode elscreen elpy elmacro elisp-slime-nav eldoc-eval dired-subtree dired-filetype-face darcsum danneskjold-theme csv-nav csv-mode crm-custom coffee-mode cl-lib-highlight cinspect bug-reference-github bpr bookmark+ auto-compile anzu ag ace-jump-mode ac-js2))))
