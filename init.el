@@ -75,9 +75,9 @@
           (defconst *is-a-mac* (eq system-type 'darwin))
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
-
-          ;; (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-          ;;   (normal-top-level-add-subdirs-to-load-path))
+          (setq inhibit-startup-screen t)
+          (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+            (normal-top-level-add-subdirs-to-load-path))
           ))
 
 (use-package my/shell
@@ -130,6 +130,16 @@
 
 (use-package my/user-interface
   :init (progn
+          (use-package my/cursor
+            :init (progn
+                    (setq-default cursor-type 'box)
+                    (set-cursor-color "#D0E1F9")
+                    (blink-cursor-mode 0)))
+
+          (use-package my/alarm-bell
+            :init (progn
+                    (setq visible-bell nil)))
+
           (setq-default buffers-menu-max-size 30
                         case-fold-search t
                         compilation-scroll-output t
@@ -150,38 +160,37 @@
                         line-spacing 7
                         indent-tabs-mode nil
                         x-use-underline-position-properties t
-                        underline-minimum-offset 3
-                        cursor-type 'box
-                        frame-title-format '((:eval (if (buffer-file-name)
-                                                        (abbreviate-file-name (buffer-file-name))
-                                                      "%b"))))
+                        underline-minimum-offset 3)
+
+          (setq frame-title-format '((:eval (if (buffer-file-name)
+                                                (abbreviate-file-name (buffer-file-name))
+                                              "%b"))))
 
           (fset 'yes-or-no-p 'y-or-n-p)
 
-          (custom-set-faces
-           '(default ((t (:inherit nil
-                                   :stipple nil
-                                   :inverse-video nil
-                                   :box nil
-                                   :strike-through nil
-                                   :overline nil
-                                   :underline nil
-                                   :slant normal
-                                   :weight normal
-                                   :height 120
-                                   :width normal
-                                   :foundry nil
-                                   :family "Menlo")))))
+          (use-package my/font
+            :init (progn
+                    (custom-set-faces
+                     '(default ((t (:inherit nil
+                                             :stipple nil
+                                             :inverse-video nil
+                                             :box nil
+                                             :strike-through nil
+                                             :overline nil
+                                             :underline nil
+                                             :slant normal
+                                             :weight normal
+                                             :height 120
+                                             :width normal
+                                             :foundry nil
+                                             :family "Menlo")))))))
 
           (tool-bar-mode -1)
           (menu-bar-mode -1)
-          (set-cursor-color "#D0E1F9")
+          (toggle-scroll-bar -1)
 
 	  (use-package my/themes
 	    :init (progn
-		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
-		    (add-to-list 'custom-theme-load-path custom-themes-dir)
-		    (make-directory custom-themes-dir t)
                     (use-package danneskjold-theme
                       :ensure t)))
 
@@ -296,6 +305,9 @@
 (use-package my/text-editing-utils
   :init (progn
           (use-package origami
+            :commands (origami-toggle-node
+                       origami-recursively-toggle-node
+                       origami-show-only-node)
             :config (progn
                       (add-hook 'prog-mode-hook 'origami-mode)
                       (add-hook 'emacs-lisp-mode-hook 'origami-mode))
@@ -330,18 +342,20 @@
             :ensure t)
 
           (use-package hippie-expand
-            :init (progn
-                    (global-set-key (kbd "M-/") 'hippie-expand)
-                    (setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                                             try-expand-dabbrev-all-buffers
-                                                             try-expand-dabbrev-from-kill
-                                                             try-complete-file-name-partially
-                                                             try-complete-file-name
-                                                             try-expand-all-abbrevs
-                                                             try-expand-list
-                                                             try-expand-line
-                                                             try-complete-lisp-symbol-partially
-                                                             try-complete-lisp-symbol))))
+            :commands (hippie-expand)
+            :config (progn
+                      (global-set-key (kbd "M-/") 'hippie-expand)
+                      (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                                               try-expand-dabbrev-all-buffers
+                                                               try-expand-dabbrev-from-kill
+                                                               try-complete-file-name-partially
+                                                               try-complete-file-name
+                                                               try-expand-all-abbrevs
+                                                               try-expand-list
+                                                               try-expand-line
+                                                               try-complete-lisp-symbol-partially
+                                                               try-complete-lisp-symbol))))
+
           (use-package wgrep
             :ensure t)
 
@@ -354,12 +368,12 @@
             :ensure t)
 
           (use-package autocomplete
-            (setq read-file-name-completion-ignore-case t
-                  read-buffer-completion-ignore-case t)
-
-            (mapc (lambda (x)
-                    (add-to-list 'completion-ignored-extensions x))
-                  '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store")))))
+            :config (progn
+                      (setq read-file-name-completion-ignore-case t
+                            read-buffer-completion-ignore-case t)
+                      (mapc (lambda (x)
+                              (add-to-list 'completion-ignored-extensions x))
+                            '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))))))
 
 (use-package my/log-utils
   :commands (itail
@@ -405,49 +419,7 @@
                       :ensure t)
                     (use-package js-comint
                       :commands js-comint
-                      :ensure t)
-
-                    (defcustom preferred-javascript-mode
-                      (first (remove-if-not #'fboundp '(js2-mode js-mode)))
-                      "Javascript mode to use for .js files."
-                      :type 'symbol
-                      :group 'programming
-                      :options '(js2-mode js-mode))
-                    (defvar preferred-javascript-indent-level 4)
-                    (setq auto-mode-alist (cons `("\\.js\\(\\.erb\\)?\\'" . ,preferred-javascript-mode)
-                                                (loop for entry in auto-mode-alist
-                                                      unless (eq preferred-javascript-mode (cdr entry))
-                                                      collect entry)))
-                    ;; js2-mode
-                    (after-load 'js2-mode
-                      ;; Disable js2 mode's syntax error highlighting by default...
-                      (setq-default js2-mode-show-parse-errors nil
-                                    js2-mode-show-strict-warnings nil)
-                      ;; ... but enable it if flycheck can't handle javascript
-                      (autoload 'flycheck-get-checker-for-buffer "flycheck")
-                      (defun sanityinc/disable-js2-checks-if-flycheck-active ()
-                        (unless (flycheck-get-checker-for-buffer)
-                          (set (make-local-variable 'js2-mode-show-parse-errors) t)
-                          (set (make-local-variable 'js2-mode-show-strict-warnings) t)))
-                      (add-hook 'js2-mode-hook 'sanityinc/disable-js2-checks-if-flycheck-active)
-
-                      (add-hook 'js2-mode-hook '(lambda () (setq mode-name "JS2")))
-
-                      (setq-default
-                       js2-basic-offset preferred-javascript-indent-level
-                       js2-bounce-indent-p nil)
-
-                      (after-load 'js2-mode
-                        (js2-imenu-extras-setup))
-
-                      (dolist (hook '(js2-mode-hook js-mode-hook json-mode-hook))
-                        (add-hook hook 'rainbow-delimiters-mode)))
-
-                    ;; js-mode
-                    (setq-default js-indent-level preferred-javascript-indent-level)
-
-
-                    (add-to-list 'interpreter-mode-alist (cons "node" preferred-javascript-mode))))
+                      :ensure t)))
 
           (use-package scala-mode
             :ensure t)
@@ -988,19 +960,3 @@
 (provide 'init)
 
 ;;; init.el ends here
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
- '(package-selected-packages
-   (quote
-    (scala-mode scala yaml-mode yagist whole-line-or-region which-key wgrep-ag web-mode web-beautify virtualenvwrapper virtualenv vc-darcs use-package undo-tree tidy term+ syntax-subword switch-window super-save smex scratch restclient regex-tool redshank rainbow-mode rainbow-delimiters py-yapf py-isort pungi prodigy pdf-tools paredit-everywhere page-break-lines origami org-pomodoro org-fstree nvm mwe-log-commands multiple-cursors move-dup mmm-mode magit-gh-pulls lively lice json-mode js-comint itail ipretty interaction-log impatient-mode imenu-anywhere idomenu ido-yes-or-no ido-vertical-mode ido-ubiquitous ibuffer-vc ibuffer-git http hl-sexp highlight-escape-sequences haml-mode hackernews guide-key google-translate github-clone github-browse-file git-gutter+ general fullframe flycheck fiplr fill-column-indicator expand-region exec-path-from-shell emmet-mode elscreen elpy elmacro elisp-slime-nav eldoc-eval dired-subtree dired-filetype-face darcsum danneskjold-theme csv-nav csv-mode crm-custom coffee-mode cl-lib-highlight cinspect bug-reference-github bpr bookmark+ auto-compile anzu ag ace-jump-mode ac-js2))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
