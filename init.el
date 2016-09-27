@@ -151,7 +151,10 @@
                         indent-tabs-mode nil
                         x-use-underline-position-properties t
                         underline-minimum-offset 3
-                        cursor-type 'box)
+                        cursor-type 'box
+                        frame-title-format '((:eval (if (buffer-file-name)
+                                                        (abbreviate-file-name (buffer-file-name))
+                                                      "%b"))))
 
           (fset 'yes-or-no-p 'y-or-n-p)
 
@@ -174,19 +177,6 @@
           (menu-bar-mode -1)
           (set-cursor-color "#D0E1F9")
 
-          (defconst doom-fringe-size '3 "Default fringe width")
-          ;; standardize fringe width
-          (fringe-mode doom-fringe-size)
-          (push `(left-fringe  . ,doom-fringe-size) default-frame-alist)
-          (push `(right-fringe . ,doom-fringe-size) default-frame-alist)
-          ;; default frame size on startup
-          (push '(width . 120) default-frame-alist)
-          (push '(height . 40) default-frame-alist)
-          ;; Show tilde in margin on empty lines
-          (define-fringe-bitmap 'tilde [64 168 16] nil nil 'center)
-          (set-fringe-bitmap-face 'tilde 'fringe)
-          (setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
-
 	  (use-package my/themes
 	    :init (progn
 		    (defvar custom-themes-dir (concat dist-packages-dir "themes/"))
@@ -194,24 +184,6 @@
 		    (make-directory custom-themes-dir t)
                     (use-package danneskjold-theme
                       :ensure t)))
-
-	  ;; (use-package frame-cmds
-	  ;;   :commands toggle-max-frame
-	  ;;   :ensure t)
-
-          (use-package init-gui-frames
-            :if window-system
-            :init (progn
-                    (defun set-frame-alpha (arg &optional active)
-                      (interactive "nEnter alpha value (1-100): \np")
-                      (let* ((elt (assoc 'alpha default-frame-alist))
-                             (old (frame-parameter nil 'alpha))
-                             (new (cond ((atom old)     `(,arg ,arg))
-                                        ((eql 1 active) `(,arg ,(cadr old)))
-                                        (t              `(,(car old) ,arg)))))
-                        (if elt (setcdr elt new) (push `(alpha ,@new) default-frame-alist))
-                        (set-frame-parameter nil 'alpha new)))
-                    (global-set-key (kbd "C-c t") 'set-frame-alpha)))
 
           (use-package split-window
             :init (progn
@@ -247,19 +219,6 @@
                     (defun set-window-buffer-in-frame (x y buffer &optional frame)
                       "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
                       (set-window-buffer (get-window-in-frame x y frame) buffer))))
-
-          ;; (defun toggle-transparency ()
-          ;;   (interactive)
-          ;;   (let ((alpha (frame-parameter nil 'alpha)))
-          ;;     (set-frame-parameter
-          ;;      nil 'alpha
-          ;;      (if (eql (cond ((numberp alpha) alpha)
-          ;;                     ((numberp (cdr alpha)) (cdr alpha))
-          ;;                     ;; Also handle undocumented (<active> <inactive>) form.
-          ;;                     ((numberp (cadr alpha)) (cadr alpha)))
-          ;;               100)
-          ;;          '(85 . 50) '(100 . 100)))))
-          ;; (global-set-key (kbd "C-c t") 'toggle-transparency)
 
           (use-package my/what-face
             :commands (what-face)
@@ -832,14 +791,6 @@
 (use-package hl-line+
   :config (progn
             (set-face-background hl-line-face "#363636")))
-
-(setq frame-title-format
-      '((:eval (if (buffer-file-name)
-                   (abbreviate-file-name (buffer-file-name))
-                 "%b"))))
-
-;; (use-package list-processes+
-;;   :commands list-processes+)
 
 (use-package camcorder
   :commands camcorder-mode)
