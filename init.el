@@ -76,8 +76,9 @@
           (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
           (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
 
-          (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-            (normal-top-level-add-subdirs-to-load-path))))
+          ;; (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+          ;;   (normal-top-level-add-subdirs-to-load-path))
+          ))
 
 (use-package my/shell
   :init (progn
@@ -865,16 +866,6 @@
             (use-package git-gutter+
               :config (progn
                         (global-git-gutter+-mode))
-              :ensure t)
-            (use-package github-clone
-              :ensure t)
-            (use-package yagist
-              :ensure t)
-            (use-package github-browse-file
-              :ensure t)
-            (use-package bug-reference-github
-              :ensure t)
-            (use-package magit-gh-pulls
               :ensure t)
             (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
