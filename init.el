@@ -36,52 +36,18 @@
 ;;
 ;;; Code:
 
-;; Init use-package
-(require 'package)
+(load-file (concat user-emacs-directory "core/pack.el"))
 
-(defvar dist-packages-dir)
-(setq dist-packages-dir (concat user-emacs-directory "packages/"))
-
-(defvar package-user-dir)
-(setq package-user-dir (concat dist-packages-dir "elpa/"))
-
-(make-directory dist-packages-dir t)
-(make-directory package-user-dir t)
-
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-
-(package-initialize)
-
-(when (not package-archive-contents)
-  (package-refresh-contents))
-
-(if (not (package-installed-p 'use-package))
-    (progn
-      (package-refresh-contents)
-      (package-install 'use-package)))
-
-(eval-when-compile
-  (require 'use-package))
-
-(use-package use-package
-  :init (progn
-          (use-package diminish)
-          (use-package bind-key))
-  :config (progn
-            (setq use-package-verbose t)))
-
-(use-package utils :load-path "core")
-(use-package shell :load-path "core")
-(use-package ui    :load-path "core")
-(use-package buffers
-  :load-path "core"
+(use-package utils   :load-path "core")
+(use-package shell   :load-path "core")
+(use-package ui      :load-path "core")
+(use-package buffers :load-path "core"
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . split-window-vertically)
          ("C-x 3" . split-window-horizontally))
-  :commands (rename-this-file-and-buffer))
+  :commands (rename-this-file-and-buffer
+             delete-this-file))
 
 (use-package snippets
   :load-path "editor"
@@ -97,14 +63,8 @@
 (use-package ac
   :load-path "editor"
   :bind ("M-/" . hippie-expand))
-
-(use-package flycheck
-  :config (progn
-            (add-hook 'after-init-hook 'global-flycheck-mode)
-            (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-                  flycheck-idle-change-delay 0.8
-                  flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
-  :ensure t)
+(use-package checkers
+  :load-path "editor")
 
 (use-package wgrep
             :ensure t)
