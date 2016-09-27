@@ -38,10 +38,11 @@
 
 (load-file (concat user-emacs-directory "core/pack.el"))
 
-(use-package utils   :load-path "core")
-(use-package shell   :load-path "core")
-(use-package ui      :load-path "core")
-(use-package buffers :load-path "core"
+(use-package assumptions     :load-path "core")
+(use-package utils           :load-path "core")
+(use-package shell           :load-path "core")
+(use-package ui              :load-path "core")
+(use-package buffers         :load-path "core"
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . split-window-vertically)
@@ -49,22 +50,15 @@
   :commands (rename-this-file-and-buffer
              delete-this-file))
 
-(use-package snippets
-  :load-path "editor"
-  :commands yas-ido-expand)
-(use-package macro
-  :load-path "editor"
-  :commands save-macro)
-(use-package folding
-  :load-path "editor"
-  :commands (origami-toggle-node
-             origami-recursively-toggle-node
-             origami-show-only-node))
-(use-package ac
-  :load-path "editor"
+(use-package snippets  :load-path "editor"  :commands yas-ido-expand)
+(use-package checkers  :load-path "editor")
+(use-package macro     :load-path "editor"  :commands save-macro)
+(use-package ac        :load-path "editor"
   :bind ("M-/" . hippie-expand))
-(use-package checkers
-  :load-path "editor")
+(use-package folding   :load-path "editor"
+  :bind (("C-t C-t" . origami-toggle-node)
+         ("C-t C-r" . origami-recursively-toggle-node)
+         ("C-t C-o" . origami-show-only-node)))
 
 (use-package wgrep
             :ensure t)
@@ -556,14 +550,6 @@
 
 (use-package general
   :config (progn
-            (setq mac-option-key-is-meta nil
-                  mac-command-key-is-meta t
-                  mac-command-modifier 'meta
-                  mac-option-modifier nil)
-
-            (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
-              (global-unset-key key))
-
             (general-define-key
              :keymaps 'global
              "C-<" 'mc/mark-previous-like-this
@@ -581,13 +567,6 @@
              "p" 'prodigy
              "f f" 'toggle-frame-fullscreen
              "i" 'yas-ido-expand)
-
-            (general-define-key
-             :keymaps 'origami-mode-map
-             :prefix "C-t"
-             "C-t" 'origami-toggle-node
-             "C-r" 'origami-recursively-toggle-node
-             "C-o" 'origami-show-only-node)
 
             (general-define-key
              :keymaps 'python-mode-map
