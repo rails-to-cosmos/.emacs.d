@@ -525,13 +525,63 @@
 
 (use-package prog-mode
   :init (progn
-          ;; (use-package lorem-ipsum
-          ;;   :ensure t)
+          (use-package javascript
+            :init (progn
+                    (use-package json-mode
+                      :commands (json-mode json-reformat-region)
+                      :ensure t)
+                    (use-package js2-mode
+                      :commands js2-mode
+                      :ensure t)
+                    (use-package ac-js2
+                      :commands ac-js2
+                      :ensure t)
+                    (use-package js-comint
+                      :commands js-comint
+                      :ensure t)
 
-          ;; (use-package fixmee
-          ;;   :config (progn
-          ;;             (add-hook 'prog-mode-hook 'fixmee-mode))
-          ;;   :ensure t)
+                    (defcustom preferred-javascript-mode
+                      (first (remove-if-not #'fboundp '(js2-mode js-mode)))
+                      "Javascript mode to use for .js files."
+                      :type 'symbol
+                      :group 'programming
+                      :options '(js2-mode js-mode))
+                    (defvar preferred-javascript-indent-level 4)
+                    (setq auto-mode-alist (cons `("\\.js\\(\\.erb\\)?\\'" . ,preferred-javascript-mode)
+                                                (loop for entry in auto-mode-alist
+                                                      unless (eq preferred-javascript-mode (cdr entry))
+                                                      collect entry)))
+                    ;; js2-mode
+                    (after-load 'js2-mode
+                      ;; Disable js2 mode's syntax error highlighting by default...
+                      (setq-default js2-mode-show-parse-errors nil
+                                    js2-mode-show-strict-warnings nil)
+                      ;; ... but enable it if flycheck can't handle javascript
+                      (autoload 'flycheck-get-checker-for-buffer "flycheck")
+                      (defun sanityinc/disable-js2-checks-if-flycheck-active ()
+                        (unless (flycheck-get-checker-for-buffer)
+                          (set (make-local-variable 'js2-mode-show-parse-errors) t)
+                          (set (make-local-variable 'js2-mode-show-strict-warnings) t)))
+                      (add-hook 'js2-mode-hook 'sanityinc/disable-js2-checks-if-flycheck-active)
+
+                      (add-hook 'js2-mode-hook '(lambda () (setq mode-name "JS2")))
+
+                      (setq-default
+                       js2-basic-offset preferred-javascript-indent-level
+                       js2-bounce-indent-p nil)
+
+                      (after-load 'js2-mode
+                        (js2-imenu-extras-setup))
+
+                      (dolist (hook '(js2-mode-hook js-mode-hook json-mode-hook))
+                        (add-hook hook 'rainbow-delimiters-mode)))
+
+                    ;; js-mode
+                    (setq-default js-indent-level preferred-javascript-indent-level)
+
+
+                    (add-to-list 'interpreter-mode-alist (cons "node" preferred-javascript-mode))))
+
 
           (use-package scala-mode
             :ensure t)
@@ -541,12 +591,12 @@
             :interpreter ("ipython" . python-mode)
             :load-path "python/"
             :init (progn
-                    (use-package jedi
-                      :config (progn
-                                (add-hook 'python-mode-hook 'jedi:setup)
-                                (setq jedi:complete-on-dot t)
-                                (jedi:install-server))
-                      :ensure t)
+                    ;; (use-package jedi
+                    ;;   :config (progn
+                    ;;             (add-hook 'python-mode-hook 'jedi:setup)
+                    ;;             (setq jedi:complete-on-dot t)
+                    ;;             (jedi:install-server))
+                    ;;   :ensure t)
 
                     (use-package pungi
                       :ensure t)
@@ -694,7 +744,6 @@
   :ensure t)
 
 (require 'init-editing-utils)
-(require 'init-javascript)
 (require 'init-paredit)
 (require 'init-lisp)
 
@@ -1091,6 +1140,7 @@
 (provide 'init)
 
 ;;; init.el ends here
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -1099,7 +1149,7 @@
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
    (quote
-    (scala-mode scala yaml-mode yagist whole-line-or-region which-key wgrep-ag web-mode web-beautify virtualenvwrapper virtualenv vc-darcs use-package undo-tree tidy term+ syntax-subword switch-window super-save smex scratch restclient regex-tool redshank rainbow-mode rainbow-delimiters py-yapf py-isort pungi prodigy pdf-tools paredit-everywhere page-break-lines origami org-pomodoro org-fstree nvm mwe-log-commands multiple-cursors move-dup mmm-mode magit-gh-pulls lively lice json-mode js-comint itail ipretty interaction-log impatient-mode imenu-anywhere idomenu ido-yes-or-no ido-vertical-mode ido-ubiquitous ibuffer-vc ibuffer-git http hl-sexp highlight-escape-sequences haml-mode hackernews guide-key google-translate github-clone github-browse-file git-gutter+ general fullframe flycheck fiplr fill-column-indicator expand-region exec-path-from-shell emmet-mode elscreen elpy elmacro elisp-slime-nav eldoc-eval dired-subtree dired-filetype-face darcsum danneskjold-theme csv-nav csv-mode crm-custom coffee-mode cl-lib-highlight cinspect bug-reference-github bpr bookmark+ auto-compile anzu ag ace-jump-mode ac-js2))))
+    (javascript scala-mode scala yaml-mode yagist whole-line-or-region which-key wgrep-ag web-mode web-beautify virtualenvwrapper virtualenv vc-darcs use-package undo-tree tidy term+ syntax-subword switch-window super-save smex scratch restclient regex-tool redshank rainbow-mode rainbow-delimiters py-yapf py-isort pungi prodigy pdf-tools paredit-everywhere page-break-lines origami org-pomodoro org-fstree nvm mwe-log-commands multiple-cursors move-dup mmm-mode magit-gh-pulls lively lice json-mode js-comint itail ipretty interaction-log impatient-mode imenu-anywhere idomenu ido-yes-or-no ido-vertical-mode ido-ubiquitous ibuffer-vc ibuffer-git http hl-sexp highlight-escape-sequences haml-mode hackernews guide-key google-translate github-clone github-browse-file git-gutter+ general fullframe flycheck fiplr fill-column-indicator exec-path-from-shell emmet-mode elscreen elpy elmacro elisp-slime-nav eldoc-eval dired-subtree dired-filetype-face darcsum danneskjold-theme csv-nav csv-mode crm-custom coffee-mode cl-lib-highlight cinspect bug-reference-github bpr bookmark+ auto-compile anzu ag ace-jump-mode ac-js2))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
