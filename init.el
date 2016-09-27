@@ -50,6 +50,7 @@
 
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
 (package-initialize)
 
@@ -65,315 +66,48 @@
   (require 'use-package))
 
 (use-package use-package
+  :init (progn
+          (use-package diminish)
+          (use-package bind-key))
   :config (progn
-            (setq use-package-verbose t))
-  :ensure diminish
-  :ensure bind-key)
+            (setq use-package-verbose t)))
 
-(use-package my/global-settings
-  :init (progn
-          (defconst *is-a-mac* (eq system-type 'darwin))
-          (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-          (add-to-list 'load-path (expand-file-name "custom" dist-packages-dir))
-          (setq inhibit-startup-screen t)
-          ;; (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-          ;;   (normal-top-level-add-subdirs-to-load-path))
-          ))
+(use-package utils :load-path "core")
+(use-package shell :load-path "core")
+(use-package ui    :load-path "core")
+(use-package buffers
+  :load-path "core"
+  :bind (("C-x o" . switch-window)
+         ("C-x 1" . delete-other-windows)
+         ("C-x 2" . split-window-vertically)
+         ("C-x 3" . split-window-horizontally))
+  :commands (rename-this-file-and-buffer))
 
-(use-package my/shell
-  :init (progn
-          (use-package exec-path-from-shell
-            :config (progn
-                      (when (memq window-system '(mac ns))
-                        (exec-path-from-shell-initialize)
-                        (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-                        (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")
-                        (setenv "LANG" "en_US.UTF-8")
-                        (setenv "LC_ALL" "en_US.UTF-8")
-                        (setenv "LC_CTYPE" "en_US.UTF-8")))
-            :ensure t)
+(use-package snippets
+  :load-path "editor"
+  :commands yas-ido-expand)
+(use-package macro
+  :load-path "editor"
+  :commands save-macro)
+(use-package folding
+  :load-path "editor"
+  :commands (origami-toggle-node
+             origami-recursively-toggle-node
+             origami-show-only-node))
+(use-package ac
+  :load-path "editor"
+  :bind ("M-/" . hippie-expand))
 
-          (defun spawn-shell (name &rest commands)
-            "Invoke shell with commands"
-            (interactive "MName of shell buffer to spawn: ")
-            (defvar spawn-shell/old-buffer (current-buffer))
-            (setq spawn-shell/old-buffer (current-buffer))
-            (with-current-buffer (get-buffer-create name)
-              (setq default-eshell-buffer-name
-                    (if (string= (boundp 'eshell-buffer-name) nil)
-                        "*eshell*"
-                      eshell-buffer-name)
-                    eshell-buffer-name name)
-              (eshell)
-              (setq eshell-buffer-name default-eshell-buffer-name)
-              (loop for command in commands
-                    do (insert (concat command "\n")))
-              (eshell-send-input)
-              (goto-char (point-max)))
-            (switch-to-buffer spawn-shell/old-buffer))
-
-          (defun eshell-init-aliases()
-            (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
-            (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
-            (add-to-list 'eshell-command-aliases-list '("l" "ls"))
-            (add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
-            (add-to-list 'eshell-command-aliases-list '("pip-update" "pip freeze --local | grep -v '^\\-e' | cut -d = -f 1  | xargs -n1 pip install -U")))
-          (add-hook 'eshell-mode-hook 'eshell-init-aliases)
-          (setq eshell-buffer-maximum-lines 500
-                password-cache t
-                password-cache-expiry 3600
-                eshell-output-filter-functions '(eshell-truncate-buffer
-                                                 eshell-postoutput-scroll-to-bottom
-                                                 eshell-handle-control-codes
-                                                 eshell-handle-ansi-color
-                                                 eshell-watch-for-password-prompt))))
-
-(use-package my/user-interface
-  :init (progn
-          (use-package my/cursor
-            :init (progn
-                    (setq-default cursor-type 'box)
-                    (set-cursor-color "#D0E1F9")
-                    (blink-cursor-mode 0)))
-
-          (use-package my/alarm-bell
-            :init (progn
-                    (setq visible-bell nil)))
-
-          (setq-default buffers-menu-max-size 30
-                        case-fold-search t
-                        compilation-scroll-output t
-                        ediff-split-window-function 'split-window-horizontally
-                        ediff-window-setup-function 'ediff-setup-windows-plain
-                        grep-highlight-matches t
-                        grep-scroll-output t
-                        make-backup-files nil
-                        mouse-yank-at-point t
-                        save-interprogram-paste-before-kill t
-                        scroll-preserve-screen-position 'always
-                        set-mark-command-repeat-pop t
-                        show-trailing-whitespace nil
-                        tooltip-delay 1.5
-                        truncate-lines nil
-                        truncate-partial-width-windows nil
-                        indent-tabs-mode nil
-                        x-use-underline-position-properties t
-                        underline-minimum-offset 3)
-
-          (setq frame-title-format '((:eval (if (buffer-file-name)
-                                                (abbreviate-file-name (buffer-file-name))
-                                              "%b"))))
-
-          (fset 'yes-or-no-p 'y-or-n-p)
-
-          (use-package my/font
-            :init (progn
-                    (setq-default line-spacing 7)
-
-                    (custom-set-faces
-                     '(default ((t (:inherit nil
-                                             :stipple nil
-                                             :inverse-video nil
-                                             :box nil
-                                             :strike-through nil
-                                             :overline nil
-                                             :underline nil
-                                             :slant normal
-                                             :weight normal
-                                             :height 120
-                                             :width normal
-                                             :foundry nil
-                                             :family "Menlo")))))))
-
-          (tool-bar-mode -1)
-          (menu-bar-mode -1)
-          (toggle-scroll-bar -1)
-
-	  (use-package my/themes
-	    :init (progn
-                    (use-package danneskjold-theme
-                      :ensure t)))
-
-          (use-package split-window
-            :init (progn
-                    (defun split-window-multiple-ways (x y)
-                      "Split the current frame into a grid of X columns and Y rows."
-                      (interactive "nColumns: \nnRows: ")
-                      ;; one window
-                      (delete-other-windows)
-                      (dotimes (i (1- x))
-                        (split-window-horizontally)
-                        (dotimes (j (1- y))
-                          (split-window-vertically))
-                        (other-window y))
-                      (dotimes (j (1- y))
-                        (split-window-vertically))
-                      (balance-windows))
-                    (autoload 'windmove-find-other-window "windmove"
-                      "Return the window object in direction DIR. fn dir &optional arg window)")
-                    (declare-function windmove-find-other-window "windmove" (dir &optional arg window))
-                    (defun get-window-in-frame (x y &optional frame)
-                      "Find Xth horizontal and Yth vertical window from top-left of FRAME."
-                      (let ((orig-x x) (orig-y y)
-                            (w (frame-first-window frame)))
-                        (while (and (windowp w) (> x 0))
-                          (setq w (windmove-find-other-window 'right 1 w)
-                                x (1- x)))
-                        (while (and (windowp w) (> y 0))
-                          (setq w (windmove-find-other-window 'down 1 w)
-                                y (1- y)))
-                        (unless (windowp w)
-                          (error "No window at (%d, %d)" orig-x orig-y))
-                        w))
-                    (defun set-window-buffer-in-frame (x y buffer &optional frame)
-                      "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
-                      (set-window-buffer (get-window-in-frame x y frame) buffer))))
-
-          (use-package my/what-face
-            :commands (what-face)
-            :config (progn
-                      (defun what-face (pos)
-                        (interactive "d")
-                        (let ((face (or (get-char-property (point) 'read-face-name)
-                                        (get-char-property (point) 'face))))
-                          (if face (message "Face: %s" face) (message "No face at %d" pos))))))))
-
-(use-package my/elisp-utils
-  :init (progn
-          (defmacro after-load (feature &rest body)
-            "After FEATURE is loaded, evaluate BODY."
-            (declare (indent defun))
-            `(eval-after-load ,feature
-               '(progn ,@body)))
-
-          (defun add-auto-mode (mode &rest patterns)
-            "Add entries to `auto-mode-alist' to use `MODE' for all given file `PATTERNS'."
-            (dolist (pattern patterns)
-              (add-to-list 'auto-mode-alist (cons pattern mode))))
-
-          (defun delete-this-file ()
-            "Delete the current file, and kill the buffer."
-            (interactive)
-            (or (buffer-file-name) (error "No file is currently being edited"))
-            (when (yes-or-no-p (format "Really delete '%s'?"
-                                       (file-name-nondirectory buffer-file-name)))
-              (delete-file (buffer-file-name))
-              (kill-this-buffer)))
-
-          (defun rename-this-file-and-buffer (new-name)
-            "Renames both current buffer and file it's visiting to NEW-NAME."
-            (interactive "sNew name: ")
-            (let ((name (buffer-name))
-                  (filename (buffer-file-name)))
-              (unless filename
-                (error "Buffer '%s' is not visiting a file!" name))
-              (if (get-buffer new-name)
-                  (message "A buffer named '%s' already exists!" new-name)
-                (progn
-                  (when (file-exists-p filename)
-                    (rename-file filename new-name 1))
-                  (rename-buffer new-name)
-                  (set-visited-file-name new-name)))))
-
-          (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-            "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-            (cl-flet ((process-list ())) ad-do-it))
-
-          (defun project-buffer-name-by-feature (project-name feature-name)
-            (concatenate 'string "*" project-name "-" feature-name "*"))
-
-          (setq kill-buffer-query-functions
-                (remq 'process-kill-buffer-query-function
-                      kill-buffer-query-functions))))
-
-(use-package my/macros-utils
-  :commands (save-macro)
+(use-package flycheck
   :config (progn
-            (defun save-macro (name)
-              "save a macro. Take a name as argument
-        and save the last defined macro under
-        this name at the end of your .emacs"
-              (interactive "SName of the macro:") ; ask for the name of the macro
-              (kmacro-name-last-macro name)        ; use this name for the macro
-              (find-file user-init-file)   ; open ~/.emacs or other user init file
-              (goto-char (point-max))      ; go to the end of the .emacs
-              (newline)                    ; insert a newline
-              (insert-kbd-macro name)      ; copy the macro
-              (newline)                    ; insert a newline
-              (switch-to-buffer nil))))
+            (add-hook 'after-init-hook 'global-flycheck-mode)
+            (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+                  flycheck-idle-change-delay 0.8
+                  flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+  :ensure t)
 
-(use-package my/text-editing-utils
-  :init (progn
-          (use-package origami
-            :commands (origami-toggle-node
-                       origami-recursively-toggle-node
-                       origami-show-only-node)
-            :config (progn
-                      (add-hook 'prog-mode-hook 'origami-mode)
-                      (add-hook 'emacs-lisp-mode-hook 'origami-mode))
+(use-package wgrep
             :ensure t)
-
-          (use-package yasnippet
-            :config (progn
-                      ;; Completing point by some yasnippet key
-                      (defun yas-ido-expand ()
-                        "Lets you select (and expand) a yasnippet key"
-                        (interactive)
-                        (let ((original-point (point)))
-                          (while (and
-                                  (not (= (point) (point-min) ))
-                                  (not
-                                   (string-match "[[:space:]\n]" (char-to-string (char-before)))))
-                            (backward-word 1))
-                          (let* ((init-word (point))
-                                 (word (buffer-substring init-word original-point))
-                                 (list (yas-active-keys)))
-                            (goto-char original-point)
-                            (let ((key (remove-if-not
-                                        (lambda (s) (string-match (concat "^" word) s)) list)))
-                              (if (= (length key) 1)
-                                  (setq key (pop key))
-                                (setq key (ido-completing-read "key: " list nil nil word)))
-                              (delete-char (- init-word original-point))
-                              (insert key)
-                              (yas-expand)))))
-
-                      (yas-global-mode t))
-            :ensure t)
-
-          (use-package hippie-expand
-            :commands (hippie-expand)
-            :config (progn
-                      (global-set-key (kbd "M-/") 'hippie-expand)
-                      (setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                                               try-expand-dabbrev-all-buffers
-                                                               try-expand-dabbrev-from-kill
-                                                               try-complete-file-name-partially
-                                                               try-complete-file-name
-                                                               try-expand-all-abbrevs
-                                                               try-expand-list
-                                                               try-expand-line
-                                                               try-complete-lisp-symbol-partially
-                                                               try-complete-lisp-symbol))))
-
-          (use-package wgrep
-            :ensure t)
-
-          (use-package flycheck
-            :config (progn
-                      (add-hook 'after-init-hook 'global-flycheck-mode)
-                      (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-                            flycheck-idle-change-delay 0.8
-                            flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
-            :ensure t)
-
-          (use-package autocomplete
-            :config (progn
-                      (setq read-file-name-completion-ignore-case t
-                            read-buffer-completion-ignore-case t)
-                      (mapc (lambda (x)
-                              (add-to-list 'completion-ignored-extensions x))
-                            '(".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))))))
 
 (use-package my/log-utils
   :commands (itail
@@ -384,21 +118,24 @@
             (use-package mwe-log-commands
               :ensure t)))
 
-(use-package scratch
-  :init (progn
-          (defun immortal-scratch ()
-            (if (eq (current-buffer) (get-buffer "*scratch*"))
-                (progn (bury-buffer)
-                       nil)
-              t))
-          (add-hook 'kill-buffer-query-functions 'immortal-scratch)))
-
-(use-package impatient-mode
-  :commands impatient-mode
-  :ensure t)
-
 (use-package prog-mode
   :init (progn
+          (use-package web-mode
+            :mode ("\\.html\\'" "\\.ejs\\'" "\\.htm\\'" "\\.jsx\\'")
+            :config (progn
+                      (use-package emmet-mode
+                        :mode ("\\.html\\'" "\\.htm\\'")
+                        :config (add-hook 'web-mode-hook 'emmet-mode)
+                        :ensure t)
+
+                      (use-package web-beautify
+                        :ensure t)
+
+                      (setq web-mode-markup-indent-offset 4
+                            web-mode-css-indent-offset 4
+                            web-mode-code-indent-offset 4))
+            :ensure t)
+
           (use-package restclient
             :commands restclient-mode
             :mode ("\\.rest\\'" . restclient-mode)
@@ -523,62 +260,6 @@
           (add-hook 'ido-setup-hook #'bind-ido-keys)
           (ido-mode))
 
-(use-package switch-window
-  :config (progn
-            (setq switch-window-shortcut-style 'alphabet)
-            ;;----------------------------------------------------------------------------
-            ;; When splitting window, show (other-buffer) in the new window
-            ;;----------------------------------------------------------------------------
-            (defun split-window-func-with-other-buffer (split-function)
-              (lexical-let ((s-f split-function))
-                (lambda ()
-                  (interactive)
-                  (funcall s-f)
-                  (set-window-buffer (next-window) (other-buffer)))))
-            ;;----------------------------------------------------------------------------
-            ;; Rearrange split windows
-            ;;----------------------------------------------------------------------------
-            (defun split-window-horizontally-instead ()
-              (interactive)
-              (save-excursion
-                (delete-other-windows)
-                (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-            (defun split-window-vertically-instead ()
-              (interactive)
-              (save-excursion
-                (delete-other-windows)
-                (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
-            (defun my/split-vertically ()
-              (interactive)
-              (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
-            (defun my/split-horizontally ()
-              (interactive)
-              (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-  :ensure t)
-
-(use-package web-mode
-  :init (progn
-          (use-package js
-            :config (progn
-                      (setq js-indent-level 4))
-            :ensure t)
-          (use-package emmet-mode
-            :config (progn
-                      (add-hook 'web-mode-hook 'emmet-mode))
-            :commands emmet-mode
-            :ensure t)
-          (use-package web-beautify
-            :ensure t))
-  :config (progn
-            (add-auto-mode 'web-mode "\\.html\\'")
-            (add-auto-mode 'web-mode "\\.ejs\\'")
-            (add-auto-mode 'web-mode "\\.htm\\'")
-            (add-auto-mode 'web-mode "\\.jsx\\'")
-            (setq web-mode-markup-indent-offset 4
-                  web-mode-css-indent-offset 4
-                  web-mode-code-indent-offset 4))
-  :ensure t)
-
 (require 'init-editing-utils)
 (require 'init-paredit)
 (require 'init-lisp)
@@ -661,11 +342,7 @@
 
             (after-load 'org
               (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
-              (when *is-a-mac*
-                (define-key org-mode-map (kbd "M-h") nil))
               (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
-              (when *is-a-mac*
-                (define-key org-mode-map (kbd "C-c g") 'org-mac-grab-link))
               (setq org-imenu-depth 10))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
@@ -913,6 +590,7 @@
   :ensure t)
 
 (use-package auto-rsync
+  :load-path "packages/custom/"
   :config (progn
             (auto-rsync-mode t)))
 
@@ -931,13 +609,6 @@
              "C-<" 'mc/mark-previous-like-this
              "C->" 'mc/mark-next-like-this
              "C-+" 'mc/mark-all-like-this)
-
-            (general-define-key
-             :prefix "C-x"
-             "o" 'switch-window
-             "1" 'delete-other-windows
-             "2" 'my/split-vertically
-             "3" 'my/split-horizontally)
 
             (general-define-key
              :prefix "C-x i"
