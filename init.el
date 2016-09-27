@@ -40,7 +40,7 @@
 
 (use-package assumptions     :load-path "core")
 (use-package utils           :load-path "core")
-(use-package shell           :load-path "core")
+(use-package sh              :load-path "core")
 (use-package ui              :load-path "core")
 (use-package buffers         :load-path "core"
   :bind (("C-x o" . switch-window)
