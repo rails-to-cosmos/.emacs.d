@@ -222,12 +222,12 @@
 
           (use-package my/what-face
             :commands (what-face)
-            :init (progn
-                    (defun what-face (pos)
-                      (interactive "d")
-                      (let ((face (or (get-char-property (point) 'read-face-name)
-                                      (get-char-property (point) 'face))))
-                        (if face (message "Face: %s" face) (message "No face at %d" pos))))))))
+            :config (progn
+                      (defun what-face (pos)
+                        (interactive "d")
+                        (let ((face (or (get-char-property (point) 'read-face-name)
+                                        (get-char-property (point) 'face))))
+                          (if face (message "Face: %s" face) (message "No face at %d" pos))))))))
 
 (use-package my/elisp-utils
   :init (progn
@@ -279,19 +279,19 @@
 
 (use-package my/macros-utils
   :commands (save-macro)
-  :init (progn
-          (defun save-macro (name)
-            "save a macro. Take a name as argument
+  :config (progn
+            (defun save-macro (name)
+              "save a macro. Take a name as argument
         and save the last defined macro under
         this name at the end of your .emacs"
-            (interactive "SName of the macro:") ; ask for the name of the macro
-            (kmacro-name-last-macro name)        ; use this name for the macro
-            (find-file user-init-file)   ; open ~/.emacs or other user init file
-            (goto-char (point-max))      ; go to the end of the .emacs
-            (newline)                    ; insert a newline
-            (insert-kbd-macro name)      ; copy the macro
-            (newline)                    ; insert a newline
-            (switch-to-buffer nil))))
+              (interactive "SName of the macro:") ; ask for the name of the macro
+              (kmacro-name-last-macro name)        ; use this name for the macro
+              (find-file user-init-file)   ; open ~/.emacs or other user init file
+              (goto-char (point-max))      ; go to the end of the .emacs
+              (newline)                    ; insert a newline
+              (insert-kbd-macro name)      ; copy the macro
+              (newline)                    ; insert a newline
+              (switch-to-buffer nil))))
 
 (use-package my/text-editing-utils
   :init (progn
@@ -354,42 +354,6 @@
             :ensure t)
 
           (use-package autocomplete
-            ;; (require 'ej-autocomplete)
-            :config (progn
-                      ;; (setq ac-use-menu-map t
-                      ;;       hippie-expand-verbose t
-                      ;;       smart-tab-using-hippie-expand t
-                      ;;       hippie-expand-try-functions-list
-                      ;;       '(yas/hippie-try-expand
-                      ;;         try-complete-file-name-partially
-                      ;;         try-expand-all-abbrevs
-                      ;;         try-expand-dabbrev
-                      ;;         try-expand-dabbrev-all-buffers
-                      ;;         try-expand-dabbrev-from-kill
-                      ;;         try-complete-lisp-symbol-partially
-                      ;;         try-complete-lisp-symbol)
-                      ;;       )
-
-                      ;; (use-package bash-completion
-                      ;;   :commands bash-completion-dynamic-complete
-                      ;;   :init (progn
-                      ;;           (add-hook 'shell-dynamic-complete-functions
-                      ;;                     'bash-completion-dynamic-complete))
-                      ;;   :config (progn
-                      ;;             (bash-completion-setup))
-                      ;;   :ensure t)
-                      ;; (use-package auto-complete-nxml
-                      ;;   :ensure t)
-                      ;; (use-package popup
-                      ;;   :ensure t)
-                      ;; (use-package pos-tip)
-                      ;; (use-package popup-kill-ring)
-                      ;; (use-package auto-complete-config)
-                      ;; (ac-config-default)
-                      )
-            ;; (use-package yaml-mode
-            ;; :ensure t)
-
             (setq read-file-name-completion-ignore-case t
                   read-buffer-completion-ignore-case t)
 
@@ -400,11 +364,11 @@
 (use-package my/log-utils
   :commands (itail
              mwe:log-keyboard-commands)
-  :init (progn
-          (use-package itail
-            :ensure t)
-          (use-package mwe-log-commands
-            :ensure t)))
+  :config (progn
+            (use-package itail
+              :ensure t)
+            (use-package mwe-log-commands
+              :ensure t)))
 
 (use-package scratch
   :init (progn
@@ -419,43 +383,15 @@
   :commands impatient-mode
   :ensure t)
 
-(use-package restclient
-  :commands restclient-mode
-  :mode ("\\.rest\\'" . restclient-mode)
-  :ensure t)
 
-(use-package my/db-utils
-  :init (progn
-          ;; (use-package redis
-          ;;   :ensure t)
-          ;; (use-package emacsql
-          ;;   :init (progn
-          ;;           (use-package pg
-          ;;             :ensure t)
-          ;;           (use-package sql-indent
-          ;;             :ensure t))
-          ;;   :config (progn
-          ;;             (defun sql-indent-string ()
-          ;;               "Indents the string under the cursor as SQL."
-          ;;               (interactive)
-          ;;               (save-excursion
-          ;;                 (er/mark-inside-quotes)
-          ;;                 (let* ((text (buffer-substring-no-properties (region-beginning) (region-end)))
-          ;;                        (pos (region-beginning))
-          ;;                        (column (progn (goto-char pos) (current-column)))
-          ;;                        (formatted-text (with-temp-buffer
-          ;;                                          (insert text)
-          ;;                                          (delete-trailing-whitespace)
-          ;;                                          (sql-indent-buffer)
-          ;;                                          (replace-string "\n" (concat "\n" (make-string column (string-to-char " "))) nil (point-min) (point-max))
-          ;;                                          (buffer-string))))
-          ;;                   (delete-region (region-beginning) (region-end))
-          ;;                   (goto-char pos)
-          ;;                   (insert formatted-text))))))
-          ))
 
 (use-package prog-mode
   :init (progn
+          (use-package restclient
+            :commands restclient-mode
+            :mode ("\\.rest\\'" . restclient-mode)
+            :ensure t)
+
           (use-package javascript
             :init (progn
                     (use-package json-mode
@@ -512,7 +448,6 @@
 
 
                     (add-to-list 'interpreter-mode-alist (cons "node" preferred-javascript-mode))))
-
 
           (use-package scala-mode
             :ensure t)
