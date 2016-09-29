@@ -1,5 +1,7 @@
 (require 'package)
 
+(setq custom-file (concat user-emacs-directory "custom.el"))
+
 (defvar dist-packages-dir)
 (setq dist-packages-dir (concat user-emacs-directory "packages/"))
 
