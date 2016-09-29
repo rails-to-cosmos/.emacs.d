@@ -101,6 +101,7 @@
                       :commands (json-mode json-reformat-region)
                       :ensure t)
                     (use-package js2-mode
+                      :mode ("\\.js\\'" . js2-mode)
                       :commands js2-mode
                       :ensure t)
                     (use-package ac-js2
