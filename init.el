@@ -61,7 +61,7 @@
          ("C-t C-o" . origami-show-only-node)))
 
 (use-package wgrep
-            :ensure t)
+  :ensure t)
 
 (use-package my/log-utils
   :commands (itail
@@ -112,7 +112,8 @@
                       :ensure t)))
 
           (use-package scala-mode
-            :ensure t)
+            :ensure ensime
+            :ensure maker-mode)
 
           (use-package python
             :mode ("\\.py\\'" . python-mode)
