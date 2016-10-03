@@ -559,8 +559,7 @@
 
             (general-define-key
              :prefix "C-x i"
-             "m" 'imenu-anywhere
-             "t" 'iterm-goto-filedir-or-home)
+             "m" 'imenu-anywhere)
 
             (general-define-key
              :prefix "C-x y"
