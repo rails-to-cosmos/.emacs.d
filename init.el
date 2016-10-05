@@ -38,30 +38,50 @@
 
 (load-file (concat user-emacs-directory "core/pack.el"))
 
-(use-package assumptions     :load-path "core")
-(use-package utils           :load-path "core")
-(use-package sh              :load-path "core")
-(use-package ui              :load-path "core")
-(use-package buffers         :load-path "core"
+(use-package assumptions
+  :load-path "core")
+
+(use-package utils
+  :load-path "core")
+
+(use-package sh
+  :load-path "core")
+
+(use-package ui
+  :load-path "core")
+
+(use-package buffers
+  :load-path "core"
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . split-window-vertically)
          ("C-x 3" . split-window-horizontally))
-  :commands (rename-this-file-and-buffer
-             delete-this-file))
+  :commands (delete-this-file
+             rename-this-file-and-buffer))
 
-(use-package snippets  :load-path "editor"  :commands yas-ido-expand)
-(use-package checkers  :load-path "editor")
-(use-package macro     :load-path "editor"  :commands save-macro)
-(use-package ac        :load-path "editor"
+(use-package snippets
+  :load-path "editor"
+  :commands yas-ido-expand)
+
+(use-package checkers
+  :load-path "editor")
+
+(use-package macro
+  :load-path "editor"
+  :commands save-macro)
+
+(use-package ac
+  :load-path "editor"
   :bind ("M-/" . hippie-expand))
-(use-package folding   :load-path "editor"
+
+(use-package folding
+  :load-path "editor"
   :bind (("C-t C-t" . origami-toggle-node)
          ("C-t C-r" . origami-recursively-toggle-node)
          ("C-t C-o" . origami-show-only-node)))
 
-(use-package wgrep
-            :ensure t)
+(use-package search
+  :load-path "editor")
 
 (use-package my/log-utils
   :commands (itail
