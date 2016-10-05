@@ -75,38 +75,4 @@
               "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
               (set-window-buffer (get-window-in-frame x y frame) buffer))))
 
-(use-package switch-window
-  :config (progn
-            (setq switch-window-shortcut-style 'alphabet)
-
-            (defun split-window-func-with-other-buffer (split-function)
-              "When splitting window, show (other-buffer) in the new window."
-              (lexical-let ((s-f split-function))
-                (lambda ()
-                  (interactive)
-                  (funcall s-f)
-                  (set-window-buffer (next-window) (other-buffer)))))
-
-            (defun split-window-horizontally-instead ()
-              "Rearrange split windows."
-              (interactive)
-              (save-excursion
-                (delete-other-windows)
-                (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-
-            (defun split-window-vertically-instead ()
-              (interactive)
-              (save-excursion
-                (delete-other-windows)
-                (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
-
-            (defun split-window-vertically ()
-              (interactive)
-              (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
-
-            (defun split-window-horizontally ()
-              (interactive)
-              (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-  :ensure t)
-
 (provide 'buffers)
