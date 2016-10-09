@@ -1,3 +1,42 @@
+(use-package switch-window
+  :config (progn
+            (setq switch-window-shortcut-style 'alphabet)
+            ;;----------------------------------------------------------------------------
+            ;; When splitting window, show (other-buffer) in the new window
+            ;;----------------------------------------------------------------------------
+            (defun split-window-func-with-other-buffer (split-function)
+              (lexical-let ((s-f split-function))
+                (lambda ()
+                  (interactive)
+                  (funcall s-f)
+                  (set-window-buffer (next-window) (other-buffer)))))
+            ;;----------------------------------------------------------------------------
+            ;; Rearrange split windows
+            ;;----------------------------------------------------------------------------
+            (defun split-window-horizontally-instead ()
+              (interactive)
+              (save-excursion
+                (delete-other-windows)
+                (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
+            (defun split-window-vertically-instead ()
+              (interactive)
+              (save-excursion
+                (delete-other-windows)
+                (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
+            (defun my/split-vertically ()
+              (interactive)
+              (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
+            (defun my/split-horizontally ()
+              (interactive)
+              (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
+  :bind (("C-x o" . switch-window)
+         ("C-x 1" . delete-other-windows)
+         ("C-x 2" . my/split-vertically)
+         ("C-x 3" . my/split-horizontally)
+         ("\C-x|" . split-window-horizontally-instead)
+         ("\C-x_" . split-window-vertically-instead))
+  :ensure t)
+
 (defun immortal-scratch ()
   (if (eq (current-buffer) (get-buffer "*scratch*"))
       (progn (bury-buffer)
