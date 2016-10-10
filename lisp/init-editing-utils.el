@@ -47,11 +47,6 @@
 (define-key key-translation-map (kbd "M-n") (kbd "<C-down>"))
 (define-key key-translation-map (kbd "M-p") (kbd "<C-up>"))
 
-(when (eval-when-compile (string< "24.3.1" emacs-version))
-  ;; https://github.com/purcell/emacs.d/issues/138
-  (after-load 'subword
-    (diminish 'subword-mode)))
-
 (when (fboundp 'global-prettify-symbols-mode)
   (global-prettify-symbols-mode))
 
@@ -174,22 +169,6 @@
 (global-set-key [M-down] 'md/move-lines-down)
 (global-set-key [M-S-up] 'md/move-lines-up)
 (global-set-key [M-S-down] 'md/move-lines-down)
-
-;; Temporary patch pending https://github.com/wyuenho/move-dup/pull/4
-(after-load 'move-dup
-  (defun md/move-line (&optional n)
-    "Interactive function to move the current line N line.
-
-If the prefix N is positive, this function moves the current line
-forward N lines; otherwise backward."
-    (interactive "*p")
-    (let ((col (current-column)))
-      (goto-char (save-excursion
-                   (push-mark)
-                   (end-of-line)
-                   (md/move-region n)
-                   (region-beginning)))
-      (move-to-column col))))
 
 (global-set-key (kbd "C-c p") 'md/duplicate-down)
 (global-set-key (kbd "C-c P") 'md/duplicate-up)

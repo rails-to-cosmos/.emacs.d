@@ -76,7 +76,7 @@
     (kill-this-buffer)))
 
 (use-package split-window
-  :config (progn
+  :init (progn
             (defun split-window-multiple-ways (x y)
               "Split the current frame into a grid of X columns and Y rows."
               (interactive "nColumns: \nnRows: ")

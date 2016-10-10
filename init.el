@@ -36,18 +36,34 @@
 ;;
 ;;; Code:
 
-(load-file (concat user-emacs-directory "core/pack.el"))
+(require 'package)
+(package-initialize)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+(package-refresh-contents t)
+(if (not (package-installed-p 'use-package))
+    (package-install 'use-package))
+(eval-when-compile
+  (require 'use-package))
+(use-package use-package
+  :ensure diminish
+  :ensure bind-key)
+(setq custom-file (concat user-emacs-directory "custom.el"))
+(dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
+  (global-unset-key key))
+(defmacro after-load (feature &rest body)
+  "After FEATURE is loaded, evaluate BODY."
+  (declare (indent defun))
+  `(eval-after-load ,feature
+     '(progn ,@body)))
 
-(use-package assumptions
+(use-package ui
   :load-path "core")
 
-(use-package utils
+(use-package mac
   :load-path "core")
 
 (use-package sh
-  :load-path "core")
-
-(use-package ui
   :load-path "core")
 
 (use-package buffers
@@ -61,7 +77,8 @@
 
 (use-package snippets
   :load-path "editor"
-  :commands yas-ido-expand)
+  :commands (yas-ido-expand
+             yas-new-snippet))
 
 (use-package checkers
   :load-path "editor")
@@ -76,21 +93,18 @@
 
 (use-package folding
   :load-path "editor"
-  :bind (("C-t C-t" . origami-toggle-node)
-         ("C-t C-r" . origami-recursively-toggle-node)
-         ("C-t C-o" . origami-show-only-node)))
+  :bind (:map prog-mode-map
+              ("C-c f t" . origami-toggle-node)
+              ("C-c f r" . origami-recursively-toggle-node)
+              ("C-c f o" . origami-show-only-node)))
 
 (use-package search
   :load-path "editor")
 
-(use-package my/log-utils
+(use-package log
+  :load-path "editor"
   :commands (itail
-             mwe:log-keyboard-commands)
-  :config (progn
-            (use-package itail
-              :ensure t)
-            (use-package mwe-log-commands
-              :ensure t)))
+             mwe:log-keyboard-commands))
 
 (use-package prog-mode
   :init (progn
@@ -235,9 +249,14 @@
           (add-hook 'ido-setup-hook #'bind-ido-keys)
           (ido-mode))
 
-(require 'init-editing-utils)
-(require 'init-paredit)
-(require 'init-lisp)
+(use-package init-editing-utils
+  :load-path "lisp")
+
+(use-package init-paredit
+  :load-path "lisp")
+
+(use-package init-lisp
+  :load-path "lisp")
 
 (use-package org
   :config (progn
@@ -308,17 +327,6 @@
                        '((python . t)
                          (sql . t)))
                       (setq org-src-fontify-natively t)))
-
-            (use-package org-pomodoro
-              :config (progn
-                        (after-load 'org-agenda
-                          (define-key org-agenda-mode-map (kbd "P") 'org-pomodoro)))
-              :ensure t)
-
-            (after-load 'org
-              (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
-              (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
-              (setq org-imenu-depth 10))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
