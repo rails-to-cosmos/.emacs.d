@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: emacs-package-template
+# key: ;;;
+# --
+
+;;; ${1:filename} --- ${2:description}
+;;
+;; Filename: ${1:$(yas-text)}
+;; Description: ${2:$(yas-text)}
+;; Author: Dmitry Akatov
+$0
