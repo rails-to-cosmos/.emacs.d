@@ -86,7 +86,9 @@
 (use-package snippets
   :load-path "editor"
   :commands (yas-ido-expand
-             yas-new-snippet))
+             yas-new-snippet
+             yas-recompile-all
+             yas-reload-all))
 
 (use-package checkers
   :load-path "editor")
