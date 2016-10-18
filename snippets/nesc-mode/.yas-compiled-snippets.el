@@ -16,4 +16,4 @@
                        ("tossim" "#ifndef TOSSIM\n        $0\n#endif" "TOSSIM" nil nil nil "/Users/akatovda/.emacs.d/snippets/nesc-mode/TOSSIM" nil nil)))
 
 
-;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016
+;;; Do not edit! File generated at Tue Oct 18 15:56:36 2016

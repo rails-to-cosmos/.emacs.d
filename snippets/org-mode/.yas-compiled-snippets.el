@@ -14,4 +14,4 @@
                        ("dot_" "#+begin_src dot :file ${1:file} :cmdline -T${2:pdf} :exports none :results silent\n            $0\n#+end_src\n\n[[file:$1]]" "dot" nil nil nil "/Users/akatovda/.emacs.d/snippets/org-mode/dot" nil nil)))
 
 
-;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016
+;;; Do not edit! File generated at Tue Oct 18 15:56:36 2016

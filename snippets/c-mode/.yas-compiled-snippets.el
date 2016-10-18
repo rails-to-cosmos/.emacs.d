@@ -15,4 +15,4 @@
                        ("ass" "#include <assert.h>\n$0" "assert" nil nil nil "/Users/akatovda/.emacs.d/snippets/c-mode/assert" nil nil)))
 
 
-;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016
+;;; Do not edit! File generated at Tue Oct 18 15:56:35 2016

@@ -29,4 +29,4 @@
                        ("bd" "block data $0\n" "block data" nil nil nil "/Users/akatovda/.emacs.d/snippets/f90-mode/bd" nil nil)))
 
 
-;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016
+;;; Do not edit! File generated at Tue Oct 18 15:56:36 2016

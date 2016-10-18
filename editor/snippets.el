@@ -7,8 +7,7 @@
               (let ((original-point (point)))
                 (while (and
                         (not (= (point) (point-min) ))
-                        (not
-                         (string-match "[[:space:]\n]" (char-to-string (char-before)))))
+                        (not (string-match "[[:space:]\n]" (char-to-string (char-before)))))
                   (backward-word 1))
                 (let* ((init-word (point))
                        (word (buffer-substring init-word original-point))

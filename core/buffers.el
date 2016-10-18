@@ -1,3 +1,40 @@
+;;; buffers.el --- my buffer management
+;;
+;; Filename: buffers.el
+;; Description: my buffer management
+;; Author: Dmitry Akatov
+;; Created: <2016-10-18 Tue 8:30am>
+;; Version: 1.0.0
+;; URL: https://github.com/rails-to-cosmos/core/buffers.el
+;; Keywords: Emacs 24.5
+;; Compatibility: emacs >= 24.5
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Commentary:
+;;
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 3, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Code:
 
 (use-package switch-window
   :config (progn
@@ -95,4 +132,6 @@
               "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
               (set-window-buffer (get-window-in-frame x y frame) buffer))))
 
+
 (provide 'buffers)
+;;; buffers.el ends here

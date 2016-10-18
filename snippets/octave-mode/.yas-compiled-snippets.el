@@ -7,4 +7,4 @@
                        ("for" "for ${1:var} = ${2:expr}\n    $0\nendfor" "for" nil nil nil "/Users/akatovda/.emacs.d/snippets/octave-mode/for" nil nil)))
 
 
-;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016
+;;; Do not edit! File generated at Tue Oct 18 15:56:36 2016
