@@ -2,7 +2,7 @@
 ;;; Snippet definitions:
 ;;;
 (yas-define-snippets 'conf-unix-mode
-                     '(("sec" "Section \"${1:Device}\"\n        $0\nEndSection" "section" nil nil nil "/Volumes/Main/Users/akatovda/.emacs.d/snippets/conf-unix-mode/section" nil nil)))
+                     '(("sec" "Section \"${1:Device}\"\n        $0\nEndSection" "section" nil nil nil "/Users/akatovda/.emacs.d/snippets/conf-unix-mode/section" nil nil)))
 
 
-;;; Do not edit! File generated at Mon Oct 10 03:10:29 2016
+;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016

@@ -69,12 +69,19 @@
 
 (use-package buffers
   :load-path "core"
+  :config (progn
+            (setq switch-window-shortcut-style 'alphabet))
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
-         ("C-x 2" . split-window-vertically)
-         ("C-x 3" . split-window-horizontally))
-  :commands (delete-this-file
-             rename-this-file-and-buffer))
+         ("C-x 2" . split-window-vertically-swap)
+         ("C-x 3" . split-window-horizontally-swap))
+  :commands (split-window-func-with-other-buffer
+             immortal-scratch
+             delete-this-file
+             rename-this-file-and-buffer
+             save-buffers-kill-emacs
+             get-window-in-frame
+             set-window-buffer-in-frame))
 
 (use-package snippets
   :load-path "editor"

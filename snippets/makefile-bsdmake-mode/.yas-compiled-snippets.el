@@ -2,11 +2,11 @@
 ;;; Snippet definitions:
 ;;;
 (yas-define-snippets 'makefile-bsdmake-mode
-                     '(("$" "$(${1:VAR})$0" "var" nil nil nil "/Volumes/Main/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/var" nil nil)
-                       ("if" "@if [ ${1:cond} ]\n    then $0\nfi\n" "if" nil nil nil "/Volumes/Main/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/if" nil nil)
-                       ("gen" "all: ${1:targets}\n\n$0\n\nclean:\n        ${2:clean actions}\n" "gen" nil nil nil "/Volumes/Main/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/gen" nil nil)
-                       ("echo" "@echo ${1:\"message to output\"}\n" "echo" nil nil nil "/Volumes/Main/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/echo" nil nil)
-                       ("phony" ".PHONY: $0" "PHONY" nil nil nil "/Volumes/Main/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/PHONY" nil nil)))
+                     '(("$" "$(${1:VAR})$0" "var" nil nil nil "/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/var" nil nil)
+                       ("if" "@if [ ${1:cond} ]\n    then $0\nfi\n" "if" nil nil nil "/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/if" nil nil)
+                       ("gen" "all: ${1:targets}\n\n$0\n\nclean:\n        ${2:clean actions}\n" "gen" nil nil nil "/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/gen" nil nil)
+                       ("echo" "@echo ${1:\"message to output\"}\n" "echo" nil nil nil "/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/echo" nil nil)
+                       ("phony" ".PHONY: $0" "PHONY" nil nil nil "/Users/akatovda/.emacs.d/snippets/makefile-bsdmake-mode/PHONY" nil nil)))
 
 
-;;; Do not edit! File generated at Mon Oct 10 03:10:30 2016
+;;; Do not edit! File generated at Tue Oct 18 15:50:02 2016

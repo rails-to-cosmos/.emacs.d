@@ -1,6 +1,6 @@
+
 (use-package switch-window
   :config (progn
-            (setq switch-window-shortcut-style 'alphabet)
             ;;----------------------------------------------------------------------------
             ;; When splitting window, show (other-buffer) in the new window
             ;;----------------------------------------------------------------------------
@@ -10,38 +10,19 @@
                   (interactive)
                   (funcall s-f)
                   (set-window-buffer (next-window) (other-buffer)))))
-            ;;----------------------------------------------------------------------------
-            ;; Rearrange split windows
-            ;;----------------------------------------------------------------------------
-            (defun split-window-horizontally-instead ()
-              (interactive)
-              (save-excursion
-                (delete-other-windows)
-                (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-            (defun split-window-vertically-instead ()
-              (interactive)
-              (save-excursion
-                (delete-other-windows)
-                (funcall (split-window-func-with-other-buffer 'split-window-vertically))))
-            (defun my/split-vertically ()
+
+            (defun split-window-vertically-swap ()
               (interactive)
               (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
-            (defun my/split-horizontally ()
+            (defun split-window-horizontally-swap ()
               (interactive)
-              (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-  :bind (("C-x o" . switch-window)
-         ("C-x 1" . delete-other-windows)
-         ("C-x 2" . my/split-vertically)
-         ("C-x 3" . my/split-horizontally)
-         ("\C-x|" . split-window-horizontally-instead)
-         ("\C-x_" . split-window-vertically-instead))
+              (funcall (split-window-func-with-other-buffer 'split-window-horizontally)))
+            )
   :ensure t)
 
 (defun immortal-scratch ()
   (if (eq (current-buffer) (get-buffer "*scratch*"))
-      (progn (bury-buffer)
-             nil)
-    t))
+      (progn (bury-buffer) nil) t))
 (add-hook 'kill-buffer-query-functions 'immortal-scratch)
 
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
