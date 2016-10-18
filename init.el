@@ -43,11 +43,12 @@
 (package-refresh-contents t)
 (if (not (package-installed-p 'use-package))
     (package-install 'use-package))
-(eval-when-compile
-  (require 'use-package))
+(require 'use-package)
 (use-package use-package
+  :no-require t
   :ensure diminish
   :ensure bind-key)
+
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
   (global-unset-key key))
@@ -111,12 +112,12 @@
           (use-package web-mode
             :mode ("\\.html\\'" "\\.ejs\\'" "\\.htm\\'" "\\.jsx\\'")
             :config (progn
+                      (use-package web-beautify
+                        :ensure t)
+
                       (use-package emmet-mode
                         :mode ("\\.html\\'" "\\.htm\\'")
                         :config (add-hook 'web-mode-hook 'emmet-mode)
-                        :ensure t)
-
-                      (use-package web-beautify
                         :ensure t)
 
                       (setq web-mode-markup-indent-offset 4
