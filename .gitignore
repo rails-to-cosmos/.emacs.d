@@ -15,7 +15,6 @@ elpa/
 .achievements
 el-get
 .#*
-emacs.org
 .smex-items
 *.elc
 url/
@@ -35,3 +34,4 @@ ac-comphist.dat
 /custom.el
 .yas-compiled-snippets.el
 jabber-history
+jabber-avatar-cache

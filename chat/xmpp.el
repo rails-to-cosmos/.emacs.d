@@ -41,51 +41,45 @@
             (setq jabber-history-enabled t
                   jabber-use-global-history nil
                   jabber-backlog-number 40
-                  jabber-backlog-days 30)
+                  jabber-backlog-days 30
+                  jabber-chat-buffer-show-avatar nil
+                  jabber-vcard-avatars-publish nil)
 
             (defun jabber-init ()
               "Initialize jabber with my configuration"
-              (interactive)
-
-              (use-package notify)
-
-              ;; Message alert hooks
-              (define-jabber-alert echo "Show a message in the echo area"
-                (lambda (msg)
-                  (unless (minibuffer-prompt)
-                    (message "%s" msg))))
-
-              (defun notify-jabber-notify (from buf text proposed-alert)
-                "(jabber.el hook) Notify of new Jabber chat messages via notify.el"
-                (when (or jabber-message-alert-same-buffer
-                          (not (memq (selected-window) (get-buffer-window-list buf))))
-                  (if (jabber-muc-sender-p from)
-                      (notify (format "(PM) %s"
-                                      (jabber-jid-displayname (jabber-jid-user from)))
-                              (format "%s: %s" (jabber-jid-resource from) text)))
-                  (notify (format "%s" (jabber-jid-displayname from))
-                          text)))
-
-              (add-hook 'jabber-alert-message-hooks 'notify-jabber-notify)
-
-              (setq jabber-chat-header-line-format
-                    '(" " (:eval (jabber-jid-displayname jabber-chatting-with))
-                      " " (:eval (jabber-jid-resource jabber-chatting-with)) "\t";
-                      (:eval (let ((buddy (jabber-jid-symbol jabber-chatting-with)))
-                               (propertize
-                                (or
-                                 (cdr (assoc (get buddy 'show) jabber-presence-strings))
-                                 (get buddy 'show))
-                                'face
-                                (or (cdr (assoc (get buddy 'show) jabber-presence-faces))
-                                    'jabber-roster-user-online))))
-                      "\t" (:eval (get (jabber-jid-symbol jabber-chatting-with) 'status))
-                      (:eval (unless (equal "" *jabber-current-show*)
-                               (concat "\t You're " *jabber-current-show*
-                                       " (" *jabber-current-status* ")"))))))
+              (interactive))
 
             (jabber-connect-all))
   :ensure t)
+
+; (set-face-foreground 'jabber-activity-personal-face "deep pink")
+;; (set-face-bold-p 'jabber-activity-personal-face t)
+
+;; (set-face-foreground 'jabber-chat-prompt-foreign "salmon")
+;; (set-face-bold-p 'jabber-chat-prompt-foreign t)
+
+;; (set-face-foreground 'jabber-chat-prompt-local "olive drab")
+;; (set-face-bold-p 'jabber-chat-prompt-local t)
+
+;; (set-face-foreground 'jabber-rare-time-face "LightGoldenrod3")
+;; (set-face-underline-p 'jabber-rare-time-face t)
+
+;; (set-face-foreground 'jabber-roster-user-away "peru")
+;; (set-face-italic-p 'jabber-roster-user-away t)
+;; (set-face-bold-p 'jabber-roster-user-away nil)
+
+;; (set-face-foreground 'jabber-roster-user-online "dark orange")
+;; (set-face-italic-p 'jabber-roster-user-online nil)
+;; (set-face-bold-p 'jabber-roster-user-online t)
+
+(setq jabber-roster-line-format "%c %-25n %u %-8s  %S")
+
+(add-hook 'jabber-chat-mode-hook
+          (lambda()
+            (flyspell-mode t)
+            (setq truncate-lines t)
+            (setq word-wrap t)))
+
 
 (provide 'xmpp)
 ;;; xmpp.el ends here
