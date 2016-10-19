@@ -118,7 +118,10 @@
 
 (use-package xmpp
   :load-path "chat"
-  :bind (("C-x y j" . jabber-init)))
+  :bind (("C-x y j" . jabber-init))
+  :commands (my-jabber-previous-input
+             my-jabber-next-input
+             my-jabber-input-history-choose))
 
 (use-package prog-mode
   :init (progn

@@ -39,47 +39,78 @@
 (use-package jabber
   :config (progn
             (setq jabber-history-enabled t
-                  jabber-use-global-history nil
+                  jabber-use-global-history t
                   jabber-backlog-number 40
                   jabber-backlog-days 30
                   jabber-chat-buffer-show-avatar nil
-                  jabber-vcard-avatars-publish nil)
+                  jabber-vcard-avatars-publish nil
+                  jabber-vcard-avatars-retrieve nil
+                  jabber-roster-line-format "%c %-25n %u %-8s  %S"
+                  jabber-auto-reconnect t
+                  jabber-avatar-verbose nil
+                  jabber-chat-buffer-format "%n"
+                  jabber-history-size-limit 1024000000
+                  jabber-show-resources nil
+                  jabber-roster-show-bindings nil
+                  jabber-show-offline-contacts t
+                  jabber-chat-local-prompt-format "[%t] [me]: ")
+
+            (defvar my-jabber-input-history '() "Variable that holds input history")
+            (make-variable-buffer-local 'my-jabber-input-history)
+
+            (defvar my-jabber-input-history-position 0 "Current position in input history")
+            (make-variable-buffer-local 'my-jabber-input-history-position)
+
+            (defvar my-jabber-input-history-current nil "Current input value")
+            (make-variable-buffer-local 'my-jabber-input-history-current)
+
+            (defun my-jabber-input-history-hook (body id)
+              (add-to-list 'my-jabber-input-history body t)
+              (setq my-jabber-input-history-position (length my-jabber-input-history)))
+            (add-hook 'jabber-chat-send-hooks 'my-jabber-input-history-hook)
+
+            (defun my-jabber-previous-input ()
+              (interactive)
+              (let (current-input (pos my-jabber-input-history-position) (len (length my-jabber-input-history)))
+                (if (= pos 0)
+                    (message "%s" "No previous input")
+                  (setq current-input (delete-and-extract-region jabber-point-insert (point-max)))
+                  (when (= pos len) ; running first time, save current input
+                    (setq my-jabber-input-history-current current-input))
+                  (decf my-jabber-input-history-position)
+                  (insert (nth my-jabber-input-history-position my-jabber-input-history)))))
+
+            (defun my-jabber-next-input ()
+              (interactive)
+              (let ((pos my-jabber-input-history-position) (len (length my-jabber-input-history)))
+                (cond
+                 ((= pos (1- len)) ; pointing at the last element, insert saved input
+                  (incf my-jabber-input-history-position)
+                  (delete-region jabber-point-insert (point-max))
+                  (insert my-jabber-input-history-current)
+                  (setq my-jabber-input-history-current nil))
+                 ((= pos len)                              ; pointing beyound last element, notify user
+                  (message "%s" "No next input"))
+                 (t                                ; insert next history item
+                  (incf my-jabber-input-history-position)
+                  (delete-region jabber-point-insert (point-max))
+                  (insert (nth my-jabber-input-history-position my-jabber-input-history))))))
+
+            (define-key jabber-chat-mode-map (kbd "M-p") 'my-jabber-previous-input)
+            (define-key jabber-chat-mode-map (kbd "M-n") 'my-jabber-next-input)
+
+            (defun my-jabber-input-history-choose ()
+              (interactive)
+              (let ((choice (ido-completing-read "Select history item: " (reverse my-jabber-input-history))))
+                (delete-region jabber-point-insert (point-max))
+                (insert choice)))
 
             (defun jabber-init ()
               "Initialize jabber with my configuration"
-              (interactive))
-
-            (jabber-connect-all))
+              (interactive)
+              (jabber-connect-all)
+              (jabber-display-roster)))
   :ensure t)
-
-; (set-face-foreground 'jabber-activity-personal-face "deep pink")
-;; (set-face-bold-p 'jabber-activity-personal-face t)
-
-;; (set-face-foreground 'jabber-chat-prompt-foreign "salmon")
-;; (set-face-bold-p 'jabber-chat-prompt-foreign t)
-
-;; (set-face-foreground 'jabber-chat-prompt-local "olive drab")
-;; (set-face-bold-p 'jabber-chat-prompt-local t)
-
-;; (set-face-foreground 'jabber-rare-time-face "LightGoldenrod3")
-;; (set-face-underline-p 'jabber-rare-time-face t)
-
-;; (set-face-foreground 'jabber-roster-user-away "peru")
-;; (set-face-italic-p 'jabber-roster-user-away t)
-;; (set-face-bold-p 'jabber-roster-user-away nil)
-
-;; (set-face-foreground 'jabber-roster-user-online "dark orange")
-;; (set-face-italic-p 'jabber-roster-user-online nil)
-;; (set-face-bold-p 'jabber-roster-user-online t)
-
-(setq jabber-roster-line-format "%c %-25n %u %-8s  %S")
-
-(add-hook 'jabber-chat-mode-hook
-          (lambda()
-            (flyspell-mode t)
-            (setq truncate-lines t)
-            (setq word-wrap t)))
-
 
 (provide 'xmpp)
 ;;; xmpp.el ends here
