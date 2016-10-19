@@ -116,6 +116,10 @@
   :commands (itail
              mwe:log-keyboard-commands))
 
+(use-package xmpp
+  :load-path "chat"
+  :bind (("C-x y j" . jabber-init)))
+
 (use-package prog-mode
   :init (progn
           (use-package web-mode
