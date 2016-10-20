@@ -115,6 +115,8 @@
 (use-package py
   :load-path "prog"
   :init (add-hook 'python-mode-hook #'init-python)
+  :config (progn
+            (setq-default python-indent-offset 4))
   :mode ("\\.py\\'" . python-mode)
   :bind (:map python-mode-map
               ("C-c C-b" . python-add-breakpoint))

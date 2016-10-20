@@ -42,7 +42,8 @@
             (defun init-python ()
               (use-package elpy
                 :config (progn
-                          (elpy-enable))
+                          (elpy-enable)
+                          (setq jedi:complete-on-dot t))
                 :ensure t)
 
               (use-package pungi
@@ -65,9 +66,6 @@
                                       (venv-initialize-eshell))
                             :ensure t))
                 :ensure t))
-
-            (setq-default python-indent-offset 4)
-            (setq jedi:complete-on-dot t)
 
             (defun python-highlight-breakpoints ()
               (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
