@@ -108,6 +108,12 @@
               ("C-c f r" . origami-recursively-toggle-node)
               ("C-c f o" . origami-show-only-node)))
 
+(use-package py
+  :load-path "prog"
+  :mode ("\\.py\\'" . python-mode)
+  :bind (:map python-mode-map
+              ("C-c C-b" . python-add-breakpoint)))
+
 (use-package search
   :load-path "editor")
 
@@ -165,54 +171,7 @@
           (use-package scala-mode
             :ensure t)
 
-          (use-package python
-            :mode ("\\.py\\'" . python-mode)
-            :interpreter ("ipython" . python-mode)
-            :load-path "python/"
-            :init (progn
-                    ;; (use-package jedi
-                    ;;   :config (progn
-                    ;;             (add-hook 'python-mode-hook 'jedi:setup)
-                    ;;             (setq jedi:complete-on-dot t)
-                    ;;             (jedi:install-server))
-                    ;;   :ensure t)
-
-                    (use-package pungi
-                      :ensure t)
-
-                    (use-package cinspect
-                      :ensure t)
-
-                    (use-package py-isort
-                      :ensure t)
-
-                    (use-package py-yapf
-                      :ensure t)
-
-                    (use-package virtualenv
-                      :config (progn
-                                (use-package virtualenvwrapper
-                                  :config (progn
-                                            (venv-initialize-interactive-shells)
-                                            (venv-initialize-eshell))
-                                  :ensure t))
-                      :ensure t))
-
-            :config (progn
-                      (setq-default python-indent-offset 4)
-
-                      (defun python-highlight-breakpoints ()
-                        (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
-
-                      (defun python-add-breakpoint ()
-                        "Add a break point"
-                        (interactive)
-                        (insert "import ipdb; ipdb.set_trace()")
-                        (python-highlight-breakpoints))
-
-                      (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-                      (add-hook 'python-mode-hook 'linum-mode))
-            :ensure t)))
+          ))
 
 (use-package ido
   :init (progn
@@ -613,11 +572,6 @@
              "p" 'prodigy
              "f f" 'toggle-frame-fullscreen
              "i" 'yas-ido-expand)
-
-            (general-define-key
-             :keymaps 'python-mode-map
-             :prefix "C-c"
-             "C-b" 'python-add-breakpoint)
 
             (general-define-key
              :keymaps 'ido-completion-map
