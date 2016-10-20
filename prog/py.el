@@ -41,6 +41,8 @@
   :config (progn
             (defun init-python ()
               (use-package elpy
+                :config (progn
+                          (elpy-enable))
                 :ensure t)
 
               (use-package pungi
@@ -76,6 +78,7 @@
               (insert "import ipdb; ipdb.set_trace()")
               (python-highlight-breakpoints))
 
+            (add-hook 'python-mode-hook 'python-highlight-breakpoints)
             (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
             (add-hook 'python-mode-hook 'linum-mode))
   :ensure t)
