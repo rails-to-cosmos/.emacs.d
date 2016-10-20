@@ -38,8 +38,12 @@
 
 (require 'package)
 (package-initialize)
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.milkbox.net/packages/"))
+(add-to-list 'package-archives
+             '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+(add-to-list 'package-archives
+             '("elpy" . "https://jorgenschaefer.github.io/packages/"))
 (package-refresh-contents t)
 (if (not (package-installed-p 'use-package))
     (package-install 'use-package))
@@ -110,9 +114,11 @@
 
 (use-package py
   :load-path "prog"
+  :init (add-hook 'python-mode-hook #'init-python)
   :mode ("\\.py\\'" . python-mode)
   :bind (:map python-mode-map
-              ("C-c C-b" . python-add-breakpoint)))
+              ("C-c C-b" . python-add-breakpoint))
+  :commands (init-python))
 
 (use-package search
   :load-path "editor")

@@ -38,37 +38,34 @@
 
 (use-package python
   :interpreter ("ipython" . python-mode)
-  :init (progn
-          (use-package jedi
-            :config (progn
-                      (add-hook 'python-mode-hook 'jedi:setup)
-                      (setq jedi:complete-on-dot t)
-                      (jedi:install-server))
-            :ensure t)
-
-          (use-package pungi
-            :ensure t)
-
-          (use-package cinspect
-            :ensure t)
-
-          (use-package py-isort
-            :ensure t)
-
-          (use-package py-yapf
-            :ensure t)
-
-          (use-package virtualenv
-            :config (progn
-                      (use-package virtualenvwrapper
-                        :config (progn
-                                  (venv-initialize-interactive-shells)
-                                  (venv-initialize-eshell))
-                        :ensure t))
-            :ensure t))
-
   :config (progn
+            (defun init-python ()
+              (use-package elpy
+                :ensure t)
+
+              (use-package pungi
+                :ensure t)
+
+              (use-package cinspect
+                :ensure t)
+
+              (use-package py-isort
+                :ensure t)
+
+              (use-package py-yapf
+                :ensure t)
+
+              (use-package virtualenv
+                :config (progn
+                          (use-package virtualenvwrapper
+                            :config (progn
+                                      (venv-initialize-interactive-shells)
+                                      (venv-initialize-eshell))
+                            :ensure t))
+                :ensure t))
+
             (setq-default python-indent-offset 4)
+            (setq jedi:complete-on-dot t)
 
             (defun python-highlight-breakpoints ()
               (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
