@@ -142,6 +142,8 @@
   :commands (rsync-enable
              rsync-disable))
 
+;; Some unsorted stuff:
+
 (use-package prog-mode
   :init (progn
           (use-package web-mode
