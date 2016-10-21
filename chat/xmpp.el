@@ -36,6 +36,15 @@
 ;;
 ;;; Code:
 
+(defvar my-jabber-input-history '() "Variable that holds input history.")
+(make-variable-buffer-local 'my-jabber-input-history)
+
+(defvar my-jabber-input-history-position 0 "Current position in input history.")
+(make-variable-buffer-local 'my-jabber-input-history-position)
+
+(defvar my-jabber-input-history-current nil "Current input value.")
+(make-variable-buffer-local 'my-jabber-input-history-current)
+
 (defun init-jabber () "Initialize jabber with my configuration." (interactive))
 
 (use-package jabber
@@ -58,16 +67,8 @@
                   jabber-show-resources nil
                   jabber-roster-show-bindings nil
                   jabber-show-offline-contacts t
-                  jabber-chat-local-prompt-format "[%t] [me]: ")
-
-            (defvar my-jabber-input-history '() "Variable that holds input history")
-            (make-variable-buffer-local 'my-jabber-input-history)
-
-            (defvar my-jabber-input-history-position 0 "Current position in input history")
-            (make-variable-buffer-local 'my-jabber-input-history-position)
-
-            (defvar my-jabber-input-history-current nil "Current input value")
-            (make-variable-buffer-local 'my-jabber-input-history-current)
+                  jabber-chat-local-prompt-format "[%t]: "
+                  jabber-chat-foreign-prompt-format "[%t] %n: ")
 
             (defun my-jabber-input-history-hook (body id)
               (add-to-list 'my-jabber-input-history body t)
