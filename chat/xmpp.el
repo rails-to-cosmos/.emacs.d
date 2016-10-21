@@ -67,8 +67,9 @@
                   jabber-show-resources nil
                   jabber-roster-show-bindings nil
                   jabber-show-offline-contacts t
-                  jabber-chat-local-prompt-format "[%t]: "
-                  jabber-chat-foreign-prompt-format "[%t] %n: ")
+                  jabber-print-rare-time nil
+                  jabber-chat-local-prompt-format "[%t] %u: "
+                  jabber-chat-foreign-prompt-format "[%t] %u: ")
 
             (defun my-jabber-input-history-hook (body id)
               (add-to-list 'my-jabber-input-history body t)
