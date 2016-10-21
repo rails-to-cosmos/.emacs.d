@@ -44,6 +44,9 @@
                   jabber-backlog-days 30
                   jabber-chat-buffer-show-avatar nil
                   jabber-vcard-avatars-publish nil
+                  jabber-chat-fill-long-lines nil
+                  jabber-roster-show-title nil
+                  jabber-chatstates-confirm nil
                   jabber-vcard-avatars-retrieve nil
                   jabber-roster-line-format "%c %-25n %u %-8s  %S"
                   jabber-auto-reconnect t

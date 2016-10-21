@@ -360,11 +360,11 @@
   :ensure t)
 
 (use-package hl-line+
-  :config (progn
-            (set-face-background hl-line-face "#363636")))
+  :ensure t)
 
 (use-package camcorder
-  :commands camcorder-mode)
+  :commands camcorder-mode
+  :ensure t)
 
 (use-package nhexl-mode)
 
@@ -542,7 +542,6 @@
           (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
 
           (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory)
-          ;; (define-key dired-mode-map (kbd "<return>") 'dired-subtree-toggle)
           (define-key dired-mode-map (kbd "<tab>") 'dired-subtree-toggle)))
 
 (use-package my/http
