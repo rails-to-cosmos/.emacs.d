@@ -112,6 +112,14 @@
               ("C-c f r" . origami-recursively-toggle-node)
               ("C-c f o" . origami-show-only-node)))
 
+(use-package search
+  :load-path "editor")
+
+(use-package log
+  :load-path "editor"
+  :commands (itail
+             mwe:log-keyboard-commands))
+
 (use-package py
   :load-path "prog"
   :init (add-hook 'python-mode-hook #'init-python)
@@ -122,20 +130,17 @@
               ("C-c C-b" . python-add-breakpoint))
   :commands (init-python))
 
-(use-package search
-  :load-path "editor")
-
-(use-package log
-  :load-path "editor"
-  :commands (itail
-             mwe:log-keyboard-commands))
-
 (use-package xmpp
   :load-path "chat"
   :bind (("C-x y j" . jabber-init))
   :commands (my-jabber-previous-input
              my-jabber-next-input
              my-jabber-input-history-choose))
+
+(use-package rsync
+  :load-path "fs"
+  :commands (rsync-enable
+             rsync-disable))
 
 (use-package prog-mode
   :init (progn
@@ -554,11 +559,6 @@
             (super-save-initialize)
             (setq super-save-auto-save-when-idle t))
   :ensure t)
-
-(use-package auto-rsync
-  :load-path "packages/custom/"
-  :config (progn
-            (auto-rsync-mode t)))
 
 (use-package general
   :config (progn
