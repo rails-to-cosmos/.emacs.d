@@ -1,3 +1,7 @@
+;;; Code:
+
+(defun init-rsync () "Init rsync with my configuration." (interactive))
+
 (defun rsync-enable ()
   "Enable rsync support."
   (interactive)

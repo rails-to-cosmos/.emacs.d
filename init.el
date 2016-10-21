@@ -129,15 +129,11 @@
 (use-package xmpp
   :load-path "chat"
   :bind (("C-x y j" . init-jabber))
-  :commands (init-jabber
-             my-jabber-previous-input
-             my-jabber-next-input
-             my-jabber-input-history-choose))
+  :commands (init-jabber))
 
 (use-package rsync
   :load-path "fs"
-  :commands (rsync-enable
-             rsync-disable))
+  :commands (init-rsync))
 
 ;; Some unsorted stuff:
 
@@ -181,9 +177,7 @@
                       :ensure t)))
 
           (use-package scala-mode
-            :ensure t)
-
-          ))
+            :ensure t)))
 
 (use-package ido
   :init (progn
