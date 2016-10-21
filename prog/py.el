@@ -18,6 +18,8 @@
 ;;
 ;;; Code:
 
+(defun init-python () "Initialize python with my configuration." (interactive))
+
 (use-package python
   :interpreter ("ipython" . python-mode)
   :bind (:map python-mode-map
@@ -66,8 +68,6 @@
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
 (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'python-mode-hook 'linum-mode)
-
-(defun init-python ())
 
 (provide 'py)
 ;;; py.el ends here

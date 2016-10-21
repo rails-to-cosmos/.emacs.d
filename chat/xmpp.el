@@ -36,6 +36,8 @@
 ;;
 ;;; Code:
 
+(defun init-jabber () "Initialize jabber with my configuration." (interactive))
+
 (use-package jabber
   :config (progn
             (setq jabber-history-enabled t
@@ -106,13 +108,7 @@
               (interactive)
               (let ((choice (ido-completing-read "Select history item: " (reverse my-jabber-input-history))))
                 (delete-region jabber-point-insert (point-max))
-                (insert choice)))
-
-            (defun jabber-init ()
-              "Initialize jabber with my configuration"
-              (interactive)
-              (jabber-connect-all)
-              (jabber-display-roster)))
+                (insert choice))))
   :ensure t)
 
 (provide 'xmpp)
