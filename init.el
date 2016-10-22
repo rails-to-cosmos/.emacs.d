@@ -37,7 +37,7 @@
 ;;; Code:
 
 (require 'package)
-(package-initialize)
+
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives
@@ -45,14 +45,26 @@
 (add-to-list 'package-archives
              '("elpy" . "https://jorgenschaefer.github.io/packages/"))
 
+(package-initialize)
+
+(when (not package-archive-contents)
+  (package-refresh-contents))
+
 (if (not (package-installed-p 'use-package))
-    (package-refresh-contents)
-  (package-install 'use-package))
+    (progn
+      (package-install 'use-package)))
 
 (eval-when-compile
   (require 'use-package))
-(require 'diminish)
-(require 'bind-key)
+
+(use-package use-package
+  :init (progn
+          (use-package diminish
+            :commands diminish
+            :ensure t)
+          (use-package bind-key
+            :ensure t)
+          (setq use-package-verbose t)))
 
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
