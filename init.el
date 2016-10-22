@@ -44,14 +44,15 @@
              '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
 (add-to-list 'package-archives
              '("elpy" . "https://jorgenschaefer.github.io/packages/"))
-(package-refresh-contents t)
+
 (if (not (package-installed-p 'use-package))
-    (package-install 'use-package))
-(require 'use-package)
-(use-package use-package
-  :no-require t
-  :ensure diminish
-  :ensure bind-key)
+    (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+(require 'diminish)
+(require 'bind-key)
 
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
@@ -357,12 +358,12 @@
   :commands pdf-tools-install
   :ensure t)
 
-(use-package hl-line+
-  :ensure t)
+;; (use-package hl-line+
+;;   :ensure t)
 
-(use-package camcorder
-  :commands camcorder-mode
-  :ensure t)
+;; (use-package camcorder
+;;   :commands camcorder-mode
+;;   :ensure t)
 
 (use-package nhexl-mode)
 
