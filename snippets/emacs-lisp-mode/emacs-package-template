@@ -3,14 +3,14 @@
 # key: package-description
 # --
 
-;;; ${1:filename} --- ${2:description}
+;;; ${1:`(buffer-name)`} --- ${2:description}
 ;;
 ;; Filename: ${1:$(yas-text)}
 ;; Description: ${2:$(yas-text)}
 ;; Author: Dmitry Akatov
 ;; Created: `(format-time-string "<%Y-%m-%d %a 8:30am>" (current-time))`
 ;; Version: 1.0.0
-;; URL: ${3:url}
+;; URL: https://github.com/rails-to-cosmos/.emacs.d/${3:url}
 ;; Keywords: Emacs 24.5
 ;; Compatibility: emacs >= 24.5
 ;;
@@ -18,29 +18,13 @@
 ;;
 ;;; Commentary:
 ;;
-;;
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or
-;; (at your option) any later version.
-;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
-;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
 
+(defun init-${1:$(replace-regexp-in-string ".el$" "" yas-text)} () "Initialize ${1:$(replace-regexp-in-string ".el$" "" yas-text)} with my configuration." (interactive))
+
 $0
 
+(provide '${1:$(replace-regexp-in-string ".el$" "" yas-text)})
 ;;; ${1:$(yas-text)} ends here
