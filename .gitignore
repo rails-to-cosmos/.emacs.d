@@ -36,3 +36,5 @@ ac-comphist.dat
 jabber-history
 jabber-avatar-cache
 jabber-global-message-log
+.edbi-ds-history
+sqlplus-session

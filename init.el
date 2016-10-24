@@ -139,6 +139,10 @@
   :mode ("\\.py\\'" . python-mode)
   :commands (init-python))
 
+(use-package db
+  :load-path "prog"
+  :commands (init-db))
+
 (use-package xmpp
   :load-path "chat"
   :bind (("C-x y j" . init-jabber))
