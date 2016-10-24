@@ -56,7 +56,7 @@
                   jabber-chat-buffer-show-avatar nil
                   jabber-vcard-avatars-publish nil
                   jabber-chat-fill-long-lines nil
-                  jabber-roster-show-title nil
+                  jabber-roster-show-title t
                   jabber-chatstates-confirm nil
                   jabber-vcard-avatars-retrieve nil
                   jabber-roster-line-format "%c %-25n %u %-8s  %S"
@@ -65,7 +65,7 @@
                   jabber-chat-buffer-format "%n"
                   jabber-history-size-limit 1024000000
                   jabber-show-resources nil
-                  jabber-roster-show-bindings nil
+                  jabber-roster-show-bindings t
                   jabber-show-offline-contacts t
                   jabber-print-rare-time nil
                   jabber-chat-local-prompt-format "[%t] %u: "
