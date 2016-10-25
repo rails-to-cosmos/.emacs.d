@@ -20,7 +20,7 @@
 
 (defun init-ssh () "Initialize ssh with my configuration." (interactive))
 
-(defun ssh-connect (foreign-buffer)
+(defun ssh-connect (&optional foreign-buffer)
   "Manage ssh connections, if FOREIGN-BUFFER > 1, do not reuse eshell."
   (interactive "p")
   (defvar ssh-connections)
