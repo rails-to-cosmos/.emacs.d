@@ -141,16 +141,21 @@
 
 (use-package db
   :load-path "prog"
-  :commands (init-db))
+  :commands (init-db
+             sqp-connect))
 
 (use-package xmpp
   :load-path "chat"
-  :bind (("C-x y j" . init-jabber))
   :commands (init-jabber))
 
 (use-package rsync
   :load-path "fs"
   :commands (init-rsync))
+
+(use-package ssh
+  :load-path "fs"
+  :commands (init-ssh
+             ssh-connect))
 
 ;; Some unsorted stuff:
 
