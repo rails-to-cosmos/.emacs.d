@@ -20,6 +20,16 @@
 
 (defun init-python () "Initialize python with my configuration." (interactive))
 
+(defun python-add-breakpoint ()
+  "Add a break point."
+  (interactive)
+  (insert "import ipdb; ipdb.set_trace()")
+  (python-highlight-breakpoints))
+
+(defun python-highlight-breakpoints ()
+  "Highlight python breakpoints."
+  (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+
 (use-package python
   :interpreter ("ipython" . python-mode)
   :bind (:map python-mode-map
@@ -32,7 +42,7 @@
   :config (progn
             (elpy-enable)
             (jedi:install-server)
-            (setq jedi:complete-on-dot t))
+            (setq-default jedi:complete-on-dot t))
   :ensure t)
 
 (use-package pungi
@@ -55,15 +65,6 @@
                         (venv-initialize-eshell))
               :ensure t))
   :ensure t)
-
-(defun python-highlight-breakpoints ()
-  (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
-
-(defun python-add-breakpoint ()
-  "Add a break point"
-  (interactive)
-  (insert "import ipdb; ipdb.set_trace()")
-  (python-highlight-breakpoints))
 
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
 (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
