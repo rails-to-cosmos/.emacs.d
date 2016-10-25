@@ -1,4 +1,3 @@
-
 ;;; ssh.el --- manage ssh connections
 ;;
 ;; Filename: ssh.el
