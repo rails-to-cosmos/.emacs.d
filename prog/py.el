@@ -30,19 +30,18 @@
   "Highlight python breakpoints."
   (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
 
-(use-package python
-  :interpreter ("ipython" . python-mode)
-  :bind (:map python-mode-map
-              ("C-c C-b" . python-add-breakpoint)
-              ("C-c C-g" . jedi:goto-definition))
-  :config (progn
-            (setq-default python-indent-offset 4)))
-
 (use-package elpy
+  :interpreter ("ipython" . python-mode)
+  :init (progn
+          (add-hook 'python-mode-hook 'elpy-mode))
   :config (progn
             (elpy-enable)
             (jedi:install-server)
-            (setq-default jedi:complete-on-dot t))
+            (setq-default jedi:complete-on-dot t
+                          python-indent-offset 4))
+  :bind (:map elpy-mode-map
+              ("C-c C-b" . python-add-breakpoint)
+              ("C-c C-g" . jedi:goto-definition))
   :ensure t)
 
 (use-package pungi

@@ -154,8 +154,8 @@
 
 (use-package ssh
   :load-path "fs"
-  :commands (init-ssh
-             ssh-connect))
+  :bind (("C-x y s" . ssh-connect))
+  :commands (init-ssh))
 
 ;; Some unsorted stuff:
 
