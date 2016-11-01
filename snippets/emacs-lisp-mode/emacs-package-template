@@ -2,7 +2,6 @@
 # name: emacs-package-template
 # key: package-description
 # --
-
 ;;; ${1:`(buffer-name)`} --- ${2:description}
 ;;
 ;; Filename: ${1:$(yas-text)}

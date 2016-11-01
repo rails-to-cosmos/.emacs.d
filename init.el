@@ -315,7 +315,8 @@
                       (org-babel-do-load-languages
                        'org-babel-load-languages
                        '((python . t)
-                         (sql . t)))
+                         (sql . t)
+                         (sh . t)))
                       (setq org-src-fontify-natively t)))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
