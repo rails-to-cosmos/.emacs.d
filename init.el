@@ -75,9 +75,6 @@
   `(eval-after-load ,feature
      '(progn ,@body)))
 
-(use-package ui
-  :load-path "core")
-
 (use-package mac
   :load-path "core")
 
@@ -263,6 +260,12 @@
   :load-path "lisp")
 
 (use-package org
+  :bind (("C-c l" . org-store-link)
+         ("C-c a" . org-agenda)
+         ("C-c c" . org-capture)
+         :map org-mode-map
+         ("C-M-n" . org-forward-heading-same-level)
+         ("C-M-p" . org-backward-heading-same-level))
   :config (progn
             (use-package org-fstree
               :ensure t)
@@ -274,33 +277,19 @@
               (setq org-tags-exclude-from-inheritance (quote ("crypt")))
               (setq org-crypt-key nil))
 
-            (define-key global-map (kbd "C-c l") 'org-store-link)
-            (define-key global-map (kbd "C-c a") 'org-agenda)
-            (define-key global-map (kbd "C-c c") 'org-capture)
-            (define-key org-mode-map (kbd "C-M-n") 'org-forward-heading-same-level)
-            (define-key org-mode-map (kbd "C-M-p") 'org-backward-heading-same-level)
-
-            (setq org-log-done t
-                  org-completion-use-ido t
-                  org-edit-timestamp-down-means-later t
-                  org-agenda-start-on-weekday nil
-                  org-agenda-span 14
-                  org-agenda-include-diary t
-                  org-agenda-window-setup 'current-window
-                  org-fast-tag-selection-single-key 'expert
-                  org-export-kill-product-buffer-when-displayed t
-                  org-tags-column 80)
-
-            ;; org as word processor
-            ;; (use-package my/org-word-processor
-            ;;   :init (progn
-            ;;           (setq org-hide-emphasis-markers t)
-            ;;           (font-lock-add-keywords 'org-mode
-            ;;                                   '(("^ +\\([-*]\\) "
-            ;;                                      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-            ;;           (use-package org-bullets
-            ;;             :ensure t)
-            ;;           (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))))
+            (setq-default org-log-done t
+                          org-completion-use-ido t
+                          org-edit-timestamp-down-means-later t
+                          org-agenda-start-on-weekday nil
+                          org-agenda-span 14
+                          org-agenda-include-diary t
+                          org-agenda-window-setup 'current-window
+                          org-fast-tag-selection-single-key 'expert
+                          org-export-kill-product-buffer-when-displayed t
+                          org-tags-column 80
+                          org-todo-keywords
+                          (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d!/!)")
+                                  (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
 
             ;; Refile targets include this file and any file contributing to the agenda - up to 5 levels deep
             (setq org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5))))
@@ -308,9 +297,6 @@
             (setq org-refile-use-outline-path (quote file))
             ;; Targets complete in steps so we start with filename, TAB shows the next level of targets etc
             (setq org-outline-path-complete-in-steps t)
-            (setq org-todo-keywords
-                  (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d!/!)")
-                          (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
 
             (setq org-ellipsis "..." )
             (setq org-hide-leading-stars t)
@@ -318,11 +304,11 @@
 
             (use-package org-clock
               :init (progn
-                      (setq org-clock-persistence-insinuate t
-                            org-clock-persist t
-                            org-clock-in-resume t
-                            org-clock-in-switch-to-state "STARTED"
-                            org-clock-out-remove-zero-time-clocks t)))
+                      (setq-default org-clock-persistence-insinuate t
+                                    org-clock-persist t
+                                    org-clock-in-resume t
+                                    org-clock-in-switch-to-state "STARTED"
+                                    org-clock-out-remove-zero-time-clocks t)))
 
             (use-package org-babel
               :init (progn
@@ -600,6 +586,9 @@
              "C-n" 'ido-next-match
              "C-p" 'ido-prev-match))
   :ensure t)
+
+(use-package ui
+  :load-path "core")
 
 (require 'init-local nil t)
 
