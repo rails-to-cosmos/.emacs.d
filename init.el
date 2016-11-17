@@ -8,6 +8,7 @@
 ;; URL: https://github.com/rails-to-cosmos/.emacs.d
 ;; Keywords: Emacs 24.5
 ;; Compatibility: emacs >= 24.5
+;;
 ;;; Commentary:
 ;;
 ;;; Code:
