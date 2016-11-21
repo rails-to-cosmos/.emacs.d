@@ -1,11 +1,11 @@
-;;; py.el --- my python environment
+;;; init-python.el --- my python environment
 ;;
-;; Filename: py.el
+;; Filename: init-python.el
 ;; Description: my python environment
 ;; Author: Dmitry Akatov
 ;; Created: <2016-10-20 Thu 8:30am>
 ;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/.emacs.d/prog/py.el
+;; URL: https://github.com/rails-to-cosmos/.emacs.d/prog/python.el
 ;; Keywords: Emacs 24.5
 ;; Compatibility: emacs >= 24.5
 ;;
@@ -32,16 +32,12 @@
 
 (use-package elpy
   :interpreter ("ipython" . python-mode)
-  :init (progn
-          (add-hook 'python-mode-hook 'elpy-mode))
+  :init (add-hook 'python-mode-hook 'elpy-mode)
   :config (progn
             (elpy-enable)
             (jedi:install-server)
             (setq-default jedi:complete-on-dot t
                           python-indent-offset 4))
-  :bind (:map elpy-mode-map
-              ("C-c C-b" . python-add-breakpoint)
-              ("C-c C-g" . jedi:goto-definition))
   :ensure t)
 
 (use-package pungi
@@ -69,5 +65,5 @@
 (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'python-mode-hook 'linum-mode)
 
-(provide 'py)
-;;; py.el ends here
+(provide 'init-python)
+;;; init-python.el ends here

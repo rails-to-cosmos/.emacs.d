@@ -108,11 +108,21 @@
   :commands (itail
              mwe:log-keyboard-commands))
 
-(use-package py
+(use-package movements
+  :load-path "editor"
+  :bind (("C-x C-/" . goto-last-change)))
+
+(use-package init-python
   :load-path "prog"
   :init (add-hook 'python-mode-hook #'init-python)
   :mode ("\\.py\\'" . python-mode)
-  :commands (init-python))
+  :bind (:map elpy-mode-map
+              ("C-c C-b" . python-add-breakpoint)
+              ("C-c C-g" . jedi:goto-definition))
+  :commands (init-python
+             python-add-breakpoint
+             jedi:goto-definition)
+  :ensure elpy)
 
 (use-package db
   :load-path "prog"
@@ -133,6 +143,10 @@
   :commands (init-ssh))
 
 ;; Some unsorted stuff:
+
+(use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
+  :ensure elfeed-org
+  :ensure t)
 
 (use-package prog-mode
   :init (progn
@@ -274,11 +288,10 @@
             ;; Targets start with the file name - allows creating level 1 tasks
             (setq org-refile-use-outline-path (quote file))
             ;; Targets complete in steps so we start with filename, TAB shows the next level of targets etc
-            (setq org-outline-path-complete-in-steps t)
-
-            (setq org-ellipsis "..." )
-            (setq org-hide-leading-stars t)
-            (setq org-startup-indented t)
+            (setq org-outline-path-complete-in-steps t
+                  org-ellipsis "..."
+                  org-hide-leading-stars t
+                  org-startup-indented t)
 
             (use-package org-clock
               :init (progn
