@@ -516,7 +516,17 @@
 
 (use-package my/dired
   :init (progn
-          (use-package dired)
+          (use-package dired
+            :config (progn
+                      (defun switch-to-dired-buffer ()
+                        "Quickly switch to dired buffer"
+                        (interactive)
+                        (let ((dbufs  (cl-remove-if-not
+                                       (lambda (bf)
+                                         (with-current-buffer bf
+                                           (derived-mode-p 'dired-mode)))
+                                       (buffer-list))))
+                          (switch-to-buffer (car dbufs))))))
 
           ;; (use-package dired-filetype-face
           ;;   :ensure t)
@@ -537,7 +547,6 @@
           (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
 
           (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory)
-          ;; (define-key dired-mode-map (kbd "<tab>") 'dired-subtree-toggle)
 
           (use-package dired+
             :config (progn
@@ -553,7 +562,8 @@
                       (autoload 'dired-jump-other-window "dired-x"
                         "Like \\[dired-jump] (dired-jump) but in other window." t)
 
-                      (global-set-key (kbd "C-x C-d") #'dired-jump)
+                      (global-set-key (kbd "C-x C-d") #'switch-to-dired-buffer)
+                      (global-set-key (kbd "C-x d") #'dired-jump)
                       (global-set-key (kbd "C-x 4 C-d") #'dired-jump-other-window)
 
                       (define-key dired-mode-map (kbd "/") #'dired-narrow-fuzzy))
