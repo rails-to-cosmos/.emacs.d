@@ -56,6 +56,9 @@
 (use-package mac
   :load-path "core")
 
+(use-package init-bindings
+  :load-path "core")
+
 (use-package sh
   :load-path "core")
 
