@@ -21,9 +21,6 @@
   "Initialize dired with my configuration."
   (interactive)
 
-  (use-package dired-narrow
-    :ensure t)
-
   (use-package dired+
     :config (progn
               (setq-default dired-use-ls-dired nil)
@@ -33,29 +30,27 @@
                 "Jump to Dired buffer corresponding to current buffer." t)
 
               (autoload 'dired-jump-other-window "dired-x"
-                "Like \\[dired-jump] (dired-jump) but in other window." t)
+                "Like \\[dired-jump] (dired-jump) but in other window." t))
+    :ensure t))
 
-              (define-key dired-mode-map (kbd "/") #'dired-narrow-fuzzy))
-    :ensure t)
+(setq-default dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
 
-  (defun mydired-sort ()
-    "Sort dired listings with directories first."
-    (save-excursion
-      (let (buffer-read-only)
-        (forward-line 2) ;; beyond dir. header
-        (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
-      (set-buffer-modified-p nil)))
+(use-package dired-narrow
+  :ensure t)
 
-  (defun hide-cursor ()
-    (setq cursor-type nil))
+(defun dired/sort ()
+  "Sort dired listings with directories first."
+  (save-excursion
+    (let (buffer-read-only)
+      (forward-line 2) ;; beyond dir. header
+      (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
+    (set-buffer-modified-p nil)))
 
-  (add-hook 'dired-after-readin-hook 'hide-cursor)
-  (add-hook 'dired-after-readin-hook 'mydired-sort)
-  (add-hook 'dired-after-readin-hook 'hl-line-mode)
-  (add-hook 'dired-after-readin-hook 'dired-omit-mode)
-  (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$")))
+(defun dired/hide-cursor ()
+  "Hide cursor in dired buffer."
+  (setq cursor-type nil))
 
-(defun switch-to-dired-buffer-or-jump ()
+(defun dired/switch-or-jump ()
   "Quickly switch to dired buffer."
   (interactive)
   (progn (let ((dbufs  (cl-remove-if-not

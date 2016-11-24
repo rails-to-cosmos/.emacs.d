@@ -32,7 +32,6 @@
 
 (use-package elpy
   :interpreter ("ipython" . python-mode)
-  :init (add-hook 'python-mode-hook 'elpy-mode)
   :config (progn
             (elpy-enable)
             (jedi:install-server)
@@ -52,6 +51,9 @@
 (use-package py-yapf
   :ensure t)
 
+(use-package rainbow-delimiters
+  :ensure t)
+
 (use-package virtualenv
   :config (progn
             (use-package virtualenvwrapper
@@ -60,10 +62,6 @@
                         (venv-initialize-eshell))
               :ensure t))
   :ensure t)
-
-(add-hook 'python-mode-hook 'python-highlight-breakpoints)
-(add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-(add-hook 'python-mode-hook 'linum-mode)
 
 (provide 'init-python)
 ;;; init-python.el ends here

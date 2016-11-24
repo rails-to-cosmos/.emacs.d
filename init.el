@@ -117,15 +117,23 @@
 
 (use-package init-python
   :load-path "prog"
-  :init (add-hook 'python-mode-hook #'init-python)
+  :init (progn
+          (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
+
+          (add-hook 'python-mode-hook 'init-python)
+          (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+          (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
+          (add-hook 'python-mode-hook 'linum-mode)
+          (add-hook 'python-mode-hook 'elpy-mode))
   :mode ("\\.py\\'" . python-mode)
   :bind (:map elpy-mode-map
               ("C-c C-b" . python-add-breakpoint)
               ("C-c C-g" . jedi:goto-definition))
   :commands (init-python
              python-add-breakpoint
-             jedi:goto-definition)
-  :ensure elpy)
+             python-highlight-breakpoints
+             jedi:goto-definition
+             elpy-mode))
 
 (use-package db
   :load-path "prog"
@@ -138,9 +146,16 @@
 
 (use-package init-dired
   :load-path "fs"
-  :init (add-hook 'dired-mode-hook 'init-dired)
-  :commands (init-dired)
-  :bind (("C-x C-d" . switch-to-dired-buffer-or-jump)
+  :init (progn
+          (add-hook 'dired-mode-hook 'init-dired)
+          (add-hook 'dired-after-readin-hook 'dired/hide-cursor)
+          (add-hook 'dired-after-readin-hook 'dired/sort)
+          (add-hook 'dired-after-readin-hook 'hl-line-mode)
+          (add-hook 'dired-after-readin-hook 'dired-omit-mode))
+  :commands (init-dired
+             dired/hide-cursor
+             dired/sort)
+  :bind (("C-x C-d" . dired/switch-or-jump)
          :map dired-mode-map
          ("<backspace>" . dired-up-directory)
          ("/" . dired-narrow-fuzzy)))
