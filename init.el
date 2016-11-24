@@ -148,7 +148,10 @@
 ;; Some unsorted stuff:
 
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
-  :ensure elfeed-org
+  :ensure t)
+
+(use-package elfeed-org
+  :config (elfeed-org)
   :ensure t)
 
 (use-package prog-mode
