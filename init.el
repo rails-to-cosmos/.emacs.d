@@ -57,25 +57,20 @@
              get-window-in-frame
              set-window-buffer-in-frame))
 
-
 (add-hook 'grep-mode-hook (lambda () (use-package wgrep :ensure t)))
 
 ;; Dreams:
 ;; (use-package wgrep
 ;;   :hook grep-mode-hook)
 
-;; (use-package flycheck
-;;   :hook prog-mode-hook)
-
-(add-hook 'prog-mode-hook (lambda () (use-package flycheck :ensure t)))
-(after-load 'flycheck 'init-flycheck)
-(defun init-flycheck ()
-  "Init flycheck."
-  (add-hook 'after-init-hook 'global-flycheck-mode)
-  (setq-default
-     flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-     flycheck-idle-change-delay 5
-     flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+(use-package flycheck
+  :config (progn
+            (add-hook 'after-init-hook 'global-flycheck-mode)
+            (setq-default
+             flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+             flycheck-idle-change-delay 5
+             flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+  :ensure t)
 
 (use-package snippets
   :load-path "editor"
