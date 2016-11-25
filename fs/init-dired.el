@@ -20,20 +20,9 @@
 (defun init-dired ()
   "Initialize dired with my configuration."
   (interactive)
-
   (use-package dired+
-    :config (progn
-              (setq-default dired-use-ls-dired nil)
-              (diredp-toggle-find-file-reuse-dir 1)
-
-              (autoload 'dired-jump "dired-x"
-                "Jump to Dired buffer corresponding to current buffer." t)
-
-              (autoload 'dired-jump-other-window "dired-x"
-                "Like \\[dired-jump] (dired-jump) but in other window." t))
+    :config (diredp-toggle-find-file-reuse-dir t)
     :ensure t))
-
-(setq-default dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
 
 (use-package dired-narrow
   :ensure t)

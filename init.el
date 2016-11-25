@@ -32,6 +32,12 @@
     (progn
       (package-install 'use-package)))
 
+(defmacro after-load (feature &rest body)
+  "After FEATURE is loaded, evaluate BODY."
+  (declare (indent defun))
+  `(eval-after-load ,feature
+     '(progn ,@body)))
+
 (eval-when-compile
   (require 'use-package))
 
@@ -47,11 +53,6 @@
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
   (global-unset-key key))
-(defmacro after-load (feature &rest body)
-  "After FEATURE is loaded, evaluate BODY."
-  (declare (indent defun))
-  `(eval-after-load ,feature
-     '(progn ,@body)))
 
 (use-package mac
   :load-path "core")
@@ -146,16 +147,26 @@
 
 (use-package init-dired
   :load-path "fs"
+
   :init (progn
-          (add-hook 'dired-mode-hook 'init-dired)
-          (add-hook 'dired-after-readin-hook 'dired/hide-cursor)
-          (add-hook 'dired-after-readin-hook 'dired/sort)
-          (add-hook 'dired-after-readin-hook 'hl-line-mode)
-          (add-hook 'dired-after-readin-hook 'dired-omit-mode))
+          (after-load 'dired
+            (progn
+              (add-hook 'dired-mode-hook 'init-dired)
+              (add-hook 'dired-after-readin-hook 'dired/hide-cursor)
+              (add-hook 'dired-after-readin-hook 'dired/sort)
+              (add-hook 'dired-after-readin-hook 'hl-line-mode)
+              (add-hook 'dired-after-readin-hook 'dired-omit-mode)))
+
+          (after-load 'dired-x
+            (setq dired-use-ls-dired nil
+                  dired-omit-files (concat dired-omit-files "\\|^\\..+$"))))
+
   :commands (init-dired
              dired/hide-cursor
              dired/sort)
+
   :bind (("C-x C-d" . dired/switch-or-jump)
+
          :map dired-mode-map
          ("<backspace>" . dired-up-directory)
          ("/" . dired-narrow-fuzzy)))
