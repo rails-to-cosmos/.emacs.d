@@ -4,6 +4,8 @@
 
 (require 'package)
 
+(setq package-enable-at-startup nil)
+
 (dolist (package-archive '(("melpa" . "http://melpa.milkbox.net/packages/")
                            ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
                            ("elpy" . "https://jorgenschaefer.github.io/packages/")))
@@ -11,10 +13,8 @@
 
 (package-initialize)
 
-(when (not package-archive-contents)
-  (package-refresh-contents))
-
-(when (not (package-installed-p 'use-package))
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
   (package-install 'use-package))
 
 (defmacro after-load (feature &rest body)
@@ -23,18 +23,14 @@
   `(eval-after-load ,feature
      '(progn ,@body)))
 
-(eval-when-compile
-  (require 'use-package))
-
-(use-package use-package
-  :init (progn
-          (use-package diminish :ensure t)
-          (use-package bind-key :ensure t))
-  :config (progn
-            (setq use-package-verbose t)))
+(use-package diminish :ensure t)
+(use-package bind-key :ensure t)
+(setq use-package-verbose t)
 
 (use-package init-req-dirs
-  :load-path "core")
+  :load-path "core"
+  :commands (tmp/
+             dropbox/))
 
 (use-package init-mac
   :load-path "core")
@@ -61,6 +57,26 @@
              get-window-in-frame
              set-window-buffer-in-frame))
 
+
+(add-hook 'grep-mode-hook (lambda () (use-package wgrep :ensure t)))
+
+;; Dreams:
+;; (use-package wgrep
+;;   :hook grep-mode-hook)
+
+;; (use-package flycheck
+;;   :hook prog-mode-hook)
+
+(add-hook 'prog-mode-hook (lambda () (use-package flycheck :ensure t)))
+(after-load 'flycheck 'init-flycheck)
+(defun init-flycheck ()
+  "Init flycheck."
+  (add-hook 'after-init-hook 'global-flycheck-mode)
+  (setq-default
+     flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+     flycheck-idle-change-delay 5
+     flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
+
 (use-package snippets
   :load-path "editor"
   :commands (yas-ido-expand
@@ -68,12 +84,9 @@
              yas-recompile-all
              yas-reload-all))
 
-(use-package checkers
-  :load-path "editor")
-
 (use-package macro
   :load-path "editor"
-  :commands save-macro)
+  :commands (save-macro))
 
 (use-package ac
   :load-path "editor"
@@ -86,17 +99,9 @@
               ("C-c f r" . origami-recursively-toggle-node)
               ("C-c f o" . origami-show-only-node)))
 
-(use-package search
-  :load-path "editor")
-
 (use-package log
   :load-path "editor"
-  :commands (itail
-             mwe:log-keyboard-commands))
-
-(use-package movements
-  :load-path "editor"
-  :bind (("C-x C-/" . goto-last-change)))
+  :commands (mwe:log-keyboard-commands))
 
 (use-package init-python
   :load-path "prog"
