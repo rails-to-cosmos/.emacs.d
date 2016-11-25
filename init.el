@@ -1,18 +1,6 @@
 ;;; init.el --- my emacs configuration
-;;
-;; Filename: init.el
-;; Description: my emacs configuration
-;; Author: Dmitry Akatov
-;; Created: Sun Aug 09 21:49:00 2015 (-0400)
-;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/.emacs.d
-;; Keywords: Emacs 24.5
-;; Compatibility: emacs >= 24.5
-;;
 ;;; Commentary:
-;;
 ;;; Code:
-;;
 
 (require 'package)
 
@@ -45,21 +33,8 @@
   :config (progn
             (setq use-package-verbose t)))
 
-(defun tmp/ (filename)
-  "Get path to FILENAME in temp directory."
-  (let ((user-temp-directory (concat user-emacs-directory "tmp/")))
-    (concat user-temp-directory filename)))
-
-(defun dropbox/ (filename)
-  "Get path to FILENAME in dropbox directory."
-  (let ((user-dropbox-directory "~/Dropbox/"))
-    (concat user-dropbox-directory filename)))
-
-(setq-default
- custom-file (tmp/ "custom.el"))
-
-(dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
-  (global-unset-key key))
+(use-package init-req-dirs
+  :load-path "core")
 
 (use-package init-mac
   :load-path "core")
@@ -147,8 +122,8 @@
   :load-path "prog"
   :config (progn
             (setq-default
-             edbi:ds-history-file (tmp/ ".edbi-ds-history")
-             sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
+             edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
+             sqlplus-session-cache-dir (tmp/ "sqlplus-session.txt")))
   :bind (("C-x y q" . sqp-connect))
   :commands (init-db))
 
@@ -340,7 +315,7 @@
                           org-ellipsis "..."
                           org-hide-leading-stars t
                           org-startup-indented t
-                          org-id-locations-file (tmp/ ".org-id-locations")
+                          org-id-locations-file (tmp/ "org-id-locations.txt")
                           org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d!/!)")
                                                     (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
 
@@ -410,24 +385,12 @@
   :commands pdf-tools-install
   :ensure t)
 
-;; (use-package hl-line+
-;;   :ensure t)
-
-;; (use-package camcorder
-;;   :commands camcorder-mode
-;;   :ensure t)
-
 (use-package nhexl-mode)
 
 ;; https://github.com/kiwanami/emacs-calfw
 (use-package calfw
   :config
   (require 'calfw-org))
-
-(use-package keyfreq
-  :config (progn
-            (keyfreq-mode t)
-            (keyfreq-autosave-mode t)))
 
 (use-package magit
   :commands (magit-status

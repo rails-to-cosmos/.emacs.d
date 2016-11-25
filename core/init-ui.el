@@ -1,20 +1,5 @@
 ;;; init-ui.el --- my UI settings
-;;
-;; Filename: init-ui.el
-;; Description: my UI settings
-;; Author: Dmitry Akatov
-;; Created: <2016-11-25 Fri 8:30am>
-;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/.emacs.d/core/init-ui.el
-;; Keywords: Emacs 24.5
-;; Compatibility: emacs >= 24.5
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Commentary:
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Code:
 
 (fset 'yes-or-no-p 'y-or-n-p)

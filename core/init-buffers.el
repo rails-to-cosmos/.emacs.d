@@ -1,20 +1,5 @@
 ;;; init-buffers.el --- my buffer management
-;;
-;; Filename: init-buffers.el
-;; Description: my buffer management
-;; Author: Dmitry Akatov
-;; Created: <2016-10-18 Tue 8:30am>
-;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/core/init-buffers.el
-;; Keywords: Emacs 24.5
-;; Compatibility: emacs >= 24.5
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Commentary:
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Code:
 
 (use-package switch-window
@@ -75,42 +60,42 @@
 
 (use-package split-window
   :init (progn
-            (defun split-window-multiple-ways (x y)
-              "Split the current frame into a grid of X columns and Y rows."
-              (interactive "nColumns: \nnRows: ")
-              ;; one window
-              (delete-other-windows)
-              (dotimes (i (1- x))
-                (split-window-horizontally)
-                (dotimes (j (1- y))
-                  (split-window-vertically))
-                (other-window y))
+          (defun split-window-multiple-ways (x y)
+            "Split the current frame into a grid of X columns and Y rows."
+            (interactive "nColumns: \nnRows: ")
+            ;; one window
+            (delete-other-windows)
+            (dotimes (i (1- x))
+              (split-window-horizontally)
               (dotimes (j (1- y))
                 (split-window-vertically))
-              (balance-windows))
+              (other-window y))
+            (dotimes (j (1- y))
+              (split-window-vertically))
+            (balance-windows))
 
-            (autoload 'windmove-find-other-window "windmove"
-              "Return the window object in direction DIR. fn dir &optional arg window)")
+          (autoload 'windmove-find-other-window "windmove"
+            "Return the window object in direction DIR. fn dir &optional arg window)")
 
-            (declare-function windmove-find-other-window "windmove" (dir &optional arg window))
+          (declare-function windmove-find-other-window "windmove" (dir &optional arg window))
 
-            (defun get-window-in-frame (x y &optional frame)
-              "Find Xth horizontal and Yth vertical window from top-left of FRAME."
-              (let ((orig-x x) (orig-y y)
-                    (w (frame-first-window frame)))
-                (while (and (windowp w) (> x 0))
-                  (setq w (windmove-find-other-window 'right 1 w)
-                        x (1- x)))
-                (while (and (windowp w) (> y 0))
-                  (setq w (windmove-find-other-window 'down 1 w)
-                        y (1- y)))
-                (unless (windowp w)
-                  (error "No window at (%d, %d)" orig-x orig-y))
-                w))
+          (defun get-window-in-frame (x y &optional frame)
+            "Find Xth horizontal and Yth vertical window from top-left of FRAME."
+            (let ((orig-x x) (orig-y y)
+                  (w (frame-first-window frame)))
+              (while (and (windowp w) (> x 0))
+                (setq w (windmove-find-other-window 'right 1 w)
+                      x (1- x)))
+              (while (and (windowp w) (> y 0))
+                (setq w (windmove-find-other-window 'down 1 w)
+                      y (1- y)))
+              (unless (windowp w)
+                (error "No window at (%d, %d)" orig-x orig-y))
+              w))
 
-            (defun set-window-buffer-in-frame (x y buffer &optional frame)
-              "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
-              (set-window-buffer (get-window-in-frame x y frame) buffer))))
+          (defun set-window-buffer-in-frame (x y buffer &optional frame)
+            "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
+            (set-window-buffer (get-window-in-frame x y frame) buffer))))
 
 
 (provide 'init-buffers)

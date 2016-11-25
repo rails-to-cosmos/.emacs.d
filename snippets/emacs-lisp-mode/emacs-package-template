@@ -3,25 +3,10 @@
 # key: package-description
 # --
 ;;; ${1:`(buffer-name)`} --- ${2:description}
-;;
-;; Filename: ${1:$(yas-text)}
-;; Description: ${2:$(yas-text)}
-;; Author: Dmitry Akatov
-;; Created: `(format-time-string "<%Y-%m-%d %a 8:30am>" (current-time))`
-;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/.emacs.d/${3:url}
-;; Keywords: Emacs 24.5
-;; Compatibility: emacs >= 24.5
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Commentary:
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Code:
 
-(defun init-${1:$(replace-regexp-in-string ".el$" "" yas-text)} () "Initialize ${1:$(replace-regexp-in-string ".el$" "" yas-text)} with my configuration." (interactive))
+(defun ${1:$(replace-regexp-in-string ".el$" "" yas-text)} () "Initialize ${1:$(replace-regexp-in-string ".el$" "" yas-text)} with my configuration." (interactive))
 
 $0
 
