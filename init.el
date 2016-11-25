@@ -16,21 +16,18 @@
 
 (require 'package)
 
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.milkbox.net/packages/"))
-(add-to-list 'package-archives
-             '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
-(add-to-list 'package-archives
-             '("elpy" . "https://jorgenschaefer.github.io/packages/"))
+(dolist (package-archive '(("melpa" . "http://melpa.milkbox.net/packages/")
+                           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
+                           ("elpy" . "https://jorgenschaefer.github.io/packages/")))
+  (add-to-list 'package-archives package-archive))
 
 (package-initialize)
 
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(if (not (package-installed-p 'use-package))
-    (progn
-      (package-install 'use-package)))
+(when (not (package-installed-p 'use-package))
+  (package-install 'use-package))
 
 (defmacro after-load (feature &rest body)
   "After FEATURE is loaded, evaluate BODY."
@@ -43,30 +40,28 @@
 
 (use-package use-package
   :init (progn
-          (use-package diminish
-            :commands diminish
-            :ensure t)
-          (use-package bind-key
-            :ensure t)
-          (setq use-package-verbose t)))
+          (use-package diminish :ensure t)
+          (use-package bind-key :ensure t))
+  :config (progn
+            (setq use-package-verbose t)))
 
-(setq custom-file (concat user-emacs-directory "custom.el"))
+(setq-default custom-file (concat user-emacs-directory "custom.el"))
 (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
   (global-unset-key key))
 
-(use-package mac
+(use-package init-mac
   :load-path "core")
 
 (use-package init-bindings
   :load-path "core")
 
-(use-package sh
+(use-package init-shell
   :load-path "core")
 
-(use-package buffers
+(use-package init-buffers
   :load-path "core"
   :config (progn
-            (setq switch-window-shortcut-style 'alphabet))
+            (setq-default switch-window-shortcut-style 'alphabet))
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . split-window-vertically-swap)
@@ -159,14 +154,14 @@
 
           (after-load 'dired-x
             (setq dired-use-ls-dired nil
-                  dired-omit-files (concat dired-omit-files "\\|^\\..+$"))))
+                  ;; dired-omit-files (concat dired-omit-files "\\|^\\..+$")
+                  )))
 
   :commands (init-dired
              dired/hide-cursor
              dired/sort)
 
   :bind (("C-x C-d" . dired/switch-or-jump)
-
          :map dired-mode-map
          ("<backspace>" . dired-up-directory)
          ("/" . dired-narrow-fuzzy)))
@@ -424,9 +419,7 @@
              magit-push-current
              magit-log-buffer-file)
   :config (progn
-            (use-package git-gutter+
-              :config (progn
-                        (global-git-gutter+-mode))
+            (use-package git-timemachine
               :ensure t)
             (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
@@ -443,10 +436,6 @@
 
 (use-package my/internet-services
   :init (progn
-          (use-package hackernews
-            :commands hackernews
-            :ensure t)
-
           (use-package google-translate
             :commands translate-text
             :config (defun translate-text (sentence)
@@ -591,11 +580,10 @@
              "C-p" 'ido-prev-match))
   :ensure t)
 
-(use-package ui
-  :load-path "core")
-
 (require 'init-local nil t)
 
-(provide 'init)
+(use-package init-ui
+  :load-path "core")
 
+(provide 'init)
 ;;; init.el ends here
