@@ -45,7 +45,19 @@
   :config (progn
             (setq use-package-verbose t)))
 
-(setq-default custom-file (concat user-emacs-directory "custom.el"))
+(defun tmp/ (filename)
+  "Get path to FILENAME in temp directory."
+  (let ((user-temp-directory (concat user-emacs-directory "tmp/")))
+    (concat user-temp-directory filename)))
+
+(defun dropbox/ (filename)
+  "Get path to FILENAME in dropbox directory."
+  (let ((user-dropbox-directory "~/Dropbox/"))
+    (concat user-dropbox-directory filename)))
+
+(setq-default
+ custom-file (tmp/ "custom.el"))
+
 (dolist (key '("\C-l" "\C-t" "\C-xi" "\C-cC-b"))
   (global-unset-key key))
 
@@ -133,11 +145,18 @@
 
 (use-package db
   :load-path "prog"
+  :config (progn
+            (setq-default
+             edbi:ds-history-file (tmp/ ".edbi-ds-history")
+             sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
   :bind (("C-x y q" . sqp-connect))
   :commands (init-db))
 
 (use-package xmpp
   :load-path "chat"
+  :config (progn
+            (setq-default
+             jabber-global-history-filename (dropbox/ "jabber-history.txt")))
   :commands (init-jabber))
 
 (use-package init-dired
@@ -315,19 +334,15 @@
                           org-fast-tag-selection-single-key 'expert
                           org-export-kill-product-buffer-when-displayed t
                           org-tags-column 80
-                          org-todo-keywords
-                          (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d!/!)")
-                                  (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
-
-            ;; Refile targets include this file and any file contributing to the agenda - up to 5 levels deep
-            (setq org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5))))
-            ;; Targets start with the file name - allows creating level 1 tasks
-            (setq org-refile-use-outline-path (quote file))
-            ;; Targets complete in steps so we start with filename, TAB shows the next level of targets etc
-            (setq org-outline-path-complete-in-steps t
-                  org-ellipsis "..."
-                  org-hide-leading-stars t
-                  org-startup-indented t)
+                          org-refile-use-outline-path (quote file)
+                          org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
+                          org-outline-path-complete-in-steps t
+                          org-ellipsis "..."
+                          org-hide-leading-stars t
+                          org-startup-indented t
+                          org-id-locations-file (tmp/ ".org-id-locations")
+                          org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d!/!)")
+                                                    (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
 
             (use-package org-clock
               :init (progn
@@ -383,6 +398,8 @@
   :commands (mc/mark-next-like-this
              mc/mark-previous-like-this
              mc/mark-all-like-this)
+  :config (progn
+            (setq-default mc/list-file (tmp/ "multiple-cursors-data.el")))
   :ensure t)
 
 (use-package regex-tool
@@ -431,7 +448,11 @@
 
 (use-package my/project-management
   :init (progn
+          (setq-default bookmark-default-file (dropbox/ "bookmarks.txt")
+                        bookmark-save-flag t)
           (use-package bookmark+
+            :config (progn
+                      (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")))
             :ensure t)))
 
 (use-package my/internet-services
