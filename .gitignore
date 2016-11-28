@@ -39,3 +39,4 @@ jabber-global-message-log
 .edbi-ds-history
 sqlplus-session
 /.org-id-locations
+tmp/*
