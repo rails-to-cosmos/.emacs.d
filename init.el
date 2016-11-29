@@ -27,6 +27,9 @@
 (use-package bind-key :ensure t)
 (setq use-package-verbose t)
 
+(use-package no-littering
+  :ensure t)
+
 (use-package init-req-dirs
   :load-path "core"
   :commands (tmp/
@@ -123,7 +126,7 @@
   :config (progn
             (setq-default
              edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
-             sqlplus-session-cache-dir (tmp/ "sqlplus-session.txt")))
+             sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
   :bind (("C-x y q" . sqp-connect))
   :commands (init-db))
 
@@ -172,6 +175,8 @@
 ;; Some unsorted stuff:
 
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
+  :config (progn
+            (add-hook 'elfeed-search-mode 'elfeed-update))
   :ensure t)
 
 (use-package elfeed-org
@@ -298,6 +303,10 @@
               (org-crypt-use-before-save-magic)
               (setq org-tags-exclude-from-inheritance (quote ("crypt")))
               (setq org-crypt-key nil))
+
+            (defun org-archive-done-tasks ()
+              (interactive)
+              (org-map-entries 'org-archive-subtree "/DONE/CANCELLED" 'file))
 
             (setq-default org-log-done t
                           org-completion-use-ido t
