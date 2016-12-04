@@ -27,9 +27,6 @@
 (use-package bind-key :ensure t)
 (setq use-package-verbose t)
 
-(use-package no-littering
-  :ensure t)
-
 (use-package init-req-dirs
   :load-path "core"
   :commands (tmp/
