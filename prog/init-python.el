@@ -23,12 +23,12 @@
 (defun python-add-breakpoint ()
   "Add a break point."
   (interactive)
-  (insert "import ipdb; ipdb.set_trace()")
+  (insert "import pdb; pdb.set_trace()")
   (python-highlight-breakpoints))
 
 (defun python-highlight-breakpoints ()
   "Highlight python breakpoints."
-  (highlight-lines-matching-regexp "^[ ]*import ipdb; ipdb.set_trace()"))
+  (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
 (use-package elpy
   :interpreter ("ipython" . python-mode)
