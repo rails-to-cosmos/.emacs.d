@@ -303,7 +303,7 @@
 
             (defun org-archive-done-tasks ()
               (interactive)
-              (org-map-entries 'org-archive-subtree "/DONE/CANCELLED" 'file))
+              (org-map-entries 'org-archive-subtree "/DONE" 'file))
 
             (setq-default org-log-done t
                           org-completion-use-ido t
