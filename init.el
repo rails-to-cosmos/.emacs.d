@@ -74,6 +74,8 @@
 
 (use-package snippets
   :load-path "editor"
+  :config (progn
+            (add-to-list 'yas-snippet-dirs (dropbox/ "snippets")))
   :commands (yas-ido-expand
              yas-new-snippet
              yas-recompile-all

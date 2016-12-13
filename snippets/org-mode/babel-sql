@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: babel-sql
-# key: #sql
-# --
-#+begin_src sql
-$0
-#+end_src
