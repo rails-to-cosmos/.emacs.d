@@ -27,6 +27,12 @@
 (use-package bind-key :ensure t)
 (setq use-package-verbose t)
 
+(use-package spu
+  :defer 5 ;; defer package loading for 5 second
+  :config (progn
+            (spu-package-upgrade-daily))
+  :ensure t)
+
 (use-package init-req-dirs
   :load-path "core"
   :commands (tmp/

@@ -40,3 +40,4 @@ jabber-global-message-log
 sqlplus-session
 /.org-id-locations
 tmp/*
+spu_log
