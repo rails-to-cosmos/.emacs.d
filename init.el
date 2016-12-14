@@ -50,7 +50,8 @@
 (use-package init-buffers
   :load-path "core"
   :config (progn
-            (setq-default switch-window-shortcut-style 'alphabet))
+            (after-load 'switch-window (progn
+                                         (setq-default switch-window-shortcut-style 'alphabet))))
   :bind (("C-x o" . switch-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . split-window-vertically-swap)
@@ -181,7 +182,7 @@
 
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
   :config (progn
-            (add-hook 'elfeed-search-mode 'elfeed-update))
+            (after-load 'elfeed 'elfeed-update))
   :ensure t)
 
 (use-package elfeed-org
@@ -299,6 +300,10 @@
          ("C-M-n" . org-forward-heading-same-level)
          ("C-M-p" . org-backward-heading-same-level))
   :config (progn
+            ;; use org structures and tables in message mode
+            (add-hook 'prog-mode-hook 'turn-on-orgtbl)
+            (add-hook 'prog-mode-hook 'turn-on-orgstruct++)
+
             (use-package org-fstree
               :ensure t)
 
