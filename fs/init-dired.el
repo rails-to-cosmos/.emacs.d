@@ -30,12 +30,11 @@
 (use-package dired-list)
 
 (use-package dired-rainbow
-  :config (progn
-            (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
-            (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
-            (dired-rainbow-define log (:inherit default
-                                       :italic t) ".*\\.log")
-            (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
+  :config
+  (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
+  (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
+  (dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
+  (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*")
   :ensure t)
 
 (defun dired/sort ()

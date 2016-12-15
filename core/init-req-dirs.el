@@ -15,7 +15,7 @@
 
 (defun dropbox/ (filename)
   "Get path to FILENAME in dropbox directory."
-  (custom/ filename "~/Dropbox/"))
+  (custom/ filename "~/Dropbox/Emacs/"))
 
 (setq-default
  custom-file (tmp/ "custom.el"))

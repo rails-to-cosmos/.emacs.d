@@ -4,11 +4,10 @@
 
 (require 'package)
 
-(setq package-enable-at-startup nil)
-
-(dolist (package-archive '(("melpa" . "http://melpa.milkbox.net/packages/")
-                           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
-                           ("elpy" . "https://jorgenschaefer.github.io/packages/")))
+(dolist (package-archive
+         '(("melpa" . "http://melpa.milkbox.net/packages/")
+           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
+           ("elpy" . "https://jorgenschaefer.github.io/packages/")))
   (add-to-list 'package-archives package-archive))
 
 (package-initialize)
@@ -17,26 +16,18 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package diminish :ensure t)
+(use-package bind-key :ensure t)
+
 (defmacro after-load (feature &rest body)
   "After FEATURE is loaded, evaluate BODY."
   (declare (indent defun))
   `(eval-after-load ,feature
      '(progn ,@body)))
 
-(use-package diminish :ensure t)
-(use-package bind-key :ensure t)
-(setq use-package-verbose t)
-
-(use-package spu
-  :defer 5 ;; defer package loading for 5 second
-  :config (progn
-            (spu-package-upgrade-daily))
-  :ensure t)
-
 (use-package init-req-dirs
   :load-path "core"
-  :commands (tmp/
-             dropbox/))
+  :commands (tmp/ dropbox/))
 
 (use-package init-mac
   :load-path "core")
@@ -49,40 +40,45 @@
 
 (use-package init-buffers
   :load-path "core"
-  :config (progn
-            (after-load 'switch-window (progn
-                                         (setq-default switch-window-shortcut-style 'alphabet))))
-  :bind (("C-x o" . switch-window)
-         ("C-x 1" . delete-other-windows)
-         ("C-x 2" . split-window-vertically-swap)
-         ("C-x 3" . split-window-horizontally-swap))
-  :commands (split-window-func-with-other-buffer
-             immortal-scratch
-             delete-this-file
-             rename-this-file-and-buffer
-             save-buffers-kill-emacs
-             get-window-in-frame
-             set-window-buffer-in-frame))
+  :config
+  (after-load 'switch-window
+    (setq-default switch-window-shortcut-style 'alphabet))
+  :bind
+  (("C-x o" . switch-window)
+   ("C-x 1" . delete-other-windows)
+   ("C-x 2" . split-window-vertically-swap)
+   ("C-x 3" . split-window-horizontally-swap))
+  :commands
+  (split-window-func-with-other-buffer
+   immortal-scratch
+   delete-this-file
+   rename-this-file-and-buffer
+   save-buffers-kill-emacs
+   get-window-in-frame
+   set-window-buffer-in-frame))
 
-(add-hook 'grep-mode-hook (lambda () (use-package wgrep :ensure t)))
+(add-hook 'grep-mode-hook 'init-grep-mode)
+(defun init-grep-mode ()
+  "Install packages for ‘grep-mode’."
+  (use-package wgrep
+    :ensure t))
 
-;; Dreams:
-;; (use-package wgrep
-;;   :hook grep-mode-hook)
-
-(use-package flycheck
-  :config (progn
-            (add-hook 'after-init-hook 'global-flycheck-mode)
-            (setq-default
-             flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-             flycheck-idle-change-delay 5
-             flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list))
-  :ensure t)
+(add-hook 'after-init-hook 'init-flycheck)
+(defun init-flycheck ()
+  "Install packages for ‘flycheck-mode’."
+  (use-package flycheck
+    :config
+    (setq-default
+     flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+     flycheck-idle-change-delay 5
+     flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
+    (global-flycheck-mode)
+    :ensure t))
 
 (use-package snippets
   :load-path "editor"
-  :config (progn
-            (add-to-list 'yas-snippet-dirs (dropbox/ "snippets")))
+  :config
+  (add-to-list 'yas-snippet-dirs (dropbox/ "snippets"))
   :commands (yas-ido-expand
              yas-new-snippet
              yas-recompile-all
@@ -109,18 +105,21 @@
 
 (use-package init-python
   :load-path "prog"
-  :init (progn
-          (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
 
-          (add-hook 'python-mode-hook 'init-python)
-          (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-          (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-          (add-hook 'python-mode-hook 'linum-mode)
-          (add-hook 'python-mode-hook 'elpy-mode))
+  :init
+  (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
+  (add-hook 'python-mode-hook 'init-python)
+  (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+  (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'python-mode-hook 'linum-mode)
+  (add-hook 'python-mode-hook 'elpy-mode)
+
   :mode ("\\.py\\'" . python-mode)
+
   :bind (:map elpy-mode-map
               ("C-c C-b" . python-add-breakpoint)
               ("C-c C-g" . jedi:goto-definition))
+
   :commands (init-python
              python-add-breakpoint
              python-highlight-breakpoints
@@ -129,45 +128,43 @@
 
 (use-package db
   :load-path "prog"
-  :config (progn
-            (setq-default
-             edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
-             sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
+  :config
+  (setq-default
+   edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
+   sqlplus-session-cache-dir (tmp/ "sqlplus-session"))
   :bind (("C-x y q" . sqp-connect))
   :commands (init-db))
 
 (use-package xmpp
   :load-path "chat"
-  :config (progn
-            (setq-default
-             jabber-global-history-filename (dropbox/ "jabber-history.txt")))
+  :config
+  (setq-default
+   jabber-global-history-filename (dropbox/ "jabber-history.txt"))
   :commands (init-jabber))
 
 (use-package init-dired
   :load-path "fs"
 
-  :init (progn
-          (after-load 'dired
-            (progn
-              (add-hook 'dired-mode-hook 'init-dired)
-              (add-hook 'dired-after-readin-hook 'dired/hide-cursor)
-              (add-hook 'dired-after-readin-hook 'dired/sort)
-              (add-hook 'dired-after-readin-hook 'hl-line-mode)
-              (add-hook 'dired-after-readin-hook 'dired-omit-mode)))
+  :init
+  (after-load 'dired
+    (add-hook 'dired-mode-hook 'init-dired)
+    (add-hook 'dired-after-readin-hook 'dired/hide-cursor)
+    (add-hook 'dired-after-readin-hook 'dired/sort)
+    (add-hook 'dired-after-readin-hook 'hl-line-mode)
+    (add-hook 'dired-after-readin-hook 'dired-omit-mode))
+  (after-load 'dired-x
+    (setq-default dired-use-ls-dired nil))
 
-          (after-load 'dired-x
-            (setq dired-use-ls-dired nil
-                  ;; dired-omit-files (concat dired-omit-files "\\|^\\..+$")
-                  )))
+  :commands
+  (init-dired
+   dired/hide-cursor
+   dired/sort)
 
-  :commands (init-dired
-             dired/hide-cursor
-             dired/sort)
-
-  :bind (("C-x C-d" . dired/switch-or-jump)
-         :map dired-mode-map
-         ("<backspace>" . dired-up-directory)
-         ("/" . dired-narrow-fuzzy)))
+  :bind
+  (("C-x C-d" . dired/switch-or-jump)
+   :map dired-mode-map
+   ("<backspace>" . dired-up-directory)
+   ("/" . dired-narrow-fuzzy)))
 
 (use-package rsync
   :load-path "fs"
@@ -181,55 +178,16 @@
 ;; Some unsorted stuff:
 
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
-  :config (progn
-            (after-load 'elfeed 'elfeed-update))
+  :config
+  (use-package elfeed-org
+    :config
+    (elfeed-org)
+    :ensure t)
+
   :ensure t)
 
-(use-package elfeed-org
-  :config (elfeed-org)
-  :ensure t)
-
-(use-package prog-mode
-  :init (progn
-          (use-package web-mode
-            :mode ("\\.html\\'" "\\.ejs\\'" "\\.htm\\'" "\\.jsx\\'")
-            :config (progn
-                      (use-package web-beautify
-                        :ensure t)
-
-                      (use-package emmet-mode
-                        :mode ("\\.html\\'" "\\.htm\\'")
-                        :config (add-hook 'web-mode-hook 'emmet-mode)
-                        :ensure t)
-
-                      (setq web-mode-markup-indent-offset 4
-                            web-mode-css-indent-offset 4
-                            web-mode-code-indent-offset 4))
-            :ensure t)
-
-          (use-package restclient
-            :commands restclient-mode
-            :mode ("\\.rest\\'" . restclient-mode)
-            :ensure t)
-
-          (use-package javascript
-            :init (progn
-                    (use-package json-mode
-                      :commands (json-mode json-reformat-region)
-                      :ensure t)
-                    (use-package js2-mode
-                      :mode ("\\.js\\'" . js2-mode)
-                      :commands js2-mode
-                      :ensure t)
-                    (use-package ac-js2
-                      :commands ac-js2
-                      :ensure t)
-                    (use-package js-comint
-                      :commands js-comint
-                      :ensure t)))
-
-          (use-package scala-mode
-            :ensure t)))
+(use-package init-web
+  :load-path "prog")
 
 (use-package ido
   :init (progn
@@ -260,28 +218,28 @@
 
           (use-package imenu-anywhere
             :config (ido-everywhere)
-            :ensure t)))
-:config (progn
-          (setq ido-enable-flex-matching t
-                ido-use-filename-at-point nil
-                ido-auto-merge-work-directories-length -1
-                ido-use-virtual-buffers t
-                ido-confirm-unique-completion t
-                ido-default-buffer-method 'selected-window)
+            :ensure t))
+  :config (progn
+            (setq ido-enable-flex-matching t
+                  ido-use-filename-at-point nil
+                  ido-auto-merge-work-directories-length -1
+                  ido-use-virtual-buffers t
+                  ido-confirm-unique-completion t
+                  ido-default-buffer-method 'selected-window)
 
-          (global-set-key [remap execute-extended-command] 'smex)
-          (defadvice ido-find-file (after find-file-sudo activate)
-            "Find file as root if necessary."
-            (unless (and buffer-file-name
-                         (file-writable-p buffer-file-name))
-              (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-          (defun bind-ido-keys ()
-            "Keybindings for ido mode."
-            (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-            (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
-          (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-          (add-hook 'ido-setup-hook #'bind-ido-keys)
-          (ido-mode))
+            (global-set-key [remap execute-extended-command] 'smex)
+            (defadvice ido-find-file (after find-file-sudo activate)
+              "Find file as root if necessary."
+              (unless (and buffer-file-name
+                           (file-writable-p buffer-file-name))
+                (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+            (defun bind-ido-keys ()
+              "Keybindings for ido mode."
+              (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+              (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
+            (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+            (add-hook 'ido-setup-hook #'bind-ido-keys)
+            (ido-mode)))
 
 (use-package init-editing-utils
   :load-path "lisp")
@@ -301,8 +259,8 @@
          ("C-M-p" . org-backward-heading-same-level))
   :config (progn
             ;; use org structures and tables in message mode
-            (add-hook 'prog-mode-hook 'turn-on-orgtbl)
-            (add-hook 'prog-mode-hook 'turn-on-orgstruct++)
+            ;; (add-hook 'prog-mode-hook 'turn-on-orgtbl)
+            ;; (add-hook 'prog-mode-hook 'turn-on-orgstruct++)
 
             (use-package org-fstree
               :ensure t)
@@ -420,6 +378,7 @@
   :config (progn
             (use-package git-timemachine
               :ensure t)
+
             (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
@@ -450,8 +409,6 @@
                         (if (string-match (car lang-regex) sentence)
                             (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
             :ensure t)))
-
-(use-package frame-cmds)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
@@ -545,11 +502,6 @@
                       (prodigy-define-tag
                         :name 'django
                         :ready-message "Quit the server with CONTROL-C"))
-            :ensure t)))
-
-(use-package my/http
-  :init (progn
-          (use-package http  ;; https://github.com/emacs-pe/http.el
             :ensure t)))
 
 (use-package super-save

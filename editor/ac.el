@@ -1,16 +1,21 @@
+(use-package company
+  :config
+  (add-hook 'after-init-hook 'global-company-mode)
+  :ensure t)
+
 (use-package hippie-expand
   :config (progn
             (setq-default hippie-expand-try-functions-list
-                  '(try-expand-dabbrev
-                    try-expand-dabbrev-all-buffers
-                    try-expand-dabbrev-from-kill
-                    try-complete-file-name-partially
-                    try-complete-file-name
-                    try-expand-all-abbrevs
-                    try-expand-list
-                    try-expand-line
-                    try-complete-lisp-symbol-partially
-                    try-complete-lisp-symbol))))
+                          '(try-expand-dabbrev
+                            try-expand-dabbrev-all-buffers
+                            try-expand-dabbrev-from-kill
+                            try-complete-file-name-partially
+                            try-complete-file-name
+                            try-expand-all-abbrevs
+                            try-expand-list
+                            try-expand-line
+                            try-complete-lisp-symbol-partially
+                            try-complete-lisp-symbol))))
 
 ;; (use-package autocomplete
 ;;   :config (progn
