@@ -1,31 +1,16 @@
 ;;; init-dired.el --- my settings for dired
-;;
-;; Filename: init-dired.el
-;; Description: my settings for dired
-;; Author: Dmitry Akatov
-;; Created: <2016-11-24 Thu 8:30am>
-;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/.emacs.d/core/init-dired.el
-;; Keywords: Emacs 24.5
-;; Compatibility: emacs >= 24.5
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Commentary:
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Code:
 
 (defun init-dired ()
   "Initialize dired with my configuration."
   (interactive)
   (use-package dired+
-    :config (diredp-toggle-find-file-reuse-dir t)
-    :ensure t))
+    :config (diredp-toggle-find-file-reuse-dir 1)
+    :ensure t)
+  )
 
-(use-package dired-narrow
-  :ensure t)
+(use-package dired-narrow :ensure t)
 
 (use-package dired-list)
 

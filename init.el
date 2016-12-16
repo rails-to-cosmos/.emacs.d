@@ -143,7 +143,7 @@
   :commands (init-jabber))
 
 (use-package init-dired
-  :load-path "fs"
+  :load-path "packages/dired"
 
   :init
   (after-load 'dired
@@ -152,13 +152,12 @@
     (add-hook 'dired-after-readin-hook 'dired/sort)
     (add-hook 'dired-after-readin-hook 'hl-line-mode)
     (add-hook 'dired-after-readin-hook 'dired-omit-mode))
+
   (after-load 'dired-x
     (setq-default dired-use-ls-dired nil))
 
   :commands
-  (init-dired
-   dired/hide-cursor
-   dired/sort)
+  (init-dired)
 
   :bind
   (("C-x C-d" . dired/switch-or-jump)
@@ -190,56 +189,58 @@
   :load-path "prog")
 
 (use-package ido
-  :init (progn
-          (use-package idomenu
-            :ensure t)
+  :init
+  (use-package idomenu
+    :ensure t)
 
-          (use-package crm-custom
-            :config (crm-custom-mode 1)
-            :ensure t)
+  (use-package crm-custom
+    :config
+    (crm-custom-mode 1)
+    :ensure t)
 
-          (use-package ido-vertical-mode
-            :config (progn
-                      (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-                      (ido-vertical-mode))
-            :ensure t)
+  (use-package ido-vertical-mode
+    :config
+    (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+    (ido-vertical-mode)
+    :ensure t)
 
-          (use-package ido-completing-read+
-            :ensure t)
+  (use-package ido-completing-read+
+    :ensure t)
 
-          (use-package ido-ubiquitous
-            :config (ido-ubiquitous-mode)
-            :ensure t)
+  (use-package ido-ubiquitous
+    :config (ido-ubiquitous-mode)
+    :ensure t)
 
-          (use-package smex
-            ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
-            ;; your recently and most frequently used commands.
-            :ensure t)
+  (use-package smex
+    ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
+    ;; your recently and most frequently used commands.
+    :ensure t)
 
-          (use-package imenu-anywhere
-            :config (ido-everywhere)
-            :ensure t))
-  :config (progn
-            (setq ido-enable-flex-matching t
-                  ido-use-filename-at-point nil
-                  ido-auto-merge-work-directories-length -1
-                  ido-use-virtual-buffers t
-                  ido-confirm-unique-completion t
-                  ido-default-buffer-method 'selected-window)
+  (use-package imenu-anywhere
+    :config (ido-everywhere)
+    :ensure t)
 
-            (global-set-key [remap execute-extended-command] 'smex)
-            (defadvice ido-find-file (after find-file-sudo activate)
-              "Find file as root if necessary."
-              (unless (and buffer-file-name
-                           (file-writable-p buffer-file-name))
-                (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-            (defun bind-ido-keys ()
-              "Keybindings for ido mode."
-              (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-              (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
-            (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-            (add-hook 'ido-setup-hook #'bind-ido-keys)
-            (ido-mode)))
+  :config
+  (setq ido-enable-flex-matching t
+        ido-use-filename-at-point nil
+        ido-auto-merge-work-directories-length -1
+        ido-use-virtual-buffers t
+        ido-confirm-unique-completion t
+        ido-default-buffer-method 'selected-window)
+
+  (global-set-key [remap execute-extended-command] 'smex)
+  (defadvice ido-find-file (after find-file-sudo activate)
+    "Find file as root if necessary."
+    (unless (and buffer-file-name
+                 (file-writable-p buffer-file-name))
+      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+  (defun bind-ido-keys ()
+    "Keybindings for ido mode."
+    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+    (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
+  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+  (add-hook 'ido-setup-hook #'bind-ido-keys)
+  (ido-mode))
 
 (use-package init-editing-utils
   :load-path "lisp")
@@ -258,10 +259,6 @@
          ("C-M-n" . org-forward-heading-same-level)
          ("C-M-p" . org-backward-heading-same-level))
   :config (progn
-            ;; use org structures and tables in message mode
-            ;; (add-hook 'prog-mode-hook 'turn-on-orgtbl)
-            ;; (add-hook 'prog-mode-hook 'turn-on-orgstruct++)
-
             (use-package org-fstree
               :ensure t)
 
@@ -347,11 +344,12 @@
           (use-package font-utils)))
 
 (use-package multiple-cursors
-  :commands (mc/mark-next-like-this
-             mc/mark-previous-like-this
-             mc/mark-all-like-this)
-  :config (progn
-            (setq-default mc/list-file (tmp/ "multiple-cursors-data.el")))
+  :commands
+  (mc/mark-next-like-this
+   mc/mark-previous-like-this
+   mc/mark-all-like-this)
+  :config
+  (setq-default mc/list-file (tmp/ "multiple-cursors-data.el"))
   :ensure t)
 
 (use-package regex-tool
@@ -362,7 +360,7 @@
   :commands pdf-tools-install
   :ensure t)
 
-(use-package nhexl-mode)
+;; (use-package nhexl-mode)
 
 ;; https://github.com/kiwanami/emacs-calfw
 (use-package calfw
@@ -375,11 +373,9 @@
              magit-commit
              magit-push-current
              magit-log-buffer-file)
-  :config (progn
-            (use-package git-timemachine
-              :ensure t)
-
-            (setq magit-completing-read-function 'magit-ido-completing-read))
+  :config
+  (use-package git-timemachine :ensure t)
+  (setq magit-completing-read-function 'magit-ido-completing-read)
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
@@ -387,68 +383,66 @@
          ("C-x g p c" . magit-push-current))
   :ensure t)
 
-(use-package my/project-management
-  :init (progn
-          (setq-default bookmark-default-file (dropbox/ "bookmarks.txt")
-                        bookmark-save-flag t)
-          (use-package bookmark+
-            :config (progn
-                      (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")))
-            :ensure t)))
 
-(use-package my/internet-services
-  :init (progn
-          (use-package google-translate
-            :commands translate-text
-            :config (defun translate-text (sentence)
-                      "Google translate without specifying language."
-                      (interactive "sTranslate sentence: ")
-                      (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
-                                                   ("[а-яА-Я]" . ("ru" "en"))))
-                      (dolist (lang-regex lang-regexes)
-                        (if (string-match (car lang-regex) sentence)
-                            (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
-            :ensure t)))
+(use-package bookmark+
+  :config
+  (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
+                bookmark-default-file (dropbox/ "bookmarks.txt")
+                bookmark-save-flag t)
+  :ensure t)
+
+
+(use-package google-translate
+  :commands translate-text
+  :config
+  (defun translate-text (sentence)
+    "Google translate without specifying language."
+    (interactive "sTranslate sentence: ")
+    (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                 ("[а-яА-Я]" . ("ru" "en"))))
+    (dolist (lang-regex lang-regexes)
+      (if (string-match (car lang-regex) sentence)
+          (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
+  :ensure t)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 (use-package my/process-management
   :init (progn
           (use-package elscreen
-            :config (progn
-                      (elscreen-start)
-                      (setq elscreen-display-tab nil))
-            :ensure t)
-
-          (use-package lice
-            :commands lice
+            :config
+            (elscreen-start)
+            (setq elscreen-display-tab nil)
             :ensure t)
 
           ;; https://github.com/ilya-babanov/emacs-bpr
           (use-package bpr
-            :config (progn
-                      (setq bpr-colorize-output t
-                            bpr-close-after-success t
-                            bpr-erase-process-buffer t
-                            bpr-show-progress nil
-                            bpr-open-after-error nil))
+            :config
+            (setq bpr-colorize-output t
+                  bpr-close-after-success t
+                  bpr-erase-process-buffer t
+                  bpr-show-progress nil
+                  bpr-open-after-error nil)
             :ensure t)
 
           (use-package dizzee
             :commands (dz-defservice dz-defservice-group)
-            :config (progn
-                      (defun dz-restart-current ()
-                        (interactive)
-                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-                        (funcall (intern dz-restart-expr)))
-                      (defun dz-stop-current ()
-                        (interactive)
-                        (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-                        (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-                        (funcall (intern dz-restart-expr)))
-                      (global-set-key (kbd "<f5>") 'dz-restart-current)
-                      (global-set-key (kbd "<f4>") 'dz-stop-current)))
+            :config
+            (defun dz-restart-current ()
+              (interactive)
+              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+              (funcall (intern dz-restart-expr)))
+
+            (defun dz-stop-current ()
+              (interactive)
+              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+              (funcall (intern dz-restart-expr)))
+
+            (global-set-key (kbd "<f5>") 'dz-restart-current)
+            (global-set-key (kbd "<f4>") 'dz-stop-current)
+            :ensure t)
 
           (use-package prodigy
             :commands (prodigy
@@ -505,34 +499,34 @@
             :ensure t)))
 
 (use-package super-save
-  :config (progn
-            (super-save-initialize)
-            (setq super-save-auto-save-when-idle t))
+  :config
+  (super-save-initialize)
+  (setq super-save-auto-save-when-idle t)
   :ensure t)
 
 (use-package general
-  :config (progn
-            (general-define-key
-             :keymaps 'global
-             "C-<" 'mc/mark-previous-like-this
-             "C->" 'mc/mark-next-like-this
-             "C-+" 'mc/mark-all-like-this)
+  :config
+  (general-define-key
+   :keymaps 'global
+   "C-<" 'mc/mark-previous-like-this
+   "C->" 'mc/mark-next-like-this
+   "C-+" 'mc/mark-all-like-this)
 
-            (general-define-key
-             :prefix "C-x i"
-             "m" 'imenu-anywhere)
+  (general-define-key
+   :prefix "C-x i"
+   "m" 'imenu-anywhere)
 
-            (general-define-key
-             :prefix "C-x y"
-             "t t" 'translate-text
-             "p" 'prodigy
-             "f f" 'toggle-frame-fullscreen
-             "i" 'yas-ido-expand)
+  (general-define-key
+   :prefix "C-x y"
+   "t t" 'translate-text
+   "p" 'prodigy
+   "f f" 'toggle-frame-fullscreen
+   "i" 'yas-ido-expand)
 
-            (general-define-key
-             :keymaps 'ido-completion-map
-             "C-n" 'ido-next-match
-             "C-p" 'ido-prev-match))
+  (general-define-key
+   :keymaps 'ido-completion-map
+   "C-n" 'ido-next-match
+   "C-p" 'ido-prev-match)
   :ensure t)
 
 (require 'init-local nil t)
