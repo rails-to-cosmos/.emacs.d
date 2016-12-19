@@ -38,47 +38,39 @@
 (use-package init-shell
   :load-path "core")
 
-(use-package init-buffers
-  :load-path "core"
-  :config
-  (after-load 'switch-window
-    (setq-default switch-window-shortcut-style 'alphabet))
-  :bind
-  (("C-x o" . switch-window)
-   ("C-x 1" . delete-other-windows)
-   ("C-x 2" . split-window-vertically-swap)
-   ("C-x 3" . split-window-horizontally-swap))
-  :commands
-  (split-window-func-with-other-buffer
-   immortal-scratch
-   delete-this-file
-   rename-this-file-and-buffer
-   save-buffers-kill-emacs
-   get-window-in-frame
-   set-window-buffer-in-frame))
+(use-package init-windows
+  :load-path "packages/windows"
+  :init (progn
+          (add-hook 'after-init-hook 'prevent-active-processes-exist))
+  :bind (("C-x o" . switch-window)
+         ("C-x 1" . delete-other-windows)
+         ("C-x 2" . split-window-vertically-swap)
+         ("C-x 3" . split-window-horizontally-swap))
+  :commands (prevent-active-processes-exist
+             split-window-func-with-other-buffer
+             immortal-scratch
+             delete-this-file
+             rename-this-file-and-buffer
+             save-buffers-kill-emacs
+             get-window-in-frame
+             set-window-buffer-in-frame))
 
-(add-hook 'grep-mode-hook 'init-grep-mode)
-(defun init-grep-mode ()
-  "Install packages for ‘grep-mode’."
-  (use-package wgrep
-    :ensure t))
+(use-package wgrep
+    :ensure t)
 
-(add-hook 'after-init-hook 'init-flycheck)
-(defun init-flycheck ()
-  "Install packages for ‘flycheck-mode’."
-  (use-package flycheck
-    :config
-    (setq-default
-     flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-     flycheck-idle-change-delay 5
-     flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
-    (global-flycheck-mode)
-    :ensure t))
+(use-package flycheck
+  :config (progn
+            (setq-default
+             flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+             flycheck-idle-change-delay 5
+             flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
+            (global-flycheck-mode))
+   :ensure t)
 
 (use-package snippets
   :load-path "editor"
-  :config
-  (add-to-list 'yas-snippet-dirs (dropbox/ "snippets"))
+  :config (progn
+            (add-to-list 'yas-snippet-dirs (dropbox/ "snippets")))
   :commands (yas-ido-expand
              yas-new-snippet
              yas-recompile-all
@@ -88,9 +80,34 @@
   :load-path "editor"
   :commands (save-macro))
 
-(use-package ac
-  :load-path "editor"
-  :bind ("M-/" . hippie-expand))
+(use-package company
+  :config (progn
+            (global-company-mode))
+  :ensure t)
+
+(use-package hippie-expand
+  :bind ("M-/" . hippie-expand)
+  :config (progn
+            (message "Hello there, hippies!")
+            (setq-default hippie-expand-try-functions-list
+                          '(try-expand-dabbrev
+                            try-expand-dabbrev-all-buffers
+                            try-expand-dabbrev-from-kill
+                            try-complete-file-name-partially
+                            try-complete-file-name
+                            try-expand-all-abbrevs
+                            try-expand-list
+                            try-expand-line
+                            try-complete-lisp-symbol-partially
+                            try-complete-lisp-symbol))))
+
+;; (use-package autocomplete
+;;   :config (progn
+;;             (setq read-file-name-completion-ignore-case t
+;;                   read-buffer-completion-ignore-case t)
+;;             (mapc (lambda (x)
+;;                     (add-to-list 'completion-ignored-extensions x))
+;;                   '(".tramp_history" ".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))))
 
 (use-package folding
   :load-path "editor"
@@ -106,13 +123,13 @@
 (use-package init-python
   :load-path "prog"
 
-  :init
-  (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
-  (add-hook 'python-mode-hook 'init-python)
-  (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-  (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'python-mode-hook 'linum-mode)
-  (add-hook 'python-mode-hook 'elpy-mode)
+  :init (progn
+          (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
+          (add-hook 'python-mode-hook 'init-python)
+          (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+          (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
+          (add-hook 'python-mode-hook 'linum-mode)
+          (add-hook 'python-mode-hook 'elpy-mode))
 
   :mode ("\\.py\\'" . python-mode)
 
@@ -128,42 +145,31 @@
 
 (use-package db
   :load-path "prog"
-  :config
-  (setq-default
-   edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
-   sqlplus-session-cache-dir (tmp/ "sqlplus-session"))
+  :config (progn
+            (setq-default edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
+                          sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
   :bind (("C-x y q" . sqp-connect))
   :commands (init-db))
 
 (use-package xmpp
   :load-path "chat"
-  :config
-  (setq-default
-   jabber-global-history-filename (dropbox/ "jabber-history.txt"))
+  :config (progn
+            (setq-default
+             jabber-global-history-filename (dropbox/ "jabber-history.txt")))
   :commands (init-jabber))
 
 (use-package init-dired
   :load-path "packages/dired"
 
-  :init
-  (after-load 'dired
-    (add-hook 'dired-mode-hook 'init-dired)
-    (add-hook 'dired-after-readin-hook 'dired/hide-cursor)
-    (add-hook 'dired-after-readin-hook 'dired/sort)
-    (add-hook 'dired-after-readin-hook 'hl-line-mode)
-    (add-hook 'dired-after-readin-hook 'dired-omit-mode))
+  :init (progn
+          (add-hook 'dired-mode-hook 'init-dired))
 
-  (after-load 'dired-x
-    (setq-default dired-use-ls-dired nil))
+  :commands (init-dired)
 
-  :commands
-  (init-dired)
-
-  :bind
-  (("C-x C-d" . dired/switch-or-jump)
-   :map dired-mode-map
-   ("<backspace>" . dired-up-directory)
-   ("/" . dired-narrow-fuzzy)))
+  :bind (("C-x C-d" . dired/switch-or-jump)
+         :map dired-mode-map
+         ("<backspace>" . dired-up-directory)
+         ("/" . dired-narrow-fuzzy)))
 
 (use-package rsync
   :load-path "fs"
@@ -188,59 +194,12 @@
 (use-package init-web
   :load-path "prog")
 
-(use-package ido
-  :init
-  (use-package idomenu
-    :ensure t)
+(use-package init-ido
+  :load-path "packages/ido")
 
-  (use-package crm-custom
-    :config
-    (crm-custom-mode 1)
-    :ensure t)
-
-  (use-package ido-vertical-mode
-    :config
-    (setq ido-vertical-define-keys 'C-n-and-C-p-only)
-    (ido-vertical-mode)
-    :ensure t)
-
-  (use-package ido-completing-read+
-    :ensure t)
-
-  (use-package ido-ubiquitous
-    :config (ido-ubiquitous-mode)
-    :ensure t)
-
-  (use-package smex
-    ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
-    ;; your recently and most frequently used commands.
-    :ensure t)
-
-  (use-package imenu-anywhere
-    :config (ido-everywhere)
-    :ensure t)
-
-  :config
-  (setq ido-enable-flex-matching t
-        ido-use-filename-at-point nil
-        ido-auto-merge-work-directories-length -1
-        ido-use-virtual-buffers t
-        ido-confirm-unique-completion t
-        ido-default-buffer-method 'selected-window)
-
-  (global-set-key [remap execute-extended-command] 'smex)
-  (defadvice ido-find-file (after find-file-sudo activate)
-    "Find file as root if necessary."
-    (unless (and buffer-file-name
-                 (file-writable-p buffer-file-name))
-      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-  (defun bind-ido-keys ()
-    "Keybindings for ido mode."
-    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-    (define-key ido-completion-map (kbd "C-p") 'ido-prev-match))
-  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
-  (add-hook 'ido-setup-hook #'bind-ido-keys)
-  (ido-mode))
+(use-package imenu-anywhere
+  :config (ido-everywhere)
+  :ensure t)
 
 (use-package init-editing-utils
   :load-path "lisp")
