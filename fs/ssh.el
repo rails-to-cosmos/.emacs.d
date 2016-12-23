@@ -19,6 +19,12 @@
 
 (defun init-ssh () "Initialize ssh with my configuration." (interactive))
 
+(defun keys (inlist)
+  "Return keys of INLIST."
+  (let ((alkeys (list)))
+    (mapc (lambda (key) (add-to-list 'alkeys (car key))) inlist)
+    alkeys))
+
 (defun ssh-connect (&optional foreign-buffer)
   "Manage ssh connections, if FOREIGN-BUFFER > 1, do not reuse eshell."
   (interactive "p")

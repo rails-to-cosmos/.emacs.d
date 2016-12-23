@@ -1,3 +1,5 @@
 * Install
+** ubuntu
+http://ftp.gnu.org/gnu/emacs/
 ** osx
 brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus

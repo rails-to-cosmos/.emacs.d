@@ -6,11 +6,10 @@
   "Initialize dired with my configuration."
   (interactive)
 
-  (after-load 'dired
-    (add-hook 'dired-before-readin-hook 'dired/hide-cursor)
-    (add-hook 'dired-before-readin-hook 'dired/sort)
-    (add-hook 'dired-before-readin-hook 'hl-line-mode)
-    (add-hook 'dired-before-readin-hook 'dired-omit-mode))
+  (add-hook 'dired-before-readin-hook 'dired/hide-cursor)
+  (add-hook 'dired-before-readin-hook 'dired/sort)
+  (add-hook 'dired-before-readin-hook 'hl-line-mode)
+  (add-hook 'dired-before-readin-hook 'dired-omit-mode)
 
   (after-load 'dired-x
     (setq-default dired-use-ls-dired nil))
