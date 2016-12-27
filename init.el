@@ -16,8 +16,11 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-(use-package diminish :ensure t)
-(use-package bind-key :ensure t)
+(use-package diminish
+  :ensure t)
+
+(use-package bind-key
+  :ensure t)
 
 (defmacro after-load (feature &rest body)
   "After FEATURE is loaded, evaluate BODY."
@@ -26,17 +29,17 @@
      '(progn ,@body)))
 
 (use-package init-req-dirs
-  :load-path "core"
+  :load-path "packages/core"
   :commands (tmp/ dropbox/))
 
 (use-package init-mac
-  :load-path "core")
+  :load-path "packages/core")
 
 (use-package init-bindings
-  :load-path "core")
+  :load-path "packages/core")
 
 (use-package init-shell
-  :load-path "core")
+  :load-path "packages/core")
 
 (use-package init-windows
   :load-path "packages/windows"
@@ -56,7 +59,7 @@
              set-window-buffer-in-frame))
 
 (use-package wgrep
-    :ensure t)
+  :ensure t)
 
 (use-package flycheck
   :config (progn
@@ -68,7 +71,7 @@
    :ensure t)
 
 (use-package snippets
-  :load-path "editor"
+  :load-path "packages/editor"
   :config (progn
             (add-to-list 'yas-snippet-dirs (dropbox/ "snippets")))
   :commands (yas-ido-expand
@@ -77,7 +80,7 @@
              yas-reload-all))
 
 (use-package macro
-  :load-path "editor"
+  :load-path "packages/editor"
   :commands (save-macro))
 
 (use-package company
@@ -110,14 +113,14 @@
 ;;                   '(".tramp_history" ".$$$" ".000" ".a" ".a26" ".a78" ".acn" ".acr" ".agdai" ".aif" ".alg" ".ali" ".aliases" ".annot" ".ap_" ".api" ".api-txt" ".apk" ".app" ".aps" ".autosave" ".aux" ".auxlock" ".avi" ".azurePubxml" ".bak" ".bbl" ".bcf" ".bck" ".beam" ".beams" ".bim.layout" ".bin" ".blg" ".booproj" ".bowerrc" ".box" ".bpi" ".bpl" ".brf" ".bs" ".build.csdef" ".byte" ".cachefile" ".c_date" ".cfg" ".cfgc" ".cgo1.go" ".cgo2.c" ".chi" ".chs.h" ".class" ".cma" ".cmi" ".cmo" ".cmp" ".cmx" ".cmxa" ".cmxs" ".crc" ".crs" ".csproj" ".css.map" ".cubin" ".d" ".dart.js" ".db" ".dbmdl" ".dbproj.schemaview" ".dcp" ".dcu" ".debug" ".debug.app" ".def" ".DEPLOYED" ".dex" ".dll" ".dmb" ".dotCover" ".DotSettings.user" ".dox" ".dpth" ".drc" ".drd" ".dres" ".dri" ".drl" ".dsk" ".dump" ".dvi" ".dylib" ".dyn_hi" ".dyn_o" ".ear" ".pyc" ".xls" ".DS_Store"))))
 
 (use-package folding
-  :load-path "editor"
+  :load-path "packages/editor"
   :bind (:map prog-mode-map
               ("C-c f t" . origami-toggle-node)
               ("C-c f r" . origami-recursively-toggle-node)
               ("C-c f o" . origami-show-only-node)))
 
 (use-package log
-  :load-path "editor"
+  :load-path "packages/editor"
   :commands (mwe:log-keyboard-commands))
 
 (use-package init-python
@@ -143,13 +146,12 @@
              jedi:goto-definition
              elpy-mode))
 
-(use-package db
+(use-package init-db
   :load-path "prog"
   :config (progn
             (setq-default edbi:ds-history-file (tmp/ "edbi-ds-history.txt")
                           sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
-  :bind (("C-x y q" . sqp-connect))
-  :commands (init-db))
+  :bind (("C-x y q" . sqp-connect)))
 
 (use-package xmpp
   :load-path "chat"
@@ -344,10 +346,10 @@
 
 
 (use-package bookmark+
-  :config
-  (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
-                bookmark-default-file (dropbox/ "bookmarks.txt")
-                bookmark-save-flag t)
+  :init (progn
+          (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
+                        bookmark-default-file (dropbox/ "bookmarks.txt")
+                        bookmark-save-flag t))
   :ensure t)
 
 
@@ -491,7 +493,7 @@
 (require 'init-local nil t)
 
 (use-package init-ui
-  :load-path "core")
+  :load-path "packages/core")
 
 (provide 'init)
 ;;; init.el ends here
