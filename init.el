@@ -323,9 +323,8 @@
              magit-commit
              magit-push-current
              magit-log-buffer-file)
-  :config
-  (use-package git-timemachine :ensure t)
-  (setq magit-completing-read-function 'magit-ido-completing-read)
+  :config (progn
+            (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
@@ -333,6 +332,8 @@
          ("C-x g p c" . magit-push-current))
   :ensure t)
 
+(use-package monky
+  :load-path "packages/vcs/monky")
 
 (use-package bookmark+
   :init (progn
