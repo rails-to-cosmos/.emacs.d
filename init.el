@@ -25,7 +25,7 @@
 (use-package simplifies
   :load-path "packages/core")
 
-(use-package init-req-dirs
+(use-package directories
   :load-path "packages/core"
   :commands (tmp/ dropbox/))
 

@@ -1,8 +1,6 @@
-;;; init-req-dirs.el --- my default directories
+;;; directories.el --- my default directories
 ;;; Commentary:
 ;;; Code:
-
-(defun init-req-dirs () "Initialize init-req-dirs with my configuration." (interactive))
 
 (defun custom/ (filename dirname)
   "Get path to FILENAME in DIRNAME."
@@ -20,5 +18,5 @@
 (setq-default
  custom-file (tmp/ "custom.el"))
 
-(provide 'init-req-dirs)
-;;; init-req-dirs.el ends here
+(provide 'directories)
+;;; directories.el ends here
