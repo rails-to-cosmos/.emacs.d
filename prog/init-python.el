@@ -39,20 +39,20 @@
                           python-indent-offset 4))
   :ensure t)
 
-(use-package pungi
-  :ensure t)
+;; (use-package pungi
+;;   :ensure t)
 
-(use-package cinspect
-  :ensure t)
+;; (use-package cinspect
+;;   :ensure t)
 
-(use-package py-isort
-  :ensure t)
+;; (use-package py-isort
+;;   :ensure t)
 
-(use-package py-yapf
-  :ensure t)
+;; (use-package py-yapf
+;;   :ensure t)
 
-(use-package rainbow-delimiters
-  :ensure t)
+;; (use-package rainbow-delimiters
+;;   :ensure t)
 
 (use-package virtualenv
   :config (progn

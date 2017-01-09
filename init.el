@@ -153,9 +153,14 @@
   :load-path "packages/dired"
 
   :init (progn
-          (add-hook 'dired-mode-hook 'init-dired))
+          (add-hook 'dired-before-readin-hook 'dired/hide-cursor)
+          (add-hook 'dired-before-readin-hook 'hl-line-mode)
+          (add-hook 'dired-before-readin-hook 'dired-omit-mode)
+          (add-hook 'dired-mode-hook 'install-dired-x))
 
-  :commands (init-dired)
+  :commands (install-dired-x
+             dired/hide-cursor
+             dired/sort)
 
   :bind (("C-x C-d" . dired/switch-or-jump)
          :map dired-mode-map
