@@ -23,11 +23,15 @@
   :ensure t)
 
 (use-package simplifies
-  :load-path "packages/core")
+  :load-path "packages/core"
+  :commands (after-load ;; After FEATURE is loaded, evaluate BODY.
+              ))
 
 (use-package directories
   :load-path "packages/core"
-  :commands (tmp/ dropbox/))
+  :commands (tmp/ ;; Directory containing temporary files.
+             dropbox/ ;; Directory containing shared files.
+             ))
 
 (use-package init-mac
   :load-path "packages/core")
