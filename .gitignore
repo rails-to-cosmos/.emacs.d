@@ -41,3 +41,4 @@ sqlplus-session
 /.org-id-locations
 tmp/*
 spu_log
+/network-security.data
