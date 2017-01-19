@@ -131,12 +131,14 @@
 
   :bind (:map elpy-mode-map
               ("C-c C-b" . python-add-breakpoint)
-              ("C-c C-g" . jedi:goto-definition))
+              ;; ("C-c C-g" . jedi:goto-definition)
+              )
 
   :commands (init-python
              python-add-breakpoint
              python-highlight-breakpoints
-             jedi:goto-definition
+             ;; jedi:install-server
+             ;; jedi:goto-definition
              elpy-mode))
 
 (use-package init-db
@@ -230,7 +232,8 @@
 
             (defun org-archive-done-tasks ()
               (interactive)
-              (org-map-entries 'org-archive-subtree "/DONE" 'file))
+              (org-map-entries 'org-archive-subtree "/DONE" 'file)
+              (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
 
             (setq-default org-log-done t
                           org-completion-use-ido t

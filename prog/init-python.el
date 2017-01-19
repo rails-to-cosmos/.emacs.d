@@ -34,9 +34,10 @@
   :interpreter ("ipython" . python-mode)
   :config (progn
             (elpy-enable)
-            (jedi:install-server)
-            (setq-default jedi:complete-on-dot t
-                          python-indent-offset 4))
+            ;; (jedi:install-server)
+            (setq-default python-indent-offset 4
+                          ;; jedi:complete-on-dot t
+                          ))
   :ensure t)
 
 ;; (use-package pungi

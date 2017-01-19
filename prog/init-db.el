@@ -4,6 +4,9 @@
 
 (defvar sqp-connections)
 
+(use-package sqlplus
+  :ensure t)
+
 (defun sqp-connect ()
   "Manage sqp connections."
   (interactive)
