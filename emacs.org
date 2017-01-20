@@ -3,3 +3,5 @@
 http://ftp.gnu.org/gnu/emacs/
 ** osx
 brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
+* Tasks
+** TODO Dired-buffers switching (C-x C-d C-d C-d ...)
