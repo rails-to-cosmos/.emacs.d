@@ -9,14 +9,17 @@
     (mapc (lambda (key) (add-to-list 'alkeys (car key))) inlist)
     alkeys))
 
-(setq-default balance/current-tasks '("BALANCE-24291 — stat_aggregator"
-                                      "BALANCE-24258 — release"))
+(setq-default balance/current-tasks
+              '("BALANCE-24291 — stat_aggregator"))
+
+(defun task-manager/browse-task (task-name)
+  (browse-url
+   (concat "https://st.yandex-team.ru/"
+           (car (split-string task-name)))))
 
 (setq-default balance/actions
-              '(("*browse*" . (lambda (task) (browse-url
-                                         (concat "https://st.yandex-team.ru/"
-                                                 (car (split-string task))))))
-                ("*insert*" . (lambda (task) (insert (car (split-string task)))))))
+              '(("browse" . task-manager/browse-task)
+                ("insert" . (lambda (task) (insert (car (split-string task)))))))
 
 (defun balance/process-task ()
   "Insert one of my current tasks name."

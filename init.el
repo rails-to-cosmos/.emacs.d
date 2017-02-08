@@ -370,6 +370,13 @@
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
+(use-package perspeen
+  :ensure t
+  :init (progn
+          (setq perspeen-use-tab t))
+  :config (progn
+            (perspeen-mode)))
+
 (use-package my/process-management
   :init (progn
           (use-package elscreen
