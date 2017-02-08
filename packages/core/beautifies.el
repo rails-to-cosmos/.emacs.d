@@ -60,5 +60,11 @@
  cursor-type 'box
  frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
 
+(diminish 'undo-tree-mode)
+(diminish 'flycheck-mode)
+(diminish 'eldoc-mode)
+(diminish 'elisp-slime-nav-mode)
+(diminish 'paredit-mode)
+
 (provide 'beautifies)
 ;;; beautifies.el ends here

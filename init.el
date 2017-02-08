@@ -85,6 +85,7 @@
   :commands (save-macro))
 
 (use-package company
+  :diminish company-mode
   :config (progn
             (global-company-mode))
   :ensure t)
@@ -371,102 +372,100 @@
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 (use-package perspeen
-  :ensure t
   :init (progn
-          (setq perspeen-use-tab t))
+          (setq perspeen-use-tab nil))
   :config (progn
-            (perspeen-mode)))
+            (perspeen-mode))
+  :ensure t)
 
-(use-package my/process-management
-  :init (progn
-          (use-package elscreen
-            :config
-            (elscreen-start)
-            (setq elscreen-display-tab nil)
-            :ensure t)
+(use-package powerline
+  :config (progn
+            (powerline-default-theme)
+            (setq powerline-default-separator nil))
+  :ensure t)
 
-          ;; https://github.com/ilya-babanov/emacs-bpr
-          (use-package bpr
-            :config
-            (setq bpr-colorize-output t
-                  bpr-close-after-success t
-                  bpr-erase-process-buffer t
-                  bpr-show-progress nil
-                  bpr-open-after-error nil)
-            :ensure t)
+;; https://github.com/ilya-babanov/emacs-bpr
+(use-package bpr
+  :config
+  (setq bpr-colorize-output t
+        bpr-close-after-success t
+        bpr-erase-process-buffer t
+        bpr-show-progress nil
+        bpr-open-after-error nil)
+  :ensure t)
 
-          (use-package dizzee
-            :commands (dz-defservice dz-defservice-group)
-            :config
-            (defun dz-restart-current ()
+(use-package dizzee
+  :commands (dz-defservice dz-defservice-group)
+  :config
+  (defun dz-restart-current ()
+    (interactive)
+    (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+    (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+    (funcall (intern dz-restart-expr)))
+
+  (defun dz-stop-current ()
+    (interactive)
+    (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+    (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+    (funcall (intern dz-restart-expr)))
+
+  (global-set-key (kbd "<f5>") 'dz-restart-current)
+  (global-set-key (kbd "<f4>") 'dz-stop-current)
+  :ensure t)
+
+(use-package prodigy
+  :commands (prodigy
+             prodigy-start-all-services)
+  :config (progn
+            (defun ido-prodigy-menu ()
               (interactive)
-              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-              (funcall (intern dz-restart-expr)))
+              (let* ((ido-prodigy-choices (mapcar (lambda (serv)
+                                                    (let* ((status (prodigy-service-started-p serv))
+                                                           (service-name (cadr serv))
+                                                           (stopped-label service-name)
+                                                           (started-label  service-name))
+                                                      (if status started-label
+                                                        stopped-label)))
+                                                  prodigy-services)))
+                (message (ido-completing-read "Service: " ido-prodigy-choices))))
 
-            (defun dz-stop-current ()
+            (defun find-prodigy-service-with-name (service-name)
+              (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
+                                      prodigy-services)))
+                (car matches)))
+
+            (defun prodigy-apply-to-services (services fn)
+              (prodigy-with-refresh
+               (-each services fn)))
+
+            (defun prodigy-start-all-services ()
               (interactive)
-              (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-              (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-              (funcall (intern dz-restart-expr)))
+              (prodigy-apply-to-services prodigy-services
+                                         'prodigy-start-service))
 
-            (global-set-key (kbd "<f5>") 'dz-restart-current)
-            (global-set-key (kbd "<f4>") 'dz-stop-current)
-            :ensure t)
+            (defun prodigy-stop-all-services ()
+              (interactive)
+              (prodigy-apply-to-services prodigy-services
+                                         'prodigy-stop-service))
 
-          (use-package prodigy
-            :commands (prodigy
-                       prodigy-start-all-services)
-            :config (progn
-                      (defun ido-prodigy-menu ()
-                        (interactive)
-                        (let* ((ido-prodigy-choices (mapcar (lambda (serv)
-                                                              (let* ((status (prodigy-service-started-p serv))
-                                                                     (service-name (cadr serv))
-                                                                     (stopped-label service-name)
-                                                                     (started-label  service-name))
-                                                                (if status started-label
-                                                                  stopped-label)))
-                                                            prodigy-services)))
-                          (message (ido-completing-read "Service: " ido-prodigy-choices))))
+            ;; TODO pull this feature
+            (defun prodigy-stop-services-with-tag (tag)
+              (interactive "MTag: ")
+              (prodigy-apply-to-services
+               (prodigy-services-tagged-with (intern tag))
+               'prodigy-stop-service))
 
-                      (defun find-prodigy-service-with-name (service-name)
-                        (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
-                                                prodigy-services)))
-                          (car matches)))
-
-                      (defun prodigy-apply-to-services (services fn)
-                        (prodigy-with-refresh
-                         (-each services fn)))
-
-                      (defun prodigy-start-all-services ()
-                        (interactive)
-                        (prodigy-apply-to-services prodigy-services
-                                                   'prodigy-start-service))
-
-                      (defun prodigy-stop-all-services ()
-                        (interactive)
-                        (prodigy-apply-to-services prodigy-services
-                                                   'prodigy-stop-service))
-
-                      ;; TODO pull this feature
-                      (defun prodigy-stop-services-with-tag (tag)
-                        (interactive "MTag: ")
-                        (prodigy-apply-to-services
-                         (prodigy-services-tagged-with (intern tag))
-                         'prodigy-stop-service))
-
-                      ;; TODO pull this feature
-                      (defun prodigy-start-services-with-tag (tag)
-                        (interactive "MTag: ")
-                        (prodigy-apply-to-services
-                         (prodigy-services-tagged-with (intern tag))
-                         'prodigy-start-service))
-                      (prodigy-define-default-status-list)
-                      (prodigy-define-tag
-                        :name 'django
-                        :ready-message "Quit the server with CONTROL-C"))
-            :ensure t)))
+            ;; TODO pull this feature
+            (defun prodigy-start-services-with-tag (tag)
+              (interactive "MTag: ")
+              (prodigy-apply-to-services
+               (prodigy-services-tagged-with (intern tag))
+               'prodigy-start-service))
+            (prodigy-define-default-status-list)
+            (prodigy-define-tag
+              :name 'django
+              :ready-message "Quit the server with CONTROL-C"))
+  :ensure t)
 
 (use-package super-save
   :config
