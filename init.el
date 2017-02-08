@@ -120,6 +120,9 @@
 (use-package init-python
   :load-path "prog"
 
+  :diminish (rainbow-delimiters-mode
+             rainbow-mode)
+
   :init (progn
           (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
           (add-hook 'python-mode-hook 'init-python)
