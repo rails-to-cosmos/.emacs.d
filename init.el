@@ -359,18 +359,17 @@
                         bookmark-save-flag t))
   :ensure t)
 
-
 (use-package google-translate
   :commands translate-text
-  :config
-  (defun translate-text (sentence)
-    "Google translate without specifying language."
-    (interactive "sTranslate sentence: ")
-    (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
-                                 ("[а-яА-Я]" . ("ru" "en"))))
-    (dolist (lang-regex lang-regexes)
-      (if (string-match (car lang-regex) sentence)
-          (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence))))
+  :config (progn
+            (defun translate-text (sentence)
+              "Google translate without specifying language."
+              (interactive "sTranslate sentence: ")
+              (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                           ("[а-яА-Я]" . ("ru" "en"))))
+              (dolist (lang-regex lang-regexes)
+                (if (string-match (car lang-regex) sentence)
+                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))))
   :ensure t)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
