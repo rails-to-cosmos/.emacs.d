@@ -217,6 +217,7 @@
   :load-path "lisp")
 
 (use-package org
+  :diminish (org-indent-mode)
   :bind (("C-c l" . org-store-link)
          ("C-c a" . org-agenda)
          ("C-c c" . org-capture)
