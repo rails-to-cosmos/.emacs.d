@@ -270,6 +270,8 @@
 
             (use-package org-babel
               :config (progn
+                        (add-hook 'org-mode-hook 'org-hide-block-all)
+
                         (org-babel-do-load-languages
                          'org-babel-load-languages
                          '((python . t)
@@ -281,7 +283,59 @@
                         (defun my-org-confirm-babel-evaluate (lang body)
                           (not (string= lang "python")))  ; don't ask for python
 
-                        (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)))
+                        (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
+
+                        (require 'async)
+                        (require 'org-id)
+
+                        (defun org-babel-async-execute ()
+                          (interactive)
+                          (let* ((current-file (buffer-file-name))
+                                 (uuid (org-id-uuid))
+                                 (temporary-file-directory "./")
+                                 (temporary-file-name (concat "py-" uuid))
+                                 (tempfile (make-temp-file temporary-file-name))
+                                 (pbuffer (format "*%s*" uuid))
+                                 process)
+
+                            (org-babel-tangle '(4) tempfile)
+                            (org-babel-remove-result)
+
+                            (save-excursion
+                              (re-search-forward "#\\+END_SRC")
+                              (insert (format
+                                       "\n\n#+RESULTS: %s\n: %s"
+                                       (or (org-element-property :name (org-element-context))
+                                           "")
+                                       temporary-file-name)))
+
+                            (setq process (start-process
+                                           uuid
+                                           pbuffer
+                                           "python"
+                                           tempfile))
+
+                            (set-process-sentinel
+                             process
+                             `(lambda (process event)
+                                (when (string= "finished\n" event)
+                                  (delete-file ,tempfile)
+                                  (save-window-excursion
+                                    (save-excursion
+                                      (save-restriction
+                                        (with-current-buffer (find-file-noselect ,current-file)
+                                          (goto-char (point-min))
+                                          (re-search-forward ,temporary-file-name)
+                                          (beginning-of-line)
+                                          (kill-line)
+                                          (insert (mapconcat
+                                                   (lambda (x)
+                                                     (format ": %s" x))
+                                                   (split-string
+                                                    (with-current-buffer ,pbuffer (buffer-string))
+                                                    "\n")
+                                                   "\n")))))))
+                                (kill-buffer ,pbuffer)))))))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
