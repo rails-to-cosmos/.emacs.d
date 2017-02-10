@@ -269,13 +269,19 @@
                                     org-clock-out-remove-zero-time-clocks t)))
 
             (use-package org-babel
-              :init (progn
-                      (org-babel-do-load-languages
-                       'org-babel-load-languages
-                       '((python . t)
-                         (sql . t)
-                         (sh . t)))
-                      (setq org-src-fontify-natively t)))
+              :config (progn
+                        (org-babel-do-load-languages
+                         'org-babel-load-languages
+                         '((python . t)
+                           (sql . t)
+                           (sh . t)))
+
+                        (setq org-src-fontify-natively t)
+
+                        (defun my-org-confirm-babel-evaluate (lang body)
+                          (not (string= lang "python")))  ; don't ask for python
+
+                        (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
