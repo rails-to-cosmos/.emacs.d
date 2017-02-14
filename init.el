@@ -269,7 +269,7 @@
                                     org-clock-out-remove-zero-time-clocks t)))
 
             (use-package org-babel
-              :config (progn
+              :init (progn
                         (add-hook 'org-mode-hook 'org-hide-block-all)
 
                         (org-babel-do-load-languages
@@ -292,7 +292,7 @@
                           (interactive)
                           (let* ((current-file (buffer-file-name))
                                  (uuid (org-id-uuid))
-                                 (temporary-file-directory "./")
+                                 (temporary-file-directory "/tmp/")
                                  (temporary-file-name (concat "py-" uuid))
                                  (tempfile (make-temp-file temporary-file-name))
                                  (pbuffer (format "*%s*" uuid))
@@ -527,7 +527,15 @@
             (prodigy-define-default-status-list)
             (prodigy-define-tag
               :name 'django
-              :ready-message "Quit the server with CONTROL-C"))
+              :ready-message "Quit the server with CONTROL-C")
+            (prodigy-define-service
+              :name "Jupyter Notebook"
+              :command "jupyter"
+              :args '("notebook")
+              :cwd "~/Dropbox/Documents/SHAD"
+              :tags '(shad)
+              :stop-signal 'sigkill
+              :kill-process-buffer-on-stop t))
   :ensure t)
 
 (use-package super-save
