@@ -270,72 +270,145 @@
 
             (use-package org-babel
               :init (progn
-                        (add-hook 'org-mode-hook 'org-hide-block-all)
+                      (add-hook 'org-mode-hook 'org-hide-block-all)
 
-                        (org-babel-do-load-languages
-                         'org-babel-load-languages
-                         '((python . t)
-                           (sql . t)
-                           (sh . t)))
+                      (org-babel-do-load-languages
+                       'org-babel-load-languages
+                       '((python . t)
+                         (sql . t)
+                         (sh . t)))
 
-                        (setq org-src-fontify-natively t)
+                      (setq org-src-fontify-natively t)
 
-                        (defun my-org-confirm-babel-evaluate (lang body)
-                          (not (string= lang "python")))  ; don't ask for python
+                      (defun my-org-confirm-babel-evaluate (lang body)
+                        (not (string= lang "python")))  ; don't ask for python
 
-                        (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
+                      (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
 
-                        (require 'async)
-                        (require 'org-id)
+                      (require 'async)
+                      (require 'org-id)
 
-                        (defun org-babel-async-execute ()
-                          (interactive)
-                          (let* ((current-file (buffer-file-name))
-                                 (uuid (org-id-uuid))
-                                 (temporary-file-directory "/tmp/")
-                                 (temporary-file-name (concat "py-" uuid))
-                                 (tempfile (make-temp-file temporary-file-name))
-                                 (pbuffer (format "*%s*" uuid))
-                                 process)
+                      (with-eval-after-load 'org
+                        (defvar-local rasmus/org-at-src-begin -1
+                          "Variable that holds whether last position was a ")
 
-                            (org-babel-tangle '(4) tempfile)
-                            (org-babel-remove-result)
+                        (defvar rasmus/ob-header-symbol ?☰
+                          "Symbol used for babel headers")
 
+                        (defun rasmus/org-prettify-src--update ()
+                          (let ((case-fold-search t)
+                                (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
+                                found)
                             (save-excursion
-                              (re-search-forward "#\\+END_SRC")
-                              (insert (format
-                                       "\n\n#+RESULTS: %s\n: %s"
-                                       (or (org-element-property :name (org-element-context))
-                                           "")
-                                       temporary-file-name)))
+                              (goto-char (point-min))
+                              (while (re-search-forward re nil t)
+                                (goto-char (match-end 0))
+                                (let ((args (org-trim
+                                             (buffer-substring-no-properties (point)
+                                                                             (line-end-position)))))
+                                  (when (org-string-nw-p args)
+                                    (let ((new-cell (cons args rasmus/ob-header-symbol)))
+                                      (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
+                                      (cl-pushnew new-cell found :test #'equal)))))
+                              (setq prettify-symbols-alist
+                                    (cl-set-difference prettify-symbols-alist
+                                                       (cl-set-difference
+                                                        (cl-remove-if-not
+                                                         (lambda (elm)
+                                                           (eq (cdr elm) rasmus/ob-header-symbol))
+                                                         prettify-symbols-alist)
+                                                        found :test #'equal)))
+                              ;; Clean up old font-lock-keywords.
+                              (font-lock-remove-keywords nil prettify-symbols--keywords)
+                              (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
+                              (font-lock-add-keywords nil prettify-symbols--keywords)
+                              (while (re-search-forward re nil t)
+                                (font-lock-flush (line-beginning-position) (line-end-position))))))
 
-                            (setq process (start-process
-                                           uuid
-                                           pbuffer
-                                           "python"
-                                           tempfile))
+                        (defun rasmus/org-prettify-src ()
+                          "Hide src options via `prettify-symbols-mode'.
 
-                            (set-process-sentinel
-                             process
-                             `(lambda (process event)
-                                (when (string= "finished\n" event)
-                                  (delete-file ,tempfile)
-                                  (save-window-excursion
-                                    (save-excursion
-                                      (save-restriction
-                                        (with-current-buffer (find-file-noselect ,current-file)
-                                          (goto-char (point-min))
-                                          (re-search-forward ,temporary-file-name)
-                                          (beginning-of-line)
-                                          (kill-line)
-                                          (insert (mapconcat
-                                                   (lambda (x)
-                                                     (format ": %s" x))
-                                                   (split-string
-                                                    (with-current-buffer ,pbuffer (buffer-string))
-                                                    "\n")
-                                                   "\n")))))))
-                                (kill-buffer ,pbuffer)))))))
+  `prettify-symbols-mode' is used because it has uncollpasing. It's
+  may not be efficient."
+                          (let* ((case-fold-search t)
+                                 (at-src-block (save-excursion
+                                                 (beginning-of-line)
+                                                 (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
+                            ;; Test if we moved out of a block.
+                            (when (or (and rasmus/org-at-src-begin
+                                           (not at-src-block))
+                                      ;; File was just opened.
+                                      (eq rasmus/org-at-src-begin -1))
+                              (rasmus/org-prettify-src--update))
+                            ;; Remove composition if at line; doesn't work properly.
+                            ;; (when at-src-block
+                            ;;   (with-silent-modifications
+                            ;;     (remove-text-properties (match-end 0)
+                            ;;                             (1+ (line-end-position))
+                            ;;                             '(composition))))
+                            (setq rasmus/org-at-src-begin at-src-block)))
+
+                        (defun rasmus/org-prettify-symbols ()
+                          (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
+                                (cl-reduce 'append
+                                           (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                                                   `(("#+begin_src" . ?λ) ;; ➤ 🖝 ➟ ➤ ✎
+                                                     ("#+end_src"   . ?\\) ;; ⏹
+                                                     ("#+header:" . ,rasmus/ob-header-symbol)
+                                                     ("#+begin_quote" . ?»)
+                                                     ("#+end_quote" . ?«)))))
+                          (turn-on-prettify-symbols-mode)
+                          (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
+                        (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
+
+                      (defun org-babel-async-execute ()
+                        (interactive)
+                        (let* ((current-file (buffer-file-name))
+                               (uuid (org-id-uuid))
+                               (temporary-file-directory "/tmp/")
+                               (temporary-file-name (concat "py-" uuid))
+                               (tempfile (make-temp-file temporary-file-name))
+                               (pbuffer (format "*%s*" uuid))
+                               process)
+
+                          (org-babel-tangle '(4) tempfile)
+                          (org-babel-remove-result)
+
+                          (save-excursion
+                            (re-search-forward "#\\+END_SRC")
+                            (insert (format
+                                     "\n\n#+RESULTS: %s\n: %s"
+                                     (or (org-element-property :name (org-element-context))
+                                         "")
+                                     temporary-file-name)))
+
+                          (setq process (start-process
+                                         uuid
+                                         pbuffer
+                                         "python"
+                                         tempfile))
+
+                          (set-process-sentinel
+                           process
+                           `(lambda (process event)
+                              (when (string= "finished\n" event)
+                                (delete-file ,tempfile)
+                                (save-window-excursion
+                                  (save-excursion
+                                    (save-restriction
+                                      (with-current-buffer (find-file-noselect ,current-file)
+                                        (goto-char (point-min))
+                                        (re-search-forward ,temporary-file-name)
+                                        (beginning-of-line)
+                                        (kill-line)
+                                        (insert (mapconcat
+                                                 (lambda (x)
+                                                   (format ": %s" x))
+                                                 (split-string
+                                                  (with-current-buffer ,pbuffer (buffer-string))
+                                                  "\n")
+                                                 "\n")))))))
+                              (kill-buffer ,pbuffer)))))))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
