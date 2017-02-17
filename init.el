@@ -328,9 +328,8 @@
 
                         (defun rasmus/org-prettify-src ()
                           "Hide src options via `prettify-symbols-mode'.
-
-  `prettify-symbols-mode' is used because it has uncollpasing. It's
-  may not be efficient."
+                          `prettify-symbols-mode' is used because it has uncollpasing. It's
+                           may not be efficient."
                           (let* ((case-fold-search t)
                                  (at-src-block (save-excursion
                                                  (beginning-of-line)
@@ -409,8 +408,7 @@
                                                   (with-current-buffer ,pbuffer (buffer-string))
                                                   "\n")
                                                  "\n")))))))
-                              (kill-buffer ,pbuffer)))))
-                      (add-to-list 'org-ctrl-c-ctrl-c-hook 'org-babel-async-execute)))
+                              (kill-buffer ,pbuffer)))))))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
