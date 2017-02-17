@@ -82,7 +82,8 @@
 
 (use-package macro
   :load-path "packages/editor"
-  :commands (save-macro))
+  :commands (save-macro
+             increment-number-at-point))
 
 (use-package company
   :diminish company-mode
@@ -408,7 +409,8 @@
                                                   (with-current-buffer ,pbuffer (buffer-string))
                                                   "\n")
                                                  "\n")))))))
-                              (kill-buffer ,pbuffer)))))))
+                              (kill-buffer ,pbuffer)))))
+                      (add-to-list 'org-ctrl-c-ctrl-c-hook 'org-babel-async-execute)))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
@@ -481,9 +483,6 @@
          ("C-x g c" . magit-commit)
          ("C-x g p c" . magit-push-current))
   :ensure t)
-
-(use-package monky
-  :load-path "packages/vcs/monky")
 
 (use-package bookmark+
   :init (progn
