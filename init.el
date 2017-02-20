@@ -280,12 +280,7 @@
                          (sh . t)))
 
                       (setq org-src-fontify-natively t)
-
-                      (defun my-org-confirm-babel-evaluate (lang body)
-                        (not (string= lang "python")))  ; don't ask for python
-
-                      (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
-
+                      (setq org-confirm-babel-evaluate nil)
                       (require 'async)
                       (require 'org-id)
 
