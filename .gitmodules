@@ -1,0 +1,3 @@
+[submodule "packages/ob-async"]
+	path = packages/ob-async
+	url = https://github.com/astahlman/ob-async

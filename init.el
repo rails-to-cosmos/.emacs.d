@@ -226,6 +226,13 @@
          ("C-M-n" . org-forward-heading-same-level)
          ("C-M-p" . org-backward-heading-same-level))
   :config (progn
+            (defun my/org-highlight ()
+              "Highlight something."
+              (hi-lock-mode t)
+              (highlight-regexp "OK" 'hi-green-b)
+              (highlight-regexp "FAIL" 'hi-red-b))
+            (add-hook 'org-mode-hook 'ya/org-highlight)
+
             (use-package org-fstree
               :ensure t)
 
@@ -271,6 +278,11 @@
 
             (use-package org-babel
               :init (progn
+                      (use-package ob-async
+                        :load-path "packages/ob-async"
+                        :config (progn
+                                  (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-async-org-babel-execute-src-block)))
+
                       (add-hook 'org-mode-hook 'org-hide-block-all)
 
                       (org-babel-do-load-languages
@@ -281,8 +293,6 @@
 
                       (setq org-src-fontify-natively t)
                       (setq org-confirm-babel-evaluate nil)
-                      (require 'async)
-                      (require 'org-id)
 
                       (with-eval-after-load 'org
                         (defvar-local rasmus/org-at-src-begin -1
@@ -354,56 +364,8 @@
                                                      ("#+end_quote" . ?«)))))
                           (turn-on-prettify-symbols-mode)
                           (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
-                        (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
-
-                      (defun org-babel-async-execute ()
-                        (interactive)
-                        (let* ((current-file (buffer-file-name))
-                               (uuid (org-id-uuid))
-                               (temporary-file-directory "/tmp/")
-                               (temporary-file-name (concat "py-" uuid))
-                               (tempfile (make-temp-file temporary-file-name))
-                               (pbuffer (format "*%s*" uuid))
-                               process)
-
-                          (org-babel-tangle '(4) tempfile)
-                          (org-babel-remove-result)
-
-                          (save-excursion
-                            (re-search-forward "#\\+END_SRC")
-                            (insert (format
-                                     "\n\n#+RESULTS: %s\n: %s"
-                                     (or (org-element-property :name (org-element-context))
-                                         "")
-                                     temporary-file-name)))
-
-                          (setq process (start-process
-                                         uuid
-                                         pbuffer
-                                         "python"
-                                         tempfile))
-
-                          (set-process-sentinel
-                           process
-                           `(lambda (process event)
-                              (when (string= "finished\n" event)
-                                (delete-file ,tempfile)
-                                (save-window-excursion
-                                  (save-excursion
-                                    (save-restriction
-                                      (with-current-buffer (find-file-noselect ,current-file)
-                                        (goto-char (point-min))
-                                        (re-search-forward ,temporary-file-name)
-                                        (beginning-of-line)
-                                        (kill-line)
-                                        (insert (mapconcat
-                                                 (lambda (x)
-                                                   (format ": %s" x))
-                                                 (split-string
-                                                  (with-current-buffer ,pbuffer (buffer-string))
-                                                  "\n")
-                                                 "\n")))))))
-                              (kill-buffer ,pbuffer)))))))
+                        ;; (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols)
+                        )))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
