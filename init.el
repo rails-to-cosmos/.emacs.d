@@ -498,7 +498,7 @@
               :name "Jupyter Notebook"
               :command "jupyter"
               :args '("notebook")
-              :cwd (dropbox/ "Documents/SHAD")
+              :cwd "~/Dropbox/Documents/SHAD"
               :tags '(shad)
               :stop-signal 'sigkill
               :kill-process-buffer-on-stop t))
