@@ -40,6 +40,9 @@
                           ))
   :ensure t)
 
+(setq python-shell-completion-native nil)
+(add-to-list 'python-shell-completion-native-disabled-interpreters "python")
+
 ;; (use-package pungi
 ;;   :ensure t)
 
