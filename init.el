@@ -301,7 +301,7 @@
                        'org-babel-load-languages
                        '((python . t)
                          (sql . t)
-                         (sh . t)))
+                         (shell . t)))
                       (setq org-src-fontify-natively t)
                       (setq org-confirm-babel-evaluate nil)
                       ))
@@ -498,7 +498,7 @@
               :name "Jupyter Notebook"
               :command "jupyter"
               :args '("notebook")
-              :cwd "~/Dropbox/Documents/SHAD"
+              :cwd (dropbox/ "Documents/SHAD")
               :tags '(shad)
               :stop-signal 'sigkill
               :kill-process-buffer-on-stop t))

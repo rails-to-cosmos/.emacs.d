@@ -34,10 +34,7 @@
   :interpreter ("ipython" . python-mode)
   :config (progn
             (elpy-enable)
-            ;; (jedi:install-server)
-            (setq-default python-indent-offset 4
-                          ;; jedi:complete-on-dot t
-                          ))
+            (setq-default python-indent-offset 4))
   :ensure t)
 
 (setq python-shell-completion-native nil)
