@@ -58,6 +58,8 @@
  line-spacing 7
  visible-bell nil
  cursor-type 'box
+ split-width-threshold 1
+ split-height-threshold nil
  frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
 
 (diminish 'undo-tree-mode)
