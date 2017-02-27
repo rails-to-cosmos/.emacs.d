@@ -304,7 +304,8 @@
                          (shell . t)))
                       (setq org-src-fontify-natively t)
                       (setq org-confirm-babel-evaluate nil)
-                      ))
+                      (setq org-confirm-shell-link-function nil)
+                      (setq org-confirm-elisp-link-function nil)))
 
             (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
             (setq org-startup-align-all-tables "align"))
