@@ -285,6 +285,9 @@
                                     org-clock-in-switch-to-state "STARTED"
                                     org-clock-out-remove-zero-time-clocks t)))
 
+            (use-package org-dashboard
+              :ensure t)
+
             (use-package org-babel
               :init (progn
                       (use-package ob-ipython
