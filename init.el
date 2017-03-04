@@ -83,6 +83,7 @@
 
 (use-package macro
   :load-path "packages/editor"
+  :bind ("C-c +" . increment-number-at-point)
   :commands (save-macro
              increment-number-at-point))
 
