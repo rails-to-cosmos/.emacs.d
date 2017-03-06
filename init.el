@@ -83,9 +83,9 @@
 
 (use-package macro
   :load-path "packages/editor"
-  :bind ("C-c +" . increment-number-at-point)
-  :commands (save-macro
-             increment-number-at-point))
+  :bind (("C-c +" . increment-number-at-point)
+         ("C-c -" . decrement-number-at-point))
+  :commands (save-macro))
 
 (use-package company
   :diminish company-mode
