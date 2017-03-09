@@ -238,6 +238,7 @@
               (highlight-regexp "SUCCESS" 'hi-green-b)
               (highlight-regexp "FINISHED" 'hi-green-b)
               (highlight-regexp "IN PROGRESS" 'hi-yellow-b)
+              (highlight-regexp "LOADING\, PLEASE WAIT\.\.\." 'hi-yellow-b)
               (highlight-regexp "FAILED" 'hi-red-b)
               (highlight-regexp "FAILURE" 'hi-red-b)
               (highlight-regexp "FAIL" 'hi-red-b))
@@ -305,6 +306,7 @@
                        'org-babel-load-languages
                        '((python . t)
                          (sql . t)
+                         (C . t)
                          (shell . t)))
                       (setq org-src-fontify-natively t)
                       (setq org-confirm-babel-evaluate nil)
