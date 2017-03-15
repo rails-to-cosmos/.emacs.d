@@ -31,7 +31,7 @@
 (use-package directories
   :load-path "packages/core"
   :commands (tmp/ ;; Directory containing temporary files.
-             dropbox/ ;; Directory containing shared files.
+             shared/ ;; Directory containing shared files.
              ))
 
 (use-package init-mac
@@ -70,12 +70,12 @@
              flycheck-idle-change-delay 5
              flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
             (global-flycheck-mode))
-   :ensure t)
+  :ensure t)
 
 (use-package snippets
   :load-path "packages/editor"
   :config (progn
-            (add-to-list 'yas-snippet-dirs (dropbox/ "snippets")))
+            (add-to-list 'yas-snippet-dirs (shared/ "snippets")))
   :commands (yas-ido-expand
              yas-new-snippet
              yas-recompile-all
@@ -159,7 +159,7 @@
   :load-path "chat"
   :config (progn
             (setq-default
-             jabber-global-history-filename (dropbox/ "jabber-history.txt")))
+             jabber-global-history-filename (shared/ "jabber-history.txt")))
   :commands (init-jabber))
 
 (use-package init-dired
@@ -181,11 +181,11 @@
          ("/" . dired-narrow-fuzzy)))
 
 (use-package rsync
-  :load-path "fs"
+  :load-path "packages"
   :commands (init-rsync))
 
 (use-package ssh
-  :load-path "fs"
+  :load-path "packages"
   :bind (("C-x y s" . ssh-connect))
   :commands (init-ssh))
 
@@ -389,7 +389,7 @@
 (use-package bookmark+
   :init (progn
           (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
-                        bookmark-default-file (dropbox/ "bookmarks.txt")
+                        bookmark-default-file (shared/ "bookmarks.txt")
                         bookmark-save-flag t))
   :ensure t)
 
@@ -404,6 +404,7 @@
               (dolist (lang-regex lang-regexes)
                 (if (string-match (car lang-regex) sentence)
                     (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))))
+  :bind ("C-x y t t" . translate-text)
   :ensure t)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -532,7 +533,6 @@
 
   (general-define-key
    :prefix "C-x y"
-   "t t" 'translate-text
    "p" 'prodigy
    "f f" 'toggle-frame-fullscreen
    "i" 'yas-ido-expand)

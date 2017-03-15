@@ -11,8 +11,8 @@
   "Get path to FILENAME in temp directory."
   (custom/ filename (concat user-emacs-directory "tmp/")))
 
-(defun dropbox/ (filename)
-  "Get path to FILENAME in dropbox directory."
+(defun shared/ (filename)
+  "Get path to FILENAME in shared directory."
   (custom/ filename "~/Dropbox/Emacs/"))
 
 (setq-default

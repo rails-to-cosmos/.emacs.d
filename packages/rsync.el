@@ -1,4 +1,8 @@
-(defun init-rsync () "Init rsync with my configuration." (interactive))
+;;; rsync.el --- auto rsync mode
+;;; Commentary:
+;;; Code:
+
+(defun lazy-load-rsync () "Init rsync with my configuration." (interactive))
 
 (defun rsync-enable ()
   "Enable rsync support."
@@ -11,8 +15,14 @@
   (auto-rsync-mode -1))
 
 (defgroup auto-rsync nil "Auto rsync")
-(defcustom auto-rsync-command "rsync" "rsync command path." :group 'auto-rsync)
-(defcustom auto-rsync-command-option "-av --exclude='.git' --exclude='node_modules' --exclude='tmp' --exclude='*.org*' --exclude='lisp' --exclude='LICENSE' --exclude='README.md'" "options" :group 'auto-rsync)
+
+(defcustom auto-rsync-command "rsync"
+  "Rsync command path."
+  :group 'auto-rsync)
+
+(defcustom auto-rsync-command-option "-av --exclude='.git' --exclude='node_modules' --exclude='tmp' --exclude='*.org*' --exclude='lisp' --exclude='LICENSE' --exclude='README.md'"
+  "Options."
+  :group 'auto-rsync)
 
 (defvar auto-rsync-dir-alist nil "Pair of rsync source and destination dir.")
 (defvar auto-rsync-normalized-alist nil)

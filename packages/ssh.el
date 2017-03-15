@@ -1,20 +1,5 @@
 ;;; ssh.el --- manage ssh connections
-;;
-;; Filename: ssh.el
-;; Description: manage ssh connections
-;; Author: Dmitry Akatov
-;; Created: <2016-10-24 Mon 8:30am>
-;; Version: 1.0.0
-;; URL: https://github.com/rails-to-cosmos/.emacs.d/fs/ssh.el
-;; Keywords: Emacs 24.5
-;; Compatibility: emacs >= 24.5
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Commentary:
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;; Code:
 
 (defun init-ssh () "Initialize ssh with my configuration." (interactive))
