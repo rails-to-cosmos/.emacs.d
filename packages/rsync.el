@@ -2,8 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(defun lazy-load-rsync () "Init rsync with my configuration." (interactive))
-
 (defun rsync-enable ()
   "Enable rsync support."
   (interactive)
@@ -20,9 +18,17 @@
   "Rsync command path."
   :group 'auto-rsync)
 
-(defcustom auto-rsync-command-option "-av --exclude='.git' --exclude='node_modules' --exclude='tmp' --exclude='*.org*' --exclude='lisp' --exclude='LICENSE' --exclude='README.md'"
+(defcustom auto-rsync-command-option "-anv"
   "Options."
   :group 'auto-rsync)
+
+;; --exclude='.git'
+;; --exclude='node_modules'
+;; --exclude='tmp'
+;; --exclude='*.org*'
+;; --exclude='lisp'
+;; --exclude='LICENSE'
+;; --exclude='README.md'
 
 (defvar auto-rsync-dir-alist nil "Pair of rsync source and destination dir.")
 (defvar auto-rsync-normalized-alist nil)

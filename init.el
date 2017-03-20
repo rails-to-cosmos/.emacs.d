@@ -182,7 +182,8 @@
 
 (use-package rsync
   :load-path "packages"
-  :commands (init-rsync))
+  :commands (rsync-enable
+             rsync-disable))
 
 (use-package ssh
   :load-path "packages"
@@ -260,33 +261,35 @@
               (org-map-entries 'org-archive-subtree "/DONE" 'file)
               (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
 
-            (setq-default org-log-done t
-                          org-completion-use-ido t
-                          org-edit-timestamp-down-means-later t
-                          org-agenda-start-on-weekday nil
-                          org-agenda-span 14
-                          org-agenda-include-diary t
-                          org-agenda-window-setup 'current-window
-                          org-fast-tag-selection-single-key 'expert
-                          org-export-kill-product-buffer-when-displayed t
-                          org-tags-column 80
-                          org-refile-use-outline-path (quote file)
-                          org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
-                          org-outline-path-complete-in-steps t
-                          org-ellipsis "..."
-                          org-hide-leading-stars t
-                          org-startup-indented t
-                          org-id-locations-file (tmp/ "org-id-locations.txt")
-                          org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d!/!)")
-                                                    (sequence "WAITING(w!/!)" "SOMEDAY(S)" "|" "CANCELLED(c!/!)"))))
+            (setq-default
+             ;; org-log-done t
+             org-completion-use-ido t
+             org-edit-timestamp-down-means-later t
+             org-agenda-start-on-weekday nil
+             org-agenda-span 14
+             org-agenda-include-diary t
+             org-agenda-window-setup 'current-window
+             org-fast-tag-selection-single-key 'expert
+             org-export-kill-product-buffer-when-displayed t
+             org-tags-column 80
+             org-refile-use-outline-path (quote file)
+             org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
+             org-outline-path-complete-in-steps t
+             org-ellipsis "..."
+             org-hide-leading-stars t
+             org-startup-indented t
+             org-id-locations-file (tmp/ "org-id-locations.txt")
+             org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d)")
+                                       (sequence "WAITING(w)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
 
             (use-package org-clock
               :init (progn
-                      (setq-default org-clock-persistence-insinuate t
-                                    org-clock-persist t
-                                    org-clock-in-resume t
-                                    org-clock-in-switch-to-state "STARTED"
-                                    org-clock-out-remove-zero-time-clocks t)))
+                      (setq-default
+                       org-clock-persistence-insinuate t
+                       org-clock-persist t
+                       org-clock-in-resume t
+                       org-clock-in-switch-to-state "STARTED"
+                       org-clock-out-remove-zero-time-clocks t)))
 
             (use-package org-dashboard
               :ensure t)

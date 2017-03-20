@@ -10,7 +10,7 @@
     alkeys))
 
 (setq-default balance/current-tasks
-              '("BALANCE-24291 — stat_aggregator"))
+              '("TASKGROUP-24291 — task name"))
 
 (defun task-manager/browse-task (task-name)
   (browse-url
