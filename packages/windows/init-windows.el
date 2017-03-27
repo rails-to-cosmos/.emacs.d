@@ -2,8 +2,28 @@
 ;;; Commentary:
 ;;; Code:
 
+(use-package ace-window
+  :config (progn
+            (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)))
+  :ensure t)
+
 (use-package split-window
   :init (progn
+          (defun split-window-func-with-other-buffer (split-function)
+            (lexical-let ((s-f split-function))
+              (lambda ()
+                (interactive)
+                (funcall s-f)
+                (set-window-buffer (next-window) (other-buffer)))))
+
+          (defun split-window-vertically-swap ()
+            (interactive)
+            (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
+
+          (defun split-window-horizontally-swap ()
+            (interactive)
+            (funcall (split-window-func-with-other-buffer 'split-window-horizontally)))
+
           (defun split-window-multiple-ways (x y)
             "Split the current frame into a grid of X columns and Y rows."
             (interactive "nColumns: \nnRows: ")
@@ -39,28 +59,6 @@
           (defun set-window-buffer-in-frame (x y buffer &optional frame)
             "Set Xth horizontal and Yth vertical window to BUFFER from top-left of FRAME."
             (set-window-buffer (get-window-in-frame x y frame) buffer))))
-
-(use-package switch-window
-  :init (progn
-          ;; When splitting window, show (other-buffer) in the new window
-          (defun split-window-func-with-other-buffer (split-function)
-            (lexical-let ((s-f split-function))
-              (lambda ()
-                (interactive)
-                (funcall s-f)
-                (set-window-buffer (next-window) (other-buffer)))))
-
-          (defun split-window-vertically-swap ()
-            (interactive)
-            (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
-
-          (defun split-window-horizontally-swap ()
-            (interactive)
-            (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-  :config (progn
-            (setq-default
-             switch-window-shortcut-style 'alphabet))
-  :ensure t)
 
 (use-package scratch
   :init (progn

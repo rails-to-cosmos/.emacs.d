@@ -30,8 +30,8 @@
 
 (use-package directories
   :load-path "packages/core"
-  :commands (tmp/ ;; Directory containing temporary files.
-             shared/ ;; Directory containing shared files.
+  :commands (tmp/ ;; contains temporary files.
+             shared/ ;; contains shared files.
              ))
 
 (use-package init-mac
@@ -47,7 +47,7 @@
   :load-path "packages/windows"
   :init (progn
           (add-hook 'after-init-hook 'prevent-active-processes-exist))
-  :bind (("C-x o" . switch-window)
+  :bind (("C-x o" . ace-window)
          ("C-x 1" . delete-other-windows)
          ("C-x 2" . split-window-vertically-swap)
          ("C-x 3" . split-window-horizontally-swap))
