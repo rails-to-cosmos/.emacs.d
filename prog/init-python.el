@@ -30,12 +30,12 @@
   "Highlight python breakpoints."
   (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-(use-package elpy
-  :interpreter ("ipython" . python-mode)
-  :config (progn
-            (elpy-enable)
-            (setq-default python-indent-offset 4))
-  :ensure t)
+;; (use-package elpy
+;;   :interpreter ("ipython" . python-mode)
+;;   :config (progn
+;;             (elpy-enable)
+;;             (setq-default python-indent-offset 4))
+;;   :ensure t)
 
 (setq python-shell-completion-native nil)
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")

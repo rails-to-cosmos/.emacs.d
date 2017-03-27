@@ -81,6 +81,11 @@
              yas-recompile-all
              yas-reload-all))
 
+(use-package thinks
+  :config (progn
+            (setq thinks-from 'bottom-diagonal))
+  :ensure t)
+
 (use-package macro
   :load-path "packages/editor"
   :bind (("C-c +" . increment-number-at-point)
@@ -127,16 +132,16 @@
              rainbow-mode)
 
   :init (progn
-          (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
+          ;; (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
+          ;;(add-hook 'python-mode-hook 'elpy-mode)
           (add-hook 'python-mode-hook 'init-python)
           (add-hook 'python-mode-hook 'python-highlight-breakpoints)
           (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-          (add-hook 'python-mode-hook 'linum-mode)
-          (add-hook 'python-mode-hook 'elpy-mode))
+          (add-hook 'python-mode-hook 'linum-mode))
 
   :mode ("\\.py\\'" . python-mode)
 
-  :bind (:map elpy-mode-map
+  :bind (:map python-mode-map
               ("C-c C-b" . python-add-breakpoint)
               ;; ("C-c C-g" . jedi:goto-definition)
               )
@@ -146,7 +151,8 @@
              python-highlight-breakpoints
              ;; jedi:install-server
              ;; jedi:goto-definition
-             elpy-mode))
+             ;; elpy-mode
+             ))
 
 (use-package init-db
   :load-path "prog"
