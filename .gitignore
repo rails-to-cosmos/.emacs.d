@@ -42,3 +42,4 @@ sqlplus-session
 tmp/*
 spu_log
 /network-security.data
+irony

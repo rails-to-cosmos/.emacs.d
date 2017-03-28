@@ -63,6 +63,18 @@
 (use-package wgrep
   :ensure t)
 
+(use-package expand-region
+  :config (progn
+            (setq shift-select-mode nil))
+  :bind ("C-=" . er/expand-region)
+  :ensure t)
+
+;; (use-package embrace
+;;   :config (progn
+;;             (add-hook 'org-mode-hook #'embrace-org-mode-hook))
+;;   :bind (("C-c e" . embrace-commander))
+;;   :ensure t)
+
 (use-package flycheck
   :config (progn
             (setq-default
@@ -124,6 +136,17 @@
 (use-package log
   :load-path "packages/editor"
   :commands (mwe:log-keyboard-commands))
+
+(use-package init-c
+  :load-path "packages"
+  :init (progn
+          (add-hook 'c++-mode-hook 'irony-mode)
+          (add-hook 'c-mode-hook 'irony-mode)
+          (add-hook 'objc-mode-hook 'irony-mode)
+          (add-hook 'irony-mode-hook 'irony-replace-completion-at-point)
+          (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+  :commands (irony-mode
+             irony-replace-completion-at-point))
 
 (use-package init-python
   :load-path "prog"
