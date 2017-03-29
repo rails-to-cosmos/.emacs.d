@@ -326,6 +326,9 @@
             (use-package org-babel
               :init (progn
                       (use-package ob-ipython
+                        :config (progn
+                                  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+                                  (setq python-shell-prompt-detect-failure-warning nil))
                         :ensure t)
 
                       (use-package ob-async
@@ -338,6 +341,7 @@
                       (org-babel-do-load-languages
                        'org-babel-load-languages
                        '((python . t)
+                         (ipython . t)
                          (sql . t)
                          (C . t)
                          (shell . t)))

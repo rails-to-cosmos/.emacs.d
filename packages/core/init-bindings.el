@@ -9,13 +9,15 @@
   :config (progn
             (global-key-combo-mode t)
 
-            (key-combo-define-global (kbd "C-a") '(back-to-indentation
-                                                   move-beginning-of-line
-                                                   beginning-of-buffer
-                                                   key-combo-return))
-            (key-combo-define-global (kbd "C-e") '(move-end-of-line
-                                                   end-of-buffer
-                                                   key-combo-return)))
+            (key-combo-define prog-mode-map (kbd "C-a") '(back-to-indentation
+                                                          move-beginning-of-line
+                                                          beginning-of-buffer
+                                                          key-combo-return))
+
+            (key-combo-define prog-mode-map (kbd "C-e") '(move-end-of-line
+                                                          end-of-buffer
+                                                          key-combo-return))
+            )
   :ensure t)
 
 (defmacro define-context-key (keymap key dispatch)
