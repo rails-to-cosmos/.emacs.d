@@ -12,6 +12,9 @@
 (setq-default balance/current-tasks
               '("TASKGROUP-24291 — task name"))
 
+(defun task-manager/add-task (&key task desc rel) (list task desc rel)
+       (message task))
+
 (defun task-manager/browse-task (task-name)
   (browse-url
    (concat "https://st.yandex-team.ru/"

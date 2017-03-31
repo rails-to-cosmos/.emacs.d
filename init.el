@@ -255,9 +255,85 @@
          ("C-c a" . org-agenda)
          ("C-c c" . org-capture)
          :map org-mode-map
-         ("C-M-n" . org-forward-heading-same-level)
-         ("C-M-p" . org-backward-heading-same-level))
+         ;; ("C-c C-l" . my-org-insert-link)
+         ("C-M-n" . ded/org-show-next-heading-tidily)
+         ("C-M-p" . ded/org-show-previous-heading-tidily))
   :config (progn
+            (setq org-confirm-elisp-link-not-regexp "org-open-file")
+
+            ;; Mark heading done when all checkboxes are checked
+            ;; see http://thread.gmane.org/gmane.emacs.orgmode/42715
+            (eval-after-load 'org-list
+              '(add-hook 'org-checkbox-statistics-hook (function ndk/checkbox-list-complete)))
+
+            (defun ndk/checkbox-list-complete ()
+              (save-excursion
+                (org-back-to-heading t)
+                (let ((beg (point)) end)
+                  (end-of-line)
+                  (setq end (point))
+                  (goto-char beg)
+                  (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]" end t)
+                      (if (match-end 1)
+                          (if (equal (match-string 1) "100%")
+                              ;; all done - do the state change
+                              (org-todo 'done)
+                            (org-todo 'todo))
+                        (if (and (> (match-end 2) (match-beginning 2))
+                                 (equal (match-string 2) (match-string 3)))
+                            (org-todo 'done)
+                          (org-todo 'todo)))))))
+
+            ;; Org-link: insert heading by default
+            (require 'mm-url) ; to include mm-url-decode-entities-string
+
+            (defun my-org-insert-link ()
+              "Insert org link where default description is set to html title."
+              (interactive)
+              (let* ((url (read-string "URL: "))
+                     (title (get-html-title-from-url url)))
+                (org-insert-link nil url title)))
+
+            (defun get-html-title-from-url (url)
+              "Return content in <title> tag."
+              (let (x1 x2 (download-buffer (url-retrieve-synchronously url)))
+                (save-excursion
+                  (set-buffer download-buffer)
+                  (beginning-of-buffer)
+                  (setq x1 (search-forward "<title>"))
+                  (search-forward "</title>")
+                  (setq x2 (search-backward "<"))
+                  (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)))))
+
+            (defun ded/org-show-next-heading-tidily ()
+              "Show next entry, keeping other entries closed."
+              (interactive)
+              (if (save-excursion (end-of-line) (outline-invisible-p))
+                  (progn (org-show-entry) (show-children))
+                (org-forward-heading-same-level 1 t)
+                (unless (and (bolp) (org-on-heading-p))
+                  (org-up-heading-safe)
+                  (hide-subtree)
+                  (error "Boundary reached"))
+                (org-overview)
+                (org-reveal t)
+                (org-show-entry)
+                (show-children)))
+
+            (defun ded/org-show-previous-heading-tidily ()
+              "Show previous entry, keeping other entries closed."
+              (interactive)
+              (let ((pos (point)))
+                (org-backward-heading-same-level 1 t)
+                (unless (and (< (point) pos) (bolp) (org-on-heading-p))
+                  (goto-char pos)
+                  (hide-subtree)
+                  (error "Boundary reached"))
+                (org-overview)
+                (org-reveal t)
+                (org-show-entry)
+                (show-children)))
+
             (defface hi-yellow-b
               '((t (:foreground "yellow"))) "Highlight" :group 'hi)
 
@@ -292,6 +368,7 @@
 
             (setq-default
              ;; org-log-done t
+             org-special-ctrl-a/e t
              org-completion-use-ido t
              org-edit-timestamp-down-means-later t
              org-agenda-start-on-weekday nil
@@ -304,7 +381,7 @@
              org-refile-use-outline-path (quote file)
              org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
              org-outline-path-complete-in-steps t
-             org-ellipsis "..."
+             org-ellipsis " ↓"
              org-hide-leading-stars t
              org-startup-indented t
              org-id-locations-file (tmp/ "org-id-locations.txt")
@@ -440,9 +517,9 @@
 ;; (use-package nhexl-mode)
 
 ;; https://github.com/kiwanami/emacs-calfw
-(use-package calfw
-  :config
-  (require 'calfw-org))
+;; (use-package calfw
+;;   :config
+;;   (require 'calfw-org))
 
 (use-package magit
   :commands (magit-status
