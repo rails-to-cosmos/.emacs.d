@@ -37,6 +37,12 @@
 ;;             (setq-default python-indent-offset 4))
 ;;   :ensure t)
 
+(use-package jedi
+  :ensure t
+  :config (progn
+            (unless (package-installed-p 'jedi)
+              (jedi:install-server))))
+
 (setq python-shell-completion-native nil)
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 
@@ -57,11 +63,8 @@
 
 (use-package virtualenv
   :config (progn
-            (use-package virtualenvwrapper
-              :config (progn
-                        (venv-initialize-interactive-shells)
-                        (venv-initialize-eshell))
-              :ensure t))
+            (venv-initialize-interactive-shells)
+            (venv-initialize-eshell))
   :ensure t)
 
 (provide 'init-python)
