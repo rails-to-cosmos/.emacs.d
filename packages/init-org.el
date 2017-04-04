@@ -88,22 +88,11 @@
                 (org-show-entry)
                 (show-children)))
 
-            (defface hi-yellow-b
-              '((t (:foreground "yellow"))) "Highlight" :group 'hi)
-
-            (defun my/org-highlight ()
-              "Highlight something."
-              (interactive)
-              (hi-lock-mode t)
-              (highlight-regexp "\wOK\w" 'hi-green-b)
-              (highlight-regexp "SUCCESS" 'hi-green-b)
-              (highlight-regexp "FINISHED" 'hi-green-b)
-              (highlight-regexp "IN PROGRESS" 'hi-yellow-b)
-              (highlight-regexp "LOADING\, PLEASE WAIT\.\.\." 'hi-yellow-b)
-              (highlight-regexp "FAILED" 'hi-red-b)
-              (highlight-regexp "FAILURE" 'hi-red-b)
-              (highlight-regexp "FAIL" 'hi-red-b))
-            (add-hook 'org-mode-hook 'my/org-highlight)
+            (setq org-hide-emphasis-markers t)
+            (add-to-list 'org-emphasis-alist
+                         '())
+            (add-to-list 'org-emphasis-alist
+                         '("_" ()))
 
             (use-package org-fstree
               :ensure t)
