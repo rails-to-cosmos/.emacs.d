@@ -2,10 +2,52 @@
 ** ubuntu
 http://ftp.gnu.org/gnu/emacs/
 ** osx
+#+begin_src shell
 brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
+#+end_src
 * Tasks
+** Configs
+- [[https://github.com/hlissner/.emacs.d/][hlissner]]
+- https://github.com/marktran/emacs.d
+- [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's emacs config]]
+- [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source%3Ddlvr.it&utm_medium%3Dtwitter][Emacs python mode by Sacha Chua]]
+- [[https://www.youtube.com/watch?v%3DdljNabciEGg][Literate Devops]]
+** TODO https://github.com/caffo/org-minimal-html-theme
+** TODO [[http://plantuml.sourceforge.net/emacs.html][Emacs UML]]
+** TODO https://github.com/vermiculus/sx.el
+** TODO [[http://www.informatimago.com/linux/emacs-on-user-mode-linux.html][Emacs standing alone on Linux Kernel]]
+** TODO https://eschulte.github.io/org-scraps/
+** TODO http://blog.binchen.org/posts/hello-ivy-mode-bye-helm.html
+** TODO https://github.com/Andersbakken/emacs-backup-file
+
+** TODO http://joostkremers.github.io/pandoc-mode/
+
+** TODO http://ericjmritz.name/2014/04/26/screenwrite-mode-for-gnu-emacs/
+** TODO http://ericjmritz.name/2014/12/23/using-quickrun-in-emacs/
+
+** [[https://github.com/jwiegley/emacs-async][Emacs Async]]
+** TODO [[http://cedet.sourceforge.net/][CEDET]]
+** TODO Настроить RSync между облаками
+** TODO Code folding
+http://www.emacswiki.org/emacs/FoldingMode
+https://github.com/emacsmirror/fold-dwim/blob/master/fold-dwim.el
+https://github.com/mlf176f2/fold-dwim-org/blob/master/fold-dwim-org.el
+http://www.emacswiki.org/emacs/download/hideshowvis.el
+http://lists.gnu.org/archive/html/gnu-emacs-sources/2004-11/msg00047.html
+http://www.emacswiki.org/emacs/fold-dwim-org.el
+** TODO Code completion
+http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
+** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]]
+- https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/
+*** [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
+** TODO Rename eshell on process start
+- (get-buffer-process (get-buffer "*dev2f-shell*"))
+** TODO Encode region
+** TODO [[https://lists.gnu.org/archive/html/emacs-orgmode/2015-05/msg00556.html][Emacs with Siri]]
+** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/05/29/Expanding-orgmode-py-to-get-better-org-python-integration/][Org-mode.py]]
 ** TODO Dired-buffers switching (C-x C-d C-d C-d ...)
 ** TODO Навигация org-mode через ido
+
 * Config
 ** Core
 *** TODO dired
@@ -462,7 +504,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
 *** c/c++
 *** python
 **** ipython-shell-interpreter
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp
   (setq python-shell-interpreter "ipython"
       ;; python-shell-interpreter-args "--simple-prompt -i"
         )
