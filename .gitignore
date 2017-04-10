@@ -43,3 +43,4 @@ tmp/*
 spu_log
 /network-security.data
 irony
+/emacs.el

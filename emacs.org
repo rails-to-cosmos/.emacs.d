@@ -6,8 +6,9 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
 * Tasks
 ** TODO Dired-buffers switching (C-x C-d C-d C-d ...)
 ** TODO Навигация org-mode через ido
-* Core
-** TODO dired
+* Config
+** Core
+*** TODO dired
 #+begin_src emacs-lisp
   (use-package init-dired
     :load-path "packages/dired"
@@ -27,7 +28,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
            ("<backspace>" . dired-up-directory)
            ("/" . dired-narrow-fuzzy)))
 #+end_src
-** after-load
+*** after-load
 #+begin_src emacs-lisp
   (defmacro after-load (feature &rest body)
     "After FEATURE is loaded, evaluate BODY."
@@ -35,7 +36,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
     `(eval-after-load ,feature
        '(progn ,@body)))
 #+end_src
-** eshell
+*** eshell
 #+begin_src emacs-lisp
   (setq-default
    eshell-buffer-maximum-lines 500
@@ -66,14 +67,14 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                 (setenv "LC_CTYPE" "en_US.UTF-8")))
     :ensure t)
 #+end_src
-** osx
+*** osx
 #+begin_src emacs-lisp
   (setq-default mac-option-key-is-meta nil
                 mac-command-key-is-meta t
                 mac-command-modifier 'meta
                 mac-option-modifier nil)
 #+end_src
-** paths
+*** paths
 #+begin_src emacs-lisp
   (defun custom/ (filename dirname)
     "Get path to FILENAME in DIRNAME."
@@ -91,13 +92,18 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
   (setq-default
    custom-file (tmp/ "custom.el"))
 #+end_src
-** wgrep
+*** wgrep
 #+begin_src emacs-lisp
   (use-package wgrep
     :ensure t)
 #+end_src
-* Keyboard
-** key-combo
+*** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][make emacs bit quieter]]
+#+begin_src emacs-lisp
+  ;; turn off auto revert messages
+  (setq auto-revert-verbose nil)
+#+end_src
+** Keyboard
+*** key-combo
 #+begin_src emacs-lisp
   (use-package key-combo
     :config (progn
@@ -113,13 +119,13 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                                                             key-combo-return)))
     :ensure t)
 #+end_src
-** mwe-log-commands
+*** mwe-log-commands
 #+begin_src emacs-lisp
   (use-package mwe-log-commands
     :ensure t)
 #+end_src
-* Buffer Management
-** ace-window
+** Buffer Management
+*** ace-window
 #+begin_src emacs-lisp
   (use-package ace-window
     :config (progn
@@ -127,13 +133,13 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
     :bind (("C-x o" . ace-window))
     :ensure t)
 #+end_src
-** delete-other-windows
+*** delete-other-windows
 #+begin_src emacs-lisp
   (use-package delete-other-windows
     :no-require t
     :bind (("C-x 1" . delete-other-windows)))
 #+end_src
-** delete-this-file
+*** delete-this-file
 #+begin_src emacs-lisp
   (defun delete-this-file ()
     "Delete the current file, and kill the buffer."
@@ -144,7 +150,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
       (delete-file (buffer-file-name))
       (kill-this-buffer)))
 #+end_src
-** immortal-scratch
+*** immortal-scratch
 #+begin_src emacs-lisp
   (defun immortal-scratch ()
     (if (eq (current-buffer) (get-buffer "*scratch*"))
@@ -154,7 +160,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
         (remq 'process-kill-buffer-query-function
               kill-buffer-query-functions))
 #+end_src
-** prevent-active-processes-exist
+*** prevent-active-processes-exist
 #+begin_src emacs-lisp
   (use-package prevent-active-processes-exist
     :no-require t
@@ -166,7 +172,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                   ad-do-it)))
             (add-hook 'after-init-hook 'prevent-active-processes-exist)))
 #+end_src
-** rename-this-file-and-buffer
+*** rename-this-file-and-buffer
 #+begin_src emacs-lisp
   (defun rename-this-file-and-buffer (new-name)
     "Renames both current buffer and file it's visiting to NEW-NAME."
@@ -183,7 +189,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
           (rename-buffer new-name)
           (set-visited-file-name new-name)))))
 #+end_src
-** split-window
+*** split-window
 #+begin_src emacs-lisp
   (defun split-window-func-with-other-buffer (split-function)
     (lexical-let ((s-f split-function))
@@ -200,8 +206,31 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
     (interactive)
     (funcall (split-window-func-with-other-buffer 'split-window-horizontally)))
 #+end_src
-* Editor
-** origami
+** Org-mode
+*** TODO Org-link: insert heading by default
+#+begin_src emacs-lisp
+  (require 'mm-url) ; to include mm-url-decode-entities-string
+
+  (defun my-org-insert-link ()
+    "Insert org link where default description is set to html title."
+    (interactive)
+    (let* ((url (read-string "URL: "))
+           (title (get-html-title-from-url url)))
+      (org-insert-link nil url title)))
+
+  (defun get-html-title-from-url (url)
+    "Return content in <title> tag."
+    (let (x1 x2 (download-buffer (url-retrieve-synchronously url)))
+      (save-excursion
+        (set-buffer download-buffer)
+        (beginning-of-buffer)
+        (setq x1 (search-forward "<title>"))
+        (search-forward "</title>")
+        (setq x2 (search-backward "<"))
+        (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)))))
+#+end_src
+** Editor
+*** origami
 #+begin_src emacs-lisp
   (use-package origami
     :config (progn
@@ -213,14 +242,14 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                 ("C-c f o" . origami-show-only-node))
     :ensure t)
 #+end_src
-** company
+*** company
 #+begin_src emacs-lisp
   (use-package company
     :config (progn
               (global-company-mode))
     :ensure t)
 #+end_src
-** expand-region
+*** expand-region
 #+begin_src emacs-lisp
   (use-package expand-region
     :bind ("C-=" . er/expand-region)
@@ -228,7 +257,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
               (setq shift-select-mode nil))
     :ensure t)
 #+end_src
-** flycheck
+*** flycheck
 #+begin_src emacs-lisp
   (use-package flycheck
     :config (progn
@@ -239,7 +268,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
               (global-flycheck-mode))
     :ensure t)
 #+end_src
-** hippie-expand
+*** hippie-expand
 #+begin_src emacs-lisp
   (use-package hippie-expand
     :bind ("M-/" . hippie-expand)
@@ -257,7 +286,66 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                               try-complete-lisp-symbol-partially
                               try-complete-lisp-symbol))))
 #+end_src
-** increment-number
+**** flexible-expand
+#+begin_src emacs-lisp
+  (defun try-expand-flexible-abbrev (old)
+    "Try to complete word using flexible matching.
+
+  Flexible matching works by taking the search string and then
+  interspersing it with a regexp for any character. So, if you try
+  to do a flexible match for `foo' it will match the word
+  `findOtherOtter' but also `fixTheBoringOrange' and
+  `ifthisisboringstopreadingnow'.
+
+  The argument OLD has to be nil the first call of this function, and t
+  for subsequent calls (for further possible completions of the same
+  string).  It returns t if a new completion is found, nil otherwise."
+    (if (not old)
+        (progn
+	  (he-init-string (he-lisp-symbol-beg) (point))
+	  (if (not (he-string-member he-search-string he-tried-table))
+	      (setq he-tried-table (cons he-search-string he-tried-table)))
+	  (setq he-expand-list
+	        (and (not (equal he-search-string ""))
+		     (he-flexible-abbrev-collect he-search-string)))))
+    (while (and he-expand-list
+	        (he-string-member (car he-expand-list) he-tried-table))
+      (setq he-expand-list (cdr he-expand-list)))
+    (if (null he-expand-list)
+        (progn
+	  (if old (he-reset-string))
+	  ())
+      (progn
+        (he-substitute-string (car he-expand-list))
+        (setq he-expand-list (cdr he-expand-list))
+        t)))
+
+  (defun he-flexible-abbrev-collect (str)
+    "Find and collect all words that flex-matches STR.
+  See docstring for `try-expand-flexible-abbrev' for information
+  about what flexible matching means in this context."
+    (let ((collection nil)
+          (regexp (he-flexible-abbrev-create-regexp str)))
+      (save-excursion
+        (goto-char (point-min))
+        (while (search-forward-regexp regexp nil t)
+          ;; Is there a better or quicker way than using
+          ;; `thing-at-point' here?
+          (setq collection (cons (thing-at-point 'word) collection))))
+      collection))
+
+  (defun he-flexible-abbrev-create-regexp (str)
+    "Generate regexp for flexible matching of STR.
+  See docstring for `try-expand-flexible-abbrev' for information
+  about what flexible matching means in this context."
+    (concat "\\b" (mapconcat (lambda (x) (concat "\\w*" (list x))) str "")
+            "\\w*" "\\b"))
+
+  (setq hippie-expand-try-functions-list
+        (cons 'try-expand-flexible-abbrev hippie-expand-try-functions-list))
+
+#+end_src
+*** increment-number
 #+begin_src emacs-lisp
   (use-package increment-number
     :no-require t
@@ -279,7 +367,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
               (replace-match (number-to-string (1- (string-to-number (match-string 0))))))))
 
 #+end_src
-** save-macro
+*** save-macro
 #+begin_src emacs-lisp
   (defun save-macro (name)
     "Save a macro. Take a name as argument and save the last
@@ -293,7 +381,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
     (newline)                    ; insert a newline
     (switch-to-buffer nil))
 #+end_src
-** yasnippet
+*** yasnippet
 #+begin_src emacs-lisp
   (use-package yasnippet
     :config (progn
@@ -322,7 +410,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
               (add-to-list 'yas-snippet-dirs (shared/ "snippets")))
     :ensure t)
 #+end_src
-* TODO Programming
+** TODO Programming
 #+begin_src emacs-lisp
 (use-package init-c
   :load-path "packages/prog"
@@ -371,11 +459,17 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                           sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
   :bind (("C-x y q" . sqp-connect)))
 #+end_src
-** c/c++
-** python
-** database
-* Social
-** elfeed
+*** c/c++
+*** python
+**** ipython-shell-interpreter
+#+begin_src emacs-lisp :tangle yes
+  (setq python-shell-interpreter "ipython"
+      ;; python-shell-interpreter-args "--simple-prompt -i"
+        )
+#+end_src
+*** database
+** Social
+*** elfeed
 #+begin_src emacs-lisp
   (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
     :ensure t)
@@ -385,7 +479,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
               (elfeed-org))
     :ensure t)
 #+end_src
-** xmpp
+*** xmpp
 #+begin_src emacs-lisp
   (use-package xmpp
     :load-path "chat"
@@ -394,7 +488,7 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
                jabber-global-history-filename (shared/ "jabber-history.txt")))
     :commands (init-jabber))
 #+end_src
-* Unsorted
+** Unsorted
 #+begin_src emacs-lisp
   (use-package rsync
     :load-path "packages"
