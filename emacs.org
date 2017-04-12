@@ -37,9 +37,10 @@ http://lists.gnu.org/archive/html/gnu-emacs-sources/2004-11/msg00047.html
 http://www.emacswiki.org/emacs/fold-dwim-org.el
 ** TODO Code completion
 http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
-** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]]
-- https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/
-*** [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
+** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/1]
+- [ ] https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/
+- [ ] http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda
+- [ ] [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
 ** TODO Rename eshell on process start
 - (get-buffer-process (get-buffer "*dev2f-shell*"))
 ** TODO Encode region
