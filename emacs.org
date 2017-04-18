@@ -3,7 +3,7 @@
 http://ftp.gnu.org/gnu/emacs/
 ** osx
 #+begin_src shell
-brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
+  brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
 #+end_src
 * Tasks
 ** Configs
@@ -19,12 +19,9 @@ brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg 
 ** TODO https://eschulte.github.io/org-scraps/
 ** TODO http://blog.binchen.org/posts/hello-ivy-mode-bye-helm.html
 ** TODO https://github.com/Andersbakken/emacs-backup-file
-
 ** TODO http://joostkremers.github.io/pandoc-mode/
-
 ** TODO http://ericjmritz.name/2014/04/26/screenwrite-mode-for-gnu-emacs/
 ** TODO http://ericjmritz.name/2014/12/23/using-quickrun-in-emacs/
-
 ** [[https://github.com/jwiegley/emacs-async][Emacs Async]]
 ** TODO [[http://cedet.sourceforge.net/][CEDET]]
 ** TODO Настроить RSync между облаками
@@ -48,7 +45,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/05/29/Expanding-orgmode-py-to-get-better-org-python-integration/][Org-mode.py]]
 ** TODO Dired-buffers switching (C-x C-d C-d C-d ...)
 ** TODO Навигация org-mode через ido
-
 * Config
 ** Core
 *** TODO dired
@@ -270,7 +266,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
         (setq x1 (search-forward "<title>"))
         (search-forward "</title>")
         (setq x2 (search-backward "<"))
-        (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)))))
+        (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
 
 #+RESULTS:
@@ -432,30 +428,33 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+begin_src emacs-lisp
   (use-package yasnippet
     :config (progn
-              ;; Completing point by some yasnippet key
-              (defun yas-ido-expand ()
-                "Lets you select (and expand) a yasnippet key"
-                (interactive)
-                (let ((original-point (point)))
-                  (while (and
-                          (not (= (point) (point-min) ))
-                          (not (string-match "[[:space:]\n]" (char-to-string (char-before)))))
-                    (backward-word 1))
-                  (let* ((init-word (point))
-                         (word (buffer-substring init-word original-point))
-                         (list (yas-active-keys)))
-                    (goto-char original-point)
-                    (let ((key (remove-if-not
-                                (lambda (s) (string-match (concat "^" word) s)) list)))
-                      (if (= (length key) 1)
-                          (setq key (pop key))
-                        (setq key (ido-completing-read "key: " list nil nil word)))
-                      (delete-char (- init-word original-point))
-                      (insert key)
-                      (yas-expand)))))
-              (yas-global-mode t)
-              (add-to-list 'yas-snippet-dirs (shared/ "snippets")))
+              (add-to-list 'yas-snippet-dirs (shared/ "snippets"))
+              (yas-reload-all)
+              (yas-global-mode t))
     :ensure t)
+#+end_src
+**** ido-expand
+#+begin_src emacs-lisp
+  (defun yas-ido-expand ()
+    "Lets you select (and expand) a yasnippet key"
+    (interactive)
+    (let ((original-point (point)))
+      (while (and
+              (not (= (point) (point-min) ))
+              (not (string-match "[[:space:]\n]" (char-to-string (char-before)))))
+        (backward-word 1))
+      (let* ((init-word (point))
+             (word (buffer-substring init-word original-point))
+             (list (yas-active-keys)))
+        (goto-char original-point)
+        (let ((key (remove-if-not
+                    (lambda (s) (string-match (concat "^" word) s)) list)))
+          (if (= (length key) 1)
+              (setq key (pop key))
+            (setq key (ido-completing-read "key: " list nil nil word)))
+          (delete-char (- init-word original-point))
+          (insert key)
+          (yas-expand)))))
 #+end_src
 ** TODO Programming
 #+begin_src emacs-lisp
