@@ -47,7 +47,93 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** TODO Навигация org-mode через ido
 * Config
 ** Core
-*** TODO dired
+*** instruments
+**** after-load
+#+begin_src emacs-lisp
+  (defmacro after-load (feature &rest body)
+    "After FEATURE is loaded, evaluate BODY."
+    (declare (indent defun))
+    `(eval-after-load ,feature
+       '(progn ,@body)))
+#+end_src
+*** settings
+**** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
+#+begin_src emacs-lisp :results silent
+  ;; UTF-8 as the default coding system
+  (set-charset-priority 'unicode)        ; pretty
+  (prefer-coding-system        'utf-8)   ; pretty
+  (set-terminal-coding-system  'utf-8)   ; pretty
+  (set-keyboard-coding-system  'utf-8)   ; pretty
+  (set-selection-coding-system 'utf-8)   ; perdy
+  (setq locale-coding-system   'utf-8)   ; please
+  (setq-default buffer-file-coding-system 'utf-8) ; with sugar on top
+#+end_src
+**** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][make emacs bit quieter]]
+#+begin_src emacs-lisp :results silent
+  (advice-add #'display-startup-echo-area-message :override #'ignore)
+#+end_src
+**** os
+#+begin_src emacs-lisp :results silent
+  (defconst IS-MAC   (eq system-type 'darwin))
+  (defconst IS-LINUX (eq system-type 'gnu/linux))
+#+end_src
+***** Mac
+#+begin_src emacs-lisp :results silent
+  (cond (IS-MAC
+         (setq mac-command-modifier 'meta
+               mac-option-modifier  'alt
+               ;; sane trackpad/mouse scroll settings
+               mac-redisplay-dont-reset-vscroll t
+               mac-mouse-wheel-smooth-scroll nil
+               mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
+               mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
+               ;; Curse Lion and its sudden but inevitable fullscreen mode!
+               ;; NOTE Meaningless to railwaycat's emacs-mac build
+               ns-use-native-fullscreen t
+               ;; Don't open files from the workspace in a new frame
+               ns-pop-up-frames nil)
+
+         (cond ((display-graphic-p)
+                ;; A known problem with GUI Emacs on MacOS: it runs in an isolated
+                ;; environment, so envvars will be wrong. That includes the PATH
+                ;; Emacs picks up. `exec-path-from-shell' fixes this. This is slow
+                ;; and benefits greatly from compilation.
+                (setq exec-path
+                      (or (eval-when-compile
+                            (when (require 'exec-path-from-shell nil t)
+                              (setq exec-path-from-shell-check-startup-files nil
+                                    exec-path-from-shell-arguments (delete "-i" exec-path-from-shell-arguments))
+                              (nconc exec-path-from-shell-variables '("GOPATH" "GOROOT" "PYTHONPATH"))
+                              (exec-path-from-shell-initialize)
+                              ;; (persistent-soft-store 'exec-path exec-path "emacs")
+                              exec-path))
+                          exec-path)))
+               (t
+                (when (require 'osx-clipboard nil t)
+                  (osx-clipboard-mode +1))))))
+#+end_src
+**** paths
+#+begin_src emacs-lisp
+  (defun custom/ (filename dirname)
+    "Get path to FILENAME in DIRNAME."
+    (make-directory dirname t)
+    (concat dirname filename))
+
+  (defun tmp/ (filename)
+    "Get path to FILENAME in temp directory."
+    (custom/ filename (concat user-emacs-directory "tmp/")))
+
+  (defun shared/ (filename)
+    "Get path to FILENAME in shared directory."
+    (custom/ filename "~/Dropbox/Emacs/"))
+
+  (setq-default custom-file (tmp/ "custom.el"))
+  (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
+                bookmark-default-file (shared/ "bookmarks.txt")
+                bookmark-save-flag t)
+#+end_src
+*** utils
+**** dired
 #+begin_src emacs-lisp
   (use-package init-dired
     :load-path "packages/dired"
@@ -67,15 +153,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            ("<backspace>" . dired-up-directory)
            ("/" . dired-narrow-fuzzy)))
 #+end_src
-*** after-load
-#+begin_src emacs-lisp
-  (defmacro after-load (feature &rest body)
-    "After FEATURE is loaded, evaluate BODY."
-    (declare (indent defun))
-    `(eval-after-load ,feature
-       '(progn ,@body)))
-#+end_src
-*** eshell
+**** eshell
 #+begin_src emacs-lisp
   (setq-default eshell-buffer-maximum-lines 500
                 eshell-output-filter-functions
@@ -105,39 +183,73 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 (setenv "LC_CTYPE" "en_US.UTF-8")))
     :ensure t)
 #+end_src
-*** osx
-#+begin_src emacs-lisp
-  (setq-default mac-option-key-is-meta nil
-                mac-command-key-is-meta t
-                mac-command-modifier 'meta
-                mac-option-modifier nil)
+**** ido
+#+begin_src emacs-lisp :results silent
+  (defadvice ido-find-file (after find-file-sudo activate)
+    "Find file as root if necessary."
+    (unless (and buffer-file-name (file-writable-p buffer-file-name))
+      (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+
+  (use-package ido
+    :config (progn
+              (setq-default ido-enable-flex-matching t
+                            ido-use-filename-at-point nil
+                            ido-auto-merge-work-directories-length -1
+                            ido-use-virtual-buffers t
+                            ido-confirm-unique-completion t
+                            ido-default-buffer-method 'selected-window)
+              (ido-mode)
+              (ido-everywhere)))
+
+  (use-package idomenu
+    :ensure t)
+
+  (use-package ido-vertical-mode
+    :config (progn
+              (setq-default ido-vertical-define-keys 'C-n-and-C-p-only)
+              (ido-vertical-mode))
+    :ensure t)
+
+  (use-package ido-completing-read+
+    :ensure t)
+
+  (use-package ido-ubiquitous
+    :config (ido-ubiquitous-mode)
+    :ensure t)
+
+  (use-package smex
+    ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
+    ;; your recently and most frequently used commands.
+    :config (progn
+              (global-set-key [remap execute-extended-command] 'smex))
+    :ensure t)
+
 #+end_src
-*** paths
-#+begin_src emacs-lisp
-  (defun custom/ (filename dirname)
-    "Get path to FILENAME in DIRNAME."
-    (make-directory dirname t)
-    (concat dirname filename))
-
-  (defun tmp/ (filename)
-    "Get path to FILENAME in temp directory."
-    (custom/ filename (concat user-emacs-directory "tmp/")))
-
-  (defun shared/ (filename)
-    "Get path to FILENAME in shared directory."
-    (custom/ filename "~/Dropbox/Emacs/"))
-
-  (setq-default
-   custom-file (tmp/ "custom.el"))
+**** imenu
+#+begin_src emacs-lisp :results silent
+  (use-package imenu-anywhere
+    :init (progn
+            (global-unset-key "\C-xi"))
+    :bind (("C-x i m" . imenu-anywhere))
+    :ensure t)
+#+end_src
+**** ivy
+#+begin_src emacs-lisp :results silent
+  ;; (use-package ivy
+  ;;   :bind (("C-x i m" . ivy-imenu-anywhere))
+  ;;   :config (progn
+  ;;             (ivy-mode t))
+  ;;   :ensure t)
+#+end_src
+**** bookmarks
+#+begin_src emacs-lisp :results silent
+  (use-package bookmark+
+    :ensure t)
 #+end_src
 *** wgrep
 #+begin_src emacs-lisp
   (use-package wgrep
     :ensure t)
-#+end_src
-*** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][make emacs bit quieter]]
-#+begin_src emacs-lisp
-  (setq auto-revert-verbose nil)  ;; turn off auto revert messages
 #+end_src
 ** Keyboard
 *** key-combo
@@ -244,83 +356,117 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     (funcall (split-window-func-with-other-buffer 'split-window-horizontally)))
 #+end_src
 ** Org-mode
-*** Prettify Src Blocks
-#+begin_src emacs-lisp
-  (with-eval-after-load 'org
-    (defvar-local rasmus/org-at-src-begin -1
-      "Variable that holds whether last position was a ")
-
-    (defvar rasmus/ob-header-symbol ?☰
-      "Symbol used for babel headers")
-
-    (defun rasmus/org-prettify-src--update ()
-      (let ((case-fold-search t)
-            (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
-            found)
-        (save-excursion
-          (goto-char (point-min))
-          (while (re-search-forward re nil t)
-            (goto-char (match-end 0))
-            (let ((args (org-trim
-                         (buffer-substring-no-properties (point)
-                                                         (line-end-position)))))
-              (when (org-string-nw-p args)
-                (let ((new-cell (cons args rasmus/ob-header-symbol)))
-                  (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
-                  (cl-pushnew new-cell found :test #'equal)))))
-          (setq prettify-symbols-alist
-                (cl-set-difference prettify-symbols-alist
-                                   (cl-set-difference
-                                    (cl-remove-if-not
-                                     (lambda (elm)
-                                       (eq (cdr elm) rasmus/ob-header-symbol))
-                                     prettify-symbols-alist)
-                                    found :test #'equal)))
-          ;; Clean up old font-lock-keywords.
-          (font-lock-remove-keywords nil prettify-symbols--keywords)
-          (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
-          (font-lock-add-keywords nil prettify-symbols--keywords)
-          (while (re-search-forward re nil t)
-            (font-lock-flush (line-beginning-position) (line-end-position))))))
-
-    (defun rasmus/org-prettify-src ()
-      "Hide src options via `prettify-symbols-mode'.
-
-    `prettify-symbols-mode' is used because it has uncollpasing. It's
-    may not be efficient."
-      (let* ((case-fold-search t)
-             (at-src-block (save-excursion
-                             (beginning-of-line)
-                             (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
-        ;; Test if we moved out of a block.
-        (when (or (and rasmus/org-at-src-begin
-                       (not at-src-block))
-                  ;; File was just opened.
-                  (eq rasmus/org-at-src-begin -1))
-          (rasmus/org-prettify-src--update))
-        ;; Remove composition if at line; doesn't work properly.
-        ;; (when at-src-block
-        ;;   (with-silent-modifications
-        ;;     (remove-text-properties (match-end 0)
-        ;;                             (1+ (line-end-position))
-        ;;                             '(composition))))
-        (setq rasmus/org-at-src-begin at-src-block)))
-
-    (defun rasmus/org-prettify-symbols ()
-      (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-            (cl-reduce 'append
-                       (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                               `(("#+begin_src" . ?✎) ;; ➤ 🖝 ➟ ➤ ✎
-                                 ("#+end_src"   . ?↑) ;; ⏹
-                                 ("#+header:" . ,rasmus/ob-header-symbol)
-                                 ("#+begin_quote" . ?»)
-                                 ("#+end_quote" . ?«)))))
-      (turn-on-prettify-symbols-mode)
-      (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
-    (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
-
+*** Babel
+#+begin_src emacs-lisp :results silent
+  (setq org-src-fontify-natively t
+        org-confirm-babel-evaluate nil
+        org-confirm-shell-link-function nil
+        org-confirm-elisp-link-function nil)
+  (add-hook 'org-mode-hook 'org-hide-block-all)
 #+end_src
-*** Org-Link: Insert Heading by Default
+**** ob-languages
+#+begin_src emacs-lisp :results silent
+  (setq ob-languages '((python . t)
+                       (ipython . t)
+                       (sql . t)
+                       (C . t)
+                       (shell . t)))
+
+  (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
+**** ob-async
+#+begin_src emacs-lisp :results silent
+  (use-package ob-async
+    :load-path "packages/ob-async"
+    :config (progn
+              (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-async-org-babel-execute-src-block)))
+#+end_src
+**** ob-ipython
+#+begin_src emacs-lisp :results silent
+  (use-package ob-ipython
+    :config (progn
+              (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+              (setq python-shell-prompt-detect-failure-warning nil))
+    :ensure t)
+
+  (defun ob-ipython-inline-image (b64-string)
+    "Write the b64-string to a temporary file. Returns an org-link to the file."
+    (let* ((tfile (make-temp-file "ob-ipython-" nil ".png"))
+           (link (format "[[file:%s]]" tfile)))
+      (ob-ipython--write-base64-string tfile b64-string)
+      link))
+
+  (defun org-babel-execute:ipython (body params)
+    "Execute a block of IPython code with Babel. This function is called by `org-babel-execute-src-block'."
+    (let* ((file (cdr (assoc :file params)))
+           (session (cdr (assoc :session params)))
+           (result-type (cdr (assoc :result-type params))))
+      (org-babel-ipython-initiate-session session params)
+      (-when-let (ret (ob-ipython--eval
+                       (ob-ipython--execute-request
+                        (org-babel-expand-body:generic (encode-coding-string body 'utf-8)
+                                                       params (org-babel-variable-assignments:python params))
+                        (ob-ipython--normalize-session session))))
+        (let ((result (cdr (assoc :result ret)))
+              (output (cdr (assoc :output ret))))
+          (if (eq result-type 'output)
+              (concat
+               output
+               (format "%s"
+                       (mapconcat 'identity
+                                  (loop for res in result
+                                        if (eq 'image/png (car res))
+                                        collect (ob-ipython-inline-image (cdr res)))
+                                  "\n")))
+            (ob-ipython--create-stdout-buffer output)
+            (cond ((and file (string= (f-ext file) "png"))
+                   (->> result (assoc 'image/png) cdr (ob-ipython--write-base64-string file)))
+                  ((and file (string= (f-ext file) "svg"))
+                   (->> result (assoc 'image/svg+xml) cdr (ob-ipython--write-string-to-file file)))
+                  (file (error "%s is currently an unsupported file extension." (f-ext file)))
+                  (t (->> result (assoc 'text/plain) cdr))))))))
+#+end_src
+*** Dashboard
+#+begin_src emacs-lisp :results silent
+  (use-package org-dashboard
+    :ensure t)
+#+end_src
+*** Keybindings
+#+begin_src emacs-lisp :results silent
+  (use-package org-keybindings
+    :no-require t
+    :bind (("C-c l" . org-store-link)
+           ("C-c a" . org-agenda)
+           ("C-c c" . org-capture)
+           :map org-mode-map
+           ("C-M-n" . ded/org-show-next-heading-tidily)
+           ("C-M-p" . ded/org-show-previous-heading-tidily)))
+#+end_src
+*** Make Heading Done When All Checkboxes are Checked
+#+begin_src emacs-lisp :results silent
+  ;; Mark heading done when all checkboxes are checked
+  ;; see http://thread.gmane.org/gmane.emacs.orgmode/42715
+  (eval-after-load 'org-list
+    '(add-hook 'org-checkbox-statistics-hook (function ndk/checkbox-list-complete)))
+
+  (defun ndk/checkbox-list-complete ()
+    (save-excursion
+      (org-back-to-heading t)
+      (let ((beg (point)) end)
+        (end-of-line)
+        (setq end (point))
+        (goto-char beg)
+        (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]" end t)
+            (if (match-end 1)
+                (if (equal (match-string 1) "100%")
+                    (org-todo 'done)
+                  (org-todo 'todo))
+              (if (and (> (match-end 2) (match-beginning 2))
+                       (equal (match-string 2) (match-string 3)))
+                  (org-todo 'done)
+                (org-todo 'todo)))))))
+#+end_src
+*** My-Org-Insert-Link: Insert Heading by Default
 #+begin_src emacs-lisp
   (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -341,6 +487,111 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
         (search-forward "</title>")
         (setq x2 (search-backward "<"))
         (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
+#+end_src
+*** Org-Archive-Done-Tasks
+#+begin_src emacs-lisp :results silent
+  (defun org-archive-done-tasks ()
+    (interactive)
+    (org-map-entries 'org-archive-subtree "/DONE" 'file)
+    (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
+#+end_src
+*** Org-Clock
+#+begin_src emacs-lisp :results silent
+  (setq-default org-clock-persistence-insinuate t
+                org-clock-persist t
+                org-clock-in-resume t
+                org-clock-in-switch-to-state "STARTED"
+                org-clock-out-remove-zero-time-clocks t)
+#+end_src
+*** Org-Crypt
+#+begin_src emacs-lisp :results silent
+  (use-package org-crypt
+    :disabled t
+    :config
+    (org-crypt-use-before-save-magic)
+    (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+    (setq org-crypt-key nil))
+#+end_src
+*** Plain Lists
+#+begin_src emacs-lisp :results silent
+  (setq org-cycle-include-plain-lists 'integrate
+        org-confirm-elisp-link-not-regexp "org-open-file")
+#+end_src
+*** Show next entry, keeping other entries closed
+#+begin_src emacs-lisp :results silent
+  (defun ded/org-show-next-heading-tidily ()
+    "Show next entry, keeping other entries closed."
+    (interactive)
+    (if (save-excursion (end-of-line) (outline-invisible-p))
+        (progn (org-show-entry) (show-children))
+      (org-forward-heading-same-level 1 t)
+      (unless (and (bolp) (org-on-heading-p))
+        (org-up-heading-safe)
+        (hide-subtree)
+        (error "Boundary reached"))
+      (org-overview)
+      (org-reveal t)
+      (org-show-entry)
+      (show-children)))
+#+end_src
+*** Show previous entry, keeping other entries closed
+#+begin_src emacs-lisp :results silent
+  (defun ded/org-show-previous-heading-tidily ()
+    "Show previous entry, keeping other entries closed."
+    (interactive)
+    (let ((pos (point)))
+      (org-backward-heading-same-level 1 t)
+      (unless (and (< (point) pos) (bolp) (org-on-heading-p))
+        (goto-char pos)
+        (hide-subtree)
+        (error "Boundary reached"))
+      (org-overview)
+      (org-reveal t)
+      (org-show-entry)
+      (show-children)))
+#+end_src
+*** Strikethrough done statuses
+#+begin_src emacs-lisp :results silent
+  (defun my/modify-org-done-face ()
+    (setq org-fontify-done-headline t)
+    (set-face-attribute 'org-done nil :strike-through t)
+    (set-face-attribute 'org-headline-done nil
+                        :strike-through t))
+
+  (eval-after-load "org"
+    (add-hook 'org-add-hook 'my/modify-org-done-face))
+#+end_src
+*** UI
+#+begin_src emacs-lisp :results silent
+  (setq org-hide-emphasis-markers t)
+  (add-to-list 'org-emphasis-alist '())
+  (add-to-list 'org-emphasis-alist '("_" ()))
+#+end_src
+*** Unsorted Settings
+#+begin_src emacs-lisp :results silent
+  (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
+  (setq org-startup-align-all-tables "align")
+  (setq-default
+   ;; org-log-done t
+   org-special-ctrl-a/e t
+   org-completion-use-ido t
+   org-edit-timestamp-down-means-later t
+   org-agenda-start-on-weekday nil
+   org-agenda-span 14
+   org-agenda-include-diary t
+   org-agenda-window-setup 'current-window
+   org-fast-tag-selection-single-key 'expert
+   org-export-kill-product-buffer-when-displayed t
+   org-tags-column 80
+   org-refile-use-outline-path (quote file)
+   org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
+   org-outline-path-complete-in-steps t
+   org-ellipsis " ↓"
+   org-hide-leading-stars t
+   org-startup-indented t
+   org-id-locations-file (tmp/ "org-id-locations.txt")
+   org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d)")
+                             (sequence "WAITING(w)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
 #+end_src
 ** Editor
 *** origami
@@ -526,6 +777,81 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
           (insert key)
           (yas-expand)))))
 #+end_src
+** Utils
+*** ssh
+#+begin_src emacs-lisp :results silent
+  (use-package ssh-connect
+    :no-require t
+    :bind (("C-x y s" . ssh-connect)))
+
+  (defun ssh-connect (&optional foreign-buffer)
+      "Manage ssh connections, if FOREIGN-BUFFER > 1, do not reuse eshell."
+      (interactive "p")
+      (defvar ssh-connections)
+      (defvar ssh-connections-names)
+      (defvar ssh-connection-name)
+      (defvar ssh-connection-string)
+      (setq ssh-connections-names (list))
+      (mapc (lambda (key) (add-to-list 'ssh-connections-names (car key))) ssh-connections)
+      (setq ssh-connection-name (ido-completing-read "Choose connection: " ssh-connections-names))
+      (setq ssh-connection-string (cdr (assoc ssh-connection-name ssh-connections)))
+      (let ((default-directory ssh-connection-string)
+            (_buffn (get-buffer ssh-connection-name)))
+        (if (or (eq nil _buffn) (> foreign-buffer 1))
+            (progn
+              (eshell t)
+              (rename-buffer ssh-connection-name t))
+          (progn
+            (switch-to-buffer _buffn)))))
+#+end_src
+*** rsync
+#+begin_src emacs-lisp :results silent
+  (defun rsync-enable ()
+    "Enable rsync support."
+    (interactive)
+    (auto-rsync-mode t))
+
+  (defun rsync-disable ()
+    "Disable rsync support."
+    (interactive)
+    (auto-rsync-mode -1))
+
+  (defgroup auto-rsync nil "Auto rsync")
+
+  (defcustom auto-rsync-command "rsync"
+    "Rsync command path."
+    :group 'auto-rsync)
+
+  (defcustom auto-rsync-command-option "-anv"
+    "Options."
+    :group 'auto-rsync)
+
+  (defvar auto-rsync-dir-alist nil "Pair of rsync source and destination dir.")
+  (defvar auto-rsync-normalized-alist nil)
+
+  (defun auto-rsync-exec-rsync ()
+    "Execute rsync if editing file path match src dir."
+    (interactive)
+    (let* ((normalized-alist (mapcar (lambda (x) (cons (file-name-as-directory (expand-file-name (car x)))
+                                                  (file-name-as-directory (cdr x))))
+                                     auto-rsync-dir-alist))
+           (sync-pair (assoc-if (lambda (key) (string-match key buffer-file-name)) normalized-alist)))
+      (when sync-pair
+        (save-window-excursion
+          ;; avoid annoying shell command window
+          (message (format "%s %s %s %s&" auto-rsync-command auto-rsync-command-option (car sync-pair) (cdr sync-pair)))
+          (shell-command (format "%s %s %s %s&" auto-rsync-command auto-rsync-command-option (car sync-pair) (cdr sync-pair)) nil)))))
+
+  (define-minor-mode auto-rsync-mode
+    "automatically execute rsync when editing file's path matches `auto-rsync-dir-alist`"
+    :lighter " rsync"
+    :global t
+    (cond (auto-rsync-mode
+           (add-hook 'after-save-hook 'auto-rsync-exec-rsync))
+          (t
+           (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
+
+#+end_src
 ** TODO Programming
 #+begin_src emacs-lisp
 (use-package init-c
@@ -609,31 +935,10 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 ** Unsorted
 #+begin_src emacs-lisp
-  (use-package rsync
-    :load-path "packages"
-    :commands (rsync-enable
-               rsync-disable))
-
-  (use-package ssh
-    :load-path "packages"
-    :bind (("C-x y s" . ssh-connect))
-    :commands (init-ssh))
-
   ;; Some unsorted stuff:
 
   (use-package init-web
     :load-path "packages/prog")
-
-  (use-package init-ido
-    :load-path "packages/ido")
-
-  (use-package imenu-anywhere
-    :init (progn
-            (global-unset-key "\C-xi"))
-    :config (progn
-              (ido-everywhere))
-    :bind (("C-x i m" . imenu-anywhere))
-    :ensure t)
 
   (use-package init-editing-utils
     :load-path "lisp")
@@ -647,9 +952,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   (use-package init-lisp
     :load-path "lisp")
-
-  (use-package init-org
-    :load-path "packages")
 
   (org-babel-load-file
    (expand-file-name "packages/org/beautify-emphasis.org"
@@ -721,13 +1023,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            ("C-x g l" . magit-log-buffer-file)
            ("C-x g c" . magit-commit)
            ("C-x g p c" . magit-push-current))
-    :ensure t)
-
-  (use-package bookmark+
-    :init (progn
-            (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
-                          bookmark-default-file (shared/ "bookmarks.txt")
-                          bookmark-save-flag t))
     :ensure t)
 
   (use-package google-translate
@@ -856,8 +1151,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     (setq super-save-auto-save-when-idle t)
     :ensure t)
 
-  (global-unset-key "\C-xi")
-
   (use-package general
     :config
     (general-define-key
@@ -865,10 +1158,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
      "C-<" 'mc/mark-previous-like-this
      "C->" 'mc/mark-next-like-this
      "C-+" 'mc/mark-all-like-this)
-
-    (general-define-key
-     :prefix "C-x i"
-     "m" 'imenu-anywhere)
 
     (general-define-key
      :prefix "C-x y"
@@ -881,9 +1170,76 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
      "C-n" 'ido-next-match
      "C-p" 'ido-prev-match)
     :ensure t)
+#+end_src
+** UI
+#+begin_src emacs-lisp :results silent
+  (fset 'yes-or-no-p 'y-or-n-p)
+  (delete-selection-mode 1)
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  (toggle-scroll-bar -1)
+  (set-cursor-color "#D0E1F9")
+  (blink-cursor-mode 0)
 
+  (custom-set-faces
+   '(default ((t (
+		  :inherit nil
+			   :stipple nil
+			   :inverse-video nil
+			   :box nil
+			   :strike-through nil
+			   :overline nil
+			   :underline nil
+			   :slant normal
+			   :weight normal
+			   :height 90
+			   :width normal
+			   :foundry nil
+			   :family "Menlo")))))
+
+  (use-package danneskjold-theme
+    :ensure t)
+
+  (defun what-face (pos)
+    "Tell me what face used in POS."
+    (interactive "d")
+    (let ((face (or (get-char-property (point) 'read-face-name)
+                    (get-char-property (point) 'face))))
+      (if face (message "Face: %s" face) (message "No face at %d" pos))))
+
+  (setq-default case-fold-search t
+		compilation-scroll-output t
+		ediff-split-window-function 'split-window-horizontally
+		ediff-window-setup-function 'ediff-setup-windows-plain
+		grep-highlight-matches t
+		grep-scroll-output t
+		make-backup-files nil
+		mouse-yank-at-point t
+		save-interprogram-paste-before-kill t
+		scroll-preserve-screen-position 'always
+		set-mark-command-repeat-pop t
+		show-trailing-whitespace nil
+		tooltip-delay 1.5
+		truncate-lines nil
+		truncate-partial-width-windows nil
+		indent-tabs-mode nil
+		x-use-underline-position-properties t
+		underline-minimum-offset 3
+		inhibit-startup-screen t
+		line-spacing 7
+		visible-bell nil
+		cursor-type 'box
+		split-width-threshold 160
+		split-height-threshold nil
+		frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
+
+  (diminish 'undo-tree-mode)
+  (diminish 'flycheck-mode)
+  (diminish 'eldoc-mode)
+  (diminish 'elisp-slime-nav-mode)
+  (diminish 'paredit-mode)
+#+end_src
+** Local Config
+#+begin_src emacs-lisp :results silent
   (require 'init-local nil t)
-
-  (use-package beautifies
-    :load-path "packages/core")
 #+end_src

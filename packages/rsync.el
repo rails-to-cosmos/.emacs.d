@@ -22,14 +22,6 @@
   "Options."
   :group 'auto-rsync)
 
-;; --exclude='.git'
-;; --exclude='node_modules'
-;; --exclude='tmp'
-;; --exclude='*.org*'
-;; --exclude='lisp'
-;; --exclude='LICENSE'
-;; --exclude='README.md'
-
 (defvar auto-rsync-dir-alist nil "Pair of rsync source and destination dir.")
 (defvar auto-rsync-normalized-alist nil)
 
