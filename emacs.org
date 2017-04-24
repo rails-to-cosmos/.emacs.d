@@ -47,7 +47,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** TODO Навигация org-mode через ido
 * Config
 ** Core
-*** instruments
+*** Instruments
 **** after-load
 #+begin_src emacs-lisp
   (defmacro after-load (feature &rest body)
@@ -56,23 +56,23 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     `(eval-after-load ,feature
        '(progn ,@body)))
 #+end_src
-*** settings
-**** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
+*** Settings
+**** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
 #+begin_src emacs-lisp :results silent
   ;; UTF-8 as the default coding system
-  (set-charset-priority 'unicode)        ; pretty
-  (prefer-coding-system        'utf-8)   ; pretty
-  (set-terminal-coding-system  'utf-8)   ; pretty
-  (set-keyboard-coding-system  'utf-8)   ; pretty
-  (set-selection-coding-system 'utf-8)   ; perdy
-  (setq locale-coding-system   'utf-8)   ; please
-  (setq-default buffer-file-coding-system 'utf-8) ; with sugar on top
+  (set-charset-priority 'unicode)
+  (prefer-coding-system        'utf-8)
+  (set-terminal-coding-system  'utf-8)
+  (set-keyboard-coding-system  'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (setq locale-coding-system   'utf-8)
+  (setq-default buffer-file-coding-system 'utf-8)
 #+end_src
-**** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][make emacs bit quieter]]
+**** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+begin_src emacs-lisp :results silent
   (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
-**** os
+**** OS
 #+begin_src emacs-lisp :results silent
   (defconst IS-MAC   (eq system-type 'darwin))
   (defconst IS-LINUX (eq system-type 'gnu/linux))
@@ -112,7 +112,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 (when (require 'osx-clipboard nil t)
                   (osx-clipboard-mode +1))))))
 #+end_src
-**** paths
+**** Paths
 #+begin_src emacs-lisp
   (defun custom/ (filename dirname)
     "Get path to FILENAME in DIRNAME."
@@ -125,15 +125,15 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   (defun shared/ (filename)
     "Get path to FILENAME in shared directory."
-    (custom/ filename "~/Dropbox/Emacs/"))
+    (custom/ filename "~/Yandex.Disk.localized/Emacs/"))
 
   (setq-default custom-file (tmp/ "custom.el"))
   (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
                 bookmark-default-file (shared/ "bookmarks.txt")
                 bookmark-save-flag t)
 #+end_src
-*** utils
-**** dired
+*** Utils
+**** Dired
 #+begin_src emacs-lisp
   (use-package init-dired
     :load-path "packages/dired"
@@ -153,7 +153,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            ("<backspace>" . dired-up-directory)
            ("/" . dired-narrow-fuzzy)))
 #+end_src
-**** eshell
+**** Eshell
 #+begin_src emacs-lisp
   (setq-default eshell-buffer-maximum-lines 500
                 eshell-output-filter-functions
@@ -183,7 +183,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 (setenv "LC_CTYPE" "en_US.UTF-8")))
     :ensure t)
 #+end_src
-**** ido
+**** Ido
 #+begin_src emacs-lisp :results silent
   (defadvice ido-find-file (after find-file-sudo activate)
     "Find file as root if necessary."
@@ -225,7 +225,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :ensure t)
 
 #+end_src
-**** imenu
+**** Imenu
 #+begin_src emacs-lisp :results silent
   (use-package imenu-anywhere
     :init (progn
@@ -233,20 +233,12 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
 #+end_src
-**** ivy
-#+begin_src emacs-lisp :results silent
-  ;; (use-package ivy
-  ;;   :bind (("C-x i m" . ivy-imenu-anywhere))
-  ;;   :config (progn
-  ;;             (ivy-mode t))
-  ;;   :ensure t)
-#+end_src
-**** bookmarks
+**** Bookmarks
 #+begin_src emacs-lisp :results silent
   (use-package bookmark+
     :ensure t)
 #+end_src
-*** wgrep
+**** Wgrep
 #+begin_src emacs-lisp
   (use-package wgrep
     :ensure t)
@@ -864,7 +856,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
 
 #+end_src
-** TODO Programming
+** Programming
 #+begin_src emacs-lisp
 (use-package init-c
   :load-path "packages/prog"
@@ -1205,15 +1197,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
               (prodigy-define-default-status-list)
               (prodigy-define-tag
                 :name 'django
-                :ready-message "Quit the server with CONTROL-C")
-              (prodigy-define-service
-                :name "Jupyter Notebook"
-                :command "jupyter"
-                :args '("notebook")
-                :cwd "~/Dropbox/Documents/SHAD"
-                :tags '(shad)
-                :stop-signal 'sigkill
-                :kill-process-buffer-on-stop t))
+                :ready-message "Quit the server with CONTROL-C"))
     :ensure t)
 
   (use-package super-save
