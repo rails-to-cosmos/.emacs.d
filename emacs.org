@@ -445,30 +445,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            ("C-M-n" . ded/org-show-next-heading-tidily)
            ("C-M-p" . ded/org-show-previous-heading-tidily)))
 #+end_src
-*** Make Heading Done When All Checkboxes are Checked
-#+begin_src emacs-lisp :results silent
-  ;; Mark heading done when all checkboxes are checked
-  ;; see http://thread.gmane.org/gmane.emacs.orgmode/42715
-  (eval-after-load 'org-list
-    '(add-hook 'org-checkbox-statistics-hook (function ndk/checkbox-list-complete)))
-
-  (defun ndk/checkbox-list-complete ()
-    (save-excursion
-      (org-back-to-heading t)
-      (let ((beg (point)) end)
-        (end-of-line)
-        (setq end (point))
-        (goto-char beg)
-        (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]" end t)
-            (if (match-end 1)
-                (if (equal (match-string 1) "100%")
-                    (org-todo 'done)
-                  (org-todo 'todo))
-              (if (and (> (match-end 2) (match-beginning 2))
-                       (equal (match-string 2) (match-string 3)))
-                  (org-todo 'done)
-                (org-todo 'todo)))))))
-#+end_src
 *** My-Org-Insert-Link: Insert Heading by Default
 #+begin_src emacs-lisp
   (require 'mm-url) ; to include mm-url-decode-entities-string
@@ -563,6 +539,39 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   (eval-after-load "org"
     (add-hook 'org-add-hook 'my/modify-org-done-face))
+#+end_src
+*** Todo/Checkbox Dependencies
+#+begin_src emacs-lisp :results silent
+  (setq org-enforce-todo-dependencies t)
+
+  (defun org-summary-todo (n-done n-not-done)
+    "Switch entry to DONE when all subentries are done, to TODO otherwise."
+    (let (org-log-done org-log-states)   ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+  (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+
+  ;; Mark heading done when all checkboxes are checked
+  ;; see http://thread.gmane.org/gmane.emacs.orgmode/42715
+  (eval-after-load 'org-list
+    '(add-hook 'org-checkbox-statistics-hook (function ndk/checkbox-list-complete)))
+
+  (defun ndk/checkbox-list-complete ()
+    (save-excursion
+      (org-back-to-heading t)
+      (let ((beg (point)) end)
+        (end-of-line)
+        (setq end (point))
+        (goto-char beg)
+        (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]" end t)
+            (if (match-end 1)
+                (if (equal (match-string 1) "100%")
+                    (org-todo 'done)
+                  (org-todo 'todo))
+              (if (and (> (match-end 2) (match-beginning 2))
+                       (equal (match-string 2) (match-string 3)))
+                  (org-todo 'done)
+                (org-todo 'todo)))))))
 #+end_src
 *** UI
 #+begin_src emacs-lisp :results silent
@@ -916,18 +925,19 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   (defun python-add-breakpoint ()
     "Add a break point."
     (interactive)
-    (if (buffer-contains-substring "from IPython.core.debugger import Tracer as breakpoint")
-        (insert "breakpoint()()")
+    (if (buffer-contains-substring "from IPython.core.debugger import Tracer as Breakpoint")
+        (progn
+          (indent-according-to-mode)
+          (insert "Breakpoint()()"))
       (progn
-        (insert "from IPython.core.debugger import Tracer as breakpoint\n")
+        (insert "from IPython.core.debugger import Tracer as Breakpoint\n")
         (indent-according-to-mode)
-        (insert "breakpoint()()")
-        ))
+        (insert "Breakpoint()()")))
     (python-highlight-breakpoints))
 
   (defun python-highlight-breakpoints ()
     "Highlight python breakpoints."
-    (highlight-lines-matching-regexp "^[ ]*breakpoint()()"))
+    (highlight-lines-matching-regexp "^[ ]*Breakpoint()()"))
 
   ;; (use-package elpy
   ;;   :interpreter ("ipython" . python-mode)
