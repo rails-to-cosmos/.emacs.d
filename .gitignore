@@ -45,3 +45,5 @@ spu_log
 irony
 /emacs.el
 /emacs.org_archive
+packages/yandex
+*.org\[*\]

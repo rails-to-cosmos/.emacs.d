@@ -185,7 +185,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   (use-package eshell-up
     :config (progn
-              (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1")))
+              (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1"))
+              )
     :ensure t)
 #+end_src
 **** Ido
