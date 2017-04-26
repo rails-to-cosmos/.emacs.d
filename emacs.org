@@ -182,6 +182,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 (setenv "LC_ALL" "en_US.UTF-8")
                 (setenv "LC_CTYPE" "en_US.UTF-8")))
     :ensure t)
+
+  (use-package eshell-up
+    :config (progn
+              (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1")))
+    :ensure t)
 #+end_src
 **** Ido
 #+begin_src emacs-lisp :results silent
@@ -868,35 +873,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
           (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
   :commands (irony-mode
              irony-replace-completion-at-point))
-
-(use-package init-python
-  :load-path "packages/prog"
-
-  :diminish (rainbow-delimiters-mode
-             rainbow-mode)
-
-  :init (progn
-          ;; (autoload 'elpy-mode-map "elpy" "Define elpy-mode-map." t)
-          ;;(add-hook 'python-mode-hook 'elpy-mode)
-          (add-hook 'python-mode-hook 'init-python)
-          (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-          (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-          (add-hook 'python-mode-hook 'linum-mode))
-
-  :mode ("\\.py\\'" . python-mode)
-
-  :bind (:map python-mode-map
-              ("C-c C-b" . python-add-breakpoint)
-              ;; ("C-c C-g" . jedi:goto-definition)
-              )
-
-  :commands (init-python
-             python-add-breakpoint
-             python-highlight-breakpoints
-             ;; jedi:install-server
-             ;; jedi:goto-definition
-             ;; elpy-mode
-             ))
 
 (use-package init-db
   :load-path "packages/prog"
