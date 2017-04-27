@@ -23,7 +23,7 @@ http://ftp.gnu.org/gnu/emacs/
 ** http://pragmaticemacs.com/feed/
 ** http://sachachua.com/blog/category/emacs-news/feed
 ** https://www.reddit.com/r/emacs.rss
-* Usefull Sources
+* Useful Sources
 http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23
 * Other Configs
 - https://github.com/jkitchin/scimax/tree/org-9
