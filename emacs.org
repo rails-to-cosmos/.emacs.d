@@ -5,13 +5,34 @@ http://ftp.gnu.org/gnu/emacs/
 #+begin_src shell
   brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
 #+end_src
-* Tasks
-** Configs
+* Feed                                                                          :elfeed:
+** http://emacshorrors.com/feed.atom
+** http://endlessparentheses.com/atom.xml
+** http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/
+** http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/
+** http://pragmaticemacs.com/feed/
+** http://sachachua.com/blog/category/emacs-news/feed
+** https://www.reddit.com/r/emacs.rss
+* Usefull Sources
+http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23
+* Other Configs
+- https://github.com/jkitchin/scimax/tree/org-9
 - [[https://github.com/hlissner/.emacs.d/][hlissner]]
 - https://github.com/marktran/emacs.d
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's emacs config]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source%3Ddlvr.it&utm_medium%3Dtwitter][Emacs python mode by Sacha Chua]]
 - [[https://www.youtube.com/watch?v%3DdljNabciEGg][Literate Devops]]
+* Tasks
 ** TODO https://github.com/caffo/org-minimal-html-theme
 ** TODO [[http://plantuml.sourceforge.net/emacs.html][Emacs UML]]
 ** TODO https://github.com/vermiculus/sx.el
@@ -165,12 +186,12 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 password-cache t
                 password-cache-expiry 3600)
 
-  (defun eshell-init-aliases()
+  (defun eshell-init-default-aliases ()
     (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
     (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
     (add-to-list 'eshell-command-aliases-list '("l" "ls"))
     (add-to-list 'eshell-command-aliases-list '("ll" "ls -la")))
-  (add-hook 'eshell-mode-hook 'eshell-init-aliases)
+  (add-hook 'eshell-mode-hook 'eshell-init-default-aliases)
 
   (use-package exec-path-from-shell
     :config (progn
@@ -185,10 +206,17 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   (use-package eshell-up
     :config (progn
-              (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1"))
-              )
+              (defun eshell-add-aliases--eshell-up ()
+                (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1")))
+
+              (add-hook 'eshell-mode-hook
+                        'eshell-add-aliases--eshell-up))
     :ensure t)
 #+end_src
+
+#+RESULTS:
+: t
+
 **** Ido
 #+begin_src emacs-lisp :results silent
   (defadvice ido-find-file (after find-file-sudo activate)
@@ -204,8 +232,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                             ido-use-virtual-buffers t
                             ido-confirm-unique-completion t
                             ido-default-buffer-method 'selected-window)
-              (ido-mode)
-              (ido-everywhere)))
+              (ido-mode t)
+              (ido-everywhere t)))
 
   (use-package idomenu
     :ensure t)
@@ -229,7 +257,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :config (progn
               (global-set-key [remap execute-extended-command] 'smex))
     :ensure t)
-
 #+end_src
 **** Imenu
 #+begin_src emacs-lisp :results silent
@@ -250,6 +277,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :ensure t)
 #+end_src
 ** Keyboard
+*** default bindings
+#+begin_src emacs-lisp :results silent
+  ;; (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+  (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
+#+end_src
 *** key-combo
 #+begin_src emacs-lisp
   (use-package key-combo
@@ -357,6 +389,24 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
           (set-visited-file-name new-name)))))
 #+end_src
 ** Org-mode
+*** Highlighter
+#+begin_src emacs-lisp :results silent
+  (use-package ov
+    :ensure t)
+
+  (use-package hydra
+    :ensure t)
+
+  (use-package ov-highlighter
+    :load-path "packages")
+#+end_src
+*** Autolist
+#+begin_src emacs-lisp :results silent
+  (use-package org-autolist
+    :config (progn
+              (add-hook 'org-mode-hook (lambda () (org-autolist-mode))))
+    :ensure t)
+#+end_src
 *** Babel
 #+begin_src emacs-lisp :results silent
   (setq org-src-fontify-natively t
@@ -434,14 +484,12 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 *** Keybindings
 #+begin_src emacs-lisp :results silent
-  (use-package org-keybindings
-    :no-require t
-    :bind (("C-c l" . org-store-link)
-           ("C-c a" . org-agenda)
-           ("C-c c" . org-capture)
-           :map org-mode-map
-           ("C-M-n" . ded/org-show-next-heading-tidily)
-           ("C-M-p" . ded/org-show-previous-heading-tidily)))
+  (define-key global-map (kbd "C-x l") 'org-store-link)
+  (define-key global-map (kbd "C-c a") 'org-agenda)
+  (define-key global-map (kbd "C-c c") 'org-capture)
+  (define-key org-mode-map (kbd "C-M-n") 'ded/org-show-next-heading-tidily)
+  (define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
+  (define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
 #+end_src
 *** My-Org-Insert-Link: Insert Heading by Default
 #+begin_src emacs-lisp
@@ -493,6 +541,68 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+begin_src emacs-lisp :results silent
   (setq org-cycle-include-plain-lists 'integrate
         org-confirm-elisp-link-not-regexp "org-open-file")
+#+end_src
+*** Pretty-Entities
+#+begin_src emacs-lisp :results silent
+  (setq org-pretty-entities t)
+#+end_src
+*** Scimax-autoformat-mode
+#+begin_src emacs-lisp :results silent
+  (defcustom scimax-autoformat-ordinals t
+    "Determines if scimax autoformats ordinal numbers."
+    :group 'scimax)
+
+  (defun scimax-org-autoformat-ordinals ()
+    "Expand ordinal words to superscripted versions in org-mode.
+  1st to 1^{st}.
+  2nd to 2^{nd}
+  3rd to 3^{rd}
+  4th to 4^{th}"
+    (interactive)
+    (when (and scimax-autoformat-ordinals
+               (eq major-mode 'org-mode)
+               (not (org-in-src-block-p))
+               (looking-back "\\(?3:\\<\\(?1:[0-9]+\\)\\(?2:st\\|nd\\|rd\\|th\\)\\>\\)\\(?:[[:punct:]]\\|[[:space:]]\\)"
+                             (line-beginning-position)))
+      (undo-boundary)
+      (save-excursion
+        (replace-match "\\1^{\\2}" nil nil nil 3))))
+
+
+  (defcustom scimax-autoformat-fractions t
+    "Determines if scimax autoformats fractions."
+    :group 'scimax)
+
+
+  (defun scimax-org-autoformat-fractions ()
+    "Expand fractions to take up space."
+    (interactive)
+    (when (and scimax-autoformat-fractions
+               (eq major-mode 'org-mode)
+               (not (org-in-src-block-p))
+               (looking-back "\\(?3:\\<\\(1/4\\|1/2\\|3/4\\)\\>\\)\\(?:[[:punct:]]\\|[[:space:]]\\)"
+                             (line-beginning-position)))
+      (undo-boundary)
+      (save-excursion
+        (replace-match (cdr (assoc (match-string 3) '(("1/4" . "¼")
+                                                      ("1/2" . "½")
+                                                      ("3/4" . "¾"))))
+                       nil nil nil 3))))
+
+  (defun scimax-org-autoformat ()
+    "Autoformat functions."
+    (scimax-org-autoformat-ordinals)
+    (scimax-org-autoformat-fractions))
+
+  (define-minor-mode scimax-autoformat-mode
+    "Toggle `scimax-autoformat-mode'.  Converts 1st to 1^{st} as you type."
+    :init-value nil
+    :lighter (" om")
+    (if scimax-autoformat-mode
+        (add-hook 'post-self-insert-hook #'scimax-org-autoformat nil 'local)
+      (remove-hook 'post-self-insert-hook #'scimax-org-autoformat 'local)))
+
+  (add-hook 'org-mode-hook (lambda () (scimax-autoformat-mode)))
 #+end_src
 *** Show next entry, keeping other entries closed
 #+begin_src emacs-lisp :results silent
@@ -604,18 +714,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                              (sequence "WAITING(w)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
 #+end_src
 ** Editor
-*** origami
-#+begin_src emacs-lisp
-  (use-package origami
-    :config (progn
-              (add-hook 'prog-mode-hook 'origami-mode)
-              (add-hook 'emacs-lisp-mode-hook 'origami-mode))
-    :bind (:map prog-mode-map
-                ("C-c f t" . origami-toggle-node)
-                ("C-c f r" . origami-recursively-toggle-node)
-                ("C-c f o" . origami-show-only-node))
-    :ensure t)
-#+end_src
 *** company
 #+begin_src emacs-lisp
   (use-package company
@@ -640,6 +738,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                flycheck-idle-change-delay 5
                flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
               (global-flycheck-mode))
+    :ensure t)
+#+end_src
+*** flyspell
+#+begin_src emacs-lisp :results silent
+  (use-package flyspell
     :ensure t)
 #+end_src
 *** hippie-expand
@@ -741,6 +844,18 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
               (replace-match (number-to-string (1- (string-to-number (match-string 0))))))))
 
 #+end_src
+*** origami
+#+begin_src emacs-lisp
+  (use-package origami
+    :config (progn
+              (add-hook 'prog-mode-hook 'origami-mode)
+              (add-hook 'emacs-lisp-mode-hook 'origami-mode))
+    :bind (:map prog-mode-map
+                ("C-c f t" . origami-toggle-node)
+                ("C-c f r" . origami-recursively-toggle-node)
+                ("C-c f o" . origami-show-only-node))
+    :ensure t)
+#+end_src
 *** save-macro
 #+begin_src emacs-lisp
   (defun save-macro (name)
@@ -765,7 +880,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :ensure t)
 #+end_src
 **** ido-expand
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent
   (defun yas-ido-expand ()
     "Lets you select (and expand) a yasnippet key"
     (interactive)
@@ -786,7 +901,10 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
           (delete-char (- init-word original-point))
           (insert key)
           (yas-expand)))))
+
+  (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
+
 ** Utils
 *** ssh
 #+begin_src emacs-lisp :results silent
@@ -882,32 +1000,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                           sqlplus-session-cache-dir (tmp/ "sqlplus-session")))
   :bind (("C-x y q" . sqp-connect)))
 #+end_src
-*** c/c++
 *** python
 #+begin_src emacs-lisp :results silent
-  (defun buffer-contains-substring (string)
-    (save-excursion
-      (save-match-data
-        (goto-char (point-min))
-        (search-forward string nil t))))
-
-  (defun python-add-breakpoint ()
-    "Add a break point."
-    (interactive)
-    (if (buffer-contains-substring "from IPython.core.debugger import Tracer as Breakpoint")
-        (progn
-          (indent-according-to-mode)
-          (insert "Breakpoint()()"))
-      (progn
-        (insert "from IPython.core.debugger import Tracer as Breakpoint\n")
-        (indent-according-to-mode)
-        (insert "Breakpoint()()")))
-    (python-highlight-breakpoints))
-
-  (defun python-highlight-breakpoints ()
-    "Highlight python breakpoints."
-    (highlight-lines-matching-regexp "^[ ]*Breakpoint()()"))
-
+  (require 'python)
+#+end_src
+**** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
+SCHEDULED: <2017-05-27 Sat>
+**** jedi
+#+begin_src emacs-lisp :results silent
   ;; (use-package elpy
   ;;   :interpreter ("ipython" . python-mode)
   ;;   :config (progn
@@ -938,21 +1038,49 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   ;; (use-package rainbow-delimiters
   ;;   :ensure t)
-
+#+end_src
+**** virtualenv
+#+begin_src emacs-lisp :results silent
   (use-package virtualenv
     :config (progn
               (venv-initialize-interactive-shells)
               (venv-initialize-eshell))
     :ensure t)
-
 #+end_src
-
 **** ipython-shell-interpreter
 #+begin_src emacs-lisp
   (setq python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i")
 #+end_src
-*** database
+**** breakpoint
+#+begin_src emacs-lisp :results silent
+  (defun buffer-contains-substring (string)
+    (save-excursion
+      (save-match-data
+        (goto-char (point-min))
+        (search-forward string nil t))))
+
+  (defun python-add-breakpoint ()
+    "Add a break point."
+    (interactive)
+    (if (buffer-contains-substring "from IPython.core.debugger import Tracer as Breakpoint")
+        (progn
+          (indent-according-to-mode)
+          (insert "Breakpoint()()"))
+      (progn
+        (insert "from IPython.core.debugger import Tracer as Breakpoint\n")
+        (indent-according-to-mode)
+        (insert "Breakpoint()()")))
+    (python-highlight-breakpoints))
+
+  (defun python-highlight-breakpoints ()
+    "Highlight python breakpoints."
+    (highlight-lines-matching-regexp "^[ ]*Breakpoint()()"))
+
+  ;; (define-key python-mode-map (kbd "C-c C-b") nil)
+  (define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
+  (add-hook 'python-mode-hook 'python-highlight-breakpoints)
+#+end_src
 ** Social
 *** elfeed
 #+begin_src emacs-lisp
@@ -961,8 +1089,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
   (use-package elfeed-org
     :config (progn
-              (elfeed-org))
+              (elfeed-org)
+              (setq-default rmh-elfeed-org-files (list "~/.emacs.d/emacs.org")))
     :ensure t)
+
+  (defun elfeed-run-after-update ()
+    (interactive)
+    (elfeed-update)
+    (elfeed))
 #+end_src
 *** xmpp
 #+begin_src emacs-lisp
@@ -1027,12 +1161,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
             (use-package font-utils)))
 
   (use-package multiple-cursors
-    :commands
-    (mc/mark-next-like-this
-     mc/mark-previous-like-this
-     mc/mark-all-like-this)
-    :config
-    (setq-default mc/list-file (tmp/ "multiple-cursors-data.el"))
+    :bind (("C-<" . mc/mark-previous-like-this)
+           ("C->" . mc/mark-next-like-this)
+           ("C-+" . mc/mark-all-like-this))
+    :config (progn
+              (setq-default mc/list-file (tmp/ "multiple-cursors-data.el")))
     :ensure t)
 
   (use-package regex-tool
@@ -1126,6 +1259,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   (use-package prodigy
     :commands (prodigy
                prodigy-start-all-services)
+    :bind (("C-x y p" . prodigy))
     :config (progn
               (defun ido-prodigy-menu ()
                 (interactive)
@@ -1181,26 +1315,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :config
     (super-save-initialize)
     (setq super-save-auto-save-when-idle t)
-    :ensure t)
-
-  (use-package general
-    :config
-    (general-define-key
-     :keymaps 'global
-     "C-<" 'mc/mark-previous-like-this
-     "C->" 'mc/mark-next-like-this
-     "C-+" 'mc/mark-all-like-this)
-
-    (general-define-key
-     :prefix "C-x y"
-     "p" 'prodigy
-     "f f" 'toggle-frame-fullscreen
-     "i" 'yas-ido-expand)
-
-    (general-define-key
-     :keymaps 'ido-completion-map
-     "C-n" 'ido-next-match
-     "C-p" 'ido-prev-match)
     :ensure t)
 #+end_src
 ** UI
@@ -1275,3 +1389,9 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+begin_src emacs-lisp :results silent
   (require 'init-local nil t)
 #+end_src
+
+#  ov-highlight-data: nil
+
+# Local Variables:
+# eval: (ov-highlight-load)
+# End:
