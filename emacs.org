@@ -1,3 +1,8 @@
+#+TODO: TODO DISABLED | DONE CANCELLED
+#+STARTUP: entitiespretty
+
+[[elisp:(elfeed-run-after-update)][Elfeed]]
+
 * Install
 ** ubuntu
 http://ftp.gnu.org/gnu/emacs/
@@ -23,15 +28,18 @@ http://ftp.gnu.org/gnu/emacs/
 ** http://pragmaticemacs.com/feed/
 ** http://sachachua.com/blog/category/emacs-news/feed
 ** https://www.reddit.com/r/emacs.rss
+** https://shiyuangu.com/feed/
 * Useful Sources
-http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23
+- [[http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23][Emacs org-mode examples and cookbook]]
+- [[http://alexott.net/ru/writings/emacs-devenv/EmacsCedet.html#fn.1][Использование Emacs вместе с CEDET]]
 * Other Configs
-- https://github.com/jkitchin/scimax/tree/org-9
-- [[https://github.com/hlissner/.emacs.d/][hlissner]]
-- https://github.com/marktran/emacs.d
-- [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's emacs config]]
-- [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source%3Ddlvr.it&utm_medium%3Dtwitter][Emacs python mode by Sacha Chua]]
-- [[https://www.youtube.com/watch?v%3DdljNabciEGg][Literate Devops]]
+- [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
+- [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
+- [[https://github.com/hlissner/.emacs.d/][GitHub - hlissner/.emacs.d: Emacs for the stubborn martian vimmer]]
+- [[https://github.com/marktran/emacs.d][GitHub - marktran/emacs.d: Emacs configuration files]]
+- [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
+- [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
+- [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
 * Tasks
 ** TODO https://github.com/caffo/org-minimal-html-theme
 ** TODO [[http://plantuml.sourceforge.net/emacs.html][Emacs UML]]
@@ -389,17 +397,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
           (set-visited-file-name new-name)))))
 #+end_src
 ** Org-mode
-*** Highlighter
-#+begin_src emacs-lisp :results silent
-  (use-package ov
-    :ensure t)
-
-  (use-package hydra
-    :ensure t)
-
-  (use-package ov-highlighter
-    :load-path "packages")
-#+end_src
 *** Autolist
 #+begin_src emacs-lisp :results silent
   (use-package org-autolist
@@ -433,6 +430,210 @@ SCHEDULED: <2017-06-10 Sat>
     :load-path "packages/ob-async"
     :config (progn
               (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-async-org-babel-execute-src-block)))
+#+end_src
+**** [[https://shiyuangu.com/2014/08/24/source-code-digging-emacs-org-babel/][Source Code Digging: Emacs-Org-Babel | A Learner's Journey —- Shiyuan's Blog]]
+#+begin_src emacs-lisp :results silent
+  (defun org-babel-execute:python (body params)
+    "Execute a block of Python code with Babel.
+    This function is called by `org-babel-execute-src-block'."
+    (let* ((session (org-babel-python-initiate-session
+                     (cdr (assoc :session params))))
+           (result-params (cdr (assoc :result-params params)))
+           (result-type (cdr (assoc :result-type params)))
+           (return-val (when (and (eq result-type 'value) (not session))
+                         (cdr (assoc :return params))))
+           (preamble (cdr (assoc :preamble params)))
+           (org-babel-python-command
+            (or (cdr (assoc :python params)) org-babel-python-command))
+           (full-body
+            (org-babel-expand-body:generic
+             (concat body (if return-val (format "\nreturn %s" return-val) ""))
+             params (org-babel-variable-assignments:python params)))
+           (result (org-babel-python-evaluate
+                    session full-body result-type result-params preamble)))
+      (org-babel-reassemble-table
+       result
+       (org-babel-pick-name (cdr (assoc :colname-names params))
+                            (cdr (assoc :colnames params)))
+       (org-babel-pick-name (cdr (assoc :rowname-names params))
+                            (cdr (assoc :rownames params))))))
+
+  (defun org-babel-python-evaluate
+      (session body &optional result-type result-params preamble)
+    "Evaluate BODY as Python code."
+    (if session
+        (org-babel-python-evaluate-session
+         session body result-type result-params)
+      (org-babel-python-evaluate-external-process
+       body result-type result-params preamble)))
+
+  (defun org-babel-python-evaluate-session
+      (session body &optional result-type result-params)
+    "Pass BODY to the Python process in SESSION.
+  If RESULT-TYPE equals 'output then return standard output as a
+  string.  If RESULT-TYPE equals 'value then return the value of the
+  last statement in BODY, as elisp."
+    (let* ((send-wait (lambda () (comint-send-input nil t) (sleep-for 0 5)))
+           (dump-last-value
+            (lambda
+              (tmp-file pp)
+              (mapc
+               (lambda (statement) (insert statement) (funcall send-wait))
+               (if pp
+                   (list
+                    "import pprint"
+                    (format "open('%s', 'w').write(pprint.pformat(_))"
+                            (org-babel-process-file-name tmp-file 'noquote)))
+                 (list (format "open('%s', 'w').write(str(_))"
+                               (org-babel-process-file-name tmp-file
+                                                            'noquote)))))))
+           (input-body (lambda (body)
+                         (mapc (lambda (line) (insert line) (funcall send-wait))
+                               (split-string body "[\r\n]"))
+                         (funcall send-wait)))
+           (results
+            (case result-type
+              (output
+               (mapconcat
+                #'org-babel-trim
+                (butlast
+                 (org-babel-comint-with-output
+                     (session org-babel-python-eoe-indicator t body)
+                   (funcall input-body body)
+                   (funcall send-wait) (funcall send-wait)
+                   (insert org-babel-python-eoe-indicator)
+                   (funcall send-wait))
+                 2) "\n"))
+              (value
+               (let ((tmp-file (org-babel-temp-file "python-")))
+                 (org-babel-comint-with-output
+                     (session org-babel-python-eoe-indicator nil body)
+                   (let ((comint-process-echoes nil))
+                     (funcall input-body body)
+                     (funcall dump-last-value tmp-file
+                              (member "pp" result-params))
+                     (funcall send-wait) (funcall send-wait)
+                     (insert org-babel-python-eoe-indicator)
+                     (funcall send-wait)))
+                 (org-babel-eval-read-file tmp-file))))))
+      (unless (string= (substring org-babel-python-eoe-indicator 1 -1) results)
+        (org-babel-result-cond result-params
+          results
+          (org-babel-python-table-or-string results)))))
+
+  (defun org-babel-python-evaluate-external-process
+      (body &optional result-type result-params preamble)
+    "Evaluate BODY in external python process.
+  If RESULT-TYPE equals 'output then return standard output as a
+  string.  If RESULT-TYPE equals 'value then return the value of the
+  last statement in BODY, as elisp."
+    (let ((raw
+           (case result-type
+             (output (org-babel-eval org-babel-python-command
+                                     (concat (if preamble (concat preamble "\n"))
+                                             body)))
+             (value (let ((tmp-file (org-babel-temp-file "python-")))
+                      (org-babel-eval
+                       org-babel-python-command
+                       (concat
+                        (if preamble (concat preamble "\n") "")
+                        (format
+                         (if (member "pp" result-params)
+                             org-babel-python-pp-wrapper-method
+                           org-babel-python-wrapper-method)
+                         (mapconcat
+                          (lambda (line) (format "\t%s" line))
+                          (split-string
+                           (org-remove-indentation
+                            (org-babel-trim body))
+                           "[\r\n]") "\n")
+                         (org-babel-process-file-name tmp-file 'noquote))))
+                      (org-babel-eval-read-file tmp-file))))))
+      (org-babel-result-cond result-params
+        raw
+        (org-babel-python-table-or-string (org-babel-trim raw)))))
+
+  (defun org-babel-eval (cmd body)
+    "Run CMD on BODY.
+  If CMD succeeds then return its results, otherwise display
+  STDERR with `org-babel-eval-error-notify'."
+    (let ((err-buff (get-buffer-create " *Org-Babel Error*")) exit-code)
+      (with-current-buffer err-buff (erase-buffer))
+      (with-temp-buffer
+        (insert body)
+        (setq exit-code
+              (org-babel--shell-command-on-region
+               (point-min) (point-max) cmd err-buff))
+        (if (or (not (numberp exit-code)) (> exit-code 0))
+            (progn
+              (with-current-buffer err-buff
+                (org-babel-eval-error-notify exit-code (buffer-string)))
+              nil)
+          (buffer-string)))))
+
+  (defun org-babel--shell-command-on-region (start end command error-buffer)
+    "Execute COMMAND in an inferior shell with region as input.
+
+  Stripped down version of shell-command-on-region for internal use
+  in Babel only.  This lets us work around errors in the original
+  function in various versions of Emacs.
+  "
+    (let ((input-file (org-babel-temp-file "ob-input-"))
+          (error-file (if error-buffer (org-babel-temp-file "ob-error-") nil))
+          ;; Unfortunately, `executable-find' does not support file name
+          ;; handlers.  Therefore, we could use it in the local case
+          ;; only.
+          (shell-file-name
+           (cond ((and (not (file-remote-p default-directory))
+                       (executable-find shell-file-name))
+                  shell-file-name)
+                 ((file-executable-p
+                   (concat (file-remote-p default-directory) shell-file-name))
+                  shell-file-name)
+                 ("/bin/sh")))
+          exit-status)
+      ;; There is an error in `process-file' when `error-file' exists.
+      ;; This is fixed in Emacs trunk as of 2012-12-21; let's use this
+      ;; workaround for now.
+      (unless (file-remote-p default-directory)
+        (delete-file error-file))
+      ;; we always call this with 'replace, remove conditional
+      ;; Replace specified region with output from command.
+      (let ((swap (< start end)))
+        (goto-char start)
+        (push-mark (point) 'nomsg)
+        (write-region start end input-file)
+        (delete-region start end)
+        (setq exit-status
+              (process-file shell-file-name input-file
+                            (if error-file
+                                (list t error-file)
+                              t)
+                            nil shell-command-switch command))
+        (when swap (exchange-point-and-mark)))
+
+      (when (and input-file (file-exists-p input-file)
+                 ;; bind org-babel--debug-input around the call to keep
+                 ;; the temporary input files available for inspection
+                 (not (when (boundp 'org-babel--debug-input)
+                        org-babel--debug-input)))
+        (delete-file input-file))
+
+      (when (and error-file (file-exists-p error-file))
+        (if (< 0 (nth 7 (file-attributes error-file)))
+            (with-current-buffer (get-buffer-create error-buffer)
+              (let ((pos-from-end (- (point-max) (point))))
+                (or (bobp)
+                    (insert "\f\n"))
+                ;; Do no formatting while reading error file,
+                ;; because that can run a shell command, and we
+                ;; don't want that to cause an infinite recursion.
+                (format-insert-file error-file nil)
+                ;; Put point after the inserted errors.
+                (goto-char (- (point-max) pos-from-end)))
+              (current-buffer)))
+        (delete-file error-file))
+      exit-status))
 #+end_src
 **** ob-ipython
 #+begin_src emacs-lisp :results silent
@@ -483,6 +684,17 @@ SCHEDULED: <2017-06-10 Sat>
 #+begin_src emacs-lisp :results silent
   (use-package org-dashboard
     :ensure t)
+#+end_src
+*** Highlighter
+#+begin_src emacs-lisp :results silent
+  (use-package ov
+    :ensure t)
+
+  (use-package hydra
+    :ensure t)
+
+  (use-package ov-highlighter
+    :load-path "packages")
 #+end_src
 *** Keybindings
 #+begin_src emacs-lisp :results silent
@@ -544,9 +756,10 @@ SCHEDULED: <2017-06-10 Sat>
   (setq org-cycle-include-plain-lists 'integrate
         org-confirm-elisp-link-not-regexp "org-open-file")
 #+end_src
-*** Pretty-Entities
+*** DISABLED Pretty-Entities
+Use /#+STARTUP entitiespretty/ instead
 #+begin_src emacs-lisp :results silent
-  (setq org-pretty-entities t)
+  ;; (setq org-pretty-entities t)
 #+end_src
 *** Scimax-autoformat-mode
 #+begin_src emacs-lisp :results silent
@@ -982,6 +1195,25 @@ SCHEDULED: <2017-06-10 Sat>
            (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
 
 #+end_src
+** Version Control
+*** Monky
+#+begin_src emacs-lisp :results silent
+  (use-package monky
+    :ensure t)
+#+end_src
+**** TODO Implement vcs-status: monky-status or magit-status?
+*** Magit
+#+begin_src emacs-lisp :results silent
+  (use-package magit
+    :config (progn
+              (setq magit-completing-read-function 'magit-ido-completing-read))
+    :bind (("C-x g s" . magit-status)
+           ("C-x g b" . magit-blame)
+           ("C-x g l" . magit-log-buffer-file)
+           ("C-x g c" . magit-commit)
+           ("C-x g p c" . magit-push-current))
+    :ensure t)
+#+end_src
 ** Programming
 #+begin_src emacs-lisp
 (use-package init-c
@@ -1008,7 +1240,7 @@ SCHEDULED: <2017-06-10 Sat>
 #+end_src
 **** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
 SCHEDULED: <2017-05-27 Sat>
-**** jedi
+**** DISABLED jedi
 #+begin_src emacs-lisp :results silent
   ;; (use-package elpy
   ;;   :interpreter ("ipython" . python-mode)
@@ -1017,14 +1249,14 @@ SCHEDULED: <2017-05-27 Sat>
   ;;             (setq-default python-indent-offset 4))
   ;;   :ensure t)
 
-  (use-package jedi
-    :ensure t
-    :config (progn
-              (unless (package-installed-p 'jedi)
-                (jedi:install-server))))
+  ;; (use-package jedi
+  ;;   :ensure t
+  ;;   :config (progn
+  ;;             (unless (package-installed-p 'jedi)
+  ;;               (jedi:install-server))))
 
-  (setq python-shell-completion-native nil)
-  (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
+  ;; (setq python-shell-completion-native nil)
+  ;; (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 
   ;; (use-package pungi
   ;;   :ensure t)
@@ -1041,12 +1273,20 @@ SCHEDULED: <2017-05-27 Sat>
   ;; (use-package rainbow-delimiters
   ;;   :ensure t)
 #+end_src
-**** virtualenv
+**** DISABLED virtualenv
 #+begin_src emacs-lisp :results silent
-  (use-package virtualenv
+  ;; (use-package virtualenv
+  ;;   :config (progn
+  ;;             (venv-initialize-interactive-shells)
+  ;;             (venv-initialize-eshell))
+  ;;   :ensure t)
+#+end_src
+**** anaconda
+#+begin_src emacs-lisp :results silent
+  (use-package anaconda-mode
     :config (progn
-              (venv-initialize-interactive-shells)
-              (venv-initialize-eshell))
+              (add-hook 'python-mode-hook 'anaconda-mode)
+              (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
     :ensure t)
 #+end_src
 **** ipython-shell-interpreter
@@ -1184,21 +1424,6 @@ SCHEDULED: <2017-05-27 Sat>
   ;; (use-package calfw
   ;;   :config
   ;;   (require 'calfw-org))
-
-  (use-package magit
-    :commands (magit-status
-               magit-blame
-               magit-commit
-               magit-push-current
-               magit-log-buffer-file)
-    :config (progn
-              (setq magit-completing-read-function 'magit-ido-completing-read))
-    :bind (("C-x g s" . magit-status)
-           ("C-x g b" . magit-blame)
-           ("C-x g l" . magit-log-buffer-file)
-           ("C-x g c" . magit-commit)
-           ("C-x g p c" . magit-push-current))
-    :ensure t)
 
   (use-package google-translate
     :commands translate-text
@@ -1391,9 +1616,3 @@ SCHEDULED: <2017-05-27 Sat>
 #+begin_src emacs-lisp :results silent
   (require 'init-local nil t)
 #+end_src
-
-#  ov-highlight-data: nil
-
-# Local Variables:
-# eval: (ov-highlight-load)
-# End:

@@ -47,3 +47,5 @@ irony
 /emacs.org_archive
 packages/yandex
 *.org\[*\]
+/anaconda-mode
+/ede-projects.el
