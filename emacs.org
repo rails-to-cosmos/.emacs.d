@@ -3,7 +3,7 @@
 
 [[elisp:(elfeed-run-after-update)][Elfeed]]
 
-* Install
+* Installation
 ** ubuntu
 http://ftp.gnu.org/gnu/emacs/
 ** osx
@@ -29,9 +29,6 @@ http://ftp.gnu.org/gnu/emacs/
 ** http://sachachua.com/blog/category/emacs-news/feed
 ** https://www.reddit.com/r/emacs.rss
 ** https://shiyuangu.com/feed/
-* Useful Sources
-- [[http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23][Emacs org-mode examples and cookbook]]
-- [[http://alexott.net/ru/writings/emacs-devenv/EmacsCedet.html#fn.1][Использование Emacs вместе с CEDET]]
 * Other Configs
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
@@ -41,18 +38,21 @@ http://ftp.gnu.org/gnu/emacs/
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
 - [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
 * Tasks
-** TODO https://github.com/caffo/org-minimal-html-theme
+** TODO [[http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23][Emacs org-mode examples and cookbook]]
+** TODO [[https://github.com/caffo/org-minimal-html-theme][GitHub - caffo/org-minimal-html-theme: Simple and beautiful orgmode HTML export theme]]
 ** TODO [[http://plantuml.sourceforge.net/emacs.html][Emacs UML]]
-** TODO https://github.com/vermiculus/sx.el
+** TODO [[https://github.com/vermiculus/sx.el][GitHub - vermiculus/sx.el: Stack Exchange for Emacs]]
 ** TODO [[http://www.informatimago.com/linux/emacs-on-user-mode-linux.html][Emacs standing alone on Linux Kernel]]
 ** TODO https://eschulte.github.io/org-scraps/
-** TODO http://blog.binchen.org/posts/hello-ivy-mode-bye-helm.html
-** TODO https://github.com/Andersbakken/emacs-backup-file
-** TODO http://joostkremers.github.io/pandoc-mode/
+** TODO [[http://blog.binchen.org/posts/hello-ivy-mode-bye-helm.html][Hello Ivy-mode, bye Helm | Chen's blog]]
+** TODO [[https://github.com/Andersbakken/emacs-backup-file][GitHub - Andersbakken/emacs-backup-file: Automatically back up all changes made from emacs to a git repo in ~/.backups]]
+** TODO [[http://joostkremers.github.io/pandoc-mode/][Pandoc-mode by joostkremers]]
 ** TODO http://ericjmritz.name/2014/04/26/screenwrite-mode-for-gnu-emacs/
 ** TODO http://ericjmritz.name/2014/12/23/using-quickrun-in-emacs/
-** [[https://github.com/jwiegley/emacs-async][Emacs Async]]
+** TODO [[https://github.com/jwiegley/emacs-async][Emacs Async]]
 ** TODO [[http://cedet.sourceforge.net/][CEDET]]
+- [ ] [[http://alexott.net/ru/writings/emacs-devenv/EmacsCedet.html#fn.1][Использование Emacs вместе с CEDET]]
+- [ ] [[https://writequit.org/denver-emacs/presentations/2017-02-21-semantic-mode.html][Semantic Mode]]
 ** TODO Настроить RSync между облаками
 ** TODO Code folding
 http://www.emacswiki.org/emacs/FoldingMode
@@ -63,7 +63,7 @@ http://lists.gnu.org/archive/html/gnu-emacs-sources/2004-11/msg00047.html
 http://www.emacswiki.org/emacs/fold-dwim-org.el
 ** TODO Code completion
 http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
-** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/1]
+** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/3]
 - [ ] https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/
 - [ ] http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda
 - [ ] [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
@@ -75,6 +75,9 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** TODO Dired-buffers switching (C-x C-d C-d C-d ...)
 ** TODO Навигация org-mode через ido
 * Config
+:PROPERTIES:
+:header-args: :results silent
+:END:
 ** Core
 *** Instruments
 **** after-load
@@ -87,7 +90,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 *** Settings
 **** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   ;; UTF-8 as the default coding system
   (set-charset-priority 'unicode)
   (prefer-coding-system        'utf-8)
@@ -98,16 +101,16 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   (setq-default buffer-file-coding-system 'utf-8)
 #+end_src
 **** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
 **** OS
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defconst IS-MAC   (eq system-type 'darwin))
   (defconst IS-LINUX (eq system-type 'gnu/linux))
 #+end_src
 ***** Mac
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (cond (IS-MAC
          (setq mac-command-modifier 'meta
                mac-option-modifier  'alt
@@ -226,7 +229,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 : t
 
 **** Ido
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defadvice ido-find-file (after find-file-sudo activate)
     "Find file as root if necessary."
     (unless (and buffer-file-name (file-writable-p buffer-file-name))
@@ -267,7 +270,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :ensure t)
 #+end_src
 **** Imenu
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package imenu-anywhere
     :init (progn
             (global-unset-key "\C-xi"))
@@ -275,7 +278,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :ensure t)
 #+end_src
 **** Bookmarks
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package bookmark+
     :ensure t)
 #+end_src
@@ -286,7 +289,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 ** Keyboard
 *** default bindings
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   ;; (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
   (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
 #+end_src
@@ -313,7 +316,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 ** Buffer Management
 *** window utils
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package ace-window
     :config (progn
               (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)))
@@ -398,15 +401,18 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 ** Org-mode
 *** Autolist
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package org-autolist
     :config (progn
               (add-hook 'org-mode-hook (lambda () (org-autolist-mode))))
     :ensure t)
 #+end_src
 *** Babel
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (setq org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-adapt-indentation nil
+        org-src-preserve-indentation t
         org-confirm-babel-evaluate nil
         org-confirm-shell-link-function nil
         org-confirm-elisp-link-function nil)
@@ -415,7 +421,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 **** TODO [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
 SCHEDULED: <2017-06-10 Sat>
 **** ob-languages
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (setq ob-languages '((python . t)
                        (ipython . t)
                        (sql . t)
@@ -425,14 +431,14 @@ SCHEDULED: <2017-06-10 Sat>
   (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
 **** ob-async
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package ob-async
     :load-path "packages/ob-async"
     :config (progn
               (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-async-org-babel-execute-src-block)))
 #+end_src
 **** [[https://shiyuangu.com/2014/08/24/source-code-digging-emacs-org-babel/][Source Code Digging: Emacs-Org-Babel | A Learner's Journey —- Shiyuan's Blog]]
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun org-babel-execute:python (body params)
     "Execute a block of Python code with Babel.
     This function is called by `org-babel-execute-src-block'."
@@ -636,7 +642,7 @@ SCHEDULED: <2017-06-10 Sat>
       exit-status))
 #+end_src
 **** ob-ipython
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package ob-ipython
     :config (progn
               (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -681,12 +687,12 @@ SCHEDULED: <2017-06-10 Sat>
                   (t (->> result (assoc 'text/plain) cdr))))))))
 #+end_src
 *** Dashboard
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package org-dashboard
     :ensure t)
 #+end_src
 *** Highlighter
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package ov
     :ensure t)
 
@@ -697,7 +703,7 @@ SCHEDULED: <2017-06-10 Sat>
     :load-path "packages")
 #+end_src
 *** Keybindings
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (define-key global-map (kbd "C-x l") 'org-store-link)
   (define-key global-map (kbd "C-c a") 'org-agenda)
   (define-key global-map (kbd "C-c c") 'org-capture)
@@ -728,14 +734,14 @@ SCHEDULED: <2017-06-10 Sat>
         (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
 *** Org-Archive-Done-Tasks
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun org-archive-done-tasks ()
     (interactive)
     (org-map-entries 'org-archive-subtree "/DONE" 'file)
     (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
 #+end_src
 *** Org-Clock
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (setq-default org-clock-persistence-insinuate t
                 org-clock-persist t
                 org-clock-in-resume t
@@ -743,7 +749,7 @@ SCHEDULED: <2017-06-10 Sat>
                 org-clock-out-remove-zero-time-clocks t)
 #+end_src
 *** Org-Crypt
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package org-crypt
     :disabled t
     :config
@@ -752,17 +758,17 @@ SCHEDULED: <2017-06-10 Sat>
     (setq org-crypt-key nil))
 #+end_src
 *** Plain Lists
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (setq org-cycle-include-plain-lists 'integrate
         org-confirm-elisp-link-not-regexp "org-open-file")
 #+end_src
 *** DISABLED Pretty-Entities
 Use /#+STARTUP entitiespretty/ instead
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   ;; (setq org-pretty-entities t)
 #+end_src
 *** Scimax-autoformat-mode
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defcustom scimax-autoformat-ordinals t
     "Determines if scimax autoformats ordinal numbers."
     :group 'scimax)
@@ -820,7 +826,7 @@ Use /#+STARTUP entitiespretty/ instead
   (add-hook 'org-mode-hook (lambda () (scimax-autoformat-mode)))
 #+end_src
 *** Show next entry, keeping other entries closed
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun ded/org-show-next-heading-tidily ()
     "Show next entry, keeping other entries closed."
     (interactive)
@@ -837,7 +843,7 @@ Use /#+STARTUP entitiespretty/ instead
       (show-children)))
 #+end_src
 *** Show previous entry, keeping other entries closed
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun ded/org-show-previous-heading-tidily ()
     "Show previous entry, keeping other entries closed."
     (interactive)
@@ -853,7 +859,7 @@ Use /#+STARTUP entitiespretty/ instead
       (show-children)))
 #+end_src
 *** Strikethrough done statuses
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun my/modify-org-done-face ()
     (setq org-fontify-done-headline t)
     (set-face-attribute 'org-done nil :strike-through t)
@@ -864,7 +870,7 @@ Use /#+STARTUP entitiespretty/ instead
     (add-hook 'org-add-hook 'my/modify-org-done-face))
 #+end_src
 *** Todo/Checkbox Dependencies
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (setq org-enforce-todo-dependencies t)
 
   (defun org-summary-todo (n-done n-not-done)
@@ -897,13 +903,13 @@ Use /#+STARTUP entitiespretty/ instead
                 (org-todo 'todo)))))))
 #+end_src
 *** UI
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (setq org-hide-emphasis-markers t)
   (add-to-list 'org-emphasis-alist '())
   (add-to-list 'org-emphasis-alist '("_" ()))
 #+end_src
 *** Unsorted Settings
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
   (setq org-startup-align-all-tables "align")
   (setq-default
@@ -956,7 +962,7 @@ Use /#+STARTUP entitiespretty/ instead
     :ensure t)
 #+end_src
 *** flyspell
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package flyspell
     :ensure t)
 #+end_src
@@ -978,64 +984,63 @@ Use /#+STARTUP entitiespretty/ instead
                               try-complete-lisp-symbol-partially
                               try-complete-lisp-symbol))))
 #+end_src
-**** flexible-expand
+**** DISABLED flexible-expand
 #+begin_src emacs-lisp
-  (defun try-expand-flexible-abbrev (old)
-    "Try to complete word using flexible matching.
+  ;; (defun try-expand-flexible-abbrev (old)
+  ;;   "Try to complete word using flexible matching.
 
-  Flexible matching works by taking the search string and then
-  interspersing it with a regexp for any character. So, if you try
-  to do a flexible match for `foo' it will match the word
-  `findOtherOtter' but also `fixTheBoringOrange' and
-  `ifthisisboringstopreadingnow'.
+  ;; Flexible matching works by taking the search string and then
+  ;; interspersing it with a regexp for any character. So, if you try
+  ;; to do a flexible match for `foo' it will match the word
+  ;; `findOtherOtter' but also `fixTheBoringOrange' and
+  ;; `ifthisisboringstopreadingnow'.
 
-  The argument OLD has to be nil the first call of this function, and t
-  for subsequent calls (for further possible completions of the same
-  string).  It returns t if a new completion is found, nil otherwise."
-    (if (not old)
-        (progn
-	  (he-init-string (he-lisp-symbol-beg) (point))
-	  (if (not (he-string-member he-search-string he-tried-table))
-	      (setq he-tried-table (cons he-search-string he-tried-table)))
-	  (setq he-expand-list
-	        (and (not (equal he-search-string ""))
-		     (he-flexible-abbrev-collect he-search-string)))))
-    (while (and he-expand-list
-	        (he-string-member (car he-expand-list) he-tried-table))
-      (setq he-expand-list (cdr he-expand-list)))
-    (if (null he-expand-list)
-        (progn
-	  (if old (he-reset-string))
-	  ())
-      (progn
-        (he-substitute-string (car he-expand-list))
-        (setq he-expand-list (cdr he-expand-list))
-        t)))
+  ;; The argument OLD has to be nil the first call of this function, and t
+  ;; for subsequent calls (for further possible completions of the same
+  ;; string).  It returns t if a new completion is found, nil otherwise."
+  ;;   (if (not old)
+  ;;       (progn
+  ;; 	(he-init-string (he-lisp-symbol-beg) (point))
+  ;; 	(if (not (he-string-member he-search-string he-tried-table))
+  ;; 	    (setq he-tried-table (cons he-search-string he-tried-table)))
+  ;; 	(setq he-expand-list
+  ;; 	      (and (not (equal he-search-string ""))
+  ;; 		   (he-flexible-abbrev-collect he-search-string)))))
+  ;;   (while (and he-expand-list
+  ;; 	      (he-string-member (car he-expand-list) he-tried-table))
+  ;;     (setq he-expand-list (cdr he-expand-list)))
+  ;;   (if (null he-expand-list)
+  ;;       (progn
+  ;; 	(if old (he-reset-string))
+  ;; 	())
+  ;;     (progn
+  ;;       (he-substitute-string (car he-expand-list))
+  ;;       (setq he-expand-list (cdr he-expand-list))
+  ;;       t)))
 
-  (defun he-flexible-abbrev-collect (str)
-    "Find and collect all words that flex-matches STR.
-  See docstring for `try-expand-flexible-abbrev' for information
-  about what flexible matching means in this context."
-    (let ((collection nil)
-          (regexp (he-flexible-abbrev-create-regexp str)))
-      (save-excursion
-        (goto-char (point-min))
-        (while (search-forward-regexp regexp nil t)
-          ;; Is there a better or quicker way than using
-          ;; `thing-at-point' here?
-          (setq collection (cons (thing-at-point 'word) collection))))
-      collection))
+  ;; (defun he-flexible-abbrev-collect (str)
+  ;;   "Find and collect all words that flex-matches STR.
+  ;; See docstring for `try-expand-flexible-abbrev' for information
+  ;; about what flexible matching means in this context."
+  ;;   (let ((collection nil)
+  ;;         (regexp (he-flexible-abbrev-create-regexp str)))
+  ;;     (save-excursion
+  ;;       (goto-char (point-min))
+  ;;       (while (search-forward-regexp regexp nil t)
+  ;;         ;; Is there a better or quicker way than using
+  ;;         ;; `thing-at-point' here?
+  ;;         (setq collection (cons (thing-at-point 'word) collection))))
+  ;;     collection))
 
-  (defun he-flexible-abbrev-create-regexp (str)
-    "Generate regexp for flexible matching of STR.
-  See docstring for `try-expand-flexible-abbrev' for information
-  about what flexible matching means in this context."
-    (concat "\\b" (mapconcat (lambda (x) (concat "\\w*" (list x))) str "")
-            "\\w*" "\\b"))
+  ;; (defun he-flexible-abbrev-create-regexp (str)
+  ;;   "Generate regexp for flexible matching of STR.
+  ;; See docstring for `try-expand-flexible-abbrev' for information
+  ;; about what flexible matching means in this context."
+  ;;   (concat "\\b" (mapconcat (lambda (x) (concat "\\w*" (list x))) str "")
+  ;;           "\\w*" "\\b"))
 
-  (setq hippie-expand-try-functions-list
-        (cons 'try-expand-flexible-abbrev hippie-expand-try-functions-list))
-
+  ;; (setq hippie-expand-try-functions-list
+  ;;       (cons 'try-expand-flexible-abbrev hippie-expand-try-functions-list))
 #+end_src
 *** increment-number
 #+begin_src emacs-lisp
@@ -1095,7 +1100,7 @@ Use /#+STARTUP entitiespretty/ instead
     :ensure t)
 #+end_src
 **** ido-expand
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun yas-ido-expand ()
     "Lets you select (and expand) a yasnippet key"
     (interactive)
@@ -1122,7 +1127,7 @@ Use /#+STARTUP entitiespretty/ instead
 
 ** Utils
 *** ssh
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package ssh-connect
     :no-require t
     :bind (("C-x y s" . ssh-connect)))
@@ -1148,7 +1153,7 @@ Use /#+STARTUP entitiespretty/ instead
             (switch-to-buffer _buffn)))))
 #+end_src
 *** rsync
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun rsync-enable ()
     "Enable rsync support."
     (interactive)
@@ -1197,13 +1202,13 @@ Use /#+STARTUP entitiespretty/ instead
 #+end_src
 ** Version Control
 *** Monky
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package monky
     :ensure t)
 #+end_src
 **** TODO Implement vcs-status: monky-status or magit-status?
 *** Magit
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package magit
     :config (progn
               (setq magit-completing-read-function 'magit-ido-completing-read))
@@ -1235,13 +1240,13 @@ Use /#+STARTUP entitiespretty/ instead
   :bind (("C-x y q" . sqp-connect)))
 #+end_src
 *** python
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (require 'python)
 #+end_src
 **** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
 SCHEDULED: <2017-05-27 Sat>
 **** DISABLED jedi
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   ;; (use-package elpy
   ;;   :interpreter ("ipython" . python-mode)
   ;;   :config (progn
@@ -1274,7 +1279,7 @@ SCHEDULED: <2017-05-27 Sat>
   ;;   :ensure t)
 #+end_src
 **** DISABLED virtualenv
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   ;; (use-package virtualenv
   ;;   :config (progn
   ;;             (venv-initialize-interactive-shells)
@@ -1282,7 +1287,7 @@ SCHEDULED: <2017-05-27 Sat>
   ;;   :ensure t)
 #+end_src
 **** anaconda
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (use-package anaconda-mode
     :config (progn
               (add-hook 'python-mode-hook 'anaconda-mode)
@@ -1291,11 +1296,14 @@ SCHEDULED: <2017-05-27 Sat>
 #+end_src
 **** ipython-shell-interpreter
 #+begin_src emacs-lisp
-  (setq python-shell-interpreter "ipython"
-      python-shell-interpreter-args "--simple-prompt -i")
+(setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "--simple-prompt -i"
+      python-shell-completion-native nil)
+(add-to-list 'python-shell-completion-native-disabled-interpreters "python")
+(add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
 #+end_src
 **** breakpoint
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (defun buffer-contains-substring (string)
     (save-excursion
       (save-match-data
@@ -1545,7 +1553,7 @@ SCHEDULED: <2017-05-27 Sat>
     :ensure t)
 #+end_src
 ** UI
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (fset 'yes-or-no-p 'y-or-n-p)
   (delete-selection-mode 1)
   (tool-bar-mode -1)
@@ -1613,6 +1621,6 @@ SCHEDULED: <2017-05-27 Sat>
   (diminish 'paredit-mode)
 #+end_src
 ** Local Config
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
   (require 'init-local nil t)
 #+end_src
