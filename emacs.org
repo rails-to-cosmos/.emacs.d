@@ -1123,6 +1123,34 @@ SCHEDULED: <2017-06-10 Sat>
 
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
+** Tweaks and Hacks
+*** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
+#+begin_src emacs-lisp :results silent
+(defcustom default-messages-to-show 10
+  "Default number of messages for `show-some-last-messages'.")
+
+(defun show-some-last-messages (count)
+  "Show COUNT last lines of the `*Messages*' buffer."
+  (interactive "P")
+  (setq count (if count (prefix-numeric-value count)
+		default-messages-to-show))
+  (save-excursion
+	(set-buffer "*Messages*")
+	(let ((prev-point-max (point-max-marker))
+	  (inhibit-read-only t))
+	  (message "%s"
+		   (progn
+		 (set-buffer "*Messages*")
+		 (buffer-substring-no-properties
+		  (progn
+			(goto-char (point-max))
+			(unless (bolp)
+			  (insert "\n"))
+			(forward-line (- count))
+			(point))
+		  (point-max))))
+	  (delete-region (point-max) prev-point-max))))
+#+end_src
 ** Utils
 *** ssh
 #+begin_src emacs-lisp
