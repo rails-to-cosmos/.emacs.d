@@ -860,16 +860,16 @@ SCHEDULED: <2017-06-10 Sat>
     (org-show-entry)
     (show-children)))
 #+end_src
-*** Strikethrough done statuses
+*** DISABLED Strikethrough done statuses
 #+begin_src emacs-lisp
-(defun my/modify-org-done-face ()
-  (setq org-fontify-done-headline t)
-  (set-face-attribute 'org-done nil :strike-through t)
-  (set-face-attribute 'org-headline-done nil
-                      :strike-through t))
+;; (defun my/modify-org-done-face ()
+;;   (setq org-fontify-done-headline t)
+;;   (set-face-attribute 'org-done nil :strike-through t)
+;;   (set-face-attribute 'org-headline-done nil
+;;                       :strike-through t))
 
-(eval-after-load "org"
-  (add-hook 'org-add-hook 'my/modify-org-done-face))
+;; (eval-after-load "org"
+;;   (add-hook 'org-add-hook 'my/modify-org-done-face))
 #+end_src
 *** Todo/Checkbox Dependencies
 #+begin_src emacs-lisp
@@ -1314,13 +1314,13 @@ SCHEDULED: <2017-05-27 Sat>
   ;;             (venv-initialize-eshell))
   ;;   :ensure t)
 #+end_src
-**** anaconda
+**** DISABLED anaconda
 #+begin_src emacs-lisp
-(use-package anaconda-mode
-  :config (progn
-            (add-hook 'python-mode-hook 'anaconda-mode)
-            (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
-  :ensure t)
+;; (use-package anaconda-mode
+;;   :config (progn
+;;             (add-hook 'python-mode-hook 'anaconda-mode)
+;;             (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+;;   :ensure t)
 #+end_src
 **** ipython-shell-interpreter
 #+begin_src emacs-lisp
@@ -3296,6 +3296,8 @@ instead."
 *** elfeed
 #+begin_src emacs-lisp
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
+  :config (progn
+            (elfeed-update))
   :ensure t)
 
 (use-package elfeed-org
