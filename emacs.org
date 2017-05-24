@@ -30,7 +30,8 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://www.reddit.com/r/emacs.rss
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
-* Other Configs
+* Research
+** Other Configs
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
 - [[https://github.com/hlissner/.emacs.d/][GitHub - hlissner/.emacs.d: Emacs for the stubborn martian vimmer]]
@@ -38,7 +39,7 @@ http://ftp.gnu.org/gnu/emacs/
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
 - [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
-* Tasks
+** TODO [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][Use Org-Mode Links for Absolutely Anything · Endless Parentheses]]
 ** TODO [[https://www.reddit.com/r/emacs/comments/6a3oxv/ledgerledgermode_tips_and_tricks/][ledger/ledger-mode tips and tricks? : emacs]]
 ** TODO [[https://emacs-el.com/episodes][Episodes Index - Emacs.el]]
 ** TODO [[https://lists.gnu.org/archive/html/emacs-devel/2017-04/msg00359.html][Re: scroll-down with pixel transition]]
@@ -719,11 +720,11 @@ SCHEDULED: <2017-06-10 Sat>
 (define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
 (define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
 #+end_src
-*** My-Org-Insert-Link: Insert Heading by Default
+*** Org-Insert-Link: Insert Heading by Default
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
-(defun my-org-insert-link ()
+(defun my/org-insert-link ()
   "Insert org link where default description is set to html title."
   (interactive)
   (let* ((url (read-string "URL: "))
