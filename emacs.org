@@ -1,4 +1,4 @@
-#+TODO: TODO DISABLED | DONE CANCELLED
+#+TODO: TODO(t) DISABLED(D) | DONE(d)
 #+STARTUP: entitiespretty
 
 [[elisp:(elfeed-run-after-update)][Elfeed]]
@@ -31,7 +31,7 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
-** Other Configs
+** Configs
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
 - [[https://github.com/hlissner/.emacs.d/][GitHub - hlissner/.emacs.d: Emacs for the stubborn martian vimmer]]
