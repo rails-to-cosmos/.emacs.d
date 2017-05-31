@@ -10,25 +10,28 @@
     (mapc (lambda (key) (add-to-list 'alkeys (car key))) inlist)
     alkeys))
 
-(defun ssh-connect (&optional foreign-buffer)
+(defun open-ssh-connection (ssh-connection-name)
+  (let ((default-directory ssh-connection-string)
+        (ssh-buffer-name (concat "*" ssh-connection-name "-shell*")))
+    (setq ssh-connection-string (cdr (assoc ssh-connection-name ssh-connections)))
+    (if (eq nil (get-buffer ssh-buffer-name))
+        (progn
+          (eshell t)
+          (rename-buffer ssh-buffer-name t))
+      (progn
+        (switch-to-buffer (get-buffer ssh-buffer-name))))))
+
+(defun ssh-connect ()
   "Manage ssh connections, if FOREIGN-BUFFER > 1, do not reuse eshell."
-  (interactive "p")
+  (interactive)
   (defvar ssh-connections)
   (defvar ssh-connections-names)
   (defvar ssh-connection-name)
-  (defvar ssh-connection-string)
+
   (setq ssh-connections-names (list))
   (mapc (lambda (key) (add-to-list 'ssh-connections-names (car key))) ssh-connections)
   (setq ssh-connection-name (ido-completing-read "Choose ssh connection: " ssh-connections-names))
-  (setq ssh-connection-string (cdr (assoc ssh-connection-name ssh-connections)))
-  (let ((default-directory ssh-connection-string)
-        (_buffn (get-buffer ssh-connection-name)))
-    (if (or (eq nil _buffn) (> foreign-buffer 1))
-          (progn
-            (eshell t)
-            (rename-buffer ssh-connection-name t))
-        (progn
-          (switch-to-buffer _buffn)))))
+  (open-ssh-connection ssh-connection-name))
 
 (provide 'ssh)
 ;;; ssh.el ends here
