@@ -11,9 +11,8 @@
     alkeys))
 
 (defun open-ssh-connection (ssh-connection-name)
-  (let ((default-directory ssh-connection-string)
+  (let ((default-directory (cdr (assoc ssh-connection-name ssh-connections)))
         (ssh-buffer-name (concat "*" ssh-connection-name "-shell*")))
-    (setq ssh-connection-string (cdr (assoc ssh-connection-name ssh-connections)))
     (if (eq nil (get-buffer ssh-buffer-name))
         (progn
           (eshell t)
