@@ -1,4 +1,4 @@
-#+TODO: TODO(t) DISABLED(D) | DONE(d)
+#+TODO: TODO(t) | DONE(d)
 #+STARTUP: entitiespretty
 
 [[elisp:(elfeed-run-after-update)][Elfeed]]
@@ -69,11 +69,12 @@ http://lists.gnu.org/archive/html/gnu-emacs-sources/2004-11/msg00047.html
 http://www.emacswiki.org/emacs/fold-dwim-org.el
 ** TODO Code completion
 http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
-** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/4]
+** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/5]
 - [ ] [[https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/][mu4e 0.9.18: E-Mailing with Emacs now even better. – vxlabs]]
 - [ ] [[http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda][org mode - Automating inbox zero with the org agenda? - Emacs Stack Exchange]]
 - [ ] [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
 - [ ] [[http://pragmaticemacs.com/emacs/an-unobtrusive-email-monitor-for-mu4e-on-the-mac/][An unobtrusive email monitor for mu4e on the Mac | Pragmatic Emacs]]
+- [ ] [[https://www.reddit.com/r/emacs/comments/6dg7t3/mu4eisyncmbsync_dont_ask_for_password_unlocking/][mu4e+isync/mbsync: don't ask for password unlocking at each run? : emacs]]
 ** TODO Rename eshell on process start
 - (get-buffer-process (get-buffer "*dev2f-shell*"))
 ** TODO Encode region
@@ -921,16 +922,16 @@ SCHEDULED: <2017-06-10 Sat>
     (org-show-entry)
     (show-children)))
 #+end_src
-*** DISABLED Strikethrough done statuses
+*** COMMENT Strikethrough done statuses
 #+begin_src emacs-lisp
-;; (defun my/modify-org-done-face ()
-;;   (setq org-fontify-done-headline t)
-;;   (set-face-attribute 'org-done nil :strike-through t)
-;;   (set-face-attribute 'org-headline-done nil
-;;                       :strike-through t))
+(defun my/modify-org-done-face ()
+  (setq org-fontify-done-headline t)
+  (set-face-attribute 'org-done nil :strike-through t)
+  (set-face-attribute 'org-headline-done nil
+                      :strike-through t))
 
-;; (eval-after-load "org"
-;;   (add-hook 'org-add-hook 'my/modify-org-done-face))
+(eval-after-load "org"
+  (add-hook 'org-add-hook 'my/modify-org-done-face))
 #+end_src
 *** Todo/Checkbox Dependencies
 #+begin_src emacs-lisp
@@ -1047,63 +1048,63 @@ SCHEDULED: <2017-06-10 Sat>
                             try-complete-lisp-symbol-partially
                             try-complete-lisp-symbol))))
 #+end_src
-**** DISABLED flexible-expand
+**** COMMENT flexible-expand
 #+begin_src emacs-lisp
-  ;; (defun try-expand-flexible-abbrev (old)
-  ;;   "Try to complete word using flexible matching.
+  (defun try-expand-flexible-abbrev (old)
+    "Try to complete word using flexible matching.
 
-  ;; Flexible matching works by taking the search string and then
-  ;; interspersing it with a regexp for any character. So, if you try
-  ;; to do a flexible match for `foo' it will match the word
-  ;; `findOtherOtter' but also `fixTheBoringOrange' and
-  ;; `ifthisisboringstopreadingnow'.
+  Flexible matching works by taking the search string and then
+  interspersing it with a regexp for any character. So, if you try
+  to do a flexible match for `foo' it will match the word
+  `findOtherOtter' but also `fixTheBoringOrange' and
+  `ifthisisboringstopreadingnow'.
 
-  ;; The argument OLD has to be nil the first call of this function, and t
-  ;; for subsequent calls (for further possible completions of the same
-  ;; string).  It returns t if a new completion is found, nil otherwise."
-  ;;   (if (not old)
-  ;;       (progn
-  ;; 	(he-init-string (he-lisp-symbol-beg) (point))
-  ;; 	(if (not (he-string-member he-search-string he-tried-table))
-  ;; 	    (setq he-tried-table (cons he-search-string he-tried-table)))
-  ;; 	(setq he-expand-list
-  ;; 	      (and (not (equal he-search-string ""))
-  ;; 		   (he-flexible-abbrev-collect he-search-string)))))
-  ;;   (while (and he-expand-list
-  ;; 	      (he-string-member (car he-expand-list) he-tried-table))
-  ;;     (setq he-expand-list (cdr he-expand-list)))
-  ;;   (if (null he-expand-list)
-  ;;       (progn
-  ;; 	(if old (he-reset-string))
-  ;; 	())
-  ;;     (progn
-  ;;       (he-substitute-string (car he-expand-list))
-  ;;       (setq he-expand-list (cdr he-expand-list))
-  ;;       t)))
+  The argument OLD has to be nil the first call of this function, and t
+  for subsequent calls (for further possible completions of the same
+  string).  It returns t if a new completion is found, nil otherwise."
+    (if (not old)
+        (progn
+  	(he-init-string (he-lisp-symbol-beg) (point))
+  	(if (not (he-string-member he-search-string he-tried-table))
+  	    (setq he-tried-table (cons he-search-string he-tried-table)))
+  	(setq he-expand-list
+  	      (and (not (equal he-search-string ""))
+  		   (he-flexible-abbrev-collect he-search-string)))))
+    (while (and he-expand-list
+  	      (he-string-member (car he-expand-list) he-tried-table))
+      (setq he-expand-list (cdr he-expand-list)))
+    (if (null he-expand-list)
+        (progn
+  	(if old (he-reset-string))
+  	())
+      (progn
+        (he-substitute-string (car he-expand-list))
+        (setq he-expand-list (cdr he-expand-list))
+        t)))
 
-  ;; (defun he-flexible-abbrev-collect (str)
-  ;;   "Find and collect all words that flex-matches STR.
-  ;; See docstring for `try-expand-flexible-abbrev' for information
-  ;; about what flexible matching means in this context."
-  ;;   (let ((collection nil)
-  ;;         (regexp (he-flexible-abbrev-create-regexp str)))
-  ;;     (save-excursion
-  ;;       (goto-char (point-min))
-  ;;       (while (search-forward-regexp regexp nil t)
-  ;;         ;; Is there a better or quicker way than using
-  ;;         ;; `thing-at-point' here?
-  ;;         (setq collection (cons (thing-at-point 'word) collection))))
-  ;;     collection))
+  (defun he-flexible-abbrev-collect (str)
+    "Find and collect all words that flex-matches STR.
+  See docstring for `try-expand-flexible-abbrev' for information
+  about what flexible matching means in this context."
+    (let ((collection nil)
+          (regexp (he-flexible-abbrev-create-regexp str)))
+      (save-excursion
+        (goto-char (point-min))
+        (while (search-forward-regexp regexp nil t)
+          ;; Is there a better or quicker way than using
+          ;; `thing-at-point' here?
+          (setq collection (cons (thing-at-point 'word) collection))))
+      collection))
 
-  ;; (defun he-flexible-abbrev-create-regexp (str)
-  ;;   "Generate regexp for flexible matching of STR.
-  ;; See docstring for `try-expand-flexible-abbrev' for information
-  ;; about what flexible matching means in this context."
-  ;;   (concat "\\b" (mapconcat (lambda (x) (concat "\\w*" (list x))) str "")
-  ;;           "\\w*" "\\b"))
+  (defun he-flexible-abbrev-create-regexp (str)
+    "Generate regexp for flexible matching of STR.
+  See docstring for `try-expand-flexible-abbrev' for information
+  about what flexible matching means in this context."
+    (concat "\\b" (mapconcat (lambda (x) (concat "\\w*" (list x))) str "")
+            "\\w*" "\\b"))
 
-  ;; (setq hippie-expand-try-functions-list
-  ;;       (cons 'try-expand-flexible-abbrev hippie-expand-try-functions-list))
+  (setq hippie-expand-try-functions-list
+        (cons 'try-expand-flexible-abbrev hippie-expand-try-functions-list))
 #+end_src
 *** increment-number
 #+begin_src emacs-lisp
@@ -1342,54 +1343,51 @@ SCHEDULED: <2017-06-10 Sat>
 #+end_src
 **** DONE [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
 SCHEDULED: <2017-05-27 Sat>
-**** DISABLED jedi
+**** COMMENT jedi
 #+begin_src emacs-lisp
-  ;; (use-package elpy
-  ;;   :interpreter ("ipython" . python-mode)
-  ;;   :config (progn
-  ;;             (elpy-enable)
-  ;;             (setq-default python-indent-offset 4))
-  ;;   :ensure t)
+  (use-package elpy
+    :interpreter ("ipython" . python-mode)
+    :config (progn
+              (elpy-enable)
+              (setq-default python-indent-offset 4))
+    :ensure t)
 
-  ;; (use-package jedi
-  ;;   :ensure t
-  ;;   :config (progn
-  ;;             (unless (package-installed-p 'jedi)
-  ;;               (jedi:install-server))))
+  (use-package jedi
+    :ensure t
+    :config (progn
+              (unless (package-installed-p 'jedi)
+                (jedi:install-server))))
 
-  ;; (setq python-shell-completion-native nil)
-  ;; (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
+  (setq python-shell-completion-native nil)
+  (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 
-  ;; (use-package pungi
-  ;;   :ensure t)
+  (use-package pungi
+    :ensure t)
 
-  ;; (use-package cinspect
-  ;;   :ensure t)
+  (use-package cinspect
+    :ensure t)
 
-  ;; (use-package py-isort
-  ;;   :ensure t)
+  (use-package py-isort
+    :ensure t)
 
-  ;; (use-package py-yapf
-  ;;   :ensure t)
-
-  ;; (use-package rainbow-delimiters
-  ;;   :ensure t)
+  (use-package py-yapf
+    :ensure t)
 #+end_src
-**** DISABLED virtualenv
+**** COMMENT virtualenv
 #+begin_src emacs-lisp
-  ;; (use-package virtualenv
-  ;;   :config (progn
-  ;;             (venv-initialize-interactive-shells)
-  ;;             (venv-initialize-eshell))
-  ;;   :ensure t)
+(use-package virtualenv
+  :config (progn
+            (venv-initialize-interactive-shells)
+            (venv-initialize-eshell))
+  :ensure t)
 #+end_src
-**** DISABLED anaconda
+**** COMMENT anaconda
 #+begin_src emacs-lisp
-;; (use-package anaconda-mode
-;;   :config (progn
-;;             (add-hook 'python-mode-hook 'anaconda-mode)
-;;             (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
-;;   :ensure t)
+(use-package anaconda-mode
+  :config (progn
+            (add-hook 'python-mode-hook 'anaconda-mode)
+            (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+  :ensure t)
 #+end_src
 **** ipython-shell-interpreter
 #+begin_src emacs-lisp
@@ -3610,6 +3608,9 @@ instead."
 			   :foundry nil
 			   :family "Menlo")))))
 
+  (use-package rainbow-delimiters
+    :ensure t)
+
   (use-package danneskjold-theme
     :ensure t)
 
@@ -3657,7 +3658,7 @@ instead."
   (require 'init-local nil t)
 #+end_src
 
-#  ov-highlight-data: nil
+#  ov-highlight-data: ((101%20107%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
 
 # Local Variables:
 # eval: (ov-highlight-load)
