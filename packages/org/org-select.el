@@ -36,7 +36,8 @@
     (setq selected-index (position selected-value options :test #'equal))
     (setq babel-result (eval (read (concat "(org-sbe " fn " (index " (int-to-string selected-index) "))"))))
     (delete-region (mark) (point))
-    (insert babel-result)))
+    (insert babel-result)
+    (org-table-map-tables 'org-table-align)))
 
 (provide 'org-select)
 ;;; org-select.el ends here
