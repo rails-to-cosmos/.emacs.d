@@ -69,10 +69,11 @@ http://lists.gnu.org/archive/html/gnu-emacs-sources/2004-11/msg00047.html
 http://www.emacswiki.org/emacs/fold-dwim-org.el
 ** TODO Code completion
 http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
-** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/3]
-- [ ] https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/
-- [ ] http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda
+** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/4]
+- [ ] [[https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/][mu4e 0.9.18: E-Mailing with Emacs now even better. – vxlabs]]
+- [ ] [[http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda][org mode - Automating inbox zero with the org agenda? - Emacs Stack Exchange]]
 - [ ] [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
+- [ ] [[http://pragmaticemacs.com/emacs/an-unobtrusive-email-monitor-for-mu4e-on-the-mac/][An unobtrusive email monitor for mu4e on the Mac | Pragmatic Emacs]]
 ** TODO Rename eshell on process start
 - (get-buffer-process (get-buffer "*dev2f-shell*"))
 ** TODO Encode region
@@ -808,6 +809,10 @@ SCHEDULED: <2017-06-10 Sat>
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
   (setq org-crypt-key nil))
 #+end_src
+*** Org-Velocity
+#+begin_src emacs-lisp :results silent
+(add-to-list 'org-modules 'org-velocity)
+#+end_src
 *** Org-Habit
 #+begin_src emacs-lisp :results silent
 (add-to-list 'org-modules 'org-habit)
@@ -816,6 +821,10 @@ SCHEDULED: <2017-06-10 Sat>
 #+begin_src emacs-lisp :results silent
 (use-package org-select
   :load-path "packages/org")
+#+end_src
+*** Narrowing
+#+begin_src emacs-lisp :results silent
+(setq org-indirect-buffer-display 'current-window)
 #+end_src
 *** Plain Lists
 #+begin_src emacs-lisp
@@ -1207,6 +1216,14 @@ SCHEDULED: <2017-06-10 Sat>
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
 ** Utils
+*** firestarter
+#+begin_src emacs-lisp :results silent
+(use-package firestarter
+  :config (progn
+            (firestarter-mode)
+            (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
+  :ensure t)
+#+end_src
 *** ssh
 #+begin_src emacs-lisp
 (use-package ssh-connect
@@ -1323,7 +1340,7 @@ SCHEDULED: <2017-06-10 Sat>
 #+begin_src emacs-lisp
 (require 'python)
 #+end_src
-**** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
+**** DONE [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
 SCHEDULED: <2017-05-27 Sat>
 **** DISABLED jedi
 #+begin_src emacs-lisp

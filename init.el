@@ -23,6 +23,7 @@
 (use-package bind-key
   :ensure t)
 
+(add-to-list 'safe-local-variable-values '(eval ov-highlight-load))
 (org-babel-load-file (expand-file-name "~/.emacs.d/emacs.org"))
 
 (provide 'init)
