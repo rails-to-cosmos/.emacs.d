@@ -812,6 +812,11 @@ SCHEDULED: <2017-06-10 Sat>
 #+begin_src emacs-lisp :results silent
 (add-to-list 'org-modules 'org-habit)
 #+end_src
+*** Org-Select
+#+begin_src emacs-lisp :results silent
+(use-package org-select
+  :load-path "packages/org")
+#+end_src
 *** Plain Lists
 #+begin_src emacs-lisp
 (setq org-cycle-include-plain-lists 'integrate
