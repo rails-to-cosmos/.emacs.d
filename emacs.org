@@ -173,6 +173,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 bookmark-save-flag t)
 #+end_src
 *** Utils
+**** Package Managing
+#+begin_src emacs-lisp :results silent
+(use-package paradox
+  :ensure t)
+#+end_src
 **** Dired
 #+begin_src emacs-lisp
   (use-package init-dired
@@ -3664,7 +3669,7 @@ instead."
   (require 'init-local nil t)
 #+end_src
 * COMMENT Footer
-#  ov-highlight-data: nil
+#  ov-highlight-data: ((89%2095%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
 
 # Local Variables:
 # eval: (ov-highlight-load)
