@@ -1189,6 +1189,12 @@ SCHEDULED: <2017-06-10 Sat>
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Tweaks and Hacks
+*** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
+#+begin_src emacs-lisp :results silent
+(defun set-region-read-only (begin end)
+  (interactive "r")
+  (add-text-properties begin end '(read-only t)))
+#+end_src
 *** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
 #+begin_src emacs-lisp :results silent
 (defcustom default-messages-to-show 10
@@ -3653,12 +3659,12 @@ instead."
   (diminish 'elisp-slime-nav-mode)
   (diminish 'paredit-mode)
 #+end_src
-** Local Config
+** Local
 #+begin_src emacs-lisp
   (require 'init-local nil t)
 #+end_src
-
-#  ov-highlight-data: ((101%20107%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
+* COMMENT Footer
+#  ov-highlight-data: nil
 
 # Local Variables:
 # eval: (ov-highlight-load)
