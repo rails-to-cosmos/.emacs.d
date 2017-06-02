@@ -311,7 +311,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** Keyboard
 *** default bindings
 #+begin_src emacs-lisp
-  (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
+(define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
 #+end_src
 *** key-combo
 #+begin_src emacs-lisp
@@ -3669,7 +3669,7 @@ instead."
   (require 'init-local nil t)
 #+end_src
 * COMMENT Footer
-#  ov-highlight-data: ((89%2095%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
+#  ov-highlight-data: ((89%2095%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
 
 # Local Variables:
 # eval: (ov-highlight-load)
