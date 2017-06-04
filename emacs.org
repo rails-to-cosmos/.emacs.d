@@ -39,7 +39,7 @@ http://ftp.gnu.org/gnu/emacs/
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
 - [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
-** TODO [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][Use Org-Mode Links for Absolutely Anything · Endless Parentheses]]
+** DONE [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][Use Org-Mode Links for Absolutely Anything · Endless Parentheses]]
 ** TODO [[http://thomasf.github.io/solarized-css/test/org-hacks.html#sec-1][Org ad hoc code, quick hacks and workarounds]]
 ** TODO [[https://www.reddit.com/r/emacs/comments/6a3oxv/ledgerledgermode_tips_and_tricks/][ledger/ledger-mode tips and tricks? : emacs]]
 ** TODO [[https://emacs-el.com/episodes][Episodes Index - Emacs.el]]
@@ -198,49 +198,45 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            ("<backspace>" . dired-up-directory)
            ("/" . dired-narrow-fuzzy)))
 #+end_src
-**** Eshell
+**** EShell
 #+begin_src emacs-lisp
-  (setq-default eshell-buffer-maximum-lines 500
-                eshell-output-filter-functions
-                '(eshell-truncate-buffer
-                  eshell-postoutput-scroll-to-bottom
-                  eshell-handle-control-codes
-                  eshell-handle-ansi-color
-                  eshell-watch-for-password-prompt)
-                password-cache t
-                password-cache-expiry 3600)
+(setq-default eshell-buffer-maximum-lines 500
+              eshell-output-filter-functions
+              '(eshell-truncate-buffer
+                eshell-postoutput-scroll-to-bottom
+                eshell-handle-control-codes
+                eshell-handle-ansi-color
+                eshell-watch-for-password-prompt)
+              password-cache t
+              password-cache-expiry 3600)
 
-  (defun eshell-init-default-aliases ()
-    (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
-    (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
-    (add-to-list 'eshell-command-aliases-list '("l" "ls"))
-    (add-to-list 'eshell-command-aliases-list '("ll" "ls -la")))
-  (add-hook 'eshell-mode-hook 'eshell-init-default-aliases)
+(defun eshell-init-default-aliases ()
+  (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
+  (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
+  (add-to-list 'eshell-command-aliases-list '("l" "ls"))
+  (add-to-list 'eshell-command-aliases-list '("ll" "ls -la")))
+(add-hook 'eshell-mode-hook 'eshell-init-default-aliases)
 
-  (use-package exec-path-from-shell
-    :config (progn
-              (when (memq window-system '(mac ns))
-                (exec-path-from-shell-initialize)
-                (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-                (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")
-                (setenv "LANG" "en_US.UTF-8")
-                (setenv "LC_ALL" "en_US.UTF-8")
-                (setenv "LC_CTYPE" "en_US.UTF-8")))
-    :ensure t)
+(use-package exec-path-from-shell
+  :config (progn
+            (when (memq window-system '(mac ns))
+              (exec-path-from-shell-initialize)
+              (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")
+              (setenv "LANG" "en_US.UTF-8")
+              (setenv "LC_ALL" "en_US.UTF-8")
+              (setenv "LC_CTYPE" "en_US.UTF-8")))
+  :ensure t)
 
-  (use-package eshell-up
-    :config (progn
-              (defun eshell-add-aliases--eshell-up ()
-                (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1")))
+(use-package eshell-up
+  :config (progn
+            (defun eshell-add-aliases--eshell-up ()
+              (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1")))
 
-              (add-hook 'eshell-mode-hook
-                        'eshell-add-aliases--eshell-up))
-    :ensure t)
+            (add-hook 'eshell-mode-hook
+                      'eshell-add-aliases--eshell-up))
+  :ensure t)
 #+end_src
-
-#+RESULTS:
-: t
-
 **** Ido
 #+begin_src emacs-lisp
 (defadvice ido-find-file (after find-file-sudo activate)
@@ -3669,7 +3665,7 @@ instead."
   (require 'init-local nil t)
 #+end_src
 * COMMENT Footer
-#  ov-highlight-data: ((89%2095%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
+#  ov-highlight-data: ((89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
 
 # Local Variables:
 # eval: (ov-highlight-load)
