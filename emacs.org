@@ -39,11 +39,8 @@ http://ftp.gnu.org/gnu/emacs/
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
 - [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
-** DONE [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][Use Org-Mode Links for Absolutely Anything · Endless Parentheses]]
-** TODO [[http://thomasf.github.io/solarized-css/test/org-hacks.html#sec-1][Org ad hoc code, quick hacks and workarounds]]
-** TODO [[https://www.reddit.com/r/emacs/comments/6a3oxv/ledgerledgermode_tips_and_tricks/][ledger/ledger-mode tips and tricks? : emacs]]
-** TODO [[https://emacs-el.com/episodes][Episodes Index - Emacs.el]]
-** TODO [[https://lists.gnu.org/archive/html/emacs-devel/2017-04/msg00359.html][Re: scroll-down with pixel transition]]
+** TODO [[https://www.reddit.com/r/emacs/comments/6a3oxv/ledgerledgermode_tips_and_tricks/][ledger/ledger-mode tips and tricks]]
+** TODO [[http://blog.garage-coding.com/2015/12/12/offline-reading-setup.html][Offline reading setup]]
 ** TODO [[http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23][Emacs org-mode examples and cookbook]]
 ** TODO [[https://github.com/caffo/org-minimal-html-theme][GitHub - caffo/org-minimal-html-theme: Simple and beautiful orgmode HTML export theme]]
 ** TODO [[http://plantuml.sourceforge.net/emacs.html][Emacs UML]]
@@ -87,17 +84,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 :header-args: :results silent
 :END:
 ** Core
-*** Instruments
-**** after-load
-#+begin_src emacs-lisp
-(defmacro after-load (feature &rest body)
-  "After FEATURE is loaded, evaluate BODY."
-  (declare (indent defun))
-  `(eval-after-load ,feature
-     '(progn ,@body)))
-#+end_src
-*** Settings
-**** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
+*** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
 #+begin_src emacs-lisp
 ;; UTF-8 as the default coding system
 (set-charset-priority 'unicode)
@@ -108,16 +95,44 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (setq locale-coding-system   'utf-8)
 (setq-default buffer-file-coding-system 'utf-8)
 #+end_src
-**** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
+*** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+begin_src emacs-lisp
-  (advice-add #'display-startup-echo-area-message :override #'ignore)
+(advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
-**** OS
+*** after-load
+#+begin_src emacs-lisp
+(defmacro after-load (feature &rest body)
+  "After FEATURE is loaded, evaluate BODY."
+  (declare (indent defun))
+  `(eval-after-load ,feature
+     '(progn ,@body)))
+#+end_src
+*** paths
+#+begin_src emacs-lisp
+  (defun custom/ (filename dirname)
+    "Get path to FILENAME in DIRNAME."
+    (make-directory dirname t)
+    (concat dirname filename))
+
+  (defun tmp/ (filename)
+    "Get path to FILENAME in temp directory."
+    (custom/ filename (concat user-emacs-directory "tmp/")))
+
+  (defun shared/ (filename)
+    "Get path to FILENAME in shared directory."
+    (custom/ filename "~/Yandex.Disk.localized/Emacs/"))
+
+  (setq-default custom-file (tmp/ "custom.el"))
+  (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
+                bookmark-default-file (shared/ "bookmarks.txt")
+                bookmark-save-flag t)
+#+end_src
+*** os
 #+begin_src emacs-lisp
   (defconst IS-MAC   (eq system-type 'darwin))
   (defconst IS-LINUX (eq system-type 'gnu/linux))
 #+end_src
-***** Mac
+**** osx
 #+begin_src emacs-lisp
   (cond (IS-MAC
          (setq mac-command-modifier 'meta
@@ -152,33 +167,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 (when (require 'osx-clipboard nil t)
                   (osx-clipboard-mode +1))))))
 #+end_src
-**** Paths
-#+begin_src emacs-lisp
-  (defun custom/ (filename dirname)
-    "Get path to FILENAME in DIRNAME."
-    (make-directory dirname t)
-    (concat dirname filename))
-
-  (defun tmp/ (filename)
-    "Get path to FILENAME in temp directory."
-    (custom/ filename (concat user-emacs-directory "tmp/")))
-
-  (defun shared/ (filename)
-    "Get path to FILENAME in shared directory."
-    (custom/ filename "~/Yandex.Disk.localized/Emacs/"))
-
-  (setq-default custom-file (tmp/ "custom.el"))
-  (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
-                bookmark-default-file (shared/ "bookmarks.txt")
-                bookmark-save-flag t)
-#+end_src
-*** Utils
-**** Package Managing
-#+begin_src emacs-lisp :results silent
-(use-package paradox
-  :ensure t)
-#+end_src
-**** Dired
+*** dired
 #+begin_src emacs-lisp
   (use-package init-dired
     :load-path "packages/dired"
@@ -198,7 +187,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
            ("<backspace>" . dired-up-directory)
            ("/" . dired-narrow-fuzzy)))
 #+end_src
-**** EShell
+*** eshell
 #+begin_src emacs-lisp
 (setq-default eshell-buffer-maximum-lines 500
               eshell-output-filter-functions
@@ -237,131 +226,33 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                       'eshell-add-aliases--eshell-up))
   :ensure t)
 #+end_src
-**** Ido
-#+begin_src emacs-lisp
-(defadvice ido-find-file (after find-file-sudo activate)
-  "Find file as root if necessary."
-  (unless (and buffer-file-name (file-writable-p buffer-file-name))
-    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-
-(use-package ido
-  :config (progn
-            (setq-default ido-enable-flex-matching t
-                          ido-use-filename-at-point nil
-                          ido-auto-merge-work-directories-length -1
-                          ido-use-virtual-buffers t
-                          ido-confirm-unique-completion t
-                          ido-default-buffer-method 'selected-window)
-            (ido-mode t)
-            (ido-everywhere t)))
-
-(use-package idomenu
-  :ensure t)
-
-(use-package ido-vertical-mode
-  :config (progn
-            (setq-default ido-vertical-define-keys 'C-n-and-C-p-only)
-            (ido-vertical-mode))
-  :ensure t)
-
-(use-package ido-completing-read+
-  :ensure t)
-
-(use-package ido-ubiquitous
-  :config (ido-ubiquitous-mode)
-  :ensure t)
-
-(use-package smex
-  ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
-  ;; your recently and most frequently used commands.
-  :config (progn
-            (global-set-key [remap execute-extended-command] 'smex))
-  :ensure t)
-
-(defun ido-search-cheat-sh ()
-  "Search `http://cheat.sh/' for help on commands and code."
-  (interactive)
-  (eww-browse-url (concat "http://cheat.sh/"
-                      (ido-completing-read+ "Command or Topic: "
-                                            (process-lines "curl" "--silent" "http://cheat.sh/:list?T&q"))
-                      "?T&q")))
-    #+end_src
-**** Imenu
-#+begin_src emacs-lisp
-  (use-package imenu-anywhere
-    :init (progn
-            (global-unset-key "\C-xi"))
-    :bind (("C-x i m" . imenu-anywhere))
-    :ensure t)
-#+end_src
-**** Bookmarks
-#+begin_src emacs-lisp
-  (use-package bookmark+
-    :ensure t)
-#+end_src
-**** Wgrep
-#+begin_src emacs-lisp
-  (use-package wgrep
-    :ensure t)
-#+end_src
-** Keyboard
-*** default bindings
-#+begin_src emacs-lisp
-(define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
-#+end_src
-*** key-combo
-#+begin_src emacs-lisp
-(use-package key-combo
-  :config (progn
-            (global-key-combo-mode t))
-  :ensure t)
-
-(key-combo-define
- prog-mode-map (kbd "C-a")
- '(back-to-indentation
-   move-beginning-of-line
-   beginning-of-buffer
-   key-combo-return))
-
-(key-combo-define
- prog-mode-map (kbd "C-e")
- '(move-end-of-line
-   end-of-buffer
-   key-combo-return))
-#+end_src
-*** mwe-log-commands
-#+begin_src emacs-lisp
-(use-package mwe-log-commands
-  :ensure t)
-#+end_src
-** Buffer Management
-*** window utils
-#+begin_src emacs-lisp
+*** ace-window
+#+begin_src emacs-lisp :results silent
 (use-package ace-window
   :config (progn
             (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)))
   :bind (("C-x o" . ace-window))
   :ensure t)
+#+end_src
+*** split-window
+#+begin_src emacs-lisp
+(defun split-window-func-with-other-buffer (split-function)
+  (lexical-let ((s-f split-function))
+    (lambda ()
+      (interactive)
+      (funcall s-f)
+      (set-window-buffer (next-window) (other-buffer)))))
 
-(use-package split-window
-  :no-require t
-  :init (progn
-          (defun split-window-func-with-other-buffer (split-function)
-            (lexical-let ((s-f split-function))
-              (lambda ()
-                (interactive)
-                (funcall s-f)
-                (set-window-buffer (next-window) (other-buffer)))))
+(defun split-window-vertically-swap ()
+  (interactive)
+  (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
 
-          (defun split-window-vertically-swap ()
-            (interactive)
-            (funcall (split-window-func-with-other-buffer 'split-window-vertically)))
+(defun split-window-horizontally-swap ()
+  (interactive)
+  (funcall (split-window-func-with-other-buffer 'split-window-horizontally)))
 
-          (defun split-window-horizontally-swap ()
-            (interactive)
-            (funcall (split-window-func-with-other-buffer 'split-window-horizontally))))
-  :bind (("C-x 2" . split-window-vertically-swap)
-         ("C-x 3" . split-window-horizontally-swap)))
+(define-key global-map (kbd "C-x 2") 'split-window-vertically-swap)
+(define-key global-map (kbd "C-x 3") 'split-window-horizontally-swap)
 #+end_src
 *** delete-other-windows
 #+begin_src emacs-lisp
@@ -418,6 +309,37 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
           (rename-file filename new-name 1))
         (rename-buffer new-name)
         (set-visited-file-name new-name)))))
+#+end_src
+
+** Keyboard
+*** default bindings
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
+#+end_src
+*** key-combo
+#+begin_src emacs-lisp
+(use-package key-combo
+  :config (progn
+            (global-key-combo-mode t))
+  :ensure t)
+
+(key-combo-define
+ prog-mode-map (kbd "C-a")
+ '(back-to-indentation
+   move-beginning-of-line
+   beginning-of-buffer
+   key-combo-return))
+
+(key-combo-define
+ prog-mode-map (kbd "C-e")
+ '(move-end-of-line
+   end-of-buffer
+   key-combo-return))
+#+end_src
+*** mwe-log-commands
+#+begin_src emacs-lisp
+(use-package mwe-log-commands
+  :ensure t)
 #+end_src
 ** Org-mode
 *** Autolist
@@ -1224,6 +1146,78 @@ SCHEDULED: <2017-06-10 Sat>
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
 ** Utils
+*** bookmark+
+#+begin_src emacs-lisp
+  (use-package bookmark+
+    :ensure t)
+#+end_src
+*** ido
+#+begin_src emacs-lisp
+(defadvice ido-find-file (after find-file-sudo activate)
+  "Find file as root if necessary."
+  (unless (and buffer-file-name (file-writable-p buffer-file-name))
+    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+
+(use-package ido
+  :config (progn
+            (setq-default ido-enable-flex-matching t
+                          ido-use-filename-at-point nil
+                          ido-auto-merge-work-directories-length -1
+                          ido-use-virtual-buffers t
+                          ido-confirm-unique-completion t
+                          ido-default-buffer-method 'selected-window)
+            (ido-mode t)
+            (ido-everywhere t)))
+
+(use-package idomenu
+  :ensure t)
+
+(use-package ido-vertical-mode
+  :config (progn
+            (setq-default ido-vertical-define-keys 'C-n-and-C-p-only)
+            (ido-vertical-mode))
+  :ensure t)
+
+(use-package ido-completing-read+
+  :ensure t)
+
+(use-package ido-ubiquitous
+  :config (ido-ubiquitous-mode)
+  :ensure t)
+
+(use-package smex
+  ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
+  ;; your recently and most frequently used commands.
+  :config (progn
+            (global-set-key [remap execute-extended-command] 'smex))
+  :ensure t)
+
+(defun ido-search-cheat-sh ()
+  "Search `http://cheat.sh/' for help on commands and code."
+  (interactive)
+  (eww-browse-url (concat "http://cheat.sh/"
+                      (ido-completing-read+ "Command or Topic: "
+                                            (process-lines "curl" "--silent" "http://cheat.sh/:list?T&q"))
+                      "?T&q")))
+    #+end_src
+*** imenu
+#+begin_src emacs-lisp
+  (use-package imenu-anywhere
+    :init (progn
+            (global-unset-key "\C-xi"))
+    :bind (("C-x i m" . imenu-anywhere))
+    :ensure t)
+#+end_src
+*** paradox
+#+begin_src emacs-lisp :results silent
+(use-package paradox
+  :ensure t)
+#+end_src
+*** wgrep
+#+begin_src emacs-lisp
+  (use-package wgrep
+    :ensure t)
+#+end_src
 *** firestarter
 #+begin_src emacs-lisp :results silent
 (use-package firestarter
@@ -1234,29 +1228,29 @@ SCHEDULED: <2017-06-10 Sat>
 #+end_src
 *** ssh
 #+begin_src emacs-lisp
-(use-package ssh-connect
-  :no-require t
-  :bind (("C-x y s" . ssh-connect)))
+(define-key global-map (kbd "C-x y s") 'ssh-connect)
 
-(defun ssh-connect (&optional foreign-buffer)
+(defun open-ssh-connection (ssh-connection-name)
+  (let ((default-directory (cdr (assoc ssh-connection-name ssh-connections)))
+        (ssh-buffer-name (concat "*" ssh-connection-name "-shell*")))
+    (if (eq nil (get-buffer ssh-buffer-name))
+        (progn
+          (eshell t)
+          (rename-buffer ssh-buffer-name t))
+      (progn
+        (switch-to-buffer (get-buffer ssh-buffer-name))))))
+
+(defun ssh-connect ()
   "Manage ssh connections, if FOREIGN-BUFFER > 1, do not reuse eshell."
-  (interactive "p")
+  (interactive)
   (defvar ssh-connections)
   (defvar ssh-connections-names)
   (defvar ssh-connection-name)
-  (defvar ssh-connection-string)
+
   (setq ssh-connections-names (list))
   (mapc (lambda (key) (add-to-list 'ssh-connections-names (car key))) ssh-connections)
-  (setq ssh-connection-name (ido-completing-read "Choose connection: " ssh-connections-names))
-  (setq ssh-connection-string (cdr (assoc ssh-connection-name ssh-connections)))
-  (let ((default-directory ssh-connection-string)
-        (_buffn (get-buffer ssh-connection-name)))
-    (if (or (eq nil _buffn) (> foreign-buffer 1))
-        (progn
-          (eshell t)
-          (rename-buffer ssh-connection-name t))
-      (progn
-        (switch-to-buffer _buffn)))))
+  (setq ssh-connection-name (ido-completing-read "Choose ssh connection: " ssh-connections-names))
+  (open-ssh-connection ssh-connection-name))
 #+end_src
 *** rsync
 #+begin_src emacs-lisp
@@ -3591,74 +3585,74 @@ instead."
 #+end_src
 ** UI
 #+begin_src emacs-lisp
-  (fset 'yes-or-no-p 'y-or-n-p)
-  (delete-selection-mode 1)
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  (toggle-scroll-bar -1)
-  (set-cursor-color "#D0E1F9")
-  (blink-cursor-mode 0)
+(fset 'yes-or-no-p 'y-or-n-p)
+(delete-selection-mode 1)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(toggle-scroll-bar -1)
+(set-cursor-color "#D0E1F9")
+(blink-cursor-mode 0)
 
-  (custom-set-faces
-   '(default ((t (
-		  :inherit nil
-			   :stipple nil
-			   :inverse-video nil
-			   :box nil
-			   :strike-through nil
-			   :overline nil
-			   :underline nil
-			   :slant normal
-			   :weight normal
-			   :height 120
-			   :width normal
-			   :foundry nil
-			   :family "Menlo")))))
+(custom-set-faces
+ '(default ((t (
+                :inherit nil
+                         :stipple nil
+                         :inverse-video nil
+                         :box nil
+                         :strike-through nil
+                         :overline nil
+                         :underline nil
+                         :slant normal
+                         :weight normal
+                         :height 120
+                         :width normal
+                         :foundry nil
+                         :family "Menlo")))))
 
-  (use-package rainbow-delimiters
-    :ensure t)
+(use-package rainbow-delimiters
+  :ensure t)
 
-  (use-package danneskjold-theme
-    :ensure t)
+(use-package danneskjold-theme
+  :ensure t)
 
-  (defun what-face (pos)
-    "Tell me what face used in POS."
-    (interactive "d")
-    (let ((face (or (get-char-property (point) 'read-face-name)
-                    (get-char-property (point) 'face))))
-      (if face (message "Face: %s" face) (message "No face at %d" pos))))
+(defun what-face (pos)
+  "Tell me what face used in POS."
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
+    (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
-  (setq-default case-fold-search t
-		compilation-scroll-output t
-		ediff-split-window-function 'split-window-horizontally
-		ediff-window-setup-function 'ediff-setup-windows-plain
-		grep-highlight-matches t
-		grep-scroll-output t
-		make-backup-files nil
-		mouse-yank-at-point t
-		save-interprogram-paste-before-kill t
-		scroll-preserve-screen-position 'always
-		set-mark-command-repeat-pop t
-		show-trailing-whitespace nil
-		tooltip-delay 1.5
-		truncate-lines nil
-		truncate-partial-width-windows nil
-		indent-tabs-mode nil
-		x-use-underline-position-properties t
-		underline-minimum-offset 3
-		inhibit-startup-screen t
-		line-spacing 7
-		visible-bell nil
-		cursor-type 'box
-		split-width-threshold 160
-		split-height-threshold nil
-		frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
+(setq-default case-fold-search t
+              compilation-scroll-output t
+              ediff-split-window-function 'split-window-horizontally
+              ediff-window-setup-function 'ediff-setup-windows-plain
+              grep-highlight-matches t
+              grep-scroll-output t
+              make-backup-files nil
+              mouse-yank-at-point t
+              save-interprogram-paste-before-kill t
+              scroll-preserve-screen-position 'always
+              set-mark-command-repeat-pop t
+              show-trailing-whitespace nil
+              tooltip-delay 1.5
+              truncate-lines nil
+              truncate-partial-width-windows nil
+              indent-tabs-mode nil
+              x-use-underline-position-properties t
+              underline-minimum-offset 3
+              inhibit-startup-screen t
+              line-spacing 7
+              visible-bell nil
+              cursor-type 'box
+              split-width-threshold 160
+              split-height-threshold nil
+              frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
 
-  (diminish 'undo-tree-mode)
-  (diminish 'flycheck-mode)
-  (diminish 'eldoc-mode)
-  (diminish 'elisp-slime-nav-mode)
-  (diminish 'paredit-mode)
+(diminish 'undo-tree-mode)
+(diminish 'flycheck-mode)
+(diminish 'eldoc-mode)
+(diminish 'elisp-slime-nav-mode)
+(diminish 'paredit-mode)
 #+end_src
 ** Local
 #+begin_src emacs-lisp
