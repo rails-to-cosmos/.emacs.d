@@ -320,6 +320,13 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 
 ** Keyboard
+*** reverse-im
+#+begin_src emacs-lisp :results silent
+(use-package reverse-im
+  :config (progn
+            (reverse-im-activate "russian-computer"))
+  :ensure t)
+#+end_src
 *** default bindings
 #+begin_src emacs-lisp
 (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
@@ -3667,7 +3674,11 @@ instead."
   (require 'init-local nil t)
 #+end_src
 * COMMENT Footer
+<<<<<<< HEAD
 #  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
+=======
+#  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
+>>>>>>> 6f75f668915c2e3cdf69ec1bf03141292d6c8383
 
 # Local Variables:
 # eval: (ov-highlight-load)
