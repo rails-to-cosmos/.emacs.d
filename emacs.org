@@ -107,6 +107,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   `(eval-after-load ,feature
      '(progn ,@body)))
 #+end_src
+*** read-lines
+#+begin_src emacs-lisp
+(defun read-lines (filePath)
+  "Return a list of lines of a file at filePath."
+  (with-temp-buffer
+    (insert-file-contents filePath)
+    (split-string (buffer-string) "\n" t)))
+#+end_src
 *** paths
 #+begin_src emacs-lisp
   (defun custom/ (filename dirname)
@@ -3659,7 +3667,7 @@ instead."
   (require 'init-local nil t)
 #+end_src
 * COMMENT Footer
-#  ov-highlight-data: ((89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
+#  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
 
 # Local Variables:
 # eval: (ov-highlight-load)
