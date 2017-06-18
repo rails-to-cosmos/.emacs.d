@@ -31,6 +31,8 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
+** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
+** [[https://ekaschalk.github.io/#posts][Eric Kaschalk on Emacs]]
 ** Configs
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
@@ -3675,7 +3677,7 @@ instead."
 #+end_src
 * COMMENT Footer
 <<<<<<< HEAD
-#  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
+#  ov-highlight-data: ((89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
 =======
 #  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
 >>>>>>> 6f75f668915c2e3cdf69ec1bf03141292d6c8383
