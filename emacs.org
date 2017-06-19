@@ -31,6 +31,7 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
+<<<<<<< HEAD
 ** Idle Timers
 :PROPERTIES:
 :ID:       C5E8C2DB-D5AA-496D-9C94-C8C4C948AF3A
@@ -41,6 +42,10 @@ http://ftp.gnu.org/gnu/emacs/
                        (message "Time is up!")
                        ))
 #+end_src
+=======
+** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
+** [[https://ekaschalk.github.io/#posts][Eric Kaschalk on Emacs]]
+>>>>>>> b77b96389bff342bad9cc0bb2208602c84b7b495
 ** Configs
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
