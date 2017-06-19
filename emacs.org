@@ -31,6 +31,16 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
+** Idle Timers
+:PROPERTIES:
+:ID:       C5E8C2DB-D5AA-496D-9C94-C8C4C948AF3A
+:END:
+#+begin_src emacs-lisp :results silent
+(run-with-idle-timer 5 t
+                     (lambda ()
+                       (message "Time is up!")
+                       ))
+#+end_src
 ** Configs
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
@@ -3675,7 +3685,7 @@ instead."
 #+end_src
 * COMMENT Footer
 <<<<<<< HEAD
-#  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
+#  ov-highlight-data: ((89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow"))))
 =======
 #  ov-highlight-data: ((89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t))%20(89%2097%20(ov-highlight%20t%20face%20(:foreground%20"green%20yellow")))%20(89%2097%20(face%20(:foreground%20"green%20yellow")%20ov-highlight%20t)))
 >>>>>>> 6f75f668915c2e3cdf69ec1bf03141292d6c8383
