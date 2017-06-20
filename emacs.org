@@ -1212,7 +1212,7 @@ SCHEDULED: <2017-06-10 Sat>
   (use-package bookmark+
     :ensure t)
 #+end_src
-*** coin-ticker
+*** COMMENT coin-ticker
 #+begin_src emacs-lisp :results silent
 (use-package coin-ticker
   :config (progn
