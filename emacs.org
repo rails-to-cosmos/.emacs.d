@@ -44,6 +44,7 @@ http://ftp.gnu.org/gnu/emacs/
 ** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 ** [[https://ekaschalk.github.io/#posts][Eric Kaschalk on Emacs]]
 ** Configs
+- [[https://github.com/howardabrams/dot-files][GitHub - howardabrams/dot-files: My Emacs initialization code and standard scripts I use for client and servers alike.]]
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
 - [[https://github.com/hlissner/.emacs.d/][GitHub - hlissner/.emacs.d: Emacs for the stubborn martian vimmer]]
@@ -398,6 +399,12 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 **** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
 **** TODO [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
 SCHEDULED: <2017-06-10 Sat>
+**** get out of editing src blocks on save
+#+begin_src emacs-lisp :results silent
+(eval-after-load 'org-src
+  '(define-key org-src-mode-map
+     (kbd "C-x C-s") #'org-edit-src-exit))
+#+end_src
 **** ob-http
 #+begin_src emacs-lisp :results silent
 (use-package ob-http
@@ -696,7 +703,7 @@ SCHEDULED: <2017-06-10 Sat>
 (define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
 (define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
 #+end_src
-*** Org-Insert-Link: Insert Heading by Default
+*** Insert heading by default
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -718,7 +725,7 @@ SCHEDULED: <2017-06-10 Sat>
       (setq x2 (search-backward "<"))
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
-*** Org-Archive Preserve Tree
+*** Archive preserve tree
 #+begin_src emacs-lisp :results silent
 (defun my-org-inherited-no-file-tags ()
   (let ((tags (org-entry-get nil "ALLTAGS" 'selective))
@@ -744,14 +751,21 @@ SCHEDULED: <2017-06-10 Sat>
         (while (org-up-heading-safe))
         (org-set-tags-to tags)))))
 #+end_src
-*** Org-Archive-Done-Tasks
+*** Archive done tasks
 #+begin_src emacs-lisp
 (defun org-archive-done-tasks ()
   (interactive)
   (org-map-entries 'org-archive-subtree "/DONE" 'file)
   (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
 #+end_src
-*** Org-Clock
+*** Bullets
+#+begin_src emacs-lisp :results silent
+(use-package org-bullets
+  :config (progn
+            (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  :ensure t)
+#+end_src
+*** Clock
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
@@ -759,7 +773,7 @@ SCHEDULED: <2017-06-10 Sat>
               org-clock-in-switch-to-state "STARTED"
               org-clock-out-remove-zero-time-clocks t)
 #+end_src
-*** Org-Crypt
+*** COMMENT Crypt
 #+begin_src emacs-lisp
 (use-package org-crypt
   :disabled t
@@ -768,29 +782,40 @@ SCHEDULED: <2017-06-10 Sat>
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
   (setq org-crypt-key nil))
 #+end_src
-*** Org-Velocity
+*** Velocity
 #+begin_src emacs-lisp :results silent
 (add-to-list 'org-modules 'org-velocity)
 #+end_src
-*** Org-Habit
+*** Habit
 #+begin_src emacs-lisp :results silent
 (add-to-list 'org-modules 'org-habit)
 #+end_src
-*** Org-Select
+*** Select (dropdown)
 #+begin_src emacs-lisp :results silent
 (use-package org-select
   :load-path "packages/org")
+#+end_src
+*** Tree slide
+#+begin_src emacs-lisp :results silent
+(use-package org-tree-slide
+   :config (progn
+             (setq org-tree-slide-skip-outline-level 4)
+             (org-tree-slide-simple-profile)
+             (add-hook 'org-mode-hook (lambda () (progn
+                                              (org-tree-slide-mode)
+                                              (org-tree-slide-move-previous-tree)))))
+   :ensure t)
 #+end_src
 *** Narrowing
 #+begin_src emacs-lisp :results silent
 (setq org-indirect-buffer-display 'current-window)
 #+end_src
-*** Plain Lists
+*** Plain lists
 #+begin_src emacs-lisp
 (setq org-cycle-include-plain-lists 'integrate
       org-confirm-elisp-link-not-regexp "org-open-file")
 #+end_src
-*** Scimax-autoformat-mode
+*** Scimax autoformat mode
 #+begin_src emacs-lisp
 (defcustom scimax-autoformat-ordinals t
   "Determines if scimax autoformats ordinal numbers."
