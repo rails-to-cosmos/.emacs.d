@@ -95,6 +95,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 * Config
 :PROPERTIES:
 :header-args: :results silent
+:CATEGORY: Understanding
 :END:
 ** Core
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
