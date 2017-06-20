@@ -1,4 +1,4 @@
-script="ls"
+script="ls -la"
 cmds = [cmd.strip() for cmd in script.split('\n\t') if cmd.strip()]
 ascmds = '\n\t'.join(['do script "{cmd}" in front window'.format(cmd=cmd) for cmd in cmds])
 script = '''
@@ -14,4 +14,3 @@ proc = subprocess.Popen(
     stdout=subprocess.PIPE
 )
 stdout_output = proc.communicate(script)[0]
-print stdout_output, type(proc)
