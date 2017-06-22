@@ -121,14 +121,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   `(eval-after-load ,feature
      '(progn ,@body)))
 #+end_src
-*** read-lines
-#+begin_src emacs-lisp
-(defun read-lines (filePath)
-  "Return a list of lines of a file at filePath."
-  (with-temp-buffer
-    (insert-file-contents filePath)
-    (split-string (buffer-string) "\n" t)))
-#+end_src
 *** paths
 #+begin_src emacs-lisp
   (defun custom/ (filename dirname)
@@ -276,6 +268,35 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (define-key global-map (kbd "C-x 2") 'split-window-vertically-swap)
 (define-key global-map (kbd "C-x 3") 'split-window-horizontally-swap)
 #+end_src
+*** super-save
+#+begin_src emacs-lisp
+(use-package super-save
+  :config (progn
+            (super-save-initialize)
+            (setq super-save-auto-save-when-idle t))
+  :ensure t)
+#+end_src
+*** COMMENT powerline
+#+begin_src emacs-lisp
+(use-package powerline
+  :config (progn
+            (powerline-default-theme)
+            (setq powerline-default-separator nil))
+  :ensure t)
+#+end_src
+*** COMMENT perspeen
+#+begin_src emacs-lisp
+(use-package perspeen
+  :init (progn
+          (setq perspeen-use-tab nil))
+  :config (progn
+            (perspeen-mode))
+  :ensure t)
+#+end_src
+*** delete-trailing-whitespace
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+end_src
 *** delete-other-windows
 #+begin_src emacs-lisp
 (use-package delete-other-windows
@@ -379,12 +400,38 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 #+end_src
 ** Org-mode
-*** COMMENT Autolist
+*** Archive done tasks
 #+begin_src emacs-lisp
-(use-package org-autolist
-  :config (progn
-            (add-hook 'org-mode-hook (lambda () (org-autolist-mode))))
-  :ensure t)
+(defun org-archive-done-tasks ()
+  (interactive)
+  (org-map-entries 'org-archive-subtree "/DONE" 'file)
+  (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
+#+end_src
+*** Archive preserve tree
+#+begin_src emacs-lisp :results silent
+(defun my-org-inherited-no-file-tags ()
+  (let ((tags (org-entry-get nil "ALLTAGS" 'selective))
+        (ltags (org-entry-get nil "TAGS")))
+    (mapc (lambda (tag)
+            (setq tags
+                  (replace-regexp-in-string (concat tag ":") "" tags)))
+          (append org-file-tags (when ltags (split-string ltags ":" t))))
+    (if (string= ":" tags) nil tags)))
+
+(defadvice org-archive-subtree (around my-org-archive-subtree-low-level activate)
+  (let ((tags (my-org-inherited-no-file-tags))
+        (org-archive-location
+         (if (save-excursion (org-back-to-heading)
+                             (> (org-outline-level) 1))
+             (concat (car (split-string org-archive-location "::"))
+                     "::* "
+                     (car (org-get-outline-path)))
+           org-archive-location)))
+    ad-do-it
+    (with-current-buffer (find-file-noselect (org-extract-archive-file))
+      (save-excursion
+        (while (org-up-heading-safe))
+        (org-set-tags-to tags)))))
 #+end_src
 *** Babel
 #+begin_src emacs-lisp
@@ -678,6 +725,37 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
+*** Bullets
+#+begin_src emacs-lisp :results silent
+(use-package org-bullets
+  :config (progn
+            (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  :ensure t)
+#+end_src
+*** Clock
+#+begin_src emacs-lisp
+(setq-default org-clock-persistence-insinuate t
+              org-clock-persist t
+              org-clock-in-resume t
+              org-clock-in-switch-to-state "STARTED"
+              org-clock-out-remove-zero-time-clocks t)
+#+end_src
+*** COMMENT Autolist
+#+begin_src emacs-lisp
+(use-package org-autolist
+  :config (progn
+            (add-hook 'org-mode-hook (lambda () (org-autolist-mode))))
+  :ensure t)
+#+end_src
+*** COMMENT Crypt
+#+begin_src emacs-lisp
+(use-package org-crypt
+  :disabled t
+  :config
+  (org-crypt-use-before-save-magic)
+  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+  (setq org-crypt-key nil))
+#+end_src
 *** COMMENT Dashboard
 #+begin_src emacs-lisp
 (use-package org-dashboard
@@ -694,14 +772,37 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (use-package ov-highlighter
   :load-path "packages")
 #+end_src
-*** Keybindings
+*** COMMENT Strikethrough done statuses
 #+begin_src emacs-lisp
-(define-key global-map (kbd "C-x l") 'org-store-link)
-(define-key global-map (kbd "C-c a") 'org-agenda)
-(define-key global-map (kbd "C-c c") 'org-capture)
-(define-key org-mode-map (kbd "C-M-n") 'ded/org-show-next-heading-tidily)
-(define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
-(define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
+(defun my/modify-org-done-face ()
+  (setq org-fontify-done-headline t)
+  (set-face-attribute 'org-done nil :strike-through t)
+  (set-face-attribute 'org-headline-done nil
+                      :strike-through t))
+
+(eval-after-load "org"
+  (add-hook 'org-add-hook 'my/modify-org-done-face))
+#+end_src
+*** COMMENT Tree slide
+#+begin_src emacs-lisp :results silent
+(use-package org-tree-slide
+   :config (progn
+             (setq org-tree-slide-skip-outline-level 4)
+             (org-tree-slide-simple-profile)
+             (add-hook 'org-mode-hook (lambda () (progn
+                                              (org-tree-slide-mode)
+                                              (org-tree-slide-move-previous-tree)))))
+   :ensure t)
+#+end_src
+*** COMMENT UI
+#+begin_src emacs-lisp
+(setq org-hide-emphasis-markers t)
+(add-to-list 'org-emphasis-alist '())
+(add-to-list 'org-emphasis-alist '("_" ()))
+#+end_src
+*** Habit
+#+begin_src emacs-lisp :results silent
+(add-to-list 'org-modules 'org-habit)
 #+end_src
 *** Insert page heading on org-insert-link
 #+begin_src emacs-lisp
@@ -725,86 +826,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       (setq x2 (search-backward "<"))
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
-*** Archive preserve tree
-#+begin_src emacs-lisp :results silent
-(defun my-org-inherited-no-file-tags ()
-  (let ((tags (org-entry-get nil "ALLTAGS" 'selective))
-        (ltags (org-entry-get nil "TAGS")))
-    (mapc (lambda (tag)
-            (setq tags
-                  (replace-regexp-in-string (concat tag ":") "" tags)))
-          (append org-file-tags (when ltags (split-string ltags ":" t))))
-    (if (string= ":" tags) nil tags)))
-
-(defadvice org-archive-subtree (around my-org-archive-subtree-low-level activate)
-  (let ((tags (my-org-inherited-no-file-tags))
-        (org-archive-location
-         (if (save-excursion (org-back-to-heading)
-                             (> (org-outline-level) 1))
-             (concat (car (split-string org-archive-location "::"))
-                     "::* "
-                     (car (org-get-outline-path)))
-           org-archive-location)))
-    ad-do-it
-    (with-current-buffer (find-file-noselect (org-extract-archive-file))
-      (save-excursion
-        (while (org-up-heading-safe))
-        (org-set-tags-to tags)))))
-#+end_src
-*** Archive done tasks
+*** Keybindings
 #+begin_src emacs-lisp
-(defun org-archive-done-tasks ()
-  (interactive)
-  (org-map-entries 'org-archive-subtree "/DONE" 'file)
-  (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
-#+end_src
-*** Bullets
-#+begin_src emacs-lisp :results silent
-(use-package org-bullets
-  :config (progn
-            (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-  :ensure t)
-#+end_src
-*** Clock
-#+begin_src emacs-lisp
-(setq-default org-clock-persistence-insinuate t
-              org-clock-persist t
-              org-clock-in-resume t
-              org-clock-in-switch-to-state "STARTED"
-              org-clock-out-remove-zero-time-clocks t)
-#+end_src
-*** COMMENT Crypt
-#+begin_src emacs-lisp
-(use-package org-crypt
-  :disabled t
-  :config
-  (org-crypt-use-before-save-magic)
-  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
-  (setq org-crypt-key nil))
-#+end_src
-*** Velocity
-#+begin_src emacs-lisp :results silent
-(add-to-list 'org-modules 'org-velocity)
-#+end_src
-*** Habit
-#+begin_src emacs-lisp :results silent
-(add-to-list 'org-modules 'org-habit)
-#+end_src
-*** Select (dropdown)
-#+begin_src emacs-lisp :results silent
-(use-package org-select
-  :load-path "packages/org")
-#+end_src
-*** COMMENT Tree slide
-#+begin_src emacs-lisp :results silent
-(use-package org-tree-slide
-   :config (progn
-             (setq org-tree-slide-skip-outline-level 4)
-             (org-tree-slide-simple-profile)
-             (add-hook 'org-mode-hook (lambda () (progn
-                                              (org-tree-slide-mode)
-                                              (org-tree-slide-move-previous-tree)))))
-   :ensure t)
+(define-key global-map (kbd "C-x l") 'org-store-link)
+(define-key global-map (kbd "C-c a") 'org-agenda)
+(define-key global-map (kbd "C-c c") 'org-capture)
+(define-key org-mode-map (kbd "C-M-n") 'ded/org-show-next-heading-tidily)
+(define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
+(define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
 #+end_src
 *** Narrowing
 #+begin_src emacs-lisp :results silent
@@ -872,6 +901,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
 (add-hook 'org-mode-hook (lambda () (scimax-autoformat-mode)))
 #+end_src
+*** Select (dropdown)
+#+begin_src emacs-lisp :results silent
+(use-package org-select
+  :load-path "packages/org")
+#+end_src
 *** Show next entry, keeping other entries closed
 #+begin_src emacs-lisp
 (defun ded/org-show-next-heading-tidily ()
@@ -904,17 +938,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     (org-reveal t)
     (org-show-entry)
     (show-children)))
-#+end_src
-*** COMMENT Strikethrough done statuses
-#+begin_src emacs-lisp
-(defun my/modify-org-done-face ()
-  (setq org-fontify-done-headline t)
-  (set-face-attribute 'org-done nil :strike-through t)
-  (set-face-attribute 'org-headline-done nil
-                      :strike-through t))
-
-(eval-after-load "org"
-  (add-hook 'org-add-hook 'my/modify-org-done-face))
 #+end_src
 *** Todo/Checkbox Dependencies
 #+begin_src emacs-lisp
@@ -949,12 +972,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 (org-todo 'done)
               (org-todo 'todo)))))))
 #+end_src
-*** COMMENT UI
-#+begin_src emacs-lisp
-(setq org-hide-emphasis-markers t)
-(add-to-list 'org-emphasis-alist '())
-(add-to-list 'org-emphasis-alist '("_" ()))
-#+end_src
 *** Unsorted Settings
 #+begin_src emacs-lisp
 (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
@@ -980,6 +997,10 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
  org-id-locations-file (tmp/ "org-id-locations.txt")
  org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d)")
                            (sequence "WAITING(w)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
+#+end_src
+*** Velocity
+#+begin_src emacs-lisp :results silent
+(add-to-list 'org-modules 'org-velocity)
 #+end_src
 ** Editor
 *** company
@@ -1206,12 +1227,13 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
 ** Utils
-*** pomidor
-#+begin_src emacs-lisp :results silent
-(use-package pomidor
-  :config (progn
-            (global-set-key (kbd "<f12>") #'pomidor))
-  :ensure t)
+*** read-lines
+#+begin_src emacs-lisp
+(defun read-lines (filePath)
+  "Return a list of lines of a file at filePath."
+  (with-temp-buffer
+    (insert-file-contents filePath)
+    (split-string (buffer-string) "\n" t)))
 #+end_src
 *** bookmark+
 #+begin_src emacs-lisp
@@ -1236,12 +1258,117 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
             (coin-ticker-mode))
   :ensure t)
 #+end_src
+*** COMMENT Process Managers
+**** [[https://github.com/ilya-babanov/emacs-bpr][bpr]]
+#+begin_src emacs-lisp
+(use-package bpr
+  :config (progn
+            (setq bpr-colorize-output t
+                  bpr-close-after-success t
+                  bpr-erase-process-buffer t
+                  bpr-show-progress nil
+                  bpr-open-after-error nil))
+  :ensure t)
+#+end_src
+**** dizzee
+#+begin_src emacs-lisp
+(use-package dizzee
+  :commands (dz-defservice dz-defservice-group)
+  :config
+  (defun dz-restart-current ()
+    (interactive)
+    (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+    (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
+    (funcall (intern dz-restart-expr)))
+
+  (defun dz-stop-current ()
+    (interactive)
+    (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
+    (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
+    (funcall (intern dz-restart-expr)))
+
+  (global-set-key (kbd "<f5>") 'dz-restart-current)
+  (global-set-key (kbd "<f4>") 'dz-stop-current)
+  :ensure t)
+#+end_src
+**** prodigy
+#+begin_src emacs-lisp
+(use-package prodigy
+  :commands (prodigy
+             prodigy-start-all-services)
+  :bind (("C-x y p" . prodigy))
+  :config (progn
+            (defun ido-prodigy-menu ()
+              (interactive)
+              (let* ((ido-prodigy-choices (mapcar (lambda (serv)
+                                                    (let* ((status (prodigy-service-started-p serv))
+                                                           (service-name (cadr serv))
+                                                           (stopped-label service-name)
+                                                           (started-label  service-name))
+                                                      (if status started-label
+                                                        stopped-label)))
+                                                  prodigy-services)))
+                (message (ido-completing-read "Service: " ido-prodigy-choices))))
+
+            (defun find-prodigy-service-with-name (service-name)
+              (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
+                                      prodigy-services)))
+                (car matches)))
+
+            (defun prodigy-apply-to-services (services fn)
+              (prodigy-with-refresh
+               (-each services fn)))
+
+            (defun prodigy-start-all-services ()
+              (interactive)
+              (prodigy-apply-to-services prodigy-services
+                                         'prodigy-start-service))
+
+            (defun prodigy-stop-all-services ()
+              (interactive)
+              (prodigy-apply-to-services prodigy-services
+                                         'prodigy-stop-service))
+
+            ;; TODO pull this feature
+            (defun prodigy-stop-services-with-tag (tag)
+              (interactive "MTag: ")
+              (prodigy-apply-to-services
+               (prodigy-services-tagged-with (intern tag))
+               'prodigy-stop-service))
+
+            ;; TODO pull this feature
+            (defun prodigy-start-services-with-tag (tag)
+              (interactive "MTag: ")
+              (prodigy-apply-to-services
+               (prodigy-services-tagged-with (intern tag))
+               'prodigy-start-service))
+            (prodigy-define-default-status-list)
+            (prodigy-define-tag
+              :name 'django
+              :ready-message "Quit the server with CONTROL-C"))
+  :ensure t)
+#+end_src
 *** firestarter
 #+begin_src emacs-lisp :results silent
 (use-package firestarter
   :config (progn
             (firestarter-mode)
             (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
+  :ensure t)
+#+end_src
+*** google-translate
+#+begin_src emacs-lisp
+(use-package google-translate
+  :config (progn
+            (defun translate-text (sentence)
+              "Google translate without specifying language."
+              (interactive "sTranslate sentence: ")
+              (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                           ("[а-яА-Я]" . ("ru" "en"))))
+              (dolist (lang-regex lang-regexes)
+                (if (string-match (car lang-regex) sentence)
+                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))))
+  :bind ("C-x y t t" . translate-text)
   :ensure t)
 #+end_src
 *** ido
@@ -1304,6 +1431,13 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 *** paradox
 #+begin_src emacs-lisp :results silent
 (use-package paradox
+  :ensure t)
+#+end_src
+*** pomidor
+#+begin_src emacs-lisp :results silent
+(use-package pomidor
+  :config (progn
+            (global-set-key (kbd "<f12>") #'pomidor))
   :ensure t)
 #+end_src
 *** rsync
@@ -1385,13 +1519,13 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     :ensure t)
 #+end_src
 ** Version Control
-*** Monky
+*** monky
 #+begin_src emacs-lisp
 (use-package monky
   :ensure t)
 #+end_src
 **** TODO Implement vcs-status: monky-status or magit-status?
-*** Magit
+*** magit
 #+begin_src emacs-lisp
 (use-package magit
   :config (progn
@@ -3543,130 +3677,6 @@ instead."
   :ensure t)
 
 ;; (use-package nhexl-mode)
-
-;; https://github.com/kiwanami/emacs-calfw
-;; (use-package calfw
-;;   :config
-;;   (require 'calfw-org))
-
-(use-package google-translate
-  :commands translate-text
-  :config (progn
-            (defun translate-text (sentence)
-              "Google translate without specifying language."
-              (interactive "sTranslate sentence: ")
-              (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
-                                           ("[а-яА-Я]" . ("ru" "en"))))
-              (dolist (lang-regex lang-regexes)
-                (if (string-match (car lang-regex) sentence)
-                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))))
-  :bind ("C-x y t t" . translate-text)
-  :ensure t)
-
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-(use-package perspeen
-  :init (progn
-          (setq perspeen-use-tab nil))
-  :config (progn
-            (perspeen-mode))
-  :ensure t)
-
-(use-package powerline
-  :config (progn
-            (powerline-default-theme)
-            (setq powerline-default-separator nil))
-  :ensure t)
-
-;; https://github.com/ilya-babanov/emacs-bpr
-(use-package bpr
-  :config
-  (setq bpr-colorize-output t
-        bpr-close-after-success t
-        bpr-erase-process-buffer t
-        bpr-show-progress nil
-        bpr-open-after-error nil)
-  :ensure t)
-
-(use-package dizzee
-  :commands (dz-defservice dz-defservice-group)
-  :config
-  (defun dz-restart-current ()
-    (interactive)
-    (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-    (setq dz-restart-expr (concatenate 'string dz-buffer-name "-restart"))
-    (funcall (intern dz-restart-expr)))
-
-  (defun dz-stop-current ()
-    (interactive)
-    (setq dz-buffer-name (replace-regexp-in-string "*" "" (buffer-name)))
-    (setq dz-restart-expr (concatenate 'string dz-buffer-name "-stop"))
-    (funcall (intern dz-restart-expr)))
-
-  (global-set-key (kbd "<f5>") 'dz-restart-current)
-  (global-set-key (kbd "<f4>") 'dz-stop-current)
-  :ensure t)
-
-(use-package prodigy
-  :commands (prodigy
-             prodigy-start-all-services)
-  :bind (("C-x y p" . prodigy))
-  :config (progn
-            (defun ido-prodigy-menu ()
-              (interactive)
-              (let* ((ido-prodigy-choices (mapcar (lambda (serv)
-                                                    (let* ((status (prodigy-service-started-p serv))
-                                                           (service-name (cadr serv))
-                                                           (stopped-label service-name)
-                                                           (started-label  service-name))
-                                                      (if status started-label
-                                                        stopped-label)))
-                                                  prodigy-services)))
-                (message (ido-completing-read "Service: " ido-prodigy-choices))))
-
-            (defun find-prodigy-service-with-name (service-name)
-              (let ((matches (-filter (lambda (s) (string= service-name (cadr s)))
-                                      prodigy-services)))
-                (car matches)))
-
-            (defun prodigy-apply-to-services (services fn)
-              (prodigy-with-refresh
-               (-each services fn)))
-
-            (defun prodigy-start-all-services ()
-              (interactive)
-              (prodigy-apply-to-services prodigy-services
-                                         'prodigy-start-service))
-
-            (defun prodigy-stop-all-services ()
-              (interactive)
-              (prodigy-apply-to-services prodigy-services
-                                         'prodigy-stop-service))
-
-            ;; TODO pull this feature
-            (defun prodigy-stop-services-with-tag (tag)
-              (interactive "MTag: ")
-              (prodigy-apply-to-services
-               (prodigy-services-tagged-with (intern tag))
-               'prodigy-stop-service))
-
-            ;; TODO pull this feature
-            (defun prodigy-start-services-with-tag (tag)
-              (interactive "MTag: ")
-              (prodigy-apply-to-services
-               (prodigy-services-tagged-with (intern tag))
-               'prodigy-start-service))
-            (prodigy-define-default-status-list)
-            (prodigy-define-tag
-              :name 'django
-              :ready-message "Quit the server with CONTROL-C"))
-  :ensure t)
-
-(use-package super-save
-  :config
-  (super-save-initialize)
-  (setq super-save-auto-save-when-idle t)
-  :ensure t)
 #+end_src
 ** UI
 #+begin_src emacs-lisp
