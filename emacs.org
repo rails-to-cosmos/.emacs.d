@@ -1,4 +1,4 @@
-#+TODO: TODO(t) | DONE(d)
+#+TODO: TODO(t) SOMEDAY(s) | DONE(d)
 #+STARTUP: entitiespretty
 
 [[elisp:(elfeed-run-after-update)][Elfeed]]
@@ -379,7 +379,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 #+end_src
 ** Org-mode
-*** Autolist
+*** COMMENT Autolist
 #+begin_src emacs-lisp
 (use-package org-autolist
   :config (progn
@@ -397,10 +397,9 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       org-confirm-elisp-link-function nil)
 (add-hook 'org-mode-hook 'org-hide-block-all)
 #+end_src
-**** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
-**** TODO [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
-SCHEDULED: <2017-06-10 Sat>
-**** get out of editing src blocks on save
+**** SOMEDAY [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
+**** SOMEDAY [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
+**** Get out of editing src blocks on save
 #+begin_src emacs-lisp :results silent
 (eval-after-load 'org-src
   '(define-key org-src-mode-map
@@ -679,12 +678,12 @@ SCHEDULED: <2017-06-10 Sat>
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
-*** Dashboard
+*** COMMENT Dashboard
 #+begin_src emacs-lisp
 (use-package org-dashboard
   :ensure t)
 #+end_src
-*** Highlighter
+*** COMMENT Highlighter
 #+begin_src emacs-lisp
 (use-package ov
   :ensure t)
@@ -704,7 +703,7 @@ SCHEDULED: <2017-06-10 Sat>
 (define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
 (define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
 #+end_src
-*** Insert heading by default
+*** Insert page heading on org-insert-link
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -796,7 +795,7 @@ SCHEDULED: <2017-06-10 Sat>
 (use-package org-select
   :load-path "packages/org")
 #+end_src
-*** Tree slide
+*** COMMENT Tree slide
 #+begin_src emacs-lisp :results silent
 (use-package org-tree-slide
    :config (progn
@@ -950,7 +949,7 @@ SCHEDULED: <2017-06-10 Sat>
                 (org-todo 'done)
               (org-todo 'todo)))))))
 #+end_src
-*** UI
+*** COMMENT UI
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
 (add-to-list 'org-emphasis-alist '())
@@ -961,7 +960,7 @@ SCHEDULED: <2017-06-10 Sat>
 (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
 (setq org-startup-align-all-tables "align")
 (setq-default
- ;; org-log-done t
+ org-log-done t
  org-special-ctrl-a/e t
  org-completion-use-ido t
  org-edit-timestamp-down-means-later t
@@ -1207,6 +1206,13 @@ SCHEDULED: <2017-06-10 Sat>
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
 ** Utils
+*** pomidor
+#+begin_src emacs-lisp :results silent
+(use-package pomidor
+  :config (progn
+            (global-set-key (kbd "<f12>") #'pomidor))
+  :ensure t)
+#+end_src
 *** bookmark+
 #+begin_src emacs-lisp
   (use-package bookmark+
@@ -1219,15 +1225,15 @@ SCHEDULED: <2017-06-10 Sat>
             ;; Optional: Set the update interval, in seconds (default 300)
             ;; (setq coin-ticker-api-poll-interval 120)
             ;; Optional: Set the currency list (default is BTC and ETH)
-            ;; (setq coin-ticker-syms '("BTC" "ETH" "LTC"))
+            (setq coin-ticker-syms '("BTC"))
             ;; Optional: Just show prices (and no symbols)
             ;; (setq coin-ticker-show-syms nil)
             ;; Optional: Set the price unit to use (default is "USD")
-            ;; (setq coin-ticker-price-convert "EUR")
+            (setq coin-ticker-price-convert "RUB")
             ;; Optional: Set the symbol used to display prices (default is "$")
-            ;; (setq coin-ticker-price-symbol "€")
+            (setq coin-ticker-price-symbol "₽")
             ;; Enable coin-ticker-mode
-            (coin-ticker-mode 1))
+            (coin-ticker-mode))
   :ensure t)
 #+end_src
 *** firestarter
@@ -1362,7 +1368,7 @@ SCHEDULED: <2017-06-10 Sat>
         (switch-to-buffer (get-buffer ssh-buffer-name))))))
 
 (defun ssh-connect ()
-  "Manage ssh connections, if FOREIGN-BUFFER > 1, do not reuse eshell."
+  "Manage ssh connections."
   (interactive)
   (defvar ssh-connections)
   (defvar ssh-connections-names)
