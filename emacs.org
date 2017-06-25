@@ -11,6 +11,7 @@ http://ftp.gnu.org/gnu/emacs/
   brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
 #+end_src
 * Feed                                                                          :elfeed:
+** http://nullprogram.com/feed/
 ** http://emacshorrors.com/feed.atom
 ** http://endlessparentheses.com/atom.xml
 ** http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/
