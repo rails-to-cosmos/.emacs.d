@@ -1,7 +1,8 @@
 #+TODO: TODO(t) SOMEDAY(s) | DONE(d)
 #+STARTUP: entitiespretty
 
-[[elisp:(elfeed-run-after-update)][Elfeed]]
+[[elisp:(elfeed-run-after-update)][Elfeed]]  [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
+
 
 * Installation
 ** ubuntu
@@ -11,6 +12,7 @@ http://ftp.gnu.org/gnu/emacs/
   brew install emacs --HEAD --use-git-head --with-cocoa --with-gnutls --with-rsvg --with-imagemagick --with-dbus
 #+end_src
 * Feed                                                                          :elfeed:
+** https://hackaday.com/blog/feed/
 ** http://emacshorrors.com/feed.atom
 ** http://endlessparentheses.com/atom.xml
 ** http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/
@@ -98,6 +100,18 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 :CATEGORY: Understanding
 :END:
 ** Core
+*** alert
+#+begin_src emacs-lisp
+(use-package alert
+  :ensure t)
+#+end_src
+*** benchmark
+#+begin_src emacs-lisp
+(use-package benchmark-init
+  :config (progn
+            (benchmark-init/activate))
+  :ensure t)
+#+end_src
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
 #+begin_src emacs-lisp
 ;; UTF-8 as the default coding system
@@ -160,7 +174,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                ;; NOTE Meaningless to railwaycat's emacs-mac build
                ns-use-native-fullscreen t
                ;; Don't open files from the workspace in a new frame
-               ns-pop-up-frames nil)
+               ns-pop-up-frames nil
+               alert-default-style 'osx-notifier)
 
          (cond ((display-graphic-p)
                 ;; A known problem with GUI Emacs on MacOS: it runs in an isolated
@@ -739,6 +754,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
               org-clock-in-resume t
               org-clock-in-switch-to-state "STARTED"
               org-clock-out-remove-zero-time-clocks t)
+(org-clock-persistence-insinuate)
 #+end_src
 *** COMMENT Autolist
 #+begin_src emacs-lisp
@@ -803,6 +819,10 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 *** Habit
 #+begin_src emacs-lisp :results silent
 (add-to-list 'org-modules 'org-habit)
+#+end_src
+*** Hierarchical Statistics
+#+begin_src emacs-lisp
+(setq org-hierarchical-todo-statistics nil)
 #+end_src
 *** Insert page heading on org-insert-link
 #+begin_src emacs-lisp
@@ -3598,7 +3618,7 @@ instead."
   (elfeed-update)
   (elfeed))
 #+end_src
-*** xmpp
+*** COMMENT xmpp
 #+begin_src emacs-lisp
 (use-package xmpp
   :load-path "chat"

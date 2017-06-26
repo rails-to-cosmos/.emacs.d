@@ -49,3 +49,4 @@ packages/yandex
 *.org\[*\]
 /anaconda-mode
 /ede-projects.el
+/org-clock-save.el
