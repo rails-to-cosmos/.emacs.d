@@ -2,12 +2,10 @@
 
 [[elisp:(elfeed-run-after-update)][Elfeed]]  [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
 
-
 * COMMENT Yas-highlighting
 #+begin_src emacs-lisp :results silent
 (mapcar (lambda (key)
-          (highlight-phrase key "redshank-highlight-face")
-          key)
+          (highlight-regexp (concat "^" key "$") "redshank-highlight-face") key)
         (yas-active-keys))
 #+end_src
 * Installation
