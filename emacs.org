@@ -1,9 +1,15 @@
 #+TODO: TODO(t) SOMEDAY(s) | DONE(d)
-#+STARTUP: entitiespretty
 
 [[elisp:(elfeed-run-after-update)][Elfeed]]  [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
 
 
+* COMMENT Yas-highlighting
+#+begin_src emacs-lisp :results silent
+(mapcar (lambda (key)
+          (highlight-phrase key "redshank-highlight-face")
+          key)
+        (yas-active-keys))
+#+end_src
 * Installation
 ** ubuntu
 http://ftp.gnu.org/gnu/emacs/
@@ -34,6 +40,7 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
+** TODO Highlight yasnippet words for current buffer
 ** TODO [[https://github.com/Kungsgeten/org-brain][GitHub - Kungsgeten/org-brain: Org-mode wiki + concept-mapping]]
 ** COMMENT Idle Timers
 :PROPERTIES:
