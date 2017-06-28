@@ -767,6 +767,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
               org-clock-in-switch-to-state "STARTED"
               org-clock-out-remove-zero-time-clocks t)
 (org-clock-persistence-insinuate)
+(define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 #+end_src
 *** COMMENT Autolist
 #+begin_src emacs-lisp
