@@ -1,13 +1,7 @@
 #+TODO: TODO(t) SOMEDAY(s) | DONE(d)
 
-[[elisp:(elfeed-run-after-update)][Elfeed]]  [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
+[[elisp:(elfeed-run-after-update)][Elfeed]]  [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]] [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
-* COMMENT Yas-highlighting
-#+begin_src emacs-lisp :results silent
-(mapcar (lambda (key)
-          (highlight-regexp (concat "^" key "$") "redshank-highlight-face") key)
-        (yas-active-keys))
-#+end_src
 * Installation
 ** ubuntu
 http://ftp.gnu.org/gnu/emacs/
@@ -38,7 +32,18 @@ http://ftp.gnu.org/gnu/emacs/
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
-** TODO Highlight yasnippet words for current buffer
+** TODO EMMS
+- [[http://hack.org/mc/blog/emms.html][Using EMMS on OS X | MC's Journal]]
+** COMMENT Highlight yasnippet words for current buffer
+#+begin_src emacs-lisp :results silent
+(defun yas-highlight-keywords ()
+  (interactive)
+  (mapcar (lambda (key)
+            (highlight-regexp (concat "(^| )" key "$") "redshank-highlight-face") key)
+          (yas-active-keys)))
+(add-hook 'prog-mode-hook 'yas-highlight-keywords)
+(yas-highlight-keywords)
+#+end_src
 ** TODO [[https://github.com/Kungsgeten/org-brain][GitHub - Kungsgeten/org-brain: Org-mode wiki + concept-mapping]]
 ** COMMENT Idle Timers
 :PROPERTIES:
