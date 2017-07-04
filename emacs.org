@@ -834,6 +834,13 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
+(defun my/org-get-link-current-kill ()
+  "Insert org link where default description is set to html title."
+  (interactive)
+  (let* ((url (current-kill 0))
+         (title (get-html-title-from-url url)))
+    (concat "[[" url "][" title "]]")))
+
 (defun my/org-get-link ()
   "Insert org link where default description is set to html title."
   (interactive)
