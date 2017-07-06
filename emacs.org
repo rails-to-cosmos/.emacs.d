@@ -1,6 +1,9 @@
 #+TODO: TODO(t) SOMEDAY(s) | DONE(d)
 
-[[elisp:(elfeed-run-after-update)][Elfeed]]  [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]] [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
+- Control Panel :: hello there :)
+  - [[elisp:(elfeed-run-after-update)][Elfeed]]
+  - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
+  - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
 * Installation
 ** ubuntu
@@ -34,16 +37,6 @@ http://ftp.gnu.org/gnu/emacs/
 * Research
 ** TODO EMMS
 - [[http://hack.org/mc/blog/emms.html][Using EMMS on OS X | MC's Journal]]
-** COMMENT Highlight yasnippet words for current buffer
-#+begin_src emacs-lisp :results silent
-(defun yas-highlight-keywords ()
-  (interactive)
-  (mapcar (lambda (key)
-            (highlight-regexp (concat "(^| )" key "$") "redshank-highlight-face") key)
-          (yas-active-keys)))
-(add-hook 'prog-mode-hook 'yas-highlight-keywords)
-(yas-highlight-keywords)
-#+end_src
 ** TODO [[https://github.com/Kungsgeten/org-brain][GitHub - Kungsgeten/org-brain: Org-mode wiki + concept-mapping]]
 ** COMMENT Idle Timers
 :PROPERTIES:
@@ -841,6 +834,20 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
+(defun my/org-get-link-current-kill ()
+  "Insert org link where default description is set to html title."
+  (interactive)
+  (let* ((url (current-kill 0))
+         (title (get-html-title-from-url url)))
+    (concat "[[" url "][" title "]]")))
+
+(defun my/org-get-link ()
+  "Insert org link where default description is set to html title."
+  (interactive)
+  (let* ((url (read-string "URL: "))
+         (title (get-html-title-from-url url)))
+    (concat "[[" url "][" title "]]")))
+
 (defun my/org-insert-link ()
   "Insert org link where default description is set to html title."
   (interactive)
@@ -1224,6 +1231,17 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
         (yas-expand)))))
 
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
+#+end_src
+**** COMMENT Highlight yasnippet words for current buffer
+CLOSED: [2017-06-29 Thu 19:45]
+#+begin_src emacs-lisp :results silent
+(defun yas-highlight-keywords ()
+  (interactive)
+  (mapcar (lambda (key)
+            (highlight-regexp (concat "\\(^\\| \\)" key "$") "redshank-highlight-face") key)
+          (yas-active-keys)))
+(run-with-idle-timer 2 t 'yas-highlight-keywords)
+;; (add-hook 'prog-mode-hook 'yas-highlight-keywords)
 #+end_src
 ** Tweaks and Hacks
 *** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
