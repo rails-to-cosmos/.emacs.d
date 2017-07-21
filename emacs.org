@@ -816,11 +816,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                                               (org-tree-slide-move-previous-tree)))))
    :ensure t)
 #+end_src
-*** COMMENT UI
+*** UI
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
-(add-to-list 'org-emphasis-alist '())
-(add-to-list 'org-emphasis-alist '("_" ()))
+;; (add-to-list 'org-emphasis-alist '())
+;; (add-to-list 'org-emphasis-alist '("_" ()))
 #+end_src
 *** Habit
 #+begin_src emacs-lisp :results silent
@@ -1679,19 +1679,15 @@ SCHEDULED: <2017-05-27 Sat>
 (defun python-add-breakpoint ()
   "Add a break point."
   (interactive)
-  (if (buffer-contains-substring "from IPython.core.debugger import Tracer as Breakpoint")
-      (progn
-        (indent-according-to-mode)
-        (insert "Breakpoint()()"))
-    (progn
-      (insert "from IPython.core.debugger import Tracer as Breakpoint\n")
-      (indent-according-to-mode)
-      (insert "Breakpoint()()")))
+  (indent-according-to-mode)
+  ;; (insert "from nose.tools import set_trace; set_trace()")
+  (insert "from IPython.core.debugger import Tracer as Breakpoint; Breakpoint()()")
   (python-highlight-breakpoints))
 
 (defun python-highlight-breakpoints ()
   "Highlight python breakpoints."
-  (highlight-lines-matching-regexp "^[ ]*Breakpoint()()"))
+  ;; (highlight-lines-matching-regexp "^[ ]*Breakpoint()()")
+  (highlight-lines-matching-regexp "^[ ]*set_trace()"))
 
 ;; (define-key python-mode-map (kbd "C-c C-b") nil)
 (define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
