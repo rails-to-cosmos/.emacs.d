@@ -1278,6 +1278,12 @@ CLOSED: [2017-06-29 Thu 19:45]
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
 ** Utils
+*** suggest
+#+begin_src emacs-lisp
+;; https://github.com/webyrd/Barliman/
+(use-package suggest
+  :ensure t)
+#+end_src
 *** read-lines
 #+begin_src emacs-lisp
 (defun read-lines (filePath)
