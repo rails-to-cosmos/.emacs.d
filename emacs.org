@@ -3637,7 +3637,8 @@ instead."
 #+begin_src emacs-lisp
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
   :config (progn
-            (elfeed-update))
+            (elfeed-update)
+            (add-hook 'elfeed-new-entry-hook (setq shr-use-fonts nil)))
   :ensure t)
 
 (use-package elfeed-org
