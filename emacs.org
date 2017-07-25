@@ -373,7 +373,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
         (rename-buffer new-name)
         (set-visited-file-name new-name)))))
 #+end_src
-
 ** Keyboard
 *** default bindings
 #+begin_src emacs-lisp
@@ -758,7 +757,9 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
               org-clock-persist t
               org-clock-in-resume t
               org-clock-in-switch-to-state "STARTED"
-              org-clock-out-remove-zero-time-clocks t)
+              org-clock-out-switch-to-state "WAITING"
+              org-clock-out-remove-zero-time-clocks t
+              org-clock-idle-time 60)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 #+end_src
@@ -865,6 +866,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       (search-forward "</title>")
       (setq x2 (search-backward "<"))
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
+
+(define-key org-mode-map (kbd "C-c l") 'my/org-insert-link)
 #+end_src
 *** Keybindings
 #+begin_src emacs-lisp
@@ -1237,47 +1240,18 @@ CLOSED: [2017-06-29 Thu 19:45]
 #+begin_src emacs-lisp :results silent
 (defun yas-highlight-keywords ()
   (interactive)
-  (mapcar (lambda (key)
+  (mapcar #'(lambda (key)
             (highlight-regexp (concat "\\(^\\| \\)" key "$") "redshank-highlight-face") key)
           (yas-active-keys)))
 (run-with-idle-timer 2 t 'yas-highlight-keywords)
 ;; (add-hook 'prog-mode-hook 'yas-highlight-keywords)
 #+end_src
-** Tweaks and Hacks
-*** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
-#+begin_src emacs-lisp :results silent
-(defun set-region-read-only (begin end)
-  (interactive "r")
-  (add-text-properties begin end '(read-only t)))
-#+end_src
-*** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
-#+begin_src emacs-lisp :results silent
-(defcustom default-messages-to-show 10
-  "Default number of messages for `show-some-last-messages'.")
-
-(defun show-some-last-messages (count)
-  "Show COUNT last lines of the `*Messages*' buffer."
-  (interactive "P")
-  (setq count (if count (prefix-numeric-value count)
-		default-messages-to-show))
-  (save-excursion
-	(set-buffer "*Messages*")
-	(let ((prev-point-max (point-max-marker))
-	  (inhibit-read-only t))
-	  (message "%s"
-		   (progn
-		 (set-buffer "*Messages*")
-		 (buffer-substring-no-properties
-		  (progn
-			(goto-char (point-max))
-			(unless (bolp)
-			  (insert "\n"))
-			(forward-line (- count))
-			(point))
-		  (point-max))))
-	  (delete-region (point-max) prev-point-max))))
-#+end_src
 ** Utils
+*** hierarchy
+#+begin_src emacs-lisp
+(use-package hierarchy
+  :ensure t)
+#+end_src
 *** suggest
 #+begin_src emacs-lisp
 ;; https://github.com/webyrd/Barliman/
@@ -1348,7 +1322,7 @@ CLOSED: [2017-06-29 Thu 19:45]
   (global-set-key (kbd "<f4>") 'dz-stop-current)
   :ensure t)
 #+end_src
-**** prodigy
+**** COMMENT prodigy
 #+begin_src emacs-lisp
 (use-package prodigy
   :commands (prodigy
@@ -1357,7 +1331,7 @@ CLOSED: [2017-06-29 Thu 19:45]
   :config (progn
             (defun ido-prodigy-menu ()
               (interactive)
-              (let* ((ido-prodigy-choices (mapcar (lambda (serv)
+              (let* ((ido-prodigy-choices #'(mapcar (lambda (serv)
                                                     (let* ((status (prodigy-service-started-p serv))
                                                            (service-name (cadr serv))
                                                            (stopped-label service-name)
@@ -1525,8 +1499,8 @@ CLOSED: [2017-06-29 Thu 19:45]
 (defun auto-rsync-exec-rsync ()
   "Execute rsync if editing file path match src dir."
   (interactive)
-  (let* ((normalized-alist (mapcar (lambda (x) (cons (file-name-as-directory (expand-file-name (car x)))
-                                                (file-name-as-directory (cdr x))))
+  (let* ((normalized-alist (mapcar #'(lambda (x) (cons (file-name-as-directory (expand-file-name (car x)))
+                                                  (file-name-as-directory (cdr x))))
                                    auto-rsync-dir-alist))
          (sync-pair (assoc-if (lambda (key) (string-match key buffer-file-name)) normalized-alist)))
     (when sync-pair
@@ -1574,6 +1548,40 @@ CLOSED: [2017-06-29 Thu 19:45]
 #+begin_src emacs-lisp
   (use-package wgrep
     :ensure t)
+#+end_src
+** Tweaks and Hacks
+*** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
+#+begin_src emacs-lisp :results silent
+(defun set-region-read-only (begin end)
+  (interactive "r")
+  (add-text-properties begin end '(read-only t)))
+#+end_src
+*** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
+#+begin_src emacs-lisp :results silent
+(defcustom default-messages-to-show 10
+  "Default number of messages for `show-some-last-messages'.")
+
+(defun show-some-last-messages (count)
+  "Show COUNT last lines of the `*Messages*' buffer."
+  (interactive "P")
+  (setq count (if count (prefix-numeric-value count)
+		default-messages-to-show))
+  (save-excursion
+	(set-buffer "*Messages*")
+	(let ((prev-point-max (point-max-marker))
+	  (inhibit-read-only t))
+	  (message "%s"
+		   (progn
+		 (set-buffer "*Messages*")
+		 (buffer-substring-no-properties
+		  (progn
+			(goto-char (point-max))
+			(unless (bolp)
+			  (insert "\n"))
+			(forward-line (- count))
+			(point))
+		  (point-max))))
+	  (delete-region (point-max) prev-point-max))))
 #+end_src
 ** Version Control
 *** monky
