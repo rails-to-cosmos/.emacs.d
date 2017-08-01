@@ -447,7 +447,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     (if (string= ":" tags) nil tags)))
 
 (defadvice org-archive-subtree (around my-org-archive-subtree-low-level activate)
-  (let ((tags (my-org-inherited-no-file-tags))
+  (let ((tags (my-org-    inherited-no-file-tags))
         (org-archive-location
          (if (save-excursion (org-back-to-heading)
                              (> (org-outline-level) 1))
@@ -1635,6 +1635,11 @@ CLOSED: [2017-06-29 Thu 19:45]
 #+begin_src emacs-lisp
 (require 'python)
 #+end_src
+**** offset
+#+begin_src emacs-lisp
+(setq python-indent-offset 4
+      python-indent-guess-indent-offset nil)
+#+end_src
 **** DONE [[http://kitchingroup.cheme.cmu.edu/blog/2016/11/09/New-and-improved-asynchronous-org-babel-python-blocks/][New and improved asynchronous org-babel python blocks]]
 SCHEDULED: <2017-05-27 Sat>
 **** COMMENT jedi
@@ -1642,8 +1647,7 @@ SCHEDULED: <2017-05-27 Sat>
   (use-package elpy
     :interpreter ("ipython" . python-mode)
     :config (progn
-              (elpy-enable)
-              (setq-default python-indent-offset 4))
+              (elpy-enable))
     :ensure t)
 
   (use-package jedi
