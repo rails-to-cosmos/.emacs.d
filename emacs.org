@@ -27,6 +27,8 @@
 * Research
 ** TODO EMMS
 - [[http://hack.org/mc/blog/emms.html][Using EMMS on OS X | MC's Journal]]
+
+
 ** TODO [[https://github.com/Kungsgeten/org-brain][GitHub - Kungsgeten/org-brain: Org-mode wiki + concept-mapping]]
 ** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 ** [[https://ekaschalk.github.io/#posts][Eric Kaschalk on Emacs]]
@@ -67,6 +69,7 @@ http://www.emacswiki.org/emacs/fold-dwim-org.el
 ** TODO Code completion
 http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
 ** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/5]
+- [ ] http://www.kirang.in/2014/11/13/emacs-as-email-client-with-offlineimap-and-mu4e-on-osx/
 - [ ] [[https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/][mu4e 0.9.18: E-Mailing with Emacs now even better. – vxlabs]]
 - [ ] [[http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda][org mode - Automating inbox zero with the org agenda? - Emacs Stack Exchange]]
 - [ ] [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
@@ -382,6 +385,29 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 #+end_src
 ** Org-mode
+*** Properties Magic
+#+begin_src emacs-lisp
+(defun yb/browse-task (task)
+  (browse-url
+   (concat "https://st.yandex-team.ru/" (org-entry-get task "Ticket"))))
+
+(defun yb/insert-branch (task)
+  (insert (org-entry-get task "Branch")))
+
+(setq-default yb/actions
+              '(
+                ("Insert branch" . yb/insert-branch)
+                ("Browse Startrek ticket" . yb/browse-task)
+                )
+)
+
+(defun my/show-control-panel-for-current-task ()
+  (interactive)
+  (let ((process-method (ido-completing-read "Method: " (keys yb/actions))))
+    (funcall (cdr (assoc process-method yb/actions)) org-clock-marker)))
+
+(define-key global-map (kbd "C-x y b") 'my/show-control-panel-for-current-task)
+#+end_src
 *** [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
 #+begin_src emacs-lisp
 (setq help/default-gc-cons-threshold gc-cons-threshold)
@@ -1406,15 +1432,10 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (define-key python-mode-map (kbd "C-c C-b") 'python-add-breakpoint)
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
 #+end_src
-*** sql-indent
+*** sql
 #+begin_src emacs-lisp
 (use-package sql-indent
   :ensure t)
-#+end_src
-*** sql
-#+begin_src emacs-lisp :results silent
-(require 'sql-indent)
-(add-hook 'sql-mode-hook 'sqlind-setup)
 #+end_src
 ** Social
 *** elfeed
@@ -1661,4 +1682,3 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+begin_src emacs-lisp
   (require 'init-local nil t)
 #+end_src
-* COMMENT Footer

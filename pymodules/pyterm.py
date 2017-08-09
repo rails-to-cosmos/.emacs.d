@@ -1,3 +1,4 @@
+# [[file:~/Documents/Stuff/ya.org::run_terminal][run_terminal]]
 script="ls -la"
 cmds = [cmd.strip() for cmd in script.split('\n\t') if cmd.strip()]
 ascmds = '\n\t'.join(['do script "{cmd}" in front window'.format(cmd=cmd) for cmd in cmds])
@@ -15,3 +16,4 @@ proc = subprocess.Popen(
     stdout=subprocess.PIPE
 )
 stdout_output = proc.communicate(script)[0]
+# run_terminal ends here
