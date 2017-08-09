@@ -384,7 +384,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
             (reverse-im-activate "russian-computer"))
   :ensure t)
 #+end_src
-** Org-mode
+** Org
 *** Properties Magic
 #+begin_src emacs-lisp
 (defun yb/browse-task (task)
@@ -400,6 +400,12 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                 ("Browse Startrek ticket" . yb/browse-task)
                 )
 )
+
+(defun keys (inlist)
+  "Return keys of INLIST."
+  (let ((alkeys (list)))
+    (mapc (lambda (key) (add-to-list 'alkeys (car key))) inlist)
+    alkeys))
 
 (defun my/show-control-panel-for-current-task ()
   (interactive)
@@ -417,39 +423,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   (setq gc-cons-threshold help/default-gc-cons-threshold))
 (add-hook 'org-babel-pre-tangle-hook #'help/set-mem-max)
 (add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
-#+end_src
-*** Archive done tasks
-#+begin_src emacs-lisp
-(defun org-archive-done-tasks ()
-  (interactive)
-  (org-map-entries 'org-archive-subtree "/DONE" 'file)
-  (org-map-entries 'org-archive-subtree "/CANCELLED" 'file))
-#+end_src
-*** Archive preserve tree
-#+begin_src emacs-lisp :results silent
-(defun my-org-inherited-no-file-tags ()
-  (let ((tags (org-entry-get nil "ALLTAGS" 'selective))
-        (ltags (org-entry-get nil "TAGS")))
-    (mapc (lambda (tag)
-            (setq tags
-                  (replace-regexp-in-string (concat tag ":") "" tags)))
-          (append org-file-tags (when ltags (split-string ltags ":" t))))
-    (if (string= ":" tags) nil tags)))
-
-(defadvice org-archive-subtree (around my-org-archive-subtree-low-level activate)
-  (let ((tags (my-org-inherited-no-file-tags))
-        (org-archive-location
-         (if (save-excursion (org-back-to-heading)
-                             (> (org-outline-level) 1))
-             (concat (car (split-string org-archive-location "::"))
-                     "::* "
-                     (car (org-get-outline-path)))
-           org-archive-location)))
-    ad-do-it
-    (with-current-buffer (find-file-noselect (org-extract-archive-file))
-      (save-excursion
-        (while (org-up-heading-safe))
-        (org-set-tags-to tags)))))
 #+end_src
 *** Babel
 #+begin_src emacs-lisp

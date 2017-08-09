@@ -1,6 +1,7 @@
 # [[file:~/Documents/Stuff/ya.org::run_terminal][run_terminal]]
 script="ls -la"
-cmds = [cmd.strip() for cmd in script.split('\n\t') if cmd.strip()]
+script = script.split('\n\t')
+cmds = [cmd.strip() for cmd in script if cmd.strip()]
 ascmds = '\n\t'.join(['do script "{cmd}" in front window'.format(cmd=cmd) for cmd in cmds])
 script = '''
 tell application "Terminal"
