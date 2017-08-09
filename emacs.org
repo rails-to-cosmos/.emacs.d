@@ -206,22 +206,22 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 *** eshell
 #+begin_src emacs-lisp
-(setq-default eshell-buffer-maximum-lines 500
-              eshell-output-filter-functions
-              '(eshell-truncate-buffer
-                eshell-postoutput-scroll-to-bottom
-                eshell-handle-control-codes
-                eshell-handle-ansi-color
-                eshell-watch-for-password-prompt)
-              password-cache t
-              password-cache-expiry 3600)
+(setq-default
+ eshell-buffer-maximum-lines 500
+ eshell-output-filter-functions
+ '(eshell-truncate-buffer
+   eshell-postoutput-scroll-to-bottom
+   eshell-handle-control-codes
+   eshell-handle-ansi-color
+   eshell-watch-for-password-prompt)
+ password-cache t
+ password-cache-expiry 3600)
 
-(defun eshell-init-default-aliases ()
-  (add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
-  (add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
-  (add-to-list 'eshell-command-aliases-list '("l" "ls"))
-  (add-to-list 'eshell-command-aliases-list '("ll" "ls -la")))
-(add-hook 'eshell-mode-hook 'eshell-init-default-aliases)
+(require 'em-alias)
+(add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
+(add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
+(add-to-list 'eshell-command-aliases-list '("l" "ls"))
+(add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
 
 (let ((process-environment tramp-remote-process-environment))
   (setenv "LANG" "en_US.UTF-8")
@@ -234,19 +234,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
             (when (memq window-system '(mac ns))
               (exec-path-from-shell-initialize)
               (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")
-              (setenv "LANG" "en_US.UTF-8")
-              (setenv "LC_ALL" "en_US.UTF-8")
-              (setenv "LC_CTYPE" "en_US.UTF-8")))
-  :ensure t)
-
-(use-package eshell-up
-  :config (progn
-            (defun eshell-add-aliases--eshell-up ()
-              (add-to-list 'eshell-command-aliases-list '("up" "eshell-up $1")))
-
-            (add-hook 'eshell-mode-hook
-                      'eshell-add-aliases--eshell-up))
+              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
   :ensure t)
 #+end_src
 *** ace-window
