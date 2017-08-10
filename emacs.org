@@ -4,6 +4,7 @@
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
 * Feed                                                                          :elfeed:
+** http://cestlaz.github.io/rss.xml
 ** http://nullprogram.com/feed/
 ** http://emacshorrors.com/feed.atom
 ** http://endlessparentheses.com/atom.xml
@@ -217,11 +218,25 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
  password-cache t
  password-cache-expiry 3600)
 
-(require 'em-alias)
-(add-to-list 'eshell-command-aliases-list '("ff" "find-file"))
-(add-to-list 'eshell-command-aliases-list '("d" "dired $1"))
-(add-to-list 'eshell-command-aliases-list '("l" "ls"))
-(add-to-list 'eshell-command-aliases-list '("ll" "ls -la"))
+(with-eval-after-load 'em-alias
+  ;;; TODO: This conflicts with `evil-define-key' during the initialization of
+  ;;; the first eshell session: the map in insert-mode will not take the changes
+  ;;; into account. Going to normal mode and back to insert mode works.
+  (eshell-read-aliases-list)
+  (dolist
+      (alias
+       '(("l" "ls -1 $*")
+         ("la" "ls -lAh $*")
+         ("ll" "ls -lh $*")
+         ;; ("ls" "ls -F $*")
+         ;; ("emacs" "find-file $1")
+         ;; ("em" "find-file $*")
+         ("cp" "*cp -i $*")
+         ("mv" "*mv -i $*")
+         ("mkdir" "*mkdir -p $*")
+         ("mkcd" "*mkdir -p $* && cd $1")))
+    (add-to-list 'eshell-command-aliases-list alias))
+  (eshell-write-aliases-list))
 
 (let ((process-environment tramp-remote-process-environment))
   (setenv "LANG" "en_US.UTF-8")
@@ -388,10 +403,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (defun yb/insert-branch (task)
   (insert (org-entry-get task "Branch")))
 
+(defun yb/goto-org-task (task)
+  (org-id-goto (org-entry-get task "ID")))
+
 (setq-default yb/actions
               '(
                 ("Insert branch" . yb/insert-branch)
                 ("Browse Startrek ticket" . yb/browse-task)
+                ("Go to org task" . yb/goto-org-task)
                 )
 )
 

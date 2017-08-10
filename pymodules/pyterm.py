@@ -1,3 +1,4 @@
+#!/usr/bin/yb-python
 # [[file:~/Documents/Stuff/ya.org::run_terminal][run_terminal]]
 script="ls -la"
 script = script.split('\n\t')
