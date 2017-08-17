@@ -396,9 +396,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** Org
 *** Properties Magic
 #+begin_src emacs-lisp
+(setq tracker-url "https://st.yandex-team.ru/")
+
 (defun yb/browse-task (task)
   (browse-url
-   (concat "https://st.yandex-team.ru/" (org-entry-get task "Ticket"))))
+   (concat tracker-url (org-entry-get task "Ticket"))))
 
 (defun yb/insert-branch (task)
   (insert (org-entry-get task "Branch")))
@@ -406,11 +408,16 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (defun yb/goto-org-task (task)
   (org-id-goto (org-entry-get task "ID")))
 
+(defun yb/browse-release (task)
+  (browse-url
+   (concat tracker-url (org-entry-get task "Release_Ticket"))))
+
 (setq-default yb/actions
               '(
-                ("Insert branch" . yb/insert-branch)
-                ("Browse Startrek ticket" . yb/browse-task)
-                ("Go to org task" . yb/goto-org-task)
+                ("Insert Branch" . yb/insert-branch)
+                ("Go to Org Task" . yb/goto-org-task)
+                ("Browse Startrek Ticket" . yb/browse-task)
+                ("Browse Release Ticket" . yb/browse-release)
                 )
 )
 
