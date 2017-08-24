@@ -1,5 +1,5 @@
 - Control Panel :: hello there :)
-  - [[elisp:(elfeed-run-after-update)][Elfeed]]
+  - [[elisp:(elfeed)][Elfeed]]
   - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
@@ -28,7 +28,6 @@
 * Research
 ** TODO EMMS
 - [[http://hack.org/mc/blog/emms.html][Using EMMS on OS X | MC's Journal]]
-
 
 ** TODO [[https://github.com/Kungsgeten/org-brain][GitHub - Kungsgeten/org-brain: Org-mode wiki + concept-mapping]]
 ** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
@@ -207,50 +206,50 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 *** eshell
 #+begin_src emacs-lisp
-(setq-default
- eshell-buffer-maximum-lines 500
- eshell-output-filter-functions
- '(eshell-truncate-buffer
-   eshell-postoutput-scroll-to-bottom
-   eshell-handle-control-codes
-   eshell-handle-ansi-color
-   eshell-watch-for-password-prompt)
- password-cache t
- password-cache-expiry 3600)
+  (setq-default
+   eshell-buffer-maximum-lines 500
+   eshell-output-filter-functions
+   '(eshell-truncate-buffer
+     eshell-postoutput-scroll-to-bottom
+     eshell-handle-control-codes
+     eshell-handle-ansi-color
+     eshell-watch-for-password-prompt)
+   password-cache t
+   password-cache-expiry 3600)
 
-(with-eval-after-load 'em-alias
-  ;;; TODO: This conflicts with `evil-define-key' during the initialization of
-  ;;; the first eshell session: the map in insert-mode will not take the changes
-  ;;; into account. Going to normal mode and back to insert mode works.
-  (eshell-read-aliases-list)
-  (dolist
-      (alias
-       '(("l" "ls -1 $*")
-         ("la" "ls -lAh $*")
-         ("ll" "ls -lh $*")
-         ;; ("ls" "ls -F $*")
-         ;; ("emacs" "find-file $1")
-         ;; ("em" "find-file $*")
-         ("cp" "*cp -i $*")
-         ("mv" "*mv -i $*")
-         ("mkdir" "*mkdir -p $*")
-         ("mkcd" "*mkdir -p $* && cd $1")))
-    (add-to-list 'eshell-command-aliases-list alias))
-  (eshell-write-aliases-list))
+  (with-eval-after-load 'em-alias
+    ;;; TODO: This conflicts with `evil-define-key' during the initialization of
+    ;;; the first eshell session: the map in insert-mode will not take the changes
+    ;;; into account. Going to normal mode and back to insert mode works.
+    (eshell-read-aliases-list)
+    (dolist
+	(alias
+	 '(("l" "ls -1 $*")
+	   ("la" "ls -lAh $*")
+	   ("ll" "ls -lh $*")
+	   ;; ("ls" "ls -F $*")
+	   ;; ("emacs" "find-file $1")
+	   ;; ("em" "find-file $*")
+	   ("cp" "*cp -i $*")
+	   ("mv" "*mv -i $*")
+	   ("mkdir" "*mkdir -p $*")
+	   ("mkcd" "*mkdir -p $* && cd $1")))
+      (add-to-list 'eshell-command-aliases-list alias))
+    (eshell-write-aliases-list))
 
-(let ((process-environment tramp-remote-process-environment))
-  (setenv "LANG" "en_US.UTF-8")
-  (setenv "LC_ALL" "en_US.UTF-8")
-  (setenv "LC_CTYPE" "en_US.UTF-8")
-  (setq tramp-remote-process-environment process-environment))
+  ;; (let ((process-environment tramp-remote-process-environment))
+  ;;   (setenv "LANG" "en_US.UTF-8")
+  ;;   (setenv "LC_ALL" "en_US.UTF-8")
+  ;;   (setenv "LC_CTYPE" "en_US.UTF-8")
+  ;;   (setq tramp-remote-process-environment process-environment))
 
-(use-package exec-path-from-shell
-  :config (progn
-            (when (memq window-system '(mac ns))
-              (exec-path-from-shell-initialize)
-              (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
-  :ensure t)
+  (use-package exec-path-from-shell
+    :config (progn
+	      (when (memq window-system '(mac ns))
+		(exec-path-from-shell-initialize)
+		(exec-path-from-shell-copy-env "SSH_AGENT_PID")
+		(exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
+    :ensure t)
 #+end_src
 *** ace-window
 #+begin_src emacs-lisp :results silent
@@ -1116,6 +1115,27 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** uniq-lines
+#+begin_src emacs-lisp
+(defun uniq-lines (beg end)
+  "Unique lines in region.
+Called from a program, there are two arguments:
+BEG and END (region to sort)."
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (while (not (eobp))
+        (kill-line 1)
+        (yank)
+        (let ((next-line (point)))
+          (while
+              (re-search-forward
+               (format "^%s" (regexp-quote (car kill-ring))) nil t)
+            (replace-match "" nil nil))
+          (goto-char next-line))))))
+#+end_src
 *** hierarchy
 #+begin_src emacs-lisp
 (use-package hierarchy
@@ -1191,10 +1211,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 
 (use-package ido-completing-read+
-  :ensure t)
-
-(use-package ido-ubiquitous
-  :config (ido-ubiquitous-mode)
+  :config (progn
+            (ido-ubiquitous-mode))
   :ensure t)
 
 (use-package smex
@@ -1444,11 +1462,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
             (elfeed-org)
             (setq-default rmh-elfeed-org-files (list "~/.emacs.d/emacs.org")))
   :ensure t)
-
-(defun elfeed-run-after-update ()
-  (interactive)
-  (elfeed-update)
-  (elfeed))
 #+end_src
 *** COMMENT jabber
 #+begin_src emacs-lisp
