@@ -3,7 +3,7 @@
   - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
-* Feed                                                                          :elfeed:
+* Feed                                                                          :ELFEED:
 ** http://cestlaz.github.io/rss.xml
 ** http://nullprogram.com/feed/
 ** http://emacshorrors.com/feed.atom
@@ -87,6 +87,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 :header-args: :results silent
 :CATEGORY: Understanding
 :END:
+#+INDEX: CONF
+
 ** Core
 *** alert
 #+begin_src emacs-lisp
@@ -395,30 +397,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** Org
 *** Properties Magic
 #+begin_src emacs-lisp
-(setq tracker-url "https://st.yandex-team.ru/")
-
-(defun yb/browse-task (task)
-  (browse-url
-   (concat tracker-url (org-entry-get task "Ticket"))))
-
-(defun yb/insert-branch (task)
-  (insert (org-entry-get task "Branch")))
-
-(defun yb/goto-org-task (task)
-  (org-id-goto (org-entry-get task "ID")))
-
-(defun yb/browse-release (task)
-  (browse-url
-   (concat tracker-url (org-entry-get task "Release_Ticket"))))
-
-(setq-default yb/actions
+(setq-default yandex-actions
               '(
-                ("Insert Branch" . yb/insert-branch)
-                ("Go to Org Task" . yb/goto-org-task)
-                ("Browse Startrek Ticket" . yb/browse-task)
-                ("Browse Release Ticket" . yb/browse-release)
+                ("Insert Branch" . yandex-insert-branch)
+                ("Go to Org Task" . yandex-goto-org-task)
+                ("Browse Startrek Ticket" . yandex-browse-task)
+                ("Browse Release Ticket" . yandex-browse-release)
                 )
-)
+              )
 
 (defun keys (inlist)
   "Return keys of INLIST."
@@ -428,8 +414,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 
 (defun my/show-control-panel-for-current-task ()
   (interactive)
-  (let ((process-method (ido-completing-read "Method: " (keys yb/actions))))
-    (funcall (cdr (assoc process-method yb/actions)) org-clock-marker)))
+  (let ((process-method (ido-completing-read "Method: " (keys yandex-actions))))
+    (funcall (cdr (assoc process-method yandex-actions)) org-clock-marker)))
 
 (define-key global-map (kbd "C-x y b") 'my/show-control-panel-for-current-task)
 #+end_src
