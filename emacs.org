@@ -4,6 +4,7 @@
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
 * Feed                                                                          :elfeed:
+** https://blog.aaronbieber.com/feed.xml
 ** http://cestlaz.github.io/rss.xml
 ** http://nullprogram.com/feed/
 ** http://emacshorrors.com/feed.atom
@@ -22,7 +23,6 @@
 ** http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/
 ** http://pragmaticemacs.com/feed/
 ** http://sachachua.com/blog/category/emacs-news/feed
-** https://www.reddit.com/r/emacs.rss
 ** https://shiyuangu.com/feed/
 ** https://emacs-el.com/rss.xml
 * Research
@@ -85,9 +85,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 * Config
 :PROPERTIES:
 :header-args: :results silent
-:CATEGORY: Understanding
 :END:
-#+INDEX: CONF
 
 ** Core
 *** alert
@@ -1099,9 +1097,79 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** air-going
+#+begin_src emacs-lisp
+(defun air--org-global-custom-ids ()
+  "Find custom ID fields in all org agenda files."
+  (let ((files (org-agenda-files))
+        file
+        air-all-org-custom-ids)
+    (while (setq file (pop files))
+      (with-current-buffer (org-get-agenda-file-buffer file)
+        (save-excursion
+          (save-restriction
+            (widen)
+            (goto-char (point-min))
+            (while (re-search-forward "^[ \t]*:CUSTOM_ID:[ \t]+\\(\\S-+\\)[ \t]*$"
+                                      nil t)
+              (add-to-list 'air-all-org-custom-ids
+                           `(,(match-string-no-properties 1)
+                             ,(concat file ":" (number-to-string (line-number-at-pos))))))))))
+    air-all-org-custom-ids))
+
+(defun air-org-goto-custom-id ()
+  "Go to the location of a custom ID, selected interactively."
+  (interactive)
+  (let* ((all-custom-ids (air--org-global-custom-ids))
+         (custom-id (completing-read
+                     "Custom ID: "
+                     all-custom-ids)))
+    (when custom-id
+      (let* ((val (cadr (assoc custom-id all-custom-ids)))
+             (id-parts (split-string val ":"))
+             (file (car id-parts))
+             (line (string-to-int (cadr id-parts))))
+        (pop-to-buffer (org-get-agenda-file-buffer file))
+        (goto-char (point-min))
+        (forward-line line)
+        (org-reveal)
+        (org-up-element)))))
+
+(defun air-org-insert-custom-id-link ()
+  "Insert an Org link to a custom ID selected interactively."
+  (interactive)
+  (let* ((all-custom-ids (air--org-global-custom-ids))
+         (custom-id (completing-read
+                     "Custom ID: "
+                     all-custom-ids)))
+    (when custom-id
+      (let* ((val (cadr (assoc custom-id all-custom-ids)))
+             (id-parts (split-string val ":"))
+             (file (car id-parts))
+             (line (string-to-int (cadr id-parts))))
+        (org-insert-link nil (concat file "::#" custom-id) custom-id)))))
+#+end_src
 *** tiny-menu
 #+begin_src emacs-lisp
 (use-package tiny-menu
+  :config (progn
+            (setq tiny-menu-items
+                  '(("org-things"   ("Things"
+                                     ((?t "Tag"     org-tags-view)
+                                      (?i "ID"      air-org-goto-custom-id)
+                                      (?k "Keyword" org-search-view))))
+                    ("org-links"    ("Links"
+                                     ((?c "Capture"   org-store-link)
+                                      (?l "Insert"    org-insert-link)
+                                      (?i "Custom ID" air-org-insert-custom-id-link))))
+                    ("yandex-tasks"   ("Tasks"
+                                       ((?i "Insert branch"   yandex-insert-branch)
+                                        (?g "Go to org"       yandex-goto-org-task)
+                                        (?s "Startrek ticket" yandex-browse-task)
+                                        (?r "Release ticket"  yandex-browse-release))))))
+            (define-key global-map (kbd "C-x y b") (tiny-menu-run-item "yandex-tasks"))
+            (define-key global-map (kbd "C-x y o") (tiny-menu-run-item "org-links"))
+            (define-key global-map (kbd "C-x y g") (tiny-menu-run-item "org-things")))
   :ensure t)
 #+end_src
 *** uniq-lines
