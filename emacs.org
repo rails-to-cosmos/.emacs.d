@@ -3,7 +3,7 @@
   - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
-* Feed                                                                          :ELFEED:
+* Feed                                                                          :elfeed:
 ** http://cestlaz.github.io/rss.xml
 ** http://nullprogram.com/feed/
 ** http://emacshorrors.com/feed.atom
@@ -397,23 +397,12 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** Org
 *** Properties Magic
 #+begin_src emacs-lisp
-(setq-default yandex-actions
-              '(
-                ("Insert Branch" . yandex-insert-branch)
-                ("Go to Org Task" . yandex-goto-org-task)
-                ("Browse Startrek Ticket" . yandex-browse-task)
-                ("Browse Release Ticket" . yandex-browse-release)
-                )
-              )
-
 (defun keys (inlist)
   "Return keys of INLIST."
   (let ((alkeys (list)))
     (mapc (lambda (key) (add-to-list 'alkeys (car key))) inlist)
     alkeys))
 
-(defun my/show-control-panel-for-current-task ()
-  (interactive)
   (let ((process-method (ido-completing-read "Method: " (keys yandex-actions))))
     (funcall (cdr (assoc process-method yandex-actions)) org-clock-marker)))
 
@@ -439,6 +428,14 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       org-confirm-shell-link-function nil
       org-confirm-elisp-link-function nil)
 (add-hook 'org-mode-hook 'org-hide-block-all)
+#+end_src
+**** run src block
+#+begin_src emacs-lisp
+(defun org-babel-execute-block-by-id (name)
+  (save-excursion
+    (org-id-goto name)
+    (search-forward "#+begin_src")
+    (org-babel-execute-maybe)))
 #+end_src
 **** SOMEDAY [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
 **** SOMEDAY [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
@@ -1102,6 +1099,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** tiny-menu
+#+begin_src emacs-lisp
+(use-package tiny-menu
+  :ensure t)
+#+end_src
 *** uniq-lines
 #+begin_src emacs-lisp
 (defun uniq-lines (beg end)
