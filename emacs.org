@@ -393,19 +393,6 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 #+end_src
 ** Org
-*** Properties Magic
-#+begin_src emacs-lisp
-(defun keys (inlist)
-  "Return keys of INLIST."
-  (let ((alkeys (list)))
-    (mapc (lambda (key) (add-to-list 'alkeys (car key))) inlist)
-    alkeys))
-
-  (let ((process-method (ido-completing-read "Method: " (keys yandex-actions))))
-    (funcall (cdr (assoc process-method yandex-actions)) org-clock-marker)))
-
-(define-key global-map (kbd "C-x y b") 'my/show-control-panel-for-current-task)
-#+end_src
 *** [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
 #+begin_src emacs-lisp
 (setq help/default-gc-cons-threshold gc-cons-threshold)
