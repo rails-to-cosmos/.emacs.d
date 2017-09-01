@@ -1163,7 +1163,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                                       (?l "Insert"    org-insert-link)
                                       (?i "Custom ID" air-org-insert-custom-id-link))))
                     ("yandex-tasks"   ("Tasks"
-                                       ((?i "Insert branch"   yandex-insert-branch)
+                                       ((?a "Add subtask"  yandex-add-subtask)
+                                        (?i "Insert branch"   yandex-insert-branch)
                                         (?g "Go to org"       yandex-goto-org-task)
                                         (?s "Startrek ticket" yandex-browse-task)
                                         (?r "Release ticket"  yandex-browse-release))))))
