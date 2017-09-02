@@ -888,7 +888,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
     (org-show-entry)
     (show-children)))
 #+end_src
-*** Todo/Checkbox Dependencies
+*** COMMENT Todo/Checkbox Dependencies
 #+begin_src emacs-lisp
 (setq org-enforce-todo-dependencies t)
 
