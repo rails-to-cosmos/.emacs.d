@@ -414,6 +414,52 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       org-confirm-elisp-link-function nil)
 (add-hook 'org-mode-hook 'org-hide-block-all)
 #+end_src
+**** org-mode python tracebacks
+#+BEGIN_SRC emacs-lisp
+(defun org-babel-eval-error-notify (exit-code stderr)
+  "Open a buffer to display STDERR and a message with the value of EXIT-CODE."
+  (let ((buf (get-buffer-create org-babel-error-buffer-name)))
+    (with-current-buffer buf
+      (goto-char (point-max))
+      (save-excursion
+        (insert stderr)
+        (progn
+          (goto-char (point-min))
+          (replace-string "Traceback" "* Traceback")
+          (while (re-search-forward "\s*File \"\\(.*/\\)\\(.*\\.py\\)\", line \\(.*\\), in \\([a-zA-Z_<>]+\\)" nil t)
+            (replace-match "** \\4 in [[\\1\\2::\\3][\\2]]" nil nil )
+            (next-line)
+            (beginning-of-line))
+          (goto-char (point-min))
+          (keep-lines "^\*.*")
+          (goto-char (point-min))
+          (insert "#+STARTUP: showall\n\n"))
+        (org-mode)))
+    (display-buffer buf))
+  (message "Babel evaluation exited with code %S" exit-code))
+
+(defvar org-babel-eval-verbose t
+  "A non-nil value makes `org-babel-eval' display")
+
+(defun org-babel-eval (cmd body)
+  "Run CMD on BODY.
+If CMD succeeds then return its results, otherwise display
+STDERR with `org-babel-eval-error-notify'."
+  (let ((err-buff (get-buffer-create " *Org-Babel Error*")) exit-code)
+    (with-current-buffer err-buff (erase-buffer))
+    (with-temp-buffer
+      (insert body)
+      (setq exit-code
+            (org-babel--shell-command-on-region
+             (point-min) (point-max) cmd err-buff))
+      (if (or (not (numberp exit-code)) (> exit-code 0)
+              (and org-babel-eval-verbose (> (buffer-size err-buff) 0))) ; new condition
+          (progn
+            (with-current-buffer err-buff
+              (org-babel-eval-error-notify exit-code (buffer-string)))
+            nil)
+        (buffer-string)))))
+#+END_SRC
 **** exec from results
 #+begin_src emacs-lisp
 (defun ob-execute-block-from-results ()
