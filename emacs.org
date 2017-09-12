@@ -414,6 +414,19 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       org-confirm-elisp-link-function nil)
 (add-hook 'org-mode-hook 'org-hide-block-all)
 #+end_src
+**** exec from results
+#+begin_src emacs-lisp
+(defun ob-execute-block-from-results ()
+  (when (save-excursion
+          (let ((line (thing-at-point 'line)))
+            (if (string-match "#\\+RESULTS: \\(.*\\)" (thing-at-point 'line))
+                (let ((block-name (replace-regexp-in-string "#\\+RESULTS: " "" line)))
+                  (beginning-of-buffer)
+                  (search-forward (format "%s %s" "#+name:" block-name))
+                  (org-ctrl-c-ctrl-c))
+              nil)))))
+(add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
+#+end_src
 **** run src block
 #+begin_src emacs-lisp
 (defun org-babel-execute-block-by-id (name)
@@ -442,7 +455,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :config (progn
             (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-async-org-babel-execute-src-block)))
 #+end_src
-**** [[https://shiyuangu.com/2014/08/24/source-code-digging-emacs-org-babel/][Source Code Digging: Emacs-Org-Babel | A Learner's Journey —- Shiyuan's Blog]]
+**** COMMENT [[https://shiyuangu.com/2014/08/24/source-code-digging-emacs-org-babel/][Source Code Digging: Emacs-Org-Babel | A Learner's Journey —- Shiyuan's Blog]]
 #+begin_src emacs-lisp
 (defun org-babel-execute:python (body params)
   "Execute a block of Python code with Babel.
@@ -1150,8 +1163,9 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                                       (?l "Insert"    org-insert-link)
                                       (?i "Custom ID" air-org-insert-custom-id-link))))
                     ("yandex-tasks"   ("Tasks"
-                                       ((?a "Add subtask"  yandex-add-subtask)
+                                       ((?a "Add subtask"     yandex-add-subtask)
                                         (?i "Insert branch"   yandex-insert-branch)
+                                        (?t "Insert ticket"   yandex-insert-ticket)
                                         (?g "Go to org"       yandex-goto-org-task)
                                         (?s "Startrek ticket" yandex-browse-task)
                                         (?r "Release ticket"  yandex-browse-release))))))
