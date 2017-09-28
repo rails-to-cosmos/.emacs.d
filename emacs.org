@@ -84,7 +84,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 ** TODO Навигация org-mode через ido
 * Config
 :PROPERTIES:
-:header-args: :results silent
+:header-args: :results silent :mkdirp yes
 :END:
 
 ** Core
@@ -757,17 +757,9 @@ STDERR with `org-babel-eval-error-notify'."
                      (sql . t)
                      (emacs-lisp . t)
                      (http . t)
-                     (C . t)
-                     (shell . t)))
+                     (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
-#+end_src
-*** Bullets
-#+begin_src emacs-lisp :results silent
-(use-package org-bullets
-  :config (progn
-            (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-  :ensure t)
 #+end_src
 *** Clock
 #+begin_src emacs-lisp
@@ -783,10 +775,18 @@ STDERR with `org-babel-eval-error-notify'."
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 #+end_src
 *** UI
+**** Hide markers
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
 ;; (add-to-list 'org-emphasis-alist '())
 ;; (add-to-list 'org-emphasis-alist '("_" ()))
+#+end_src
+**** Bullets
+#+begin_src emacs-lisp :results silent
+(use-package org-bullets
+  :config (progn
+            (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  :ensure t)
 #+end_src
 *** Habit
 #+begin_src emacs-lisp :results silent
@@ -1667,9 +1667,9 @@ BEG and END (region to sort)."
 (use-package init-lisp
   :load-path "lisp")
 
-(org-babel-load-file
- (expand-file-name "packages/org/beautify-emphasis.org"
-                   user-emacs-directory))
+;; n(org-babel-load-file
+;;  (expand-file-name "packages/org/beautify-emphasis.org"
+;;                   user-emacs-directory))
 
 (use-package locales
   :init (progn
@@ -1719,43 +1719,35 @@ BEG and END (region to sort)."
 ;; (use-package nhexl-mode)
 #+end_src
 ** UI
+*** rainbow-delimiters
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters
+  :ensure t)
+#+END_SRC
+*** cleanups
 #+begin_src emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (toggle-scroll-bar -1)
-(set-cursor-color "#D0E1F9")
 (blink-cursor-mode 0)
 
 (custom-set-faces
  '(default ((t (
                 :inherit nil
-                         :stipple nil
-                         :inverse-video nil
-                         :box nil
-                         :strike-through nil
-                         :overline nil
-                         :underline nil
-                         :slant normal
-                         :weight normal
-                         :height 120
-                         :width normal
-                         :foundry nil
-                         :family "Menlo")))))
-
-(use-package rainbow-delimiters
-  :ensure t)
-
-(use-package danneskjold-theme
-  :ensure t)
-
-(defun what-face (pos)
-  "Tell me what face used in POS."
-  (interactive "d")
-  (let ((face (or (get-char-property (point) 'read-face-name)
-                  (get-char-property (point) 'face))))
-    (if face (message "Face: %s" face) (message "No face at %d" pos))))
+                :stipple nil
+                :inverse-video nil
+                :box nil
+                :strike-through nil
+                :overline nil
+                :underline nil
+                :slant normal
+                :weight normal
+                :height 120
+                :width normal
+                :foundry nil
+                :family "Menlo")))))
 
 (setq-default case-fold-search t
               compilation-scroll-output t
@@ -1783,12 +1775,55 @@ BEG and END (region to sort)."
               split-height-threshold nil
               frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
 
-(diminish 'undo-tree-mode)
-(diminish 'flycheck-mode)
-(diminish 'eldoc-mode)
-(diminish 'elisp-slime-nav-mode)
-(diminish 'paredit-mode)
+(defun what-face (pos)
+  "Tell me what face used in POS."
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
+    (if face (message "Face: %s" face) (message "No face at %d" pos))))
 #+end_src
+*** Themes
+**** Default
+#+BEGIN_SRC emacs-lisp
+(use-package minimal-theme
+  :load-path "themes")
+#+END_SRC
+**** Minimal                                                                 :ARCHIVE:
+#+BEGIN_SRC emacs-lisp :tangle themes/minimal-theme.el
+;;; minimal-theme.el --- A minimal theme based on default colors.
+;; This file is not part of GNU Emacs.
+;;; Commentary:
+;;; License:
+;; Use of this source code is governed by the 'Revised BSD License'
+;; which can be found in the LICENSE file.
+;;; Code:
+
+(deftheme minimal
+  "A minimal theme based on xterm-256 color set [dark version]")
+
+(custom-theme-set-faces
+ 'minimal
+ `(org-ellipsis                    ((t (:inherit hs-face))))
+
+ ;; Mode-line
+ `(mode-line ((t (:background "grey75" :box ,(list :line-width 4 :color "grey75")))))
+ `(mode-line-inactive ((t (:background "grey90" :foreground "grey20" :box ,(list :line-width 4 :color "grey90"))))))
+
+;; Set variables
+(custom-theme-set-variables
+ 'minimal)
+
+;;;###autoload
+(when load-file-name
+  (add-to-list 'custom-theme-load-path
+	       (file-name-as-directory (file-name-directory load-file-name))))
+
+(provide-theme 'minimal)
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+;;; minimal-theme.el ends here
+#+END_SRC
 ** Local
 #+begin_src emacs-lisp
   (require 'init-local nil t)
