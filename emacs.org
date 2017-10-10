@@ -404,7 +404,18 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
 #+end_src
 *** Babel
-#+begin_src emacs-lisp
+**** tangle-block
+#+BEGIN_SRC emacs-lisp
+(defun org-babel-tangle-block()
+  (interactive)
+  (org-babel-when-in-src-block
+   (progn
+     (let ((current-prefix-arg '(4)))
+       (call-interactively 'org-babel-tangle)
+       ))))
+#+END_SRC
+**** settings
+#+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t
       org-src-tab-acts-natively t
       org-adapt-indentation nil
@@ -413,8 +424,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
       org-confirm-shell-link-function nil
       org-confirm-elisp-link-function nil)
 (add-hook 'org-mode-hook 'org-hide-block-all)
-#+end_src
-**** org-mode python tracebacks
+#+END_SRC
+**** COMMENT org-mode python tracebacks
 #+BEGIN_SRC emacs-lisp
 (defun org-babel-eval-error-notify (exit-code stderr)
   "Open a buffer to display STDERR and a message with the value of EXIT-CODE."
@@ -1785,8 +1796,11 @@ BEG and END (region to sort)."
 *** Themes
 **** Default
 #+BEGIN_SRC emacs-lisp
-(use-package minimal-theme
-  :load-path "themes")
+;; (use-package minimal-theme
+;;  :load-path "themes")
+
+(use-package danneskjold-theme
+  :ensure t)
 #+END_SRC
 **** Minimal                                                                 :ARCHIVE:
 #+BEGIN_SRC emacs-lisp :tangle themes/minimal-theme.el
