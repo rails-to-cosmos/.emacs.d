@@ -148,6 +148,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   (defconst IS-MAC   (eq system-type 'darwin))
   (defconst IS-LINUX (eq system-type 'gnu/linux))
 #+end_src
+
 **** osx
 #+begin_src emacs-lisp
   (cond (IS-MAC
@@ -185,25 +186,91 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                   (osx-clipboard-mode +1))))))
 #+end_src
 *** dired
+**** dired+
 #+begin_src emacs-lisp
-  (use-package init-dired
-    :load-path "packages/dired"
+(defun install-dired-x ()
+  "Initialize dired with my configuration."
+  (interactive)
 
+  (use-package dired+
     :init (progn
-            (add-hook 'dired-before-readin-hook 'dired/hide-cursor)
-            (add-hook 'dired-before-readin-hook 'hl-line-mode)
-            (add-hook 'dired-before-readin-hook 'dired-omit-mode)
-            (add-hook 'dired-mode-hook 'install-dired-x))
+            (after-load 'dired-x
+              (setq-default dired-use-ls-dired nil)))
+    :config (progn
+              (diredp-toggle-find-file-reuse-dir 1))
+    :ensure t))
 
-    :commands (install-dired-x
-               dired/hide-cursor
-               dired/sort)
-
-    :bind (("C-x C-d" . dired/switch-or-jump)
-           :map dired-mode-map
-           ("<backspace>" . dired-up-directory)
-           ("/" . dired-narrow-fuzzy)))
+(add-hook 'dired-before-readin-hook 'dired-omit-mode)
+(add-hook 'dired-mode-hook 'install-dired-x)
 #+end_src
+**** dired-subtree
+#+BEGIN_SRC emacs-lisp
+(use-package dired-subtree
+  :config
+  (bind-keys :map dired-mode-map
+             ("<return>" . dired-subtree-insert)
+             ("<backspace>" . dired-subtree-remove)))
+#+END_SRC
+**** dired-narrow
+#+BEGIN_SRC emacs-lisp
+(use-package dired-narrow
+  :ensure t)
+(define-key dired-mode-map (kbd "/") 'dired-narrow-fuzzy)
+#+END_SRC
+**** dired-switch-or-jump
+#+BEGIN_SRC emacs-lisp
+(defun dired/switch-or-jump ()
+  "Quickly switch to dired buffer."
+  (interactive)
+  (progn (let ((dbufs  (cl-remove-if-not
+                        (lambda (bf)
+                          (with-current-buffer bf
+                            (derived-mode-p 'dired-mode)))
+                        (buffer-list))))
+           (if dbufs
+               (switch-to-buffer (car dbufs))
+             (dired-jump)))))
+(define-key global-map (kbd "C-x C-d") 'dired/switch-or-jump)
+#+END_SRC
+**** dired-rainbow
+#+BEGIN_SRC emacs-lisp
+(use-package dired-rainbow
+  :config (progn
+            (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
+            (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
+            (dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
+            (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
+  :ensure t)
+#+END_SRC
+**** sorting
+***** sort directories first
+#+BEGIN_SRC emacs-lisp
+(defun dired/sort ()
+  "Sort dired listings with directories first."
+  (save-excursion
+    (let (buffer-read-only)
+      (forward-line 2) ;; beyond dir. header
+      (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
+    (set-buffer-modified-p nil)))
+
+(defadvice dired-readin (after dired-after-updating-hook first () activate)
+  "Sort dired listings with directories first before mark adding."
+  (dired/sort))
+#+END_SRC
+***** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
+#+BEGIN_SRC emacs-lisp
+;; using ls-lisp with these settings gives case-insensitve
+;; sorting on OS X
+(require 'ls-lisp)
+(setq dired-listing-switches "-alhG")
+(setq ls-lisp-use-insert-directory-program nil)
+(setq ls-lisp-ignore-case t)
+(setq ls-lisp-use-string-collate nil)
+;; customise the appearance of the listing
+(setq ls-lisp-verbosity '(links uid))
+(setq ls-lisp-format-time-list '("%b %e %H:%M" "%b %e  %Y"))
+(setq ls-lisp-use-localized-time-format t)
+#+END_SRC
 *** eshell
 #+begin_src emacs-lisp
   (setq-default
@@ -768,6 +835,7 @@ STDERR with `org-babel-eval-error-notify'."
                      (sql . t)
                      (emacs-lisp . t)
                      (http . t)
+                     (shell . t)
                      (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
@@ -1022,6 +1090,21 @@ STDERR with `org-babel-eval-error-notify'."
 (add-to-list 'org-modules 'org-velocity)
 #+end_src
 ** Editor
+*** fill-or-unfill paragraph
+#+BEGIN_SRC emacs-lisp
+(defun endless/fill-or-unfill ()
+  "Like `fill-paragraph', but unfill if used twice."
+  (interactive)
+  (let ((fill-column
+         (if (eq last-command 'endless/fill-or-unfill)
+             (progn (setq this-command nil)
+                    (point-max))
+           fill-column)))
+    (call-interactively #'fill-paragraph)))
+
+(global-set-key [remap fill-paragraph]
+                #'endless/fill-or-unfill)
+#+END_SRC
 *** company
 #+begin_src emacs-lisp
 (use-package company
