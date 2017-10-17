@@ -547,7 +547,8 @@ STDERR with `org-babel-eval-error-notify'."
                 (let ((block-name (replace-regexp-in-string "#\\+RESULTS: " "" line)))
                   (beginning-of-buffer)
                   (search-forward (format "%s %s" "#+name:" block-name))
-                  (org-ctrl-c-ctrl-c))
+                  (org-ctrl-c-ctrl-c)
+                  t)
               nil)))))
 (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
 #+end_src
@@ -561,7 +562,7 @@ STDERR with `org-babel-eval-error-notify'."
 #+end_src
 **** SOMEDAY [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
 **** SOMEDAY [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
-**** Get out of editing src blocks on save
+**** COMMENT Get out of editing src blocks on save
 #+begin_src emacs-lisp :results silent
 (eval-after-load 'org-src
   '(define-key org-src-mode-map
@@ -1115,10 +1116,12 @@ STDERR with `org-babel-eval-error-notify'."
 *** expand-region
 #+begin_src emacs-lisp
 (use-package expand-region
-  :bind ("C-=" . er/expand-region)
   :config (progn
             (setq shift-select-mode nil))
   :ensure t)
+
+;; from http://endlessparentheses.com/where-do-you-bind-expand-region.html
+(global-set-key (kbd "M-2") #'er/expand-region)
 #+end_src
 *** flycheck
 #+begin_src emacs-lisp
@@ -1237,6 +1240,39 @@ STDERR with `org-babel-eval-error-notify'."
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** [[http://endlessparentheses.com/improving-emacs-file-name-completion.html][Improving Emacs file-name completion · Endless Parentheses]]
+#+BEGIN_SRC emacs-lisp
+(setq read-file-name-completion-ignore-case t)
+(setq read-buffer-completion-ignore-case t)
+(mapc (lambda (x)
+        (add-to-list 'completion-ignored-extensions x))
+      '(".aux" ".bbl" ".blg" ".exe"
+        ".log" ".meta" ".out" ;; ".pdf"
+        ".synctex.gz" ".tdo" ".toc"
+        "-pkg.el" "-autoloads.el"
+        "Notes.bib" "auto/"))
+#+END_SRC
+*** conditional keys
+#+BEGIN_SRC emacs-lisp
+(defmacro endless/define-conditional-key (keymap key def
+                                                 &rest body)
+  "In KEYMAP, define key sequence KEY as DEF conditionally.
+This is like `define-key', except the definition
+\"disappears\" whenever BODY evaluates to nil."
+  (declare (indent 3)
+           (debug (form form form &rest sexp)))
+  `(define-key ,keymap ,key
+     '(menu-item
+       ,(format "maybe-%s" (or (car (cdr-safe def)) def))
+       nil
+       :filter (lambda (&optional _)
+                 (when ,(macroexp-progn body)
+                   ,def)))))
+
+;; (endless/define-conditional-key org-mode-map "\""
+;;                                 #'endless/round-quotes
+;;   (not (org-in-src-block-p)))
+#+END_SRC
 *** air-going
 #+begin_src emacs-lisp
 (defun air--org-global-custom-ids ()
