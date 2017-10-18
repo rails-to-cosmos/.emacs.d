@@ -186,30 +186,23 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                   (osx-clipboard-mode +1))))))
 #+end_src
 *** dired
-**** dired+
-#+begin_src emacs-lisp
-(defun install-dired-x ()
-  "Initialize dired with my configuration."
-  (interactive)
-
-  (use-package dired+
-    :init (progn
-            (after-load 'dired-x
-              (setq-default dired-use-ls-dired nil)))
-    :config (progn
-              (diredp-toggle-find-file-reuse-dir 1))
-    :ensure t))
-
-(add-hook 'dired-before-readin-hook 'dired-omit-mode)
-(add-hook 'dired-mode-hook 'install-dired-x)
-#+end_src
 **** dired-subtree
 #+BEGIN_SRC emacs-lisp
+(put 'dired-find-alternate-file 'disabled nil)
+
+(defun dired-subtree-up-or-directory-up ()
+  (interactive)
+  (if-let (ov (dired-subtree--get-ov))
+      (progn
+        (goto-char (overlay-start ov))
+        (dired-previous-line 1))
+    (find-alternate-file "..")))
+
 (use-package dired-subtree
   :config
   (bind-keys :map dired-mode-map
-             ("<return>" . dired-subtree-insert)
-             ("<backspace>" . dired-subtree-remove)))
+             ("<backspace>" . dired-subtree-up-or-directory-up)
+             ("<tab>" . dired-subtree-cycle)))
 #+END_SRC
 **** dired-narrow
 #+BEGIN_SRC emacs-lisp
