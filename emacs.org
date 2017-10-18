@@ -1849,6 +1849,10 @@ BEG and END (region to sort)."
 ;; (use-package nhexl-mode)
 #+end_src
 ** UI
+*** visible-bell
+#+BEGIN_SRC emacs-lisp
+(setq visible-bell t)
+#+END_SRC
 *** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
