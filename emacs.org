@@ -452,6 +452,10 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 #+end_src
 ** Org
+*** Export
+#+BEGIN_SRC emacs-lisp
+(setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
+#+END_SRC
 *** [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
 #+begin_src emacs-lisp
 (setq help/default-gc-cons-threshold gc-cons-threshold)
