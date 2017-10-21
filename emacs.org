@@ -185,6 +185,16 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
                   (osx-clipboard-mode +1))))))
 #+end_src
 *** dired
+**** dired+
+#+BEGIN_SRC emacs-lisp
+(use-package dired+
+  :ensure t)
+#+END_SRC
+**** omit
+#+BEGIN_SRC emacs-lisp
+(setq dired-omit-files "^\\.[^.]\\|\\.pdf$\\|\\.tex$")
+(setq-default dired-omit-files-p t) ; this is buffer-local variable
+#+END_SRC
 **** dired-subtree
 #+BEGIN_SRC emacs-lisp
 (put 'dired-find-alternate-file 'disabled nil)
@@ -201,7 +211,7 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :config
   (bind-keys :map dired-mode-map
              ("<backspace>" . dired-subtree-up-or-directory-up)
-             ("<tab>" . dired-subtree-cycle)))
+             ("<tab>" . dired-subtree-toggle)))
 #+END_SRC
 **** dired-narrow
 #+BEGIN_SRC emacs-lisp
