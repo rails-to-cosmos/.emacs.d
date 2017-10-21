@@ -1912,11 +1912,11 @@ BEG and END (region to sort)."
 *** Themes
 **** Default
 #+BEGIN_SRC emacs-lisp
-;; (use-package minimal-theme
-;;  :load-path "themes")
+(use-package minimal-theme
+ :load-path "themes")
 
-(use-package danneskjold-theme
-  :ensure t)
+;; (use-package danneskjold-theme
+;;   :ensure t)
 #+END_SRC
 **** Minimal                                                                 :ARCHIVE:
 #+BEGIN_SRC emacs-lisp :tangle themes/minimal-theme.el
