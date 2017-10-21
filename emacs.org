@@ -125,23 +125,22 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+end_src
 *** paths
 #+begin_src emacs-lisp
-  (defun custom/ (filename dirname)
-    "Get path to FILENAME in DIRNAME."
-    (make-directory dirname t)
-    (concat dirname filename))
-
   (defun tmp/ (filename)
     "Get path to FILENAME in temp directory."
-    (custom/ filename (concat user-emacs-directory "tmp/")))
+    (let ((dir "/tmp/emacs/"))
+      (make-directory dir t)
+      (concat dir filename)))
 
   (defun shared/ (filename)
     "Get path to FILENAME in shared directory."
-    (custom/ filename "~/Yandex.Disk.localized/Emacs/"))
-
+    (let ((dir "~/Yandex.Disk.localized/Emacs/"))
+      (make-directory dir t)
+      (concat dir filename)))
+ 
   (setq-default custom-file (tmp/ "custom.el"))
   (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
-                bookmark-default-file (shared/ "bookmarks.txt")
-                bookmark-save-flag t)
+		bookmark-default-file (shared/ "bookmarks.txt")
+		bookmark-save-flag t)
 #+end_src
 *** os
 #+begin_src emacs-lisp
@@ -1011,7 +1010,7 @@ STDERR with `org-babel-eval-error-notify'."
 (add-to-list 'org-modules 'org-velocity)
 #+end_src
 ** Editor
-*** company
+*** COMMENT company
 #+begin_src emacs-lisp
 (use-package company
   :config (progn
