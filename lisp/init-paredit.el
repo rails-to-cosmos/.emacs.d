@@ -27,7 +27,7 @@
 
 ;; Compatibility with other modes
 
-(suspend-mode-during-cua-rect-selection 'paredit-mode)
+;; (suspend-mode-during-cua-rect-selection 'paredit-mode)
 
 
 ;; Use paredit in the minibuffer

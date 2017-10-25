@@ -3,85 +3,41 @@
   - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
-* Feed                                                                          :elfeed:
-** https://blog.aaronbieber.com/feed.xml
-** http://cestlaz.github.io/rss.xml
-** http://nullprogram.com/feed/
-** http://emacshorrors.com/feed.atom
-** http://endlessparentheses.com/atom.xml
-** http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/
-** http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/
-** http://pragmaticemacs.com/feed/
-** http://sachachua.com/blog/category/emacs-news/feed
-** https://shiyuangu.com/feed/
-** https://emacs-el.com/rss.xml
-* Research
-** TODO EMMS
-- [[http://hack.org/mc/blog/emms.html][Using EMMS on OS X | MC's Journal]]
+* COMMENT Org-Feed
+#+TBLNAME: org-feed-alist
+| name                         | URL   | file  | headline | drawer                       |
+|                              | <5>   | <5>   |          |                              |
+|------------------------------+-------+-------+----------+------------------------------|
+| C'est la Z                   | http://cestlaz.github.io/rss.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | cest-la-z                    |
+| Nullprogram                  | http://nullprogram.com/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | nullprogram                  |
+| Aaron Bieber                 | https://blog.aaronbieber.com/feed.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | aaron-bieber                 |
+| Shiyuan Gu                   | https://shiyuangu.com/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | shiyuan                      |
+| Emacs Horrors                | http://emacshorrors.com/feed.atom | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | emacs-horrors                |
+| Endless Parentheses          | http://endlessparentheses.com/atom.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | endless-parentheses          |
+| Kitchin Babel                | http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-babel                |
+| Kitchin Elisp                | http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-elisp                |
+| Kitchin Emacs Lisp           | http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-emacs-lisp           |
+| Kitchin Emacs                | http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-emacs                |
+| Kitchin Emacslisp            | http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-emacslisp            |
+| Kitchin Lisp                 | http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-lisp                 |
+| Kitchin Literate Programming | http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-literate-programming |
+| Kitchin Org-mode             | http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-org-mode             |
+| Kitchin Org                  | http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-org                  |
+| Kitchin Orgmode              | http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-orgmode              |
+| Pragmatic Emacs              | http://pragmaticemacs.com/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | pragmatic-emacs              |
+| Sacha Chua                   | http://sachachua.com/blog/category/emacs-news/feed | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | sacha-chua                   |
+| Emacs-El                     | https://emacs-el.com/rss.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | emacs-el                     |
+| Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Python   | kitchin-python               |
+| Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | informatimago                |
+#+TBLFM: $3='(format "~/Yandex.Disk.localized/Emacs/feeds.org")
 
-** TODO [[https://github.com/Kungsgeten/org-brain][GitHub - Kungsgeten/org-brain: Org-mode wiki + concept-mapping]]
-** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
-** [[https://ekaschalk.github.io/#posts][Eric Kaschalk on Emacs]]
-** Configs
-- [[https://github.com/howardabrams/dot-files][GitHub - howardabrams/dot-files: My Emacs initialization code and standard scripts I use for client and servers alike.]]
-- [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
-- [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
-- [[https://github.com/hlissner/.emacs.d/][GitHub - hlissner/.emacs.d: Emacs for the stubborn martian vimmer]]
-- [[https://github.com/marktran/emacs.d][GitHub - marktran/emacs.d: Emacs configuration files]]
-- [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
-- [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
-- [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
-** TODO [[https://www.reddit.com/r/emacs/comments/6a3oxv/ledgerledgermode_tips_and_tricks/][ledger/ledger-mode tips and tricks]]
-** TODO [[http://blog.garage-coding.com/2015/12/12/offline-reading-setup.html][Offline reading setup]]
-** TODO [[http://home.fnal.gov/~neilsen/notebook/orgExamples/org-examples.html#sec-23][Emacs org-mode examples and cookbook]]
-** TODO [[https://github.com/caffo/org-minimal-html-theme][GitHub - caffo/org-minimal-html-theme: Simple and beautiful orgmode HTML export theme]]
-** TODO [[http://plantuml.sourceforge.net/emacs.html][Emacs UML]]
-** TODO [[https://github.com/vermiculus/sx.el][GitHub - vermiculus/sx.el: Stack Exchange for Emacs]]
-** TODO [[http://www.informatimago.com/linux/emacs-on-user-mode-linux.html][Emacs standing alone on Linux Kernel]]
-** TODO https://eschulte.github.io/org-scraps/
-** TODO [[http://blog.binchen.org/posts/hello-ivy-mode-bye-helm.html][Hello Ivy-mode, bye Helm | Chen's blog]]
-** TODO [[https://github.com/Andersbakken/emacs-backup-file][GitHub - Andersbakken/emacs-backup-file: Automatically back up all changes made from emacs to a git repo in ~/.backups]]
-** TODO [[http://joostkremers.github.io/pandoc-mode/][Pandoc-mode by joostkremers]]
-** TODO http://ericjmritz.name/2014/04/26/screenwrite-mode-for-gnu-emacs/
-** TODO http://ericjmritz.name/2014/12/23/using-quickrun-in-emacs/
-** TODO [[https://github.com/jwiegley/emacs-async][Emacs Async]]
-** TODO [[http://cedet.sourceforge.net/][CEDET]]
-- [ ] [[http://alexott.net/ru/writings/emacs-devenv/EmacsCedet.html#fn.1][Использование Emacs вместе с CEDET]]
-- [ ] [[https://writequit.org/denver-emacs/presentations/2017-02-21-semantic-mode.html][Semantic Mode]]
-** TODO Настроить RSync между облаками
-** TODO Code folding
-http://www.emacswiki.org/emacs/FoldingMode
-https://github.com/emacsmirror/fold-dwim/blob/master/fold-dwim.el
-https://github.com/mlf176f2/fold-dwim-org/blob/master/fold-dwim-org.el
-http://www.emacswiki.org/emacs/download/hideshowvis.el
-http://lists.gnu.org/archive/html/gnu-emacs-sources/2004-11/msg00047.html
-http://www.emacswiki.org/emacs/fold-dwim-org.el
-** TODO Code completion
-http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion-for-r-in-emacs-ess-similar-to-what-is-avai/7890516#7890516
-** TODO Настроить [[https://medium.com/@kirang89/emacs-as-email-client-with-offlineimap-and-mu4e-on-os-x-3ba55adc78b6#.v39cr8jxb][почтовый клиент]] [0/5]
-- [ ] http://www.kirang.in/2014/11/13/emacs-as-email-client-with-offlineimap-and-mu4e-on-osx/
-- [ ] [[https://vxlabs.com/2017/02/07/mu4e-0-9-18-e-mailing-with-emacs-now-even-better/][mu4e 0.9.18: E-Mailing with Emacs now even better. – vxlabs]]
-- [ ] [[http://emacs.stackexchange.com/questions/14687/automating-inbox-zero-with-the-org-agenda][org mode - Automating inbox zero with the org agenda? - Emacs Stack Exchange]]
-- [ ] [[https://github.com/pierre-lecocq/emacs4developers/blob/master/chapters/05-special-features.org#emails-in-emacs][Emails in emacs]]
-- [ ] [[http://pragmaticemacs.com/emacs/an-unobtrusive-email-monitor-for-mu4e-on-the-mac/][An unobtrusive email monitor for mu4e on the Mac | Pragmatic Emacs]]
-- [ ] [[https://www.reddit.com/r/emacs/comments/6dg7t3/mu4eisyncmbsync_dont_ask_for_password_unlocking/][mu4e+isync/mbsync: don't ask for password unlocking at each run? : emacs]]
-** TODO Rename eshell on process start
-- (get-buffer-process (get-buffer "*dev2f-shell*"))
-** TODO Encode region
-** TODO [[https://lists.gnu.org/archive/html/emacs-orgmode/2015-05/msg00556.html][Emacs with Siri]]
-** TODO [[http://kitchingroup.cheme.cmu.edu/blog/2016/05/29/Expanding-orgmode-py-to-get-better-org-python-integration/][Org-mode.py]]
-** TODO Dired-buffers switching (C-x C-d C-d C-d ...)
-** TODO Навигация org-mode через ido
+#+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
+(let ((header (mapcar 'substring-no-properties
+                      (org-table-get-remote-range "org-feed-alist" "@1$<..@1$>")))
+      (body (mapcar 'substring-no-properties
+                    (org-table-get-remote-range "org-feed-alist" "@I$<..@II$>"))))
+      (pp body))
+#+END_SRC
 * Config
 :PROPERTIES:
 :header-args: :results silent :mkdirp yes
@@ -110,6 +66,33 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 (set-selection-coding-system 'utf-8)
 (setq locale-coding-system   'utf-8)
 (setq-default buffer-file-coding-system 'utf-8)
+
+(defun sanityinc/utf8-locale-p (v)
+  "Return whether locale string V relates to a UTF-8 locale."
+  (and v (string-match "UTF-8" v)))
+
+(defun locale-is-utf8-p ()
+  "Return t iff the \"locale\" command or environment variables prefer UTF-8."
+  (or (sanityinc/utf8-locale-p (and (executable-find "locale") (shell-command-to-string "locale")))
+      (sanityinc/utf8-locale-p (getenv "LC_ALL"))
+      (sanityinc/utf8-locale-p (getenv "LC_CTYPE"))
+      (sanityinc/utf8-locale-p (getenv "LANG"))))
+
+(when (or window-system (locale-is-utf8-p))
+  (setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
+  (set-language-environment 'utf-8)
+  (setq locale-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (unless (eq system-type 'windows-nt)
+    (set-selection-coding-system 'utf-8))
+  (prefer-coding-system 'utf-8))
+
+(use-package ucs-utils)
+(use-package unicode-fonts
+  :config (progn
+            (unicode-fonts-setup)))
+(use-package font-utils)
 #+end_src
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+begin_src emacs-lisp
@@ -192,8 +175,8 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
 #+END_SRC
 **** omit
 #+BEGIN_SRC emacs-lisp
-(setq dired-omit-files "^\\.[^.]\\|\\.pdf$\\|\\.tex$")
-(setq-default dired-omit-files-p t) ; this is buffer-local variable
+;; (setq dired-omit-files "^\\.[^.]\\|\\.pdf$\\|\\.tex$")
+;; (setq-default dired-omit-files-p t) ; this is buffer-local variable
 #+END_SRC
 **** dired-subtree
 #+BEGIN_SRC emacs-lisp
@@ -462,6 +445,11 @@ http://stackoverflow.com/questions/6865344/is-it-possible-to-get-code-completion
   :ensure t)
 #+end_src
 ** Org
+:PROPERTIES:
+:CUSTOM_ID: econf.org-mode
+:END:
+
+
 *** Export
 #+BEGIN_SRC emacs-lisp
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
@@ -861,6 +849,13 @@ STDERR with `org-babel-eval-error-notify'."
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 #+end_src
 *** UI
+**** COMMENT Table in header
+#+BEGIN_SRC emacs-lisp
+(add-hook 'org-mode-hook
+          '(lambda ()
+             (setq-local header-line-format (list '(:eval (substring-no-properties (org-table-get-field)))))
+           ))
+#+END_SRC
 **** Hide markers
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
@@ -1097,7 +1092,193 @@ STDERR with `org-babel-eval-error-notify'."
 (add-to-list 'org-modules 'org-velocity)
 #+end_src
 ** Editor
-<<<<<<< HEAD
+*** elmacro
+#+BEGIN_SRC emacs-lisp
+(use-package elmacro
+  :config (progn
+            (elmacro-mode t))
+  :ensure t)
+#+END_SRC
+*** which-key
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :ensure t
+  :config (progn
+            (which-key-mode t)
+            (which-key-setup-side-window-bottom)))
+#+END_SRC
+*** whole-line-or-region
+#+BEGIN_SRC emacs-lisp
+(use-package whole-line-or-region
+  :config (progn
+	    (whole-line-or-region-mode t)
+	    (diminish 'whole-line-or-region-mode)
+	    (make-variable-buffer-local 'whole-line-or-region-mode))
+  :ensure t)
+#+END_SRC
+*** COMMENT shift-lines
+#+BEGIN_SRC emacs-lisp
+(use-package move-dup
+  :ensure t)
+(global-set-key [M-up] 'md/move-lines-up)
+(global-set-key [M-down] 'md/move-lines-down)
+(global-set-key [M-S-up] 'md/move-lines-up)
+(global-set-key [M-S-down] 'md/move-lines-down)
+
+(global-set-key (kbd "C-c p") 'md/duplicate-down)
+(global-set-key (kbd "C-c P") 'md/duplicate-up)
+#+END_SRC
+*** COMMENT fill column indicator
+#+BEGIN_SRC emacs-lisp
+(when (eval-when-compile (> emacs-major-version 23))
+  (use-package fill-column-indicator
+    :ensure t)
+  (defun sanityinc/prog-mode-fci-settings ()
+    (turn-on-fci-mode)
+    (when show-trailing-whitespace
+      (set (make-local-variable 'whitespace-style) '(face trailing))
+      (whitespace-mode 1)))
+
+  ;;(add-hook 'prog-mode-hook 'sanityinc/prog-mode-fci-settings)
+
+  (defun sanityinc/fci-enabled-p ()
+    (and (boundp 'fci-mode) fci-mode))
+
+  (defvar sanityinc/fci-mode-suppressed nil)
+  (defadvice popup-create (before suppress-fci-mode activate)
+    "Suspend fci-mode while popups are visible"
+    (let ((fci-enabled (sanityinc/fci-enabled-p)))
+      (when fci-enabled
+        (set (make-local-variable 'sanityinc/fci-mode-suppressed) fci-enabled)
+        (turn-off-fci-mode))))
+  (defadvice popup-delete (after restore-fci-mode activate)
+    "Restore fci-mode when all popups have closed"
+    (when (and sanityinc/fci-mode-suppressed
+               (null popup-instances))
+      (setq sanityinc/fci-mode-suppressed nil)
+      (turn-on-fci-mode)))
+
+  ;; Regenerate fci-mode line images after switching themes
+  (defadvice enable-theme (after recompute-fci-face activate)
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (sanityinc/fci-enabled-p)
+          (turn-on-fci-mode))))))
+#+END_SRC
+*** page-break-lines
+#+BEGIN_SRC emacs-lisp
+(use-package page-break-lines
+  :init (progn
+          (global-page-break-lines-mode)
+          (diminish 'page-break-lines-mode))
+  :ensure t)
+#+END_SRC
+*** show-paren-mode
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode 1)
+#+END_SRC
+*** kill-back
+#+BEGIN_SRC emacs-lisp
+(put 'narrow-to-region 'disabled nil)
+(put 'narrow-to-page 'disabled nil)
+(put 'narrow-to-defun 'disabled nil)
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
+
+(defun kill-back-to-indentation ()
+  "Kill from point back to the first non-whitespace character on the line."
+  (interactive)
+  (let ((prev-pos (point)))
+    (back-to-indentation)
+    (kill-region (point) prev-pos)))
+
+(global-set-key (kbd "C-M-<backspace>") 'kill-back-to-indentation)
+#+END_SRC
+*** kill-region
+#+BEGIN_SRC emacs-lisp
+(defadvice kill-region (before slick-cut activate compile)
+  "When called interactively with no active region, kill a single line instead."
+  (interactive
+    (if mark-active (list (region-beginning) (region-end))
+      (list (line-beginning-position)
+        (line-beginning-position 2)))))
+#+END_SRC
+*** highlight-symbol
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-symbol
+  :config (progn
+	    (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
+	      (add-hook hook 'highlight-symbol-mode)
+	      (add-hook hook 'highlight-symbol-nav-mode))
+	    (eval-after-load 'highlight-symbol
+	      '(diminish 'highlight-symbol-mode))))
+#+END_SRC
+*** prettify-symbols
+#+BEGIN_SRC emacs-lisp
+(when (fboundp 'global-prettify-symbols-mode)
+  (global-prettify-symbols-mode))
+#+END_SRC
+*** newline-at-end-of-line
+#+BEGIN_SRC emacs-lisp
+(defun sanityinc/newline-at-end-of-line ()
+  "Move to end of line, enter a newline, and reindent."
+  (interactive)
+  (move-end-of-line 1)
+  (newline-and-indent))
+
+(global-set-key (kbd "S-<return>") 'sanityinc/newline-at-end-of-line)
+#+END_SRC
+*** no-trailing-whitespace
+#+BEGIN_SRC emacs-lisp
+(defun sanityinc/no-trailing-whitespace ()
+  "Turn off display of trailing whitespace in this buffer."
+  (setq show-trailing-whitespace nil))
+
+;; But don't show trailing whitespace in SQLi, inf-ruby etc.
+(dolist (hook '(special-mode-hook
+                Info-mode-hook
+                eww-mode-hook
+                term-mode-hook
+                comint-mode-hook
+                compilation-mode-hook
+                twittering-mode-hook
+                minibuffer-setup-hook
+                python-mode-hook
+                eshell-mode-hook))
+  (add-hook hook #'sanityinc/no-trailing-whitespace))
+#+END_SRC
+*** whitespace-cleanup
+#+BEGIN_SRC emacs-lisp
+(use-package whitespace-cleanup-mode
+  :config (global-whitespace-cleanup-mode t)
+  :bind (("RET" . newline-and-indent))
+  :ensure t)
+#+END_SRC
+*** transitient-mark
+#+BEGIN_SRC emacs-lisp
+(transient-mark-mode)
+#+END_SRC
+*** auto-revert
+#+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode)
+(setq global-auto-revert-non-file-buffers t
+      auto-revert-verbose nil)
+#+END_SRC
+*** electric-pair
+#+BEGIN_SRC emacs-lisp
+(when (fboundp 'electric-pair-mode)
+  (electric-pair-mode))
+#+END_SRC
+*** whole-line-or-region
+#+BEGIN_SRC emacs-lisp
+(use-package whole-line-or-region
+  :ensure t)
+#+END_SRC
+*** unfill
+#+BEGIN_SRC emacs-lisp
+(use-package unfill
+  :ensure t)
+#+END_SRC
 *** fill-or-unfill paragraph
 #+BEGIN_SRC emacs-lisp
 (defun endless/fill-or-unfill ()
@@ -1247,6 +1428,15 @@ STDERR with `org-babel-eval-error-notify'."
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** undo-tree
+#+BEGIN_SRC emacs-lisp
+(use-package undo-tree
+  :config (progn
+            (global-undo-tree-mode)
+            (setq undo-tree-visualizer-timestamps t)
+            (setq undo-tree-visualizer-diff t))
+  :ensure t)
+#+END_SRC
 *** [[http://endlessparentheses.com/improving-emacs-file-name-completion.html][Improving Emacs file-name completion · Endless Parentheses]]
 #+BEGIN_SRC emacs-lisp
 (setq read-file-name-completion-ignore-case t)
@@ -1624,6 +1814,48 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 ** Programming
+*** web
+**** emmet-mode
+#+BEGIN_SRC emacs-lisp
+(use-package emmet-mode
+  :mode ("\\.html\\'" "\\.htm\\'")
+  :config (progn
+            (add-hook 'web-mode-hook 'emmet-mode))
+  :ensure t)
+#+END_SRC
+**** js
+#+BEGIN_SRC emacs-lisp
+(use-package js2-mode
+  :mode ("\\.js\\'" . js2-mode)
+  :commands js2-mode
+  :ensure t)
+
+(use-package ac-js2
+  :commands ac-js2
+  :ensure t)
+
+(use-package js-comint
+  :commands js-comint
+  :ensure t)
+#+END_SRC
+**** json
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode
+  :commands (json-mode json-reformat-region)
+  :ensure t)
+#+END_SRC
+**** web-mode
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode
+  :mode ("\\.html\\'" "\\.ejs\\'" "\\.htm\\'" "\\.jsx\\'")
+  :config (progn
+            (setq web-mode-markup-indent-offset 4
+                  web-mode-css-indent-offset 4
+                  web-mode-code-indent-offset 4)
+            )
+  :ensure web-beautify
+  :ensure t)
+#+END_SRC
 *** c
 #+begin_src emacs-lisp
 (use-package irony
@@ -1786,14 +2018,6 @@ BEG and END (region to sort)."
 #+end_src
 ** Unsorted
 #+begin_src emacs-lisp
-;; Some unsorted stuff:
-
-(use-package init-web
-  :load-path "packages/prog")
-
-(use-package init-editing-utils
-  :load-path "lisp")
-
 (use-package indent-tools
   :bind (("C-x >" . indent-tools-hydra/body))
   :ensure t)
@@ -1803,39 +2027,6 @@ BEG and END (region to sort)."
 
 (use-package init-lisp
   :load-path "lisp")
-
-;; n(org-babel-load-file
-;;  (expand-file-name "packages/org/beautify-emphasis.org"
-;;                   user-emacs-directory))
-
-(use-package locales
-  :init (progn
-          (defun sanityinc/utf8-locale-p (v)
-            "Return whether locale string V relates to a UTF-8 locale."
-            (and v (string-match "UTF-8" v)))
-
-          (defun locale-is-utf8-p ()
-            "Return t iff the \"locale\" command or environment variables prefer UTF-8."
-            (or (sanityinc/utf8-locale-p (and (executable-find "locale") (shell-command-to-string "locale")))
-                (sanityinc/utf8-locale-p (getenv "LC_ALL"))
-                (sanityinc/utf8-locale-p (getenv "LC_CTYPE"))
-                (sanityinc/utf8-locale-p (getenv "LANG"))))
-
-          (when (or window-system (locale-is-utf8-p))
-            (setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
-            (set-language-environment 'utf-8)
-            (setq locale-coding-system 'utf-8)
-            (set-default-coding-systems 'utf-8)
-            (set-terminal-coding-system 'utf-8)
-            (unless (eq system-type 'windows-nt)
-              (set-selection-coding-system 'utf-8))
-            (prefer-coding-system 'utf-8))
-
-          (use-package ucs-utils)
-          (use-package unicode-fonts
-            :config (progn
-                      (unicode-fonts-setup)))
-          (use-package font-utils)))
 
 (use-package multiple-cursors
   :bind (("C-<" . mc/mark-previous-like-this)
@@ -1850,7 +2041,6 @@ BEG and END (region to sort)."
   :ensure t)
 
 (use-package pdf-tools
-  :commands pdf-tools-install
   :ensure t)
 
 ;; (use-package nhexl-mode)
@@ -1923,14 +2113,14 @@ BEG and END (region to sort)."
                   (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 #+end_src
-*** Themes
+*** themes
 **** Default
 #+BEGIN_SRC emacs-lisp
-(use-package minimal-theme
- :load-path "themes")
+;; (use-package minimal-theme
+;;  :load-path "themes")
 
-;; (use-package danneskjold-theme
-;;   :ensure t)
+(use-package danneskjold-theme
+  :ensure t)
 #+END_SRC
 **** Minimal                                                                 :ARCHIVE:
 #+BEGIN_SRC emacs-lisp :tangle themes/minimal-theme.el
