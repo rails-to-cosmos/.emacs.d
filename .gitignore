@@ -50,3 +50,4 @@ packages/yandex
 /anaconda-mode
 /ede-projects.el
 /org-clock-save.el
+/init-local.el

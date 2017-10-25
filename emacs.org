@@ -3,34 +3,32 @@
   - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
-* COMMENT Org-Feed
 #+TBLNAME: org-feed-alist
-| name                         | URL   | file  | headline | drawer                       |
-|                              | <5>   | <5>   |          |                              |
-|------------------------------+-------+-------+----------+------------------------------|
-| C'est la Z                   | http://cestlaz.github.io/rss.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | cest-la-z                    |
-| Nullprogram                  | http://nullprogram.com/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | nullprogram                  |
-| Aaron Bieber                 | https://blog.aaronbieber.com/feed.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | aaron-bieber                 |
-| Shiyuan Gu                   | https://shiyuangu.com/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | CS       | shiyuan                      |
-| Emacs Horrors                | http://emacshorrors.com/feed.atom | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | emacs-horrors                |
-| Endless Parentheses          | http://endlessparentheses.com/atom.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | endless-parentheses          |
-| Kitchin Babel                | http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-babel                |
-| Kitchin Elisp                | http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-elisp                |
-| Kitchin Emacs Lisp           | http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-emacs-lisp           |
-| Kitchin Emacs                | http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-emacs                |
-| Kitchin Emacslisp            | http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-emacslisp            |
-| Kitchin Lisp                 | http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-lisp                 |
-| Kitchin Literate Programming | http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-literate-programming |
-| Kitchin Org-mode             | http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-org-mode             |
-| Kitchin Org                  | http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-org                  |
-| Kitchin Orgmode              | http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | kitchin-orgmode              |
-| Pragmatic Emacs              | http://pragmaticemacs.com/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | pragmatic-emacs              |
-| Sacha Chua                   | http://sachachua.com/blog/category/emacs-news/feed | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | sacha-chua                   |
-| Emacs-El                     | https://emacs-el.com/rss.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | emacs-el                     |
-| Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/ | ~/Yandex.Disk.localized/Emacs/feeds.org | Python   | kitchin-python               |
-| Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml | ~/Yandex.Disk.localized/Emacs/feeds.org | Emacs    | informatimago                |
-#+TBLFM: $3='(format "~/Yandex.Disk.localized/Emacs/feeds.org")
+| name                         | URL                                                                        | headline | drawer                       |
+|------------------------------+----------------------------------------------------------------------------+----------+------------------------------|
+| C'est la Z                   | http://cestlaz.github.io/rss.xml                                           | CS       | cest-la-z                    |
+| Nullprogram                  | http://nullprogram.com/feed/                                               | CS       | nullprogram                  |
+| Aaron Bieber                 | https://blog.aaronbieber.com/feed.xml                                      | CS       | aaron-bieber                 |
+| Shiyuan Gu                   | https://shiyuangu.com/feed/                                                | CS       | shiyuan                      |
+| Emacs Horrors                | http://emacshorrors.com/feed.atom                                          | Emacs    | emacs-horrors                |
+| Endless Parentheses          | http://endlessparentheses.com/atom.xml                                     | Emacs    | endless-parentheses          |
+| Kitchin Babel                | http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/                | Emacs    | kitchin-babel                |
+| Kitchin Elisp                | http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/                | Emacs    | kitchin-elisp                |
+| Kitchin Emacs Lisp           | http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/           | Emacs    | kitchin-emacs-lisp           |
+| Kitchin Emacs                | http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/                | Emacs    | kitchin-emacs                |
+| Kitchin Emacslisp            | http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/            | Emacs    | kitchin-emacslisp            |
+| Kitchin Lisp                 | http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/                 | Emacs    | kitchin-lisp                 |
+| Kitchin Literate Programming | http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/ | Emacs    | kitchin-literate-programming |
+| Kitchin Org-mode             | http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/             | Emacs    | kitchin-org-mode             |
+| Kitchin Org                  | http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/                  | Emacs    | kitchin-org                  |
+| Kitchin Orgmode              | http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/              | Emacs    | kitchin-orgmode              |
+| Pragmatic Emacs              | http://pragmaticemacs.com/feed/                                            | Emacs    | pragmatic-emacs              |
+| Sacha Chua                   | http://sachachua.com/blog/category/emacs-news/feed                         | Emacs    | sacha-chua                   |
+| Emacs-El                     | https://emacs-el.com/rss.xml                                               | Emacs    | emacs-el                     |
+| Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml                                 | Emacs    | informatimago                |
+| Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | Python   | kitchin-python               |
 
+* COMMENT Org-Feed
 #+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
 (let ((header (mapcar 'substring-no-properties
                       (org-table-get-remote-range "org-feed-alist" "@1$<..@1$>")))
@@ -88,11 +86,16 @@
     (set-selection-coding-system 'utf-8))
   (prefer-coding-system 'utf-8))
 
-(use-package ucs-utils)
+(use-package ucs-utils
+  :ensure t)
+
 (use-package unicode-fonts
   :config (progn
-            (unicode-fonts-setup)))
-(use-package font-utils)
+            (unicode-fonts-setup))
+  :ensure t)
+
+(use-package font-utils
+  :ensure t)
 #+end_src
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+begin_src emacs-lisp
@@ -372,15 +375,12 @@
 #+end_src
 *** prevent-active-processes-exist
 #+begin_src emacs-lisp
-(use-package prevent-active-processes-exist
-  :no-require t
-  :init (progn
-          (defun prevent-active-processes-exist ()
-            "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-            (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-              (cl-letf (((symbol-function #'process-list) (lambda ())))
-                ad-do-it)))
-          (add-hook 'after-init-hook 'prevent-active-processes-exist)))
+(defun prevent-active-processes-exist ()
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+    (cl-letf (((symbol-function #'process-list) (lambda ())))
+      ad-do-it)))
+(add-hook 'after-init-hook 'prevent-active-processes-exist)
 #+end_src
 *** rename-this-file-and-buffer
 #+begin_src emacs-lisp
@@ -570,9 +570,7 @@ STDERR with `org-babel-eval-error-notify'."
 **** ob-async
 #+begin_src emacs-lisp
 (use-package ob-async
-  :load-path "packages/ob-async"
-  :config (progn
-            (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-async-org-babel-execute-src-block)))
+  :ensure t)
 #+end_src
 **** COMMENT [[https://shiyuangu.com/2014/08/24/source-code-digging-emacs-org-babel/][Source Code Digging: Emacs-Org-Babel | A Learner's Journey —- Shiyuan's Blog]]
 #+begin_src emacs-lisp
@@ -1092,6 +1090,63 @@ STDERR with `org-babel-eval-error-notify'."
 (add-to-list 'org-modules 'org-velocity)
 #+end_src
 ** Editor
+*** paredit
+#+BEGIN_SRC emacs-lisp
+(use-package paredit
+  :config (progn
+            (defun maybe-map-paredit-newline ()
+              (unless (or (memq major-mode '(inferior-emacs-lisp-mode cider-repl-mode))
+                          (minibufferp))
+                (local-set-key (kbd "RET") 'paredit-newline)))
+
+            (add-hook 'paredit-mode-hook 'maybe-map-paredit-newline)
+
+            (after-load 'paredit
+              (diminish 'paredit-mode " Par")
+              (dolist (binding (list (kbd "C-<left>") (kbd "C-<right>")
+                                     (kbd "C-M-<left>") (kbd "C-M-<right>")))
+                (define-key paredit-mode-map binding nil))
+              (define-key paredit-mode-map [remap kill-sentence] nil)
+              (define-key paredit-mode-map [remap backward-kill-sentence] nil)
+
+              (define-key paredit-mode-map (kbd "M-?") nil))
+
+            (add-hook 'minibuffer-setup-hook 'conditionally-enable-paredit-mode)
+
+            (defvar paredit-minibuffer-commands '(eval-expression
+                                                  pp-eval-expression
+                                                  eval-expression-with-eldoc
+                                                  ibuffer-do-eval
+                                                  ibuffer-do-view-and-eval)
+              "Interactive commands for which paredit should be enabled in the minibuffer.")
+
+            (defun conditionally-enable-paredit-mode ()
+              "Enable paredit during lisp-related minibuffer commands."
+              (if (memq this-command paredit-minibuffer-commands)
+                  (enable-paredit-mode)))
+
+            (use-package paredit-everywhere
+              :ensure t)
+
+            (add-hook 'prog-mode-hook 'paredit-everywhere-mode)
+            (add-hook 'css-mode-hook 'paredit-everywhere-mode))
+  :ensure t)
+#+END_SRC
+*** multiple-cursors
+#+BEGIN_SRC emacs-lisp
+(use-package multiple-cursors
+  :bind (("C-<" . mc/mark-previous-like-this)
+         ("C->" . mc/mark-next-like-this)
+         ("C-+" . mc/mark-all-like-this))
+  :config (progn
+            (setq-default mc/list-file (tmp/ "multiple-cursors-data.el")))
+  :ensure t)
+#+END_SRC
+*** regex-tool
+#+BEGIN_SRC emacs-lisp
+(use-package regex-tool
+  :ensure t)
+#+END_SRC
 *** elmacro
 #+BEGIN_SRC emacs-lisp
 (use-package elmacro
@@ -1206,6 +1261,7 @@ STDERR with `org-babel-eval-error-notify'."
 *** highlight-symbol
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-symbol
+  :ensure t
   :config (progn
 	    (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
 	      (add-hook hook 'highlight-symbol-mode)
@@ -1428,6 +1484,11 @@ STDERR with `org-babel-eval-error-notify'."
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** pdf
+#+BEGIN_SRC emacs-lisp
+(use-package pdf-tools
+  :ensure t)
+#+END_SRC
 *** undo-tree
 #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
@@ -1814,6 +1875,236 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 ** Programming
+*** lisp
+#+BEGIN_SRC emacs-lisp
+(use-package elisp-slime-nav
+  :ensure t)
+
+(dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
+  (add-hook hook 'elisp-slime-nav-mode))
+
+(use-package lively
+  :ensure t)
+
+(setq-default initial-scratch-message
+              (concat ";; I've always thought they were lighthouses...\n\n"))
+
+;; Make C-x C-e run 'eval-region if the region is active
+
+(defun sanityinc/eval-last-sexp-or-region (prefix)
+  "Eval region from BEG to END if active, otherwise the last sexp."
+  (interactive "P")
+  (if (and (mark) (use-region-p))
+      (eval-region (min (point) (mark)) (max (point) (mark)))
+    (pp-eval-last-sexp prefix)))
+
+(global-set-key (kbd "M-:") 'pp-eval-expression)
+
+(after-load 'lisp-mode
+  (define-key emacs-lisp-mode-map (kbd "C-x C-e") 'sanityinc/eval-last-sexp-or-region))
+
+(use-package ipretty
+  :ensure t)
+
+(ipretty-mode 1)
+
+(defadvice pp-display-expression (after make-read-only (expression out-buffer-name) activate)
+  "Enable `view-mode' in the output buffer - if any - so it can be closed with `\"q\"."
+  (when (get-buffer out-buffer-name)
+    (with-current-buffer out-buffer-name
+      (view-mode 1))))
+
+
+;; ----------------------------------------------------------------------------
+;; Hippie-expand
+;; ----------------------------------------------------------------------------
+
+(defun my/emacs-lisp-module-name ()
+  "Search the buffer for `provide' declaration."
+  (save-excursion
+    (goto-char (point-min))
+    (when (search-forward-regexp "^(provide '" nil t)
+      (symbol-name (symbol-at-point)))))
+
+;; Credit to Chris Done for this one.
+(defun my/try-complete-lisp-symbol-without-namespace (old)
+  "Hippie expand \"try\" function which expands \"-foo\" to \"modname-foo\" in elisp."
+  (unless old
+    (he-init-string (he-lisp-symbol-beg) (point))
+    (when (string-prefix-p "-" he-search-string)
+      (let ((mod-name (my/emacs-lisp-module-name)))
+        (when mod-name
+          (setq he-expand-list (list (concat mod-name he-search-string)))))))
+  (when he-expand-list
+    (he-substitute-string (car he-expand-list))
+    (setq he-expand-list nil)
+    t))
+
+(defun set-up-hippie-expand-for-elisp ()
+  "Locally set `hippie-expand' completion functions for use with Emacs Lisp."
+  (make-local-variable 'hippie-expand-try-functions-list)
+  (add-to-list 'hippie-expand-try-functions-list 'try-complete-lisp-symbol t)
+  (add-to-list 'hippie-expand-try-functions-list 'try-complete-lisp-symbol-partially t)
+  (add-to-list 'hippie-expand-try-functions-list 'my/try-complete-lisp-symbol-without-namespace t))
+
+
+;; ----------------------------------------------------------------------------
+;; Automatic byte compilation
+;; ----------------------------------------------------------------------------
+
+(use-package auto-compile
+  :ensure t)
+
+(auto-compile-on-save-mode 1)
+(auto-compile-on-load-mode 1)
+
+;; ----------------------------------------------------------------------------
+;; Highlight current sexp
+;; ----------------------------------------------------------------------------
+
+(use-package hl-sexp
+  :ensure t)
+
+
+;; Prevent flickery behaviour due to hl-sexp-mode unhighlighting before each command
+(after-load 'hl-sexp
+  (defadvice hl-sexp-mode (after unflicker (&optional turn-on) activate)
+    (when turn-on
+      (remove-hook 'pre-command-hook #'hl-sexp-unhighlight))))
+
+
+
+;;; Support byte-compilation in a sub-process, as
+;;; required by highlight-cl
+
+(defun sanityinc/byte-compile-file-batch (filename)
+  "Byte-compile FILENAME in batch mode, ie. a clean sub-process."
+  (interactive "fFile to byte-compile in batch mode: ")
+  (let ((emacs (car command-line-args)))
+    (compile
+     (concat
+      emacs " "
+      (mapconcat
+       'shell-quote-argument
+       (list "-Q" "-batch" "-f" "batch-byte-compile" filename)
+       " ")))))
+
+
+;; ----------------------------------------------------------------------------
+;; Enable desired features for all lisp modes
+;; ----------------------------------------------------------------------------
+(use-package rainbow-delimiters
+  :ensure t)
+
+(use-package redshank
+  :ensure t)
+
+(after-load 'redshank
+  (diminish 'redshank-mode))
+
+
+(defun sanityinc/lisp-setup ()
+  "Enable features useful in any Lisp mode."
+  (rainbow-delimiters-mode t)
+  (enable-paredit-mode)
+  (eldoc-mode t)
+  (redshank-mode))
+
+(defun sanityinc/emacs-lisp-setup ()
+  "Enable features useful when working with elisp."
+  (elisp-slime-nav-mode t)
+  (set-up-hippie-expand-for-elisp))
+
+(defconst sanityinc/elispy-modes
+  '(emacs-lisp-mode ielm-mode)
+  "Major modes relating to elisp.")
+
+(defconst sanityinc/lispy-modes
+  (append sanityinc/elispy-modes
+          '(lisp-mode inferior-lisp-mode lisp-interaction-mode))
+  "All lispy major modes.")
+
+(require 'derived)
+
+(dolist (hook (mapcar #'derived-mode-hook-name sanityinc/lispy-modes))
+  (add-hook hook 'sanityinc/lisp-setup))
+
+(dolist (hook (mapcar #'derived-mode-hook-name sanityinc/elispy-modes))
+  (add-hook hook 'sanityinc/emacs-lisp-setup))
+
+(defun sanityinc/maybe-check-parens ()
+  "Run `check-parens' if this is a lispy mode."
+  (when (memq major-mode sanityinc/lispy-modes)
+    (check-parens)))
+
+(add-hook 'after-save-hook #'sanityinc/maybe-check-parens)
+
+(use-package eldoc-eval
+  :ensure t)
+
+(require 'eldoc-eval)
+
+(add-to-list 'auto-mode-alist '("\\.emacs-project\\'" . emacs-lisp-mode))
+(add-to-list 'auto-mode-alist '("archive-contents\\'" . emacs-lisp-mode))
+
+(use-package cl-lib-highlight
+  :ensure t)
+
+(after-load 'lisp-mode
+  (cl-lib-highlight-initialize))
+
+;; ----------------------------------------------------------------------------
+;; Delete .elc files when reverting the .el from VC or magit
+;; ----------------------------------------------------------------------------
+
+;; When .el files are open, we can intercept when they are modified
+;; by VC or magit in order to remove .elc files that are likely to
+;; be out of sync.
+
+;; This is handy while actively working on elisp files, though
+;; obviously it doesn't ensure that unopened files will also have
+;; their .elc counterparts removed - VC hooks would be necessary for
+;; that.
+
+(defvar sanityinc/vc-reverting nil
+  "Whether or not VC or Magit is currently reverting buffers.")
+
+(defadvice revert-buffer (after sanityinc/maybe-remove-elc activate)
+  "If reverting from VC, delete any .elc file that will now be out of sync."
+  (when sanityinc/vc-reverting
+    (when (and (eq 'emacs-lisp-mode major-mode)
+               buffer-file-name
+               (string= "el" (file-name-extension buffer-file-name)))
+      (let ((elc (concat buffer-file-name "c")))
+        (when (file-exists-p elc)
+          (message "Removing out-of-sync elc file %s" (file-name-nondirectory elc))
+          (delete-file elc))))))
+
+(defadvice magit-revert-buffers (around sanityinc/reverting activate)
+  (let ((sanityinc/vc-reverting t))
+    ad-do-it))
+(defadvice vc-revert-buffer-internal (around sanityinc/reverting activate)
+  (let ((sanityinc/vc-reverting t))
+    ad-do-it))
+
+(when (eval-when-compile (> emacs-major-version 24.3))
+  (use-package macrostep
+    :ensure t))
+
+(after-load 'lisp-mode
+  (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))
+
+(when (eval-when-compile (>= emacs-major-version 24))
+  ;; rainbow-mode needs color.el, bundled with Emacs >= 24.
+  (use-package rainbow-mode
+    :ensure t)
+
+  (defun sanityinc/enable-rainbow-mode-if-theme ()
+    (when (string-match "\\(color-theme-\\|-theme\\.el\\)" (buffer-name))
+      (rainbow-mode 1)))
+
+  (add-hook 'emacs-lisp-mode-hook 'sanityinc/enable-rainbow-mode-if-theme))
+#+END_SRC
 *** web
 **** emmet-mode
 #+BEGIN_SRC emacs-lisp
@@ -1876,9 +2167,12 @@ BEG and END (region to sort)."
     'irony-completion-at-point-async))
 #+end_src
 *** python
-#+begin_src emacs-lisp
-(require 'python)
-#+end_src
+**** indent
+#+BEGIN_SRC emacs-lisp
+(use-package indent-tools
+  :bind (("C-x >" . indent-tools-hydra/body))
+  :ensure t)
+#+END_SRC
 **** offset
 #+begin_src emacs-lisp
 (setq python-indent-offset 4
@@ -2016,35 +2310,6 @@ BEG and END (region to sort)."
                 (insert choice))))
   :ensure t)
 #+end_src
-** Unsorted
-#+begin_src emacs-lisp
-(use-package indent-tools
-  :bind (("C-x >" . indent-tools-hydra/body))
-  :ensure t)
-
-(use-package init-paredit
-  :load-path "lisp")
-
-(use-package init-lisp
-  :load-path "lisp")
-
-(use-package multiple-cursors
-  :bind (("C-<" . mc/mark-previous-like-this)
-         ("C->" . mc/mark-next-like-this)
-         ("C-+" . mc/mark-all-like-this))
-  :config (progn
-            (setq-default mc/list-file (tmp/ "multiple-cursors-data.el")))
-  :ensure t)
-
-(use-package regex-tool
-  :commands regex-tool
-  :ensure t)
-
-(use-package pdf-tools
-  :ensure t)
-
-;; (use-package nhexl-mode)
-#+end_src
 ** UI
 *** visible-bell
 #+BEGIN_SRC emacs-lisp
@@ -2160,5 +2425,5 @@ BEG and END (region to sort)."
 #+END_SRC
 ** Local
 #+begin_src emacs-lisp
-  (require 'init-local nil t)
+(require 'init-local nil t)
 #+end_src
