@@ -1090,6 +1090,11 @@ STDERR with `org-babel-eval-error-notify'."
 (add-to-list 'org-modules 'org-velocity)
 #+end_src
 ** Editor
+:PROPERTIES:
+:CUSTOM_ID: econf.editor
+:END:
+
+
 *** paredit
 #+BEGIN_SRC emacs-lisp
 (use-package paredit
@@ -1875,6 +1880,11 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 ** Programming
+
+#+BEGIN_SRC emacs-lisp
+(define-key global-map (kbd "C-x C-m") #'compile)
+#+END_SRC
+
 *** lisp
 #+BEGIN_SRC emacs-lisp
 (use-package elisp-slime-nav
