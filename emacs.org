@@ -1,6 +1,6 @@
 - Control Panel :: hello there :)
   - [[elisp:(elfeed)][Elfeed]]
-  - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
+  - [[elisp:(benchmark-init/show-durations-tabjulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
 #+TBLNAME: org-feed-alist
@@ -408,21 +408,32 @@
 #+begin_src emacs-lisp
 (use-package key-combo
   :config (progn
-            (global-key-combo-mode t))
+            (global-key-combo-mode t)
+
+            (defvar my-prorg-hooks
+              '(prog-mode-hook
+                org-mode-hook))
+
+            (defvar my-key-combos-for-prorg '(("e" . ("e" "ee" eshell))
+                                              ("j" . ("j" "jj" bookmark-jump))
+                                              ("SPC" . (" " "  " smex))
+                                              ("k" . ("k" "kk" kill-this-buffer))))
+
+            (key-combo-define-hook my-prorg-hooks 'my-key-combo-prorg-hook my-key-combos-for-prorg)
+
+            (key-combo-define prog-mode-map "=" '(" = " " == " " === " ))
+
+            (key-combo-define prog-mode-map (kbd "C-a")
+                              '(;; back-to-indentation
+                                move-beginning-of-line
+                                beginning-of-buffer
+                                key-combo-return))
+
+            (key-combo-define prog-mode-map (kbd "C-e")
+                              '(move-end-of-line
+                                end-of-buffer
+                                key-combo-return)))
   :ensure t)
-
-(key-combo-define
- prog-mode-map (kbd "C-a")
- '(back-to-indentation
-   move-beginning-of-line
-   beginning-of-buffer
-   key-combo-return))
-
-(key-combo-define
- prog-mode-map (kbd "C-e")
- '(move-end-of-line
-   end-of-buffer
-   key-combo-return))
 #+end_src
 *** key-freq
 #+begin_src emacs-lisp :results silent
@@ -795,6 +806,10 @@
 :END:
 
 
+*** duplicate-down
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c p") 'md/duplicate-down)
+#+END_SRC
 *** paredit
 #+BEGIN_SRC emacs-lisp
 (use-package paredit
