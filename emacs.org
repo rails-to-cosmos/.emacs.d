@@ -119,7 +119,7 @@
 
   (defun shared/ (filename)
     "Get path to FILENAME in shared directory."
-    (let ((dir "~/Yandex.Disk.localized/Emacs/"))
+    (let ((dir "~/sync/emacs/"))
       (make-directory dir t)
       (concat dir filename)))
 
