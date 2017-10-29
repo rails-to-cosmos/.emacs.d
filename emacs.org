@@ -28,7 +28,7 @@
 | Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml                                 | Emacs    | informatimago                |
 | Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | Python   | kitchin-python               |
 
-* COMMENT Org-Feed
+* Org-Feed
 #+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
   ;; (let ((header (mapcar 'substring-no-properties
   ;;                       (org-table-get-remote-range "org-feed-alist" "@1$<..@1$>")))
@@ -486,52 +486,6 @@
       org-confirm-elisp-link-function nil)
 (add-hook 'org-mode-hook 'org-hide-block-all)
 #+END_SRC
-**** COMMENT org-mode python tracebacks
-#+BEGIN_SRC emacs-lisp
-(defun org-babel-eval-error-notify (exit-code stderr)
-  "Open a buffer to display STDERR and a message with the value of EXIT-CODE."
-  (let ((buf (get-buffer-create org-babel-error-buffer-name)))
-    (with-current-buffer buf
-      (goto-char (point-max))
-      (save-excursion
-        (insert stderr)
-        (progn
-          (goto-char (point-min))
-          (replace-string "Traceback" "* Traceback")
-          (while (re-search-forward "\s*File \"\\(.*/\\)\\(.*\\.py\\)\", line \\(.*\\), in \\([a-zA-Z_<>]+\\)" nil t)
-            (replace-match "** \\4 in [[\\1\\2::\\3][\\2]]" nil nil )
-            (next-line)
-            (beginning-of-line))
-          (goto-char (point-min))
-          (keep-lines "^\*.*")
-          (goto-char (point-min))
-          (insert "#+STARTUP: showall\n\n"))
-        (org-mode)))
-    (display-buffer buf))
-  (message "Babel evaluation exited with code %S" exit-code))
-
-(defvar org-babel-eval-verbose t
-  "A non-nil value makes `org-babel-eval' display")
-
-(defun org-babel-eval (cmd body)
-  "Run CMD on BODY.
-If CMD succeeds then return its results, otherwise display
-STDERR with `org-babel-eval-error-notify'."
-  (let ((err-buff (get-buffer-create " *Org-Babel Error*")) exit-code)
-    (with-current-buffer err-buff (erase-buffer))
-    (with-temp-buffer
-      (insert body)
-      (setq exit-code
-            (org-babel--shell-command-on-region
-             (point-min) (point-max) cmd err-buff))
-      (if (or (not (numberp exit-code)) (> exit-code 0)
-              (and org-babel-eval-verbose (> (buffer-size err-buff) 0))) ; new condition
-          (progn
-            (with-current-buffer err-buff
-              (org-babel-eval-error-notify exit-code (buffer-string)))
-            nil)
-        (buffer-string)))))
-#+END_SRC
 **** exec from results
 #+begin_src emacs-lisp
 (defun ob-execute-block-from-results ()
@@ -556,12 +510,6 @@ STDERR with `org-babel-eval-error-notify'."
 #+end_src
 **** SOMEDAY [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
 **** SOMEDAY [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
-**** COMMENT Get out of editing src blocks on save
-#+begin_src emacs-lisp :results silent
-(eval-after-load 'org-src
-  '(define-key org-src-mode-map
-     (kbd "C-x C-s") #'org-edit-src-exit))
-#+end_src
 **** ob-http
 #+begin_src emacs-lisp :results silent
 (use-package ob-http
@@ -571,210 +519,6 @@ STDERR with `org-babel-eval-error-notify'."
 #+begin_src emacs-lisp
 (use-package ob-async
   :ensure t)
-#+end_src
-**** COMMENT [[https://shiyuangu.com/2014/08/24/source-code-digging-emacs-org-babel/][Source Code Digging: Emacs-Org-Babel | A Learner's Journey —- Shiyuan's Blog]]
-#+begin_src emacs-lisp
-(defun org-babel-execute:python (body params)
-  "Execute a block of Python code with Babel.
-    This function is called by `org-babel-execute-src-block'."
-  (let* ((session (org-babel-python-initiate-session
-                   (cdr (assoc :session params))))
-         (result-params (cdr (assoc :result-params params)))
-         (result-type (cdr (assoc :result-type params)))
-         (return-val (when (and (eq result-type 'value) (not session))
-                       (cdr (assoc :return params))))
-         (preamble (cdr (assoc :preamble params)))
-         (org-babel-python-command
-          (or (cdr (assoc :python params)) org-babel-python-command))
-         (full-body
-          (org-babel-expand-body:generic
-           (concat body (if return-val (format "\nreturn %s" return-val) ""))
-           params (org-babel-variable-assignments:python params)))
-         (result (org-babel-python-evaluate
-                  session full-body result-type result-params preamble)))
-    (org-babel-reassemble-table
-     result
-     (org-babel-pick-name (cdr (assoc :colname-names params))
-                          (cdr (assoc :colnames params)))
-     (org-babel-pick-name (cdr (assoc :rowname-names params))
-                          (cdr (assoc :rownames params))))))
-
-(defun org-babel-python-evaluate
-    (session body &optional result-type result-params preamble)
-  "Evaluate BODY as Python code."
-  (if session
-      (org-babel-python-evaluate-session
-       session body result-type result-params)
-    (org-babel-python-evaluate-external-process
-     body result-type result-params preamble)))
-
-(defun org-babel-python-evaluate-session
-    (session body &optional result-type result-params)
-  "Pass BODY to the Python process in SESSION.
-  If RESULT-TYPE equals 'output then return standard output as a
-  string.  If RESULT-TYPE equals 'value then return the value of the
-  last statement in BODY, as elisp."
-  (let* ((send-wait (lambda () (comint-send-input nil t) (sleep-for 0 5)))
-         (dump-last-value
-          (lambda
-            (tmp-file pp)
-            (mapc
-             (lambda (statement) (insert statement) (funcall send-wait))
-             (if pp
-                 (list
-                  "import pprint"
-                  (format "open('%s', 'w').write(pprint.pformat(_))"
-                          (org-babel-process-file-name tmp-file 'noquote)))
-               (list (format "open('%s', 'w').write(str(_))"
-                             (org-babel-process-file-name tmp-file
-                                                          'noquote)))))))
-         (input-body (lambda (body)
-                       (mapc (lambda (line) (insert line) (funcall send-wait))
-                             (split-string body "[\r\n]"))
-                       (funcall send-wait)))
-         (results
-          (case result-type
-            (output
-             (mapconcat
-              #'org-babel-trim
-              (butlast
-               (org-babel-comint-with-output
-                   (session org-babel-python-eoe-indicator t body)
-                 (funcall input-body body)
-                 (funcall send-wait) (funcall send-wait)
-                 (insert org-babel-python-eoe-indicator)
-                 (funcall send-wait))
-               2) "\n"))
-            (value
-             (let ((tmp-file (org-babel-temp-file "python-")))
-               (org-babel-comint-with-output
-                   (session org-babel-python-eoe-indicator nil body)
-                 (let ((comint-process-echoes nil))
-                   (funcall input-body body)
-                   (funcall dump-last-value tmp-file
-                            (member "pp" result-params))
-                   (funcall send-wait) (funcall send-wait)
-                   (insert org-babel-python-eoe-indicator)
-                   (funcall send-wait)))
-               (org-babel-eval-read-file tmp-file))))))
-    (unless (string= (substring org-babel-python-eoe-indicator 1 -1) results)
-      (org-babel-result-cond result-params
-        results
-        (org-babel-python-table-or-string results)))))
-
-(defun org-babel-python-evaluate-external-process
-    (body &optional result-type result-params preamble)
-  "Evaluate BODY in external python process.
-  If RESULT-TYPE equals 'output then return standard output as a
-  string.  If RESULT-TYPE equals 'value then return the value of the
-  last statement in BODY, as elisp."
-  (let ((raw
-         (case result-type
-           (output (org-babel-eval org-babel-python-command
-                                   (concat (if preamble (concat preamble "\n"))
-                                           body)))
-           (value (let ((tmp-file (org-babel-temp-file "python-")))
-                    (org-babel-eval
-                     org-babel-python-command
-                     (concat
-                      (if preamble (concat preamble "\n") "")
-                      (format
-                       (if (member "pp" result-params)
-                           org-babel-python-pp-wrapper-method
-                         org-babel-python-wrapper-method)
-                       (mapconcat
-                        (lambda (line) (format "\t%s" line))
-                        (split-string
-                         (org-remove-indentation
-                          (org-babel-trim body))
-                         "[\r\n]") "\n")
-                       (org-babel-process-file-name tmp-file 'noquote))))
-                    (org-babel-eval-read-file tmp-file))))))
-    (org-babel-result-cond result-params
-      raw
-      (org-babel-python-table-or-string (org-babel-trim raw)))))
-
-(defun org-babel-eval (cmd body)
-  "Run CMD on BODY.
-  If CMD succeeds then return its results, otherwise display
-  STDERR with `org-babel-eval-error-notify'."
-  (let ((err-buff (get-buffer-create " *Org-Babel Error*")) exit-code)
-    (with-current-buffer err-buff (erase-buffer))
-    (with-temp-buffer
-      (insert body)
-      (setq exit-code
-            (org-babel--shell-command-on-region
-             (point-min) (point-max) cmd err-buff))
-      (if (or (not (numberp exit-code)) (> exit-code 0))
-          (progn
-            (with-current-buffer err-buff
-              (org-babel-eval-error-notify exit-code (buffer-string)))
-            nil)
-        (buffer-string)))))
-
-(defun org-babel--shell-command-on-region (start end command error-buffer)
-  "Execute COMMAND in an inferior shell with region as input.
-
-  Stripped down version of shell-command-on-region for internal use
-  in Babel only.  This lets us work around errors in the original
-  function in various versions of Emacs.
-  "
-  (let ((input-file (org-babel-temp-file "ob-input-"))
-        (error-file (if error-buffer (org-babel-temp-file "ob-error-") nil))
-        ;; Unfortunately, `executable-find' does not support file name
-        ;; handlers.  Therefore, we could use it in the local case
-        ;; only.
-        (shell-file-name
-         (cond ((and (not (file-remote-p default-directory))
-                     (executable-find shell-file-name))
-                shell-file-name)
-               ((file-executable-p
-                 (concat (file-remote-p default-directory) shell-file-name))
-                shell-file-name)
-               ("/bin/sh")))
-        exit-status)
-    ;; There is an error in `process-file' when `error-file' exists.
-    ;; This is fixed in Emacs trunk as of 2012-12-21; let's use this
-    ;; workaround for now.
-    (unless (file-remote-p default-directory)
-      (delete-file error-file))
-    ;; we always call this with 'replace, remove conditional
-    ;; Replace specified region with output from command.
-    (let ((swap (< start end)))
-      (goto-char start)
-      (push-mark (point) 'nomsg)
-      (write-region start end input-file)
-      (delete-region start end)
-      (setq exit-status
-            (process-file shell-file-name input-file
-                          (if error-file
-                              (list t error-file)
-                            t)
-                          nil shell-command-switch command))
-      (when swap (exchange-point-and-mark)))
-
-    (when (and input-file (file-exists-p input-file)
-               ;; bind org-babel--debug-input around the call to keep
-               ;; the temporary input files available for inspection
-               (not (when (boundp 'org-babel--debug-input)
-                      org-babel--debug-input)))
-      (delete-file input-file))
-
-    (when (and error-file (file-exists-p error-file))
-      (if (< 0 (nth 7 (file-attributes error-file)))
-          (with-current-buffer (get-buffer-create error-buffer)
-            (let ((pos-from-end (- (point-max) (point))))
-              (or (bobp)
-                  (insert "\f\n"))
-              ;; Do no formatting while reading error file,
-              ;; because that can run a shell command, and we
-              ;; don't want that to cause an infinite recursion.
-              (format-insert-file error-file nil)
-              ;; Put point after the inserted errors.
-              (goto-char (- (point-max) pos-from-end)))
-            (current-buffer)))
-      (delete-file error-file))
-    exit-status))
 #+end_src
 **** ob-ipython
 #+begin_src emacs-lisp
@@ -847,13 +591,6 @@ STDERR with `org-babel-eval-error-notify'."
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 #+end_src
 *** UI
-**** COMMENT Table in header
-#+BEGIN_SRC emacs-lisp
-(add-hook 'org-mode-hook
-          '(lambda ()
-             (setq-local header-line-format (list '(:eval (substring-no-properties (org-table-get-field)))))
-           ))
-#+END_SRC
 **** Hide markers
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
@@ -1026,39 +763,6 @@ STDERR with `org-babel-eval-error-notify'."
     (org-show-entry)
     (show-children)))
 #+end_src
-*** COMMENT Todo/Checkbox Dependencies
-#+begin_src emacs-lisp
-(setq org-enforce-todo-dependencies t)
-
-(defun org-summary-todo (n-done n-not-done)
-  "Switch entry to DONE when all subentries are done, to TODO otherwise."
-  (let (org-log-done org-log-states)   ; turn off logging
-    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
-
-(add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-
-;; Mark heading done when all checkboxes are checked
-;; see http://thread.gmane.org/gmane.emacs.orgmode/42715
-(eval-after-load 'org-list
-  '(add-hook 'org-checkbox-statistics-hook (function ndk/checkbox-list-complete)))
-
-(defun ndk/checkbox-list-complete ()
-  (save-excursion
-    (org-back-to-heading t)
-    (let ((beg (point)) end)
-      (end-of-line)
-      (setq end (point))
-      (goto-char beg)
-      (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]" end t)
-          (if (match-end 1)
-              (if (equal (match-string 1) "100%")
-                  (org-todo 'done)
-                (org-todo 'todo))
-            (if (and (> (match-end 2) (match-beginning 2))
-                     (equal (match-string 2) (match-string 3)))
-                (org-todo 'done)
-              (org-todo 'todo)))))))
-#+end_src
 *** Unsorted Settings
 #+begin_src emacs-lisp
 (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
@@ -1175,55 +879,6 @@ STDERR with `org-babel-eval-error-notify'."
 	    (diminish 'whole-line-or-region-mode)
 	    (make-variable-buffer-local 'whole-line-or-region-mode))
   :ensure t)
-#+END_SRC
-*** COMMENT shift-lines
-#+BEGIN_SRC emacs-lisp
-(use-package move-dup
-  :ensure t)
-(global-set-key [M-up] 'md/move-lines-up)
-(global-set-key [M-down] 'md/move-lines-down)
-(global-set-key [M-S-up] 'md/move-lines-up)
-(global-set-key [M-S-down] 'md/move-lines-down)
-
-(global-set-key (kbd "C-c p") 'md/duplicate-down)
-(global-set-key (kbd "C-c P") 'md/duplicate-up)
-#+END_SRC
-*** COMMENT fill column indicator
-#+BEGIN_SRC emacs-lisp
-(when (eval-when-compile (> emacs-major-version 23))
-  (use-package fill-column-indicator
-    :ensure t)
-  (defun sanityinc/prog-mode-fci-settings ()
-    (turn-on-fci-mode)
-    (when show-trailing-whitespace
-      (set (make-local-variable 'whitespace-style) '(face trailing))
-      (whitespace-mode 1)))
-
-  ;;(add-hook 'prog-mode-hook 'sanityinc/prog-mode-fci-settings)
-
-  (defun sanityinc/fci-enabled-p ()
-    (and (boundp 'fci-mode) fci-mode))
-
-  (defvar sanityinc/fci-mode-suppressed nil)
-  (defadvice popup-create (before suppress-fci-mode activate)
-    "Suspend fci-mode while popups are visible"
-    (let ((fci-enabled (sanityinc/fci-enabled-p)))
-      (when fci-enabled
-        (set (make-local-variable 'sanityinc/fci-mode-suppressed) fci-enabled)
-        (turn-off-fci-mode))))
-  (defadvice popup-delete (after restore-fci-mode activate)
-    "Restore fci-mode when all popups have closed"
-    (when (and sanityinc/fci-mode-suppressed
-               (null popup-instances))
-      (setq sanityinc/fci-mode-suppressed nil)
-      (turn-on-fci-mode)))
-
-  ;; Regenerate fci-mode line images after switching themes
-  (defadvice enable-theme (after recompute-fci-face activate)
-    (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        (when (sanityinc/fci-enabled-p)
-          (turn-on-fci-mode))))))
 #+END_SRC
 *** page-break-lines
 #+BEGIN_SRC emacs-lisp
@@ -2233,85 +1888,6 @@ BEG and END (region to sort)."
             (setq-default rmh-elfeed-org-files (list "~/.emacs.d/emacs.org")))
   :ensure t)
 #+end_src
-*** COMMENT jabber
-#+begin_src emacs-lisp
-(defvar my-jabber-input-history '() "Variable that holds input history.")
-(make-variable-buffer-local 'my-jabber-input-history)
-
-(defvar my-jabber-input-history-position 0 "Current position in input history.")
-(make-variable-buffer-local 'my-jabber-input-history-position)
-
-(defvar my-jabber-input-history-current nil "Current input value.")
-(make-variable-buffer-local 'my-jabber-input-history-current)
-
-(use-package jabber
-  :config (progn
-            (setq jabber-history-enabled t
-                  jabber-use-global-history t
-                  jabber-backlog-number 40
-                  jabber-backlog-days 30
-                  jabber-chat-buffer-show-avatar nil
-                  jabber-vcard-avatars-publish nil
-                  jabber-chat-fill-long-lines nil
-                  jabber-roster-show-title t
-                  jabber-chatstates-confirm nil
-                  jabber-vcard-avatars-retrieve nil
-                  jabber-roster-line-format "%c %-25n %u %-8s  %S"
-                  jabber-auto-reconnect t
-                  jabber-avatar-verbose nil
-                  jabber-chat-buffer-format "%n"
-                  jabber-history-size-limit 1024000000
-                  jabber-show-resources nil
-                  jabber-roster-show-bindings t
-                  jabber-show-offline-contacts t
-                  jabber-print-rare-time nil
-                  jabber-chat-local-prompt-format "[%t] %u: "
-                  jabber-chat-foreign-prompt-format "[%t] %u: ")
-
-            (defun my-jabber-input-history-hook (body id)
-              (add-to-list 'my-jabber-input-history body t)
-              (setq my-jabber-input-history-position (length my-jabber-input-history)))
-            (add-hook 'jabber-chat-send-hooks 'my-jabber-input-history-hook)
-
-            (defun my-jabber-previous-input ()
-              (interactive)
-              (let (current-input (pos my-jabber-input-history-position) (len (length my-jabber-input-history)))
-                (if (= pos 0)
-                    (message "%s" "No previous input")
-                  (setq current-input (delete-and-extract-region jabber-point-insert (point-max)))
-                  (when (= pos len) ; running first time, save current input
-                    (setq my-jabber-input-history-current current-input))
-                  (decf my-jabber-input-history-position)
-                  (insert (nth my-jabber-input-history-position my-jabber-input-history)))))
-
-            (defun my-jabber-next-input ()
-              (interactive)
-              (let ((pos my-jabber-input-history-position) (len (length my-jabber-input-history)))
-                (cond
-                 ((= pos (1- len)) ; pointing at the last element, insert saved input
-                  (incf my-jabber-input-history-position)
-                  (delete-region jabber-point-insert (point-max))
-                  (insert my-jabber-input-history-current)
-                  (setq my-jabber-input-history-current nil))
-                 ((= pos len)                              ; pointing beyound last element, notify user
-                  (message "%s" "No next input"))
-                 (t                                ; insert next history item
-                  (incf my-jabber-input-history-position)
-                  (delete-region jabber-point-insert (point-max))
-                  (insert (nth my-jabber-input-history-position my-jabber-input-history))))))
-
-            (define-key jabber-chat-mode-map (kbd "M-p") 'my-jabber-previous-input)
-            (define-key jabber-chat-mode-map (kbd "M-n") 'my-jabber-next-input)
-
-            (setq-default jabber-global-history-filename (shared/ "jabber-history.txt"))
-
-            (defun my-jabber-input-history-choose ()
-              (interactive)
-              (let ((choice (ido-completing-read "Select history item: " (reverse my-jabber-input-history))))
-                (delete-region jabber-point-insert (point-max))
-                (insert choice))))
-  :ensure t)
-#+end_src
 ** UI
 *** visible-bell
 #+BEGIN_SRC emacs-lisp
@@ -2328,7 +1904,8 @@ BEG and END (region to sort)."
 (delete-selection-mode 1)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-;; (toggle-scroll-bar -1)
+(when window-system
+  (toggle-scroll-bar -1))
 (blink-cursor-mode 0)
 
 (custom-set-faces
