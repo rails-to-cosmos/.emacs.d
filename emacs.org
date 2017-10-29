@@ -789,10 +789,6 @@
  org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d)")
                            (sequence "WAITING(w)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
 #+end_src
-*** Velocity
-#+begin_src emacs-lisp :results silent
-(add-to-list 'org-modules 'org-velocity)
-#+end_src
 ** Editor
 :PROPERTIES:
 :CUSTOM_ID: econf.editor
