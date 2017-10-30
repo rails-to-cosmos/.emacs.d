@@ -27,7 +27,7 @@
 | Emacs-El                     | https://emacs-el.com/rss.xml                                               | Emacs    | emacs-el                     |
 | Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml                                 | Emacs    | informatimago                |
 | Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | Python   | kitchin-python               |
-| Lle                          |                                                                            |          |                              |
+| Lleo                         | http://lleo.me/dnevnik/rss.xml                                             | Life     | lleo                         |
 
 * Org-Feed
 #+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
@@ -1493,7 +1493,18 @@ BEG and END (region to sort)."
                       (ido-completing-read+ "Command or Topic: "
                                             (process-lines "curl" "--silent" "http://cheat.sh/:list?T&q"))
                       "?T&q")))
-    #+end_src
+
+(require 'delsel)
+(defun ido-backspace ()
+  "Forward to `backward-delete-char'.
+On error (read-only), quit without selecting."
+  (interactive)
+  (condition-case nil
+      (backward-delete-char 1)
+    (error
+     (minibuffer-keyboard-quit))))
+(define-key ido-common-completion-map (kbd "DEL") 'ido-backspace)
+#+end_src
 *** imenu
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
