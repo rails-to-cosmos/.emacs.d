@@ -27,6 +27,7 @@
 | Emacs-El                     | https://emacs-el.com/rss.xml                                               | Emacs    | emacs-el                     |
 | Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml                                 | Emacs    | informatimago                |
 | Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | Python   | kitchin-python               |
+| Lle                          |                                                                            |          |                              |
 
 * Org-Feed
 #+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
@@ -117,11 +118,13 @@
       (make-directory dir t)
       (concat dir filename)))
 
-  (defun sync/ (filename)
+  (defun sync/ (&optional filename)
     "Get path to FILENAME in shared directory."
     (let ((dir "~/sync/emacs/"))
       (make-directory dir t)
-      (concat dir filename)))
+      (if filename
+          (concat dir filename)
+        dir)))
 
   (setq-default custom-file (tmp/ "custom.el"))
   (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
@@ -606,8 +609,12 @@
 **** Hide markers
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
-;; (add-to-list 'org-emphasis-alist '())
-;; (add-to-list 'org-emphasis-alist '("_" ()))
+(setq org-emphasis-alist (quote (("*" (bold))
+                                 ("/" (italic))
+                                 ("_" (underline))
+                                 ("+" (:strike-through t))
+                                 ("~" org-code verbatim)
+                                 ("=" org-verbatim verbatim))))
 #+end_src
 **** Bullets
 #+begin_src emacs-lisp :results silent
@@ -1961,6 +1968,8 @@ BEG and END (region to sort)."
 #+END_SRC
 ** Local
 #+begin_src emacs-lisp
-(use-package init-local
-  :load-path "~/.emacs.d/lisp/")
+(let ((local-init-file (format "init-%s.el" system-type)))
+  (if (file-exists-p (sync/ local-init-file))
+      (load-file (sync/ local-init-file))
+    (message (format "%s was not loaded." (sync/ local-init-file)))))
 #+end_src
