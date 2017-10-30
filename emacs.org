@@ -117,15 +117,15 @@
       (make-directory dir t)
       (concat dir filename)))
 
-  (defun shared/ (filename)
+  (defun sync/ (filename)
     "Get path to FILENAME in shared directory."
-    (let ((dir "~/Yandex.Disk.localized/Emacs/"))
+    (let ((dir "~/sync/emacs"))
       (make-directory dir t)
       (concat dir filename)))
 
   (setq-default custom-file (tmp/ "custom.el"))
   (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
-		bookmark-default-file (shared/ "bookmarks.txt")
+		bookmark-default-file (sync/ "bookmarks.txt")
 		bookmark-save-flag t)
 #+end_src
 *** os
@@ -194,10 +194,11 @@
     (find-alternate-file "..")))
 
 (use-package dired-subtree
-  :config
-  (bind-keys :map dired-mode-map
-             ("<backspace>" . dired-subtree-up-or-directory-up)
-             ("<tab>" . dired-subtree-toggle)))
+  :config (progn
+            (bind-keys :map dired-mode-map
+                       ("<backspace>" . dired-subtree-up-or-directory-up)
+                       ("<tab>" . dired-subtree-toggle)))
+  :ensure t)
 #+END_SRC
 **** dired-narrow
 #+BEGIN_SRC emacs-lisp
@@ -1458,7 +1459,7 @@ STDERR with `org-babel-eval-error-notify'."
 #+begin_src emacs-lisp
 (use-package yasnippet
   :config (progn
-            (add-to-list 'yas-snippet-dirs (shared/ "snippets"))
+            (add-to-list 'yas-snippet-dirs (sync/ "snippets"))
             (yas-reload-all)
             (yas-global-mode t))
   :ensure t)
@@ -1683,10 +1684,10 @@ BEG and END (region to sort)."
 #+end_src
 *** ido
 #+begin_src emacs-lisp
-(defadvice ido-find-file (after find-file-sudo activate)
-  "Find file as root if necessary."
-  (unless (and buffer-file-name (file-writable-p buffer-file-name))
-    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+;; (defadvice ido-find-file (after find-file-sudo activate)
+;;   "Find file as root if necessary."
+;;   (unless (and buffer-file-name (file-writable-p buffer-file-name))
+;;     (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
 
 (use-package ido
   :config (progn
@@ -2227,7 +2228,7 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 ** Social
-*** elfeed
+*** COMMENT elfeed
 #+begin_src emacs-lisp
 (use-package elfeed  ;; customize rmh-elfeed-org-files in init-local
   :config (progn
@@ -2311,7 +2312,7 @@ BEG and END (region to sort)."
             (define-key jabber-chat-mode-map (kbd "M-p") 'my-jabber-previous-input)
             (define-key jabber-chat-mode-map (kbd "M-n") 'my-jabber-next-input)
 
-            (setq-default jabber-global-history-filename (shared/ "jabber-history.txt"))
+            (setq-default jabber-global-history-filename (sync/ "jabber-history.txt"))
 
             (defun my-jabber-input-history-choose ()
               (interactive)
@@ -2321,10 +2322,10 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 ** UI
-*** visible-bell
-#+BEGIN_SRC emacs-lisp
-(setq visible-bell t)
-#+END_SRC
+:PROPERTIES:
+:CUSTOM_ID: econf.ui
+:END:
+
 *** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
@@ -2340,8 +2341,7 @@ BEG and END (region to sort)."
 (blink-cursor-mode 0)
 
 (custom-set-faces
- '(default ((t (
-                :inherit nil
+ '(default ((t (:inherit nil
                 :stipple nil
                 :inverse-video nil
                 :box nil
@@ -2375,7 +2375,7 @@ BEG and END (region to sort)."
               underline-minimum-offset 3
               inhibit-startup-screen t
               line-spacing 7
-              visible-bell nil
+              visible-bell t
               cursor-type 'box
               split-width-threshold 160
               split-height-threshold nil
@@ -2397,7 +2397,7 @@ BEG and END (region to sort)."
 (use-package danneskjold-theme
   :ensure t)
 #+END_SRC
-**** Minimal                                                                 :ARCHIVE:
+**** COMMENT Minimal
 #+BEGIN_SRC emacs-lisp :tangle themes/minimal-theme.el
 ;;; minimal-theme.el --- A minimal theme based on default colors.
 ;; This file is not part of GNU Emacs.
@@ -2435,5 +2435,6 @@ BEG and END (region to sort)."
 #+END_SRC
 ** Local
 #+begin_src emacs-lisp
-(require 'init-local nil t)
+(use-package init-local
+  :load-path "~/.emacs.d/lisp/")
 #+end_src
