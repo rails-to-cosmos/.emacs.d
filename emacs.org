@@ -369,6 +369,8 @@
 #+end_src
 *** immortal-scratch
 #+begin_src emacs-lisp
+(setq-default initial-major-mode 'org-mode)
+
 (defun immortal-scratch ()
   (if (eq (current-buffer) (get-buffer "*scratch*"))
       (progn (bury-buffer) nil) t))
@@ -465,7 +467,7 @@
 #+end_src
 ** Org
 :PROPERTIES:
-:CUSTOM_ID: econf.org-mode
+:CUSTOM_ID: emacs.config.org-mode
 :END:
 
 
@@ -608,6 +610,16 @@
               org-log-note-clock-out t)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
+
+(defun org-clock-add-note ()
+  (interactive)
+  (org-clock-out)
+  (save-excursion
+    (org-clock-goto)
+    (org-clock-in)))
+
+
+(define-key global-map (kbd "C-c C-x n") 'org-clock-add-note)
 #+end_src
 *** UI
 **** Hide markers
@@ -814,7 +826,7 @@
 #+end_src
 ** Editor
 :PROPERTIES:
-:CUSTOM_ID: econf.editor
+:CUSTOM_ID: emacs.config.editor
 :END:
 
 
@@ -1640,6 +1652,9 @@ On error (read-only), quit without selecting."
   :ensure t)
 #+end_src
 ** Programming
+:PROPERTIES:
+:CUSTOM_ID: emacs.config.programming
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (define-key global-map (kbd "C-x C-m") #'compile)
@@ -1657,7 +1672,7 @@ On error (read-only), quit without selecting."
   :ensure t)
 
 (setq-default initial-scratch-message
-              (concat ";; I've always thought they were lighthouses...\n\n"))
+              (concat "# I've always thought they were lighthouses...\n\n"))
 
 ;; Make C-x C-e run 'eval-region if the region is active
 
@@ -1929,6 +1944,24 @@ On error (read-only), quit without selecting."
     'irony-completion-at-point-async))
 #+end_src
 *** python
+:PROPERTIES:
+:CUSTOM_ID: emacs.config.programming.python
+:END:
+
+
+**** highlights
+#+BEGIN_SRC emacs-lisp
+(defun python-highlight-breakpoints()
+  (interactive)
+  (highlight-lines-matching-regexp "import ipdb")
+  (highlight-lines-matching-regexp "import pdb")
+  (highlight-lines-matching-regexp "set_trace()")
+  (highlight-phrase "TODO")
+  (highlight-regexp "FIXME"))
+
+(add-hook 'python-mode-hook 'python-highlight-breakpoints)
+(add-hook 'python-mode-hook 'linum-mode)
+#+END_SRC
 **** indent
 #+BEGIN_SRC emacs-lisp
 (use-package indent-tools
@@ -1955,7 +1988,7 @@ On error (read-only), quit without selecting."
 #+end_src
 ** UI
 :PROPERTIES:
-:CUSTOM_ID: econf.ui
+:CUSTOM_ID: emacs.config.ui
 :END:
 
 *** rainbow-delimiters
