@@ -434,6 +434,20 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
+
+*** org-view
+#+BEGIN_SRC emacs-lisp
+(defun org-view/evaluate-at-point (state)
+  (let ((src-block-name (org-entry-get (point) "SRC"))
+        (tags-list (org-get-tags)))
+    (when (and (not (eq state 'folded))
+               (member "View" tags-list)
+               (not (eq src-block-name nil)))
+      (save-excursion
+        (org-babel-goto-named-src-block src-block-name)
+        (org-ctrl-c-ctrl-c)))))
+(add-hook 'org-pre-cycle-hook 'org-view/evaluate-at-point)
+#+END_SRC
 *** crypt
 #+BEGIN_SRC emacs-lisp
 (require 'epa-file)
@@ -1482,11 +1496,6 @@ On error (read-only), quit without selecting."
             (global-unset-key "\C-xi"))
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
-#+end_src
-*** paradox
-#+begin_src emacs-lisp :results silent
-(use-package paradox
-  :ensure t)
 #+end_src
 *** pomidor
 #+begin_src emacs-lisp :results silent
