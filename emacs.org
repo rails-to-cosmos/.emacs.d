@@ -1,6 +1,6 @@
 - Control Panel :: hello there :)
   - [[elisp:(elfeed)][Elfeed]]
-  - [[elisp:(benchmark-init/show-durations-tabjulated)][Show Durations]]
+  - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
 #+TBLNAME: org-feed-alist
