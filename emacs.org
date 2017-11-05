@@ -451,7 +451,6 @@
 *** crypt
 #+BEGIN_SRC emacs-lisp
 (require 'epa-file)
-(epa-file-enable)
 (setq epa-file-select-keys nil)
 (require 'org-crypt)
 ; Encrypt all entries before saving
