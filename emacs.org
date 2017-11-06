@@ -435,11 +435,6 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
-#+BEGIN_SRC emacs-lisp
-(use-package org
-  :ensure t)
-#+END_SRC
-
 *** org-view
 #+BEGIN_SRC emacs-lisp
 (defun org-view/evaluate-at-point (state)
