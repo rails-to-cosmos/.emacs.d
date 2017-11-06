@@ -434,7 +434,32 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
-
+*** modules
+#+BEGIN_SRC emacs-lisp
+; Enable habit tracking (and a bunch of other modules)
+(setq org-modules (quote (org-bbdb
+                          org-bibtex
+                          org-crypt
+                          org-gnus
+                          org-id
+                          org-info
+                          org-jsinfo
+                          org-habit
+                          org-inlinetask
+                          org-irc
+                          org-mew
+                          org-mhe
+                          org-protocol
+                          org-rmail
+                          org-vm
+                          org-wl
+                          org-w3m)))
+#+END_SRC
+*** Habit
+#+begin_src emacs-lisp :results silent
+; position the habit graph on the agenda to the right of the default
+(setq org-habit-graph-column 50)
+#+end_src
 *** org-view
 #+BEGIN_SRC emacs-lisp
 (defun org-view/evaluate-at-point (state)
@@ -474,15 +499,17 @@
 (add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
 #+end_src
 *** Babel
+**** source editing
+#+BEGIN_SRC emacs-lisp
+(setq org-src-window-setup 'current-window)
+#+END_SRC
 **** tangle-block
 #+BEGIN_SRC emacs-lisp
 (defun org-babel-tangle-block()
   (interactive)
   (org-babel-when-in-src-block
-   (progn
-     (let ((current-prefix-arg '(4)))
-       (call-interactively 'org-babel-tangle)
-       ))))
+   (let ((current-prefix-arg '(4)))
+     (call-interactively 'org-babel-tangle))))
 #+END_SRC
 **** settings
 #+BEGIN_SRC emacs-lisp
@@ -576,13 +603,13 @@
 #+end_src
 **** ob-languages
 #+begin_src emacs-lisp
-(setq ob-languages '((python . t)
-                     (ipython . t)
-                     (sql . t)
-                     (emacs-lisp . t)
-                     (http . t)
-                     (shell . t)
-                     (C . t)))
+(setq-default ob-languages '((python . t)
+                             (ipython . t)
+                             (sql . t)
+                             (emacs-lisp . t)
+                             (http . t)
+                             (shell . t)
+                             (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
@@ -606,19 +633,16 @@
     (org-clock-goto)
     (org-clock-in)))
 
-
 (define-key global-map (kbd "C-c C-x n") 'org-clock-add-note)
+
+(setq org-log-done (quote time))
+(setq org-log-into-drawer t)
+(setq org-log-state-notes-insert-after-drawers nil)
 #+end_src
 *** UI
-**** Hide markers
+**** Emphasis
 #+begin_src emacs-lisp
-(setq org-hide-emphasis-markers t)
-(setq org-emphasis-alist (quote (("*" (bold))
-                                 ("/" (italic))
-                                 ("_" (underline))
-                                 ("+" (:strike-through t))
-                                 ("~" org-code verbatim)
-                                 ("=" org-verbatim verbatim))))
+(setq org-hide-emphasis-markers nil)
 #+end_src
 **** Bullets
 #+begin_src emacs-lisp :results silent
@@ -626,10 +650,6 @@
   :config (progn
             (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
   :ensure t)
-#+end_src
-*** Habit
-#+begin_src emacs-lisp :results silent
-(add-to-list 'org-modules 'org-habit)
 #+end_src
 *** Hierarchical Statistics
 #+begin_src emacs-lisp
@@ -788,7 +808,7 @@
 #+end_src
 *** Unsorted Settings
 #+begin_src emacs-lisp
-(add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
+;; (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
 (setq org-startup-align-all-tables "align")
 (setq-default
  org-log-done nil
@@ -816,7 +836,6 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
-
 
 *** duplicate-down
 #+BEGIN_SRC emacs-lisp
@@ -999,7 +1018,7 @@
 #+END_SRC
 *** auto-revert
 #+BEGIN_SRC emacs-lisp
-(global-auto-revert-mode)
+(global-auto-revert-mode t)
 (setq global-auto-revert-non-file-buffers t
       auto-revert-verbose nil)
 #+END_SRC
@@ -1212,12 +1231,14 @@ about what flexible matching means in this context."
   (switch-to-buffer nil))
 #+end_src
 *** yasnippet
+**** __init__
 #+begin_src emacs-lisp
 (use-package yasnippet
   :config (progn
             (add-to-list 'yas-snippet-dirs (sync/ "snippets"))
             (yas-reload-all)
             (yas-global-mode t))
+  :diminish t
   :ensure t)
 #+end_src
 **** ido-expand
@@ -1249,6 +1270,8 @@ about what flexible matching means in this context."
 *** pdf
 #+BEGIN_SRC emacs-lisp
 (use-package pdf-tools
+  :commands (pdf-view-mode)
+  :diminish t
   :ensure t)
 #+END_SRC
 *** undo-tree
@@ -2002,7 +2025,7 @@ On error (read-only), quit without selecting."
                 :height 100
                 :width normal
                 :foundry nil
-                :family "Menlo")))))
+                :family "Source Code Pro")))))
 
 (setq-default case-fold-search t
               compilation-scroll-output t
