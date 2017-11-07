@@ -1,6 +1,6 @@
 - Control Panel :: hello there :)
   - [[elisp:(elfeed)][Elfeed]]
-  - [[elisp:(benchmark-init/show-durations-tabulated)][Show Durations]]
+  - [[elisp:(benchmark-init/show-durations-tabyulated)][Show Durations]]
   - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
 
 #+TBLNAME: org-feed-alist
@@ -43,6 +43,12 @@
 :END:
 
 ** Core
+
+*** better-defaults
+#+BEGIN_SRC emacs-lisp
+(use-package better-defaults
+  :ensure t)
+#+END_SRC
 *** alert
 #+begin_src emacs-lisp
 (use-package alert
@@ -388,23 +394,6 @@
       ad-do-it)))
 (add-hook 'after-init-hook 'prevent-active-processes-exist)
 #+end_src
-*** rename-this-file-and-buffer
-#+begin_src emacs-lisp
-(defun rename-this-file-and-buffer (new-name)
-  "Renames both current buffer and file it's visiting to NEW-NAME."
-  (interactive "sNew name: ")
-  (let ((name (buffer-name))
-        (filename (buffer-file-name)))
-    (unless filename
-      (error "Buffer '%s' is not visiting a file!" name))
-    (if (get-buffer new-name)
-        (message "A buffer named '%s' already exists!" new-name)
-      (progn
-        (when (file-exists-p filename)
-          (rename-file filename new-name 1))
-        (rename-buffer new-name)
-        (set-visited-file-name new-name)))))
-#+end_src
 ** Keyboard
 *** default bindings
 #+begin_src emacs-lisp
@@ -434,6 +423,13 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
+*** org-checklist
+#+BEGIN_SRC emacs-lisp
+(use-package org-plus-contrib
+  :ensure t)
+
+(require 'org-checklist)
+#+END_SRC
 *** modules
 #+BEGIN_SRC emacs-lisp
 ; Enable habit tracking (and a bunch of other modules)
@@ -617,27 +613,31 @@
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
+              org-clock-persist-query-resume nil
               org-clock-in-resume t
+              org-clock-auto-clock-resolution (quote when-no-clock-is-running)
+              org-clock-report-include-clocking-task t
+              org-drawers (quote ("PROPERTIES" "LOGBOOK"))
               org-clock-in-switch-to-state "STARTED"
-              org-clock-out-switch-to-state "WAITING"
+              org-clock-into-drawer t
+              org-clock-out-switch-to-state "PAUSED"
               org-clock-out-remove-zero-time-clocks t
+              org-clock-out-when-done t
               org-clock-idle-time 60
+              org-log-done (quote time)
+              org-log-state-notes-insert-after-drawers nil
               org-log-note-clock-out t)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 
 (defun org-clock-add-note ()
   (interactive)
-  (org-clock-out)
   (save-excursion
-    (org-clock-goto)
-    (org-clock-in)))
+      (org-clock-goto)
+      (org-clock-out)
+      (org-clock-in)))
 
 (define-key global-map (kbd "C-c C-x n") 'org-clock-add-note)
-
-(setq org-log-done (quote time))
-(setq org-log-into-drawer t)
-(setq org-log-state-notes-insert-after-drawers nil)
 #+end_src
 *** UI
 **** Emphasis
@@ -705,11 +705,6 @@
 *** Narrowing
 #+begin_src emacs-lisp :results silent
 (setq org-indirect-buffer-display 'current-window)
-#+end_src
-*** Plain lists
-#+begin_src emacs-lisp
-(setq org-cycle-include-plain-lists 'integrate
-      org-confirm-elisp-link-not-regexp "org-open-file")
 #+end_src
 *** Scimax autoformat mode
 #+begin_src emacs-lisp
@@ -829,8 +824,8 @@
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "PREPARED(p)" "|" "DONE(d)")
-                           (sequence "WAITING(w)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "|" "DONE(d)")
+                           (sequence "PAUSED(p)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
 #+end_src
 ** Editor
 :PROPERTIES:
@@ -839,7 +834,42 @@
 
 *** duplicate-down
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c p") 'md/duplicate-down)
+(defun duplicate-line (arg)
+  "Duplicate current line, leaving point in lower line."
+  (interactive "*p")
+
+  ;; save the point for undo
+  (setq buffer-undo-list (cons (point) buffer-undo-list))
+
+  ;; local variables for start and end of line
+  (let ((bol (save-excursion (beginning-of-line) (point)))
+        eol)
+    (save-excursion
+
+      ;; don't use forward-line for this, because you would have
+      ;; to check whether you are at the end of the buffer
+      (end-of-line)
+      (setq eol (point))
+
+      ;; store the line and disable the recording of undo information
+      (let ((line (buffer-substring bol eol))
+            (buffer-undo-list t)
+            (count arg))
+        ;; insert the line arg times
+        (while (> count 0)
+          (newline)         ;; because there is no newline in 'line'
+          (insert line)
+          (setq count (1- count)))
+        )
+
+      ;; create the undo information
+      (setq buffer-undo-list (cons (cons eol (point)) buffer-undo-list)))
+    ) ; end-of-let
+
+  ;; put the point in the lowest line and return
+  (next-line arg))
+
+(global-set-key (kbd "C-c p") 'duplicate-line)
 #+END_SRC
 *** paredit
 #+BEGIN_SRC emacs-lisp
@@ -1204,18 +1234,6 @@ about what flexible matching means in this context."
             (replace-match (number-to-string (1- (string-to-number (match-string 0))))))))
 
 #+end_src
-*** origami
-#+begin_src emacs-lisp
-(use-package origami
-  :config (progn
-            (add-hook 'prog-mode-hook 'origami-mode)
-            (add-hook 'emacs-lisp-mode-hook 'origami-mode))
-  :bind (:map prog-mode-map
-              ("C-c f t" . origami-toggle-node)
-              ("C-c f r" . origami-recursively-toggle-node)
-              ("C-c f o" . origami-show-only-node))
-  :ensure t)
-#+end_src
 *** save-macro
 #+begin_src emacs-lisp
 (defun save-macro (name)
@@ -1242,6 +1260,10 @@ about what flexible matching means in this context."
   :ensure t)
 #+end_src
 **** ido-expand
+| cmd            | map        | binding |
+|----------------+------------+---------|
+| yas-ido-expand | global-map | C-x y i |
+header
 #+begin_src emacs-lisp
 (defun yas-ido-expand ()
   "Lets you select (and expand) a yasnippet key"
@@ -1267,6 +1289,52 @@ about what flexible matching means in this context."
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** prodigy
+#+BEGIN_SRC emacs-lisp
+(use-package prodigy
+  :bind ("C-x y p" . prodigy)
+  :ensure t)
+
+(defun prodigy-stop-services-with-tag (tag)
+  "Stop services with TAG."
+  (interactive "MTag: ")
+  (prodigy-apply-to-services
+   (prodigy-services-tagged-with (intern tag))
+   'prodigy-stop-service))
+
+(defun prodigy-start-services-with-tag (tag)
+  "Start services with TAG."
+  (interactive "MTag: ")
+  (prodigy-apply-to-services
+   (prodigy-services-tagged-with (intern tag))
+   'prodigy-start-service))
+#+END_SRC
+*** what-face
+#+BEGIN_SRC emacs-lisp
+(defun what-face (pos)
+  "Tell me what face used in POS."
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
+    (if face (message "Face: %s" face) (message "No face at %d" pos))))
+#+END_SRC
+*** rename-this-file-and-buffer
+#+begin_src emacs-lisp
+(defun rename-this-file-and-buffer (new-name)
+  "Renames both current buffer and file it's visiting to NEW-NAME."
+  (interactive "sNew name: ")
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (unless filename
+      (error "Buffer '%s' is not visiting a file!" name))
+    (if (get-buffer new-name)
+        (message "A buffer named '%s' already exists!" new-name)
+      (progn
+        (when (file-exists-p filename)
+          (rename-file filename new-name 1))
+        (rename-buffer new-name)
+        (set-visited-file-name new-name)))))
+#+end_src
 *** pdf
 #+BEGIN_SRC emacs-lisp
 (use-package pdf-tools
@@ -1461,16 +1529,11 @@ BEG and END (region to sort)."
   :bind ("C-x y t t" . translate-text)
   :ensure t)
 #+end_src
-*** ido
+*** COMMENT ido
 #+begin_src emacs-lisp
-;; (defadvice ido-find-file (after find-file-sudo activate)
-;;   "Find file as root if necessary."
-;;   (unless (and buffer-file-name (file-writable-p buffer-file-name))
-;;     (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-
 (use-package ido
   :config (progn
-            (setq-default ido-enable-flex-matching t
+            (setq-default ido-enable-flex-matching nil
                           ido-use-filename-at-point nil
                           ido-auto-merge-work-directories-length -1
                           ido-use-virtual-buffers t
@@ -1479,8 +1542,8 @@ BEG and END (region to sort)."
             (ido-mode t)
             (ido-everywhere t)))
 
-(use-package idomenu
-  :ensure t)
+;; (use-package idomenu
+;;   :ensure t)
 
 (use-package ido-vertical-mode
   :config (progn
@@ -1499,18 +1562,39 @@ BEG and END (region to sort)."
   :config (progn
             (global-set-key [remap execute-extended-command] 'smex))
   :ensure t)
-
-(require 'delsel)
-(defun ido-backspace ()
-  "Forward to `backward-delete-char'.
-On error (read-only), quit without selecting."
-  (interactive)
-  (condition-case nil
-      (backward-delete-char 1)
-    (error
-     (minibuffer-keyboard-quit))))
-(define-key ido-common-completion-map (kbd "DEL") 'ido-backspace)
 #+end_src
+*** ivy
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+  :ensure flx
+  :ensure counsel
+  :ensure swiper
+  :ensure t)
+
+(setq ivy-re-builders-alist
+      '((t . ivy--regex-fuzzy)))
+(setq ivy-initial-inputs-alist nil)
+
+(ivy-mode 1)
+(setq ivy-use-virtual-buffers t)
+(setq enable-recursive-minibuffers t)
+(global-set-key "\C-s" 'swiper)
+(global-set-key (kbd "C-c C-r") 'ivy-resume)
+(global-set-key (kbd "<f6>") 'ivy-resume)
+(global-set-key (kbd "M-x") 'counsel-M-x)
+(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+(global-set-key (kbd "<f1> f") 'counsel-describe-function)
+(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+(global-set-key (kbd "<f1> l") 'counsel-find-library)
+(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+(global-set-key (kbd "C-c g") 'counsel-git)
+(global-set-key (kbd "C-c j") 'counsel-git-grep)
+(global-set-key (kbd "C-c k") 'counsel-ag)
+(global-set-key (kbd "C-x l") 'counsel-locate)
+(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+(define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+#+END_SRC
 *** imenu
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
@@ -1604,7 +1688,6 @@ On error (read-only), quit without selecting."
   (use-package wgrep
     :ensure t)
 #+end_src
-** Tweaks and Hacks
 *** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
 #+begin_src emacs-lisp :results silent
 (defun set-region-read-only (begin end)
@@ -2006,10 +2089,6 @@ On error (read-only), quit without selecting."
 #+begin_src emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(when window-system
-  (toggle-scroll-bar -1))
 (blink-cursor-mode 0)
 
 (custom-set-faces
@@ -2047,21 +2126,12 @@ On error (read-only), quit without selecting."
               underline-minimum-offset 3
               inhibit-startup-screen t
               line-spacing 7
-              visible-bell t
+              visible-bell nil
+              ring-bell-function 'ignore
               cursor-type 'box
               split-width-threshold 160
               split-height-threshold nil
               frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))) buffers-menu-max-size 30)
-
-(setq visible-bell nil) ;; The default
-(setq ring-bell-function 'ignore)
-
-(defun what-face (pos)
-  "Tell me what face used in POS."
-  (interactive "d")
-  (let ((face (or (get-char-property (point) 'read-face-name)
-                  (get-char-property (point) 'face))))
-    (if face (message "Face: %s" face) (message "No face at %d" pos))))
 #+end_src
 *** themes
 **** Default
