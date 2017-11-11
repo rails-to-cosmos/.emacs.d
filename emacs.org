@@ -28,6 +28,7 @@
 | Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml                                 | Emacs    | informatimago                |
 | Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | Python   | kitchin-python               |
 | Lleo                         | http://lleo.me/dnevnik/rss.xml                                             | Life     | lleo                         |
+| Howardism                    | http://howardism.org/index.xml                                             | Emacs    | howard                       |
 
 * Org-Feed
 #+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
@@ -43,7 +44,19 @@
 :END:
 
 ** Core
-
+*** safe-wrap
+#+BEGIN_SRC emacs-lisp
+(defmacro safe-wrap (fn &rest clean-up)
+  `(unwind-protect
+       (let (retval)
+         (condition-case ex
+             (setq retval (progn ,fn))
+           ('error
+            ;; (message (format "Caught exception: [%s]" ex))
+            (setq retval nil)))
+         retval)
+     ,@clean-up))
+#+END_SRC
 *** better-defaults
 #+BEGIN_SRC emacs-lisp
 (use-package better-defaults
@@ -271,51 +284,134 @@
 #+END_SRC
 *** eshell
 #+begin_src emacs-lisp
-  (setq-default
-   eshell-buffer-maximum-lines 500
-   eshell-output-filter-functions
-   '(eshell-truncate-buffer
-     eshell-postoutput-scroll-to-bottom
-     eshell-handle-control-codes
-     eshell-handle-ansi-color
-     eshell-watch-for-password-prompt)
-   password-cache t
-   password-cache-expiry 3600)
+(setq-default
+ eshell-buffer-maximum-lines 500
+ eshell-output-filter-functions
+ '(eshell-truncate-buffer
+   eshell-postoutput-scroll-to-bottom
+   eshell-handle-control-codes
+   eshell-handle-ansi-color
+   eshell-watch-for-password-prompt)
+ password-cache t
+ password-cache-expiry 3600)
 
-  (with-eval-after-load 'em-alias
+(with-eval-after-load 'em-alias
     ;;; TODO: This conflicts with `evil-define-key' during the initialization of
     ;;; the first eshell session: the map in insert-mode will not take the changes
     ;;; into account. Going to normal mode and back to insert mode works.
-    (eshell-read-aliases-list)
-    (dolist
-	(alias
-	 '(("l" "ls -1 $*")
-	   ("la" "ls -lAh $*")
-	   ("ll" "ls -lh $*")
-	   ;; ("ls" "ls -F $*")
-	   ;; ("emacs" "find-file $1")
-	   ;; ("em" "find-file $*")
-	   ("cp" "*cp -i $*")
-	   ("mv" "*mv -i $*")
-	   ("mkdir" "*mkdir -p $*")
-	   ("mkcd" "*mkdir -p $* && cd $1")))
-      (add-to-list 'eshell-command-aliases-list alias))
-    (eshell-write-aliases-list))
+  (eshell-read-aliases-list)
+  (dolist
+      (alias
+       '(("l" "ls $*")
+         ("la" "ls -lAh $*")
+         ("ll" "ls -lh $*")
+         ;; ("ls" "ls -F $*")
+         ;; ("emacs" "find-file $1")
+         ;; ("em" "find-file $*")
+         ("cp" "*cp -i $*")
+         ("mv" "*mv -i $*")
+         ("mkdir" "*mkdir -p $*")
+         ("mkcd" "*mkdir -p $* && cd $1")))
+    (add-to-list 'eshell-command-aliases-list alias))
+  (eshell-write-aliases-list))
 
-  ;; (let ((process-environment tramp-remote-process-environment))
-  ;;   (setenv "LANG" "en_US.UTF-8")
-  ;;   (setenv "LC_ALL" "en_US.UTF-8")
-  ;;   (setenv "LC_CTYPE" "en_US.UTF-8")
-  ;;   (setq tramp-remote-process-environment process-environment))
+;; (let ((process-environment tramp-remote-process-environment))
+;;   (setenv "LANG" "en_US.UTF-8")
+;;   (setenv "LC_ALL" "en_US.UTF-8")
+;;   (setenv "LC_CTYPE" "en_US.UTF-8")
+;;   (setq tramp-remote-process-environment process-environment))
 
-  (use-package exec-path-from-shell
-    :config (progn
-	      (when (memq window-system '(mac ns))
-		(exec-path-from-shell-initialize)
-		(exec-path-from-shell-copy-env "SSH_AGENT_PID")
-		(exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
-    :ensure t)
+(use-package exec-path-from-shell
+  :config (progn
+            (when (memq window-system '(mac ns))
+              (exec-path-from-shell-initialize)
+              (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
+  :ensure t)
 #+end_src
+
+**** beautify
+#+BEGIN_SRC emacs-lisp
+(require 'dash)
+(require 's)
+
+(defmacro with-face (STR &rest PROPS)
+  "Return STR propertized with PROPS."
+  `(propertize ,STR 'face (list ,@PROPS)))
+
+(defmacro esh-section (NAME ICON FORM &rest PROPS)
+  "Build eshell section NAME with ICON prepended to evaled FORM with PROPS."
+  `(setq ,NAME
+         (lambda () (when ,FORM
+                 (->(concat esh-section-delim ,FORM)
+                    (with-face ,@PROPS))))))
+
+(defun esh-acc (acc x)
+  "Accumulator for evaluating and concatenating esh-sections."
+  (--if-let (funcall x)
+      (if (s-blank? acc)
+          it
+        (concat acc esh-sep it))
+    acc))
+
+(defun esh-prompt-func ()
+  "Build `eshell-prompt-function'"
+  (concat esh-header
+          (-reduce-from 'esh-acc "" eshell-funcs)
+          " >"
+          eshell-prompt-string))
+
+(esh-section esh-dir
+             ""  ;  (faicon folder)
+             (abbreviate-file-name (eshell/pwd))
+             '(:inherit eshell-prompt))
+
+(esh-section esh-git
+             ""
+             (magit-get-current-branch)
+             '(:inherit eshell-prompt))
+
+(esh-section esh-hg
+             ""
+             (progn (safe-wrap (monky-current-branch)))
+             '(:inherit eshell-prompt))
+
+(esh-section esh-clock
+             "\xf017"  ;  (clock icon)
+             (format-time-string "%H:%M" (current-time))
+             '(:inherit font-lock-comment-face))
+
+;; Below I implement a "prompt number" section
+(setq esh-prompt-num 0)
+(add-hook 'eshell-exit-hook (lambda () (setq esh-prompt-num 0)))
+(advice-add 'eshell-send-input :before
+            (lambda (&rest args) (setq esh-prompt-num (incf esh-prompt-num))))
+
+;; (esh-section esh-num
+;;              ""
+;;              (number-to-string esh-prompt-num)
+;;              '(:foreground "brown"))
+
+;; Separator between esh-sections
+(setq esh-sep " :: ")  ; or " | "
+
+;; Separator between an esh-section icon and form
+(setq esh-section-delim "")
+
+;; Eshell prompt header
+(setq esh-header "")  ; or "\n┌─"
+
+;; Eshell prompt regexp and string. Unless you are varying the prompt by eg.
+;; your login, these can be the same.
+(setq eshell-prompt-regexp " ")   ; or "└─> "
+(setq eshell-prompt-string " ")   ; or "└─> "
+
+;; Choose which eshell-funcs to enable
+(setq eshell-funcs (list esh-dir esh-git esh-hg))
+
+;; Enable the new eshell prompt
+(setq eshell-prompt-function 'esh-prompt-func)
+#+END_SRC
 *** ace-window
 #+begin_src emacs-lisp :results silent
 (use-package ace-window
@@ -423,6 +519,7 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
+
 *** org-checklist
 #+BEGIN_SRC emacs-lisp
 (use-package org-plus-contrib
@@ -454,7 +551,7 @@
 *** Habit
 #+begin_src emacs-lisp :results silent
 ; position the habit graph on the agenda to the right of the default
-(setq org-habit-graph-column 50)
+(setq org-habit-graph-column 75)
 #+end_src
 *** org-view
 #+BEGIN_SRC emacs-lisp
@@ -511,7 +608,7 @@
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t
       org-src-tab-acts-natively t
-      org-adapt-indentation nil
+      org-adapt-indentation t
       org-src-preserve-indentation t
       org-confirm-babel-evaluate nil
       org-confirm-shell-link-function nil
@@ -624,6 +721,7 @@
               org-clock-out-remove-zero-time-clocks t
               org-clock-out-when-done t
               org-clock-idle-time 60
+              org-log-into-drawer t
               org-log-done (quote time)
               org-log-state-notes-insert-after-drawers nil
               org-log-note-clock-out t)
@@ -808,6 +906,7 @@
 (setq-default
  org-log-done nil
  org-special-ctrl-a/e t
+ org-special-ctrl-k t
  org-completion-use-ido t
  org-edit-timestamp-down-means-later t
  org-agenda-start-on-weekday nil
@@ -831,7 +930,20 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+*** [[http://oremacs.com/2014/12/23/upcase-word-you-silly/][case words]]
+#+BEGIN_SRC emacs-lisp
+(defadvice upcase-word (before upcase-word-advice activate)
+  (unless (looking-back "\\b")
+    (backward-word)))
 
+(defadvice downcase-word (before downcase-word-advice activate)
+  (unless (looking-back "\\b")
+    (backward-word)))
+
+;; (defadvice capitalize-word (before capitalize-word-advice activate)
+;;   (unless (looking-back "\\b")
+;;     (backward-word)))
+#+END_SRC
 *** duplicate-down
 #+BEGIN_SRC emacs-lisp
 (defun duplicate-line (arg)
@@ -990,7 +1102,7 @@
       (list (line-beginning-position)
         (line-beginning-position 2)))))
 #+END_SRC
-*** highlight-symbol
+*** COMMENT highlight-symbol
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-symbol
   :ensure t
@@ -1289,6 +1401,11 @@ header
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
+#+BEGIN_SRC emacs-lisp
+(use-package tiny
+  :ensure t)
+#+END_SRC
 *** prodigy
 #+BEGIN_SRC emacs-lisp
 (use-package prodigy
@@ -1566,19 +1683,22 @@ BEG and END (region to sort)."
 *** ivy
 #+BEGIN_SRC emacs-lisp
 (use-package ivy
-  :ensure flx
   :ensure counsel
   :ensure swiper
   :ensure t)
 
 (setq ivy-re-builders-alist
-      '((t . ivy--regex-fuzzy)))
+      '((nil . ivy--regex-fuzzy)
+        (t . ivy--regex-plus)))
 (setq ivy-initial-inputs-alist nil)
 
 (ivy-mode 1)
 (setq ivy-use-virtual-buffers t)
 (setq enable-recursive-minibuffers t)
 (global-set-key "\C-s" 'swiper)
+(global-set-key "\C-r" 'swiper)
+(define-key swiper-map (kbd "C-r") 'previous-line)
+(define-key swiper-map (kbd "C-s") 'next-line)
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "<f6>") 'ivy-resume)
 (global-set-key (kbd "M-x") 'counsel-M-x)
@@ -1594,6 +1714,8 @@ BEG and END (region to sort)."
 (global-set-key (kbd "C-x l") 'counsel-locate)
 (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
 (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+(define-key ivy-minibuffer-map (kbd "RET") 'ivy-alt-done)
+(define-key ivy-minibuffer-map (kbd "C-j") 'ivy-done)
 #+END_SRC
 *** imenu
 #+begin_src emacs-lisp
@@ -1731,6 +1853,7 @@ BEG and END (region to sort)."
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
+  :commands (magit-get-current-branch)
   :config (progn
             (setq magit-completing-read-function 'magit-ido-completing-read))
   :bind (("C-x g s" . magit-status)
@@ -2036,7 +2159,6 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming.python
 :END:
-
 
 **** highlights
 #+BEGIN_SRC emacs-lisp
