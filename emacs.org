@@ -174,6 +174,9 @@
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
   :ensure t)
+
+(after-load 'dired
+  (global-dired-hide-details-mode -1))
 #+END_SRC
 *** omit
 #+BEGIN_SRC emacs-lisp
@@ -862,6 +865,7 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+
 *** duplicate-down
 #+BEGIN_SRC emacs-lisp
 (defun duplicate-line (arg)
@@ -1267,7 +1271,7 @@ about what flexible matching means in this context."
   (newline)                    ; insert a newline
   (switch-to-buffer nil))
 #+end_src
-*** COMMENT yasnippet
+*** yasnippet
 **** __init__
 #+begin_src emacs-lisp
 (use-package yasnippet
@@ -1282,7 +1286,7 @@ about what flexible matching means in this context."
 | cmd            | map        | binding |
 |----------------+------------+---------|
 | yas-ido-expand | global-map | C-x y i |
-header
+
 #+begin_src emacs-lisp
 (defun yas-ido-expand ()
   "Lets you select (and expand) a yasnippet key"
@@ -1300,7 +1304,7 @@ header
                   (lambda (s) (string-match (concat "^" word) s)) list)))
         (if (= (length key) 1)
             (setq key (pop key))
-          (setq key (ido-completing-read "key: " list nil nil word)))
+          (setq key (ivy-completing-read "key: " list)))
         (delete-char (- init-word original-point))
         (insert key)
         (yas-expand)))))
@@ -1614,40 +1618,6 @@ BEG and END (region to sort)."
                 (if (string-match (car lang-regex) sentence)
                     (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))))
   :bind ("C-x y t t" . translate-text)
-  :ensure t)
-#+end_src
-*** COMMENT ido
-#+begin_src emacs-lisp
-(use-package ido
-  :config (progn
-            (setq-default ido-enable-flex-matching nil
-                          ido-use-filename-at-point nil
-                          ido-auto-merge-work-directories-length -1
-                          ido-use-virtual-buffers t
-                          ido-confirm-unique-completion t
-                          ido-default-buffer-method 'selected-window)
-            (ido-mode t)
-            (ido-everywhere t)))
-
-;; (use-package idomenu
-;;   :ensure t)
-
-(use-package ido-vertical-mode
-  :config (progn
-            (setq-default ido-vertical-define-keys 'C-n-and-C-p-only)
-            (ido-vertical-mode))
-  :ensure t)
-
-(use-package ido-completing-read+
-  :config (progn
-            (ido-ubiquitous-mode))
-  :ensure t)
-
-(use-package smex
-  ;; Smex is a M-x enhancement for Emacs, it provides a convenient interface to
-  ;; your recently and most frequently used commands.
-  :config (progn
-            (global-set-key [remap execute-extended-command] 'smex))
   :ensure t)
 #+end_src
 *** ivy
