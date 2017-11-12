@@ -32,16 +32,12 @@
 
 * COMMENT Org-Feed
 #+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
-(let ((header (mapcar 'substring-no-properties
-                      (org-table-get-remote-range "org-feed-alist" "@1$<..@1$>")))
-      (body (mapcar 'substring-no-properties
-                    (org-table-get-remote-range "org-feed-alist" "@I$<..@II$>"))))
-  (pp body))
+  ;; (let ((header (mapcar 'substring-no-properties
+  ;;                       (org-table-get-remote-range "org-feed-alist" "@1$<..@1$>")))
+  ;;       (body (mapcar 'substring-no-properties
+  ;;                     (org-table-get-remote-range "org-feed-alist" "@I$<..@II$>"))))
+  ;;   (pp body))
 #+END_SRC
-
-#+RESULTS:
-: ("C'est la Z" "http://cestlaz.github.io/rss.xml" "CS" "cest-la-z" "Nullprogram" "http://nullprogram.com/feed/" "CS" "nullprogram" "Aaron Bieber" "https://blog.aaronbieber.com/feed.xml" "CS" "aaron-bieber" "Shiyuan Gu" "https://shiyuangu.com/feed/" "CS" "shiyuan" "Emacs Horrors" "http://emacshorrors.com/feed.atom" "Emacs" "emacs-horrors" "Endless Parentheses" "http://endlessparentheses.com/atom.xml" "Emacs" "endless-parentheses" "Kitchin Babel" "http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/" "Emacs" "kitchin-babel" "Kitchin Elisp" "http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/" "Emacs" "kitchin-elisp" "Kitchin Emacs Lisp" "http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/" "Emacs" "kitchin-emacs-lisp" "Kitchin Emacs" "http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/" "Emacs" "kitchin-emacs" "Kitchin Emacslisp" "http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/" "Emacs" "kitchin-emacslisp" "Kitchin Lisp" "http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/" "Emacs" "kitchin-lisp" "Kitchin Literate Programming" "http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/" "Emacs" "kitchin-literate-programming" "Kitchin Org-mode" "http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/" "Emacs" "kitchin-org-mode" "Kitchin Org" "http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/" "Emacs" "kitchin-org" "Kitchin Orgmode" "http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/" "Emacs" "kitchin-orgmode" "Pragmatic Emacs" "http://pragmaticemacs.com/feed/" "Emacs" "pragmatic-emacs" "Sacha Chua" "http://sachachua.com/blog/category/emacs-news/feed" "Emacs" "sacha-chua" "Emacs-El" "https://emacs-el.com/rss.xml" "Emacs" "emacs-el" "Pascal Bourguignon's Sofware" "http://www.informatimago.com/blog/feed.xml" "Emacs" "informatimago" "Kitchin Python" "http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/" "Python" "kitchin-python" "Lleo" "http://lleo.me/dnevnik/rss.xml" "Life" "lleo" "Howardism" "http://howardism.org/index.xml" "Emacs" "howard")
-
 * Config
 :PROPERTIES:
 :header-args: :results silent :mkdirp yes
@@ -324,85 +320,88 @@
 #+END_SRC
 *** beautify
 #+BEGIN_SRC emacs-lisp
-(require 'dash)
-(require 's)
+  (use-package dash
+    :ensure t)
 
-(defmacro with-face (STR &rest PROPS)
-  "Return STR propertized with PROPS."
-  `(propertize ,STR 'face (list ,@PROPS)))
+  (use-package s
+    :ensure t)
 
-(defmacro esh-section (NAME ICON FORM &rest PROPS)
-  "Build eshell section NAME with ICON prepended to evaled FORM with PROPS."
-  `(setq ,NAME
-         (lambda () (when ,FORM
-                 (->(concat esh-section-delim ,FORM)
-                    (with-face ,@PROPS))))))
+  (defmacro with-face (STR &rest PROPS)
+    "Return STR propertized with PROPS."
+    `(propertize ,STR 'face (list ,@PROPS)))
 
-(defun esh-acc (acc x)
-  "Accumulator for evaluating and concatenating esh-sections."
-  (--if-let (funcall x)
-      (if (s-blank? acc)
-          it
-        (concat acc esh-sep it))
-    acc))
+  (defmacro esh-section (NAME ICON FORM &rest PROPS)
+    "Build eshell section NAME with ICON prepended to evaled FORM with PROPS."
+    `(setq ,NAME
+           (lambda () (when ,FORM
+                   (->(concat esh-section-delim ,FORM)
+                      (with-face ,@PROPS))))))
 
-(defun esh-prompt-func ()
-  "Build `eshell-prompt-function'"
-  (concat esh-header
-          (-reduce-from 'esh-acc "" eshell-funcs)
-          " >"
-          eshell-prompt-string))
+  (defun esh-acc (acc x)
+    "Accumulator for evaluating and concatenating esh-sections."
+    (--if-let (funcall x)
+        (if (s-blank? acc)
+            it
+          (concat acc esh-sep it))
+      acc))
 
-(esh-section esh-dir
-             ""  ;  (faicon folder)
-             (abbreviate-file-name (eshell/pwd))
-             '(:inherit eshell-prompt))
+  (defun esh-prompt-func ()
+    "Build `eshell-prompt-function'"
+    (concat esh-header
+            (-reduce-from 'esh-acc "" eshell-funcs)
+            " >"
+            eshell-prompt-string))
 
-(esh-section esh-git
-             ""
-             (magit-get-current-branch)
-             '(:inherit eshell-prompt))
+  (esh-section esh-dir
+               ""  ;  (faicon folder)
+               (abbreviate-file-name (eshell/pwd))
+               '(:inherit eshell-prompt))
 
-(esh-section esh-hg
-             ""
-             (progn (safe-wrap (monky-current-branch)))
-             '(:inherit eshell-prompt))
+  (esh-section esh-git
+               ""
+               (magit-get-current-branch)
+               '(:inherit eshell-prompt))
 
-(esh-section esh-clock
-             "\xf017"  ;  (clock icon)
-             (format-time-string "%H:%M" (current-time))
-             '(:inherit font-lock-comment-face))
+  (esh-section esh-hg
+               ""
+               (progn (safe-wrap (monky-current-branch)))
+               '(:inherit eshell-prompt))
 
-;; Below I implement a "prompt number" section
-(setq esh-prompt-num 0)
-(add-hook 'eshell-exit-hook (lambda () (setq esh-prompt-num 0)))
-(advice-add 'eshell-send-input :before
-            (lambda (&rest args) (setq esh-prompt-num (incf esh-prompt-num))))
+  (esh-section esh-clock
+               "\xf017"  ;  (clock icon)
+               (format-time-string "%H:%M" (current-time))
+               '(:inherit font-lock-comment-face))
 
-;; (esh-section esh-num
-;;              ""
-;;              (number-to-string esh-prompt-num)
-;;              '(:foreground "brown"))
+  ;; Below I implement a "prompt number" section
+  (setq esh-prompt-num 0)
+  (add-hook 'eshell-exit-hook (lambda () (setq esh-prompt-num 0)))
+  (advice-add 'eshell-send-input :before
+              (lambda (&rest args) (setq esh-prompt-num (incf esh-prompt-num))))
 
-;; Separator between esh-sections
-(setq esh-sep " :: ")  ; or " | "
+  ;; (esh-section esh-num
+  ;;              ""
+  ;;              (number-to-string esh-prompt-num)
+  ;;              '(:foreground "brown"))
 
-;; Separator between an esh-section icon and form
-(setq esh-section-delim "")
+  ;; Separator between esh-sections
+  (setq esh-sep " :: ")  ; or " | "
 
-;; Eshell prompt header
-(setq esh-header "")  ; or "\n┌─"
+  ;; Separator between an esh-section icon and form
+  (setq esh-section-delim "")
 
-;; Eshell prompt regexp and string. Unless you are varying the prompt by eg.
-;; your login, these can be the same.
-(setq eshell-prompt-regexp " ")   ; or "└─> "
-(setq eshell-prompt-string " ")   ; or "└─> "
+  ;; Eshell prompt header
+  (setq esh-header "")  ; or "\n┌─"
 
-;; Choose which eshell-funcs to enable
-(setq eshell-funcs (list esh-dir esh-git esh-hg))
+  ;; Eshell prompt regexp and string. Unless you are varying the prompt by eg.
+  ;; your login, these can be the same.
+  (setq eshell-prompt-regexp " ")   ; or "└─> "
+  (setq eshell-prompt-string " ")   ; or "└─> "
 
-;; Enable the new eshell prompt
-(setq eshell-prompt-function 'esh-prompt-func)
+  ;; Choose which eshell-funcs to enable
+  (setq eshell-funcs (list esh-dir esh-git esh-hg))
+
+  ;; Enable the new eshell prompt
+  (setq eshell-prompt-function 'esh-prompt-func)
 #+END_SRC
 ** Window Managment
 *** ace-window
