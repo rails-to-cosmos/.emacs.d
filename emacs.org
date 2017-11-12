@@ -43,7 +43,15 @@
 :header-args: :results silent :mkdirp yes
 :END:
 
-** Core
+** Lisp
+*** after-load
+#+begin_src emacs-lisp
+(defmacro after-load (feature &rest body)
+  "After FEATURE is loaded, evaluate BODY."
+  (declare (indent defun))
+  `(eval-after-load ,feature
+     '(progn ,@body)))
+#+end_src
 *** safe-wrap
 #+BEGIN_SRC emacs-lisp
 (defmacro safe-wrap (fn &rest clean-up)
@@ -57,25 +65,9 @@
          retval)
      ,@clean-up))
 #+END_SRC
-*** better-defaults
+** Core
+*** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
 #+BEGIN_SRC emacs-lisp
-(use-package better-defaults
-  :ensure t)
-#+END_SRC
-*** alert
-#+begin_src emacs-lisp
-(use-package alert
-  :ensure t)
-#+end_src
-*** benchmark
-#+begin_src emacs-lisp
-(use-package benchmark-init
-  :config (progn
-            (benchmark-init/activate))
-  :ensure t)
-#+end_src
-*** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][Encoding]]
-#+begin_src emacs-lisp
 ;; UTF-8 as the default coding system
 (set-charset-priority 'unicode)
 (prefer-coding-system        'utf-8)
@@ -117,20 +109,11 @@
 (use-package font-utils
   :ensure t)
 #+end_src
-*** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
-#+begin_src emacs-lisp
-(advice-add #'display-startup-echo-area-message :override #'ignore)
-#+end_src
-*** after-load
-#+begin_src emacs-lisp
-(defmacro after-load (feature &rest body)
-  "After FEATURE is loaded, evaluate BODY."
-  (declare (indent defun))
-  `(eval-after-load ,feature
-     '(progn ,@body)))
-#+end_src
 *** paths
 #+begin_src emacs-lisp
+  ;; (defmacro with-dir (FN)
+  ;;   "Get path to FN in )
+
   (defun tmp/ (filename)
     "Get path to FILENAME in temp directory."
     (let ((dir "~/tmp/emacs/"))
@@ -142,68 +125,62 @@
     (let ((dir "~/sync/emacs/"))
       (make-directory dir t)
       (if filename
-          (concat dir filename)
-        dir)))
+	  (concat dir filename)
+	dir)))
 
   (setq-default custom-file (tmp/ "custom.el"))
   (setq-default bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el")
 		bookmark-default-file (sync/ "bookmarks.txt")
 		bookmark-save-flag t)
 #+end_src
-*** os
+*** osx
 #+begin_src emacs-lisp
-  (defconst IS-MAC   (eq system-type 'darwin))
-  (defconst IS-LINUX (eq system-type 'gnu/linux))
-#+end_src
+  (cond ((eq system-type 'darwin)
+	 (setq mac-command-modifier 'meta
+	       mac-option-modifier  'alt
+	       ;; sane trackpad/mouse scroll settings
+	       mac-redisplay-dont-reset-vscroll t
+	       mac-mouse-wheel-smooth-scroll nil
+	       mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
+	       mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
+	       ;; Curse Lion and its sudden but inevitable fullscreen mode!
+	       ;; NOTE Meaningless to railwaycat's emacs-mac build
+	       ns-use-native-fullscreen t
+	       ;; Don't open files from the workspace in a new frame
+	       ns-pop-up-frames nil
+	       alert-default-style 'osx-notifier)
 
-**** osx
-#+begin_src emacs-lisp
-  (cond (IS-MAC
-         (setq mac-command-modifier 'meta
-               mac-option-modifier  'alt
-               ;; sane trackpad/mouse scroll settings
-               mac-redisplay-dont-reset-vscroll t
-               mac-mouse-wheel-smooth-scroll nil
-               mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
-               mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
-               ;; Curse Lion and its sudden but inevitable fullscreen mode!
-               ;; NOTE Meaningless to railwaycat's emacs-mac build
-               ns-use-native-fullscreen t
-               ;; Don't open files from the workspace in a new frame
-               ns-pop-up-frames nil
-               alert-default-style 'osx-notifier)
-
-         (cond ((display-graphic-p)
-                ;; A known problem with GUI Emacs on MacOS: it runs in an isolated
-                ;; environment, so envvars will be wrong. That includes the PATH
-                ;; Emacs picks up. `exec-path-from-shell' fixes this. This is slow
-                ;; and benefits greatly from compilation.
-                (setq exec-path
-                      (or (eval-when-compile
-                            (when (require 'exec-path-from-shell nil t)
-                              (setq exec-path-from-shell-check-startup-files nil
-                                    exec-path-from-shell-arguments (delete "-i" exec-path-from-shell-arguments))
-                              (nconc exec-path-from-shell-variables '("GOPATH" "GOROOT" "PYTHONPATH"))
-                              (exec-path-from-shell-initialize)
-                              ;; (persistent-soft-store 'exec-path exec-path "emacs")
-                              exec-path))
-                          exec-path)))
-               (t
-                (when (require 'osx-clipboard nil t)
-                  (osx-clipboard-mode +1))))))
+	 (cond ((display-graphic-p)
+		;; A known problem with GUI Emacs on MacOS: it runs in an isolated
+		;; environment, so envvars will be wrong. That includes the PATH
+		;; Emacs picks up. `exec-path-from-shell' fixes this. This is slow
+		;; and benefits greatly from compilation.
+		(setq exec-path
+		      (or (eval-when-compile
+			    (when (require 'exec-path-from-shell nil t)
+			      (setq exec-path-from-shell-check-startup-files nil
+				    exec-path-from-shell-arguments (delete "-i" exec-path-from-shell-arguments))
+			      (nconc exec-path-from-shell-variables '("GOPATH" "GOROOT" "PYTHONPATH"))
+			      (exec-path-from-shell-initialize)
+			      ;; (persistent-soft-store 'exec-path exec-path "emacs")
+			      exec-path))
+			  exec-path)))
+	       (t
+		(when (require 'osx-clipboard nil t)
+		  (osx-clipboard-mode +1))))))
 #+end_src
-*** dired
-**** dired+
+** Dired
+*** dired+
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
   :ensure t)
 #+END_SRC
-**** omit
+*** omit
 #+BEGIN_SRC emacs-lisp
-;; (setq dired-omit-files "^\\.[^.]\\|\\.pdf$\\|\\.tex$")
+(setq dired-omit-files "^\\.[^.]\\|\\.pdf$\\|\\.tex$")
 ;; (setq-default dired-omit-files-p t) ; this is buffer-local variable
 #+END_SRC
-**** dired-subtree
+*** dired-subtree
 #+BEGIN_SRC emacs-lisp
 (put 'dired-find-alternate-file 'disabled nil)
 
@@ -222,13 +199,13 @@
                        ("<tab>" . dired-subtree-toggle)))
   :ensure t)
 #+END_SRC
-**** dired-narrow
+*** dired-narrow
 #+BEGIN_SRC emacs-lisp
 (use-package dired-narrow
   :ensure t)
 (define-key dired-mode-map (kbd "/") 'dired-narrow-fuzzy)
 #+END_SRC
-**** dired-switch-or-jump
+*** dired-switch-or-jump
 #+BEGIN_SRC emacs-lisp
 (defun dired/switch-or-jump ()
   "Quickly switch to dired buffer."
@@ -243,7 +220,7 @@
              (dired-jump)))))
 (define-key global-map (kbd "C-x C-d") 'dired/switch-or-jump)
 #+END_SRC
-**** dired-rainbow
+*** dired-rainbow
 #+BEGIN_SRC emacs-lisp
 (use-package dired-rainbow
   :config (progn
@@ -253,8 +230,8 @@
             (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
   :ensure t)
 #+END_SRC
-**** sorting
-***** sort directories first
+*** sorting
+**** sort directories first
 #+BEGIN_SRC emacs-lisp
 (defun dired/sort ()
   "Sort dired listings with directories first."
@@ -268,7 +245,7 @@
   "Sort dired listings with directories first before mark adding."
   (dired/sort))
 #+END_SRC
-***** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
+**** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
 #+BEGIN_SRC emacs-lisp
 ;; using ls-lisp with these settings gives case-insensitve
 ;; sorting on OS X
@@ -282,19 +259,37 @@
 (setq ls-lisp-format-time-list '("%b %e %H:%M" "%b %e  %Y"))
 (setq ls-lisp-use-localized-time-format t)
 #+END_SRC
-*** eshell
+** EShell
+*** settings
 #+begin_src emacs-lisp
-(setq-default
- eshell-buffer-maximum-lines 500
- eshell-output-filter-functions
- '(eshell-truncate-buffer
-   eshell-postoutput-scroll-to-bottom
-   eshell-handle-control-codes
-   eshell-handle-ansi-color
-   eshell-watch-for-password-prompt)
- password-cache t
- password-cache-expiry 3600)
+  (setq-default
+   eshell-buffer-maximum-lines 500
+   eshell-output-filter-functions
+   '(eshell-truncate-buffer
+     eshell-postoutput-scroll-to-bottom
+     eshell-handle-control-codes
+     eshell-handle-ansi-color
+     eshell-watch-for-password-prompt)
+   password-cache t
+   password-cache-expiry 3600)
 
+  ;; (eval-after-load 'tramp-mode
+  ;; (let ((process-environment tramp-remote-process-environment))
+  ;;   (setenv "LANG" "en_US.UTF-8")
+  ;;   (setenv "LC_ALL" "en_US.UTF-8")
+  ;;   (setenv "LC_CTYPE" "en_US.UTF-8")
+  ;;   (setq tramp-remote-process-environment process-environment)))
+
+  (use-package exec-path-from-shell
+    :config (progn
+	      (when (memq window-system '(mac ns))
+		(exec-path-from-shell-initialize)
+		(exec-path-from-shell-copy-env "SSH_AGENT_PID")
+		(exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
+    :ensure t)
+#+end_src
+*** alias
+#+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'em-alias
     ;;; TODO: This conflicts with `evil-define-key' during the initialization of
     ;;; the first eshell session: the map in insert-mode will not take the changes
@@ -314,23 +309,8 @@
          ("mkcd" "*mkdir -p $* && cd $1")))
     (add-to-list 'eshell-command-aliases-list alias))
   (eshell-write-aliases-list))
-
-;; (let ((process-environment tramp-remote-process-environment))
-;;   (setenv "LANG" "en_US.UTF-8")
-;;   (setenv "LC_ALL" "en_US.UTF-8")
-;;   (setenv "LC_CTYPE" "en_US.UTF-8")
-;;   (setq tramp-remote-process-environment process-environment))
-
-(use-package exec-path-from-shell
-  :config (progn
-            (when (memq window-system '(mac ns))
-              (exec-path-from-shell-initialize)
-              (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
-  :ensure t)
-#+end_src
-
-**** beautify
+#+END_SRC
+*** beautify
 #+BEGIN_SRC emacs-lisp
 (require 'dash)
 (require 's)
@@ -412,6 +392,7 @@
 ;; Enable the new eshell prompt
 (setq eshell-prompt-function 'esh-prompt-func)
 #+END_SRC
+** Window Managment
 *** ace-window
 #+begin_src emacs-lisp :results silent
 (use-package ace-window
@@ -439,56 +420,6 @@
 
 (define-key global-map (kbd "C-x 2") 'split-window-vertically-swap)
 (define-key global-map (kbd "C-x 3") 'split-window-horizontally-swap)
-#+end_src
-*** super-save
-#+begin_src emacs-lisp
-(use-package super-save
-  :config (progn
-            (super-save-initialize)
-            (setq super-save-auto-save-when-idle t))
-  :ensure t)
-#+end_src
-*** delete-trailing-whitespace
-#+begin_src emacs-lisp
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-#+end_src
-*** delete-other-windows
-#+begin_src emacs-lisp
-(use-package delete-other-windows
-  :no-require t
-  :bind (("C-x 1" . delete-other-windows)))
-#+end_src
-*** delete-this-file
-#+begin_src emacs-lisp
-(defun delete-this-file ()
-  "Delete the current file, and kill the buffer."
-  (interactive)
-  (or (buffer-file-name) (error "No file is currently being edited"))
-  (when (yes-or-no-p (format "Really delete '%s'?"
-                             (file-name-nondirectory buffer-file-name)))
-    (delete-file (buffer-file-name))
-    (kill-this-buffer)))
-#+end_src
-*** immortal-scratch
-#+begin_src emacs-lisp
-(setq-default initial-major-mode 'org-mode)
-
-(defun immortal-scratch ()
-  (if (eq (current-buffer) (get-buffer "*scratch*"))
-      (progn (bury-buffer) nil) t))
-(add-hook 'kill-buffer-query-functions 'immortal-scratch)
-(setq kill-buffer-query-functions
-      (remq 'process-kill-buffer-query-function
-            kill-buffer-query-functions))
-#+end_src
-*** prevent-active-processes-exist
-#+begin_src emacs-lisp
-(defun prevent-active-processes-exist ()
-  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-    (cl-letf (((symbol-function #'process-list) (lambda ())))
-      ad-do-it)))
-(add-hook 'after-init-hook 'prevent-active-processes-exist)
 #+end_src
 ** Keyboard
 *** default bindings
@@ -520,78 +451,18 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
-*** org-checklist
-#+BEGIN_SRC emacs-lisp
-(use-package org-plus-contrib
-  :ensure t)
-
-(require 'org-checklist)
-#+END_SRC
-*** modules
-#+BEGIN_SRC emacs-lisp
-; Enable habit tracking (and a bunch of other modules)
-(setq org-modules (quote (org-bbdb
-                          org-bibtex
-                          org-crypt
-                          org-gnus
-                          org-id
-                          org-info
-                          org-jsinfo
-                          org-habit
-                          org-inlinetask
-                          org-irc
-                          org-mew
-                          org-mhe
-                          org-protocol
-                          org-rmail
-                          org-vm
-                          org-wl
-                          org-w3m)))
-#+END_SRC
-*** Habit
-#+begin_src emacs-lisp :results silent
-; position the habit graph on the agenda to the right of the default
-(setq org-habit-graph-column 75)
-#+end_src
-*** org-view
-#+BEGIN_SRC emacs-lisp
-(defun org-view/evaluate-at-point (state)
-  (let ((src-block-name (org-entry-get (point) "SRC"))
-        (tags-list (org-get-tags)))
-    (when (and (not (eq state 'folded))
-               (member "View" tags-list)
-               (not (eq src-block-name nil)))
-      (save-excursion
-        (org-babel-goto-named-src-block src-block-name)
-        (org-ctrl-c-ctrl-c)))))
-(add-hook 'org-pre-cycle-hook 'org-view/evaluate-at-point)
-#+END_SRC
-*** crypt
-#+BEGIN_SRC emacs-lisp
-(require 'epa-file)
-(setq epa-file-select-keys nil)
-(require 'org-crypt)
-; Encrypt all entries before saving
-(org-crypt-use-before-save-magic)
-(setq org-tags-exclude-from-inheritance (quote ("crypt")))
-; GPG key to use for encryption
-(setq org-crypt-key "F0B66B40")
-#+END_SRC
-*** Export
-#+BEGIN_SRC emacs-lisp
-(setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
-#+END_SRC
-*** [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
-#+begin_src emacs-lisp
-(setq help/default-gc-cons-threshold gc-cons-threshold)
-(defun help/set-mem-max ()
-  (setq gc-cons-threshold most-positive-fixnum))
-(defun help/set-mem-default ()
-  (setq gc-cons-threshold help/default-gc-cons-threshold))
-(add-hook 'org-babel-pre-tangle-hook #'help/set-mem-max)
-(add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
-#+end_src
 *** Babel
+**** settings
+#+BEGIN_SRC emacs-lisp
+(setq org-src-fontify-natively t
+      org-src-tab-acts-natively t
+      org-adapt-indentation t
+      org-src-preserve-indentation t
+      org-confirm-babel-evaluate nil
+      org-confirm-shell-link-function nil
+      org-confirm-elisp-link-function nil)
+(add-hook 'org-mode-hook 'org-hide-block-all)
+#+END_SRC
 **** source editing
 #+BEGIN_SRC emacs-lisp
 (setq org-src-window-setup 'current-window)
@@ -603,17 +474,6 @@
   (org-babel-when-in-src-block
    (let ((current-prefix-arg '(4)))
      (call-interactively 'org-babel-tangle))))
-#+END_SRC
-**** settings
-#+BEGIN_SRC emacs-lisp
-(setq org-src-fontify-natively t
-      org-src-tab-acts-natively t
-      org-adapt-indentation t
-      org-src-preserve-indentation t
-      org-confirm-babel-evaluate nil
-      org-confirm-shell-link-function nil
-      org-confirm-elisp-link-function nil)
-(add-hook 'org-mode-hook 'org-hide-block-all)
 #+END_SRC
 **** exec from results
 #+begin_src emacs-lisp
@@ -705,6 +565,77 @@
                              (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
+*** modules
+#+BEGIN_SRC emacs-lisp
+; Enable habit tracking (and a bunch of other modules)
+(setq org-modules (quote (org-bbdb
+                          org-bibtex
+                          org-crypt
+                          org-gnus
+                          org-id
+                          org-info
+                          org-jsinfo
+                          org-habit
+                          org-inlinetask
+                          org-irc
+                          org-mew
+                          org-mhe
+                          org-protocol
+                          org-rmail
+                          org-vm
+                          org-wl
+                          org-w3m)))
+#+END_SRC
+*** org-checklist
+#+BEGIN_SRC emacs-lisp
+(use-package org-plus-contrib
+  :ensure t)
+
+(require 'org-checklist)
+#+end_src
+*** habit
+#+begin_src emacs-lisp :results silent
+; position the habit graph on the agenda to the right of the default
+(setq org-habit-graph-column 75)
+#+end_src
+*** org-view
+#+BEGIN_SRC emacs-lisp
+(defun org-view/evaluate-at-point (state)
+  (let ((src-block-name (org-entry-get (point) "SRC"))
+        (tags-list (org-get-tags)))
+    (when (and (not (eq state 'folded))
+               (member "View" tags-list)
+               (not (eq src-block-name nil)))
+      (save-excursion
+        (org-babel-goto-named-src-block src-block-name)
+        (org-ctrl-c-ctrl-c)))))
+(add-hook 'org-pre-cycle-hook 'org-view/evaluate-at-point)
+#+END_SRC
+*** crypt
+#+BEGIN_SRC emacs-lisp
+(require 'epa-file)
+(setq epa-file-select-keys nil)
+(require 'org-crypt)
+; Encrypt all entries before saving
+(org-crypt-use-before-save-magic)
+(setq org-tags-exclude-from-inheritance (quote ("crypt")))
+; GPG key to use for encryption
+(setq org-crypt-key "F0B66B40")
+#+END_SRC
+*** Export
+#+BEGIN_SRC emacs-lisp
+(setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
+#+END_SRC
+*** [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
+#+begin_src emacs-lisp
+(setq help/default-gc-cons-threshold gc-cons-threshold)
+(defun help/set-mem-max ()
+  (setq gc-cons-threshold most-positive-fixnum))
+(defun help/set-mem-default ()
+  (setq gc-cons-threshold help/default-gc-cons-threshold))
+(add-hook 'org-babel-pre-tangle-hook #'help/set-mem-max)
+(add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
 #+end_src
 *** Clock
 #+begin_src emacs-lisp
@@ -930,20 +861,6 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
-*** [[http://oremacs.com/2014/12/23/upcase-word-you-silly/][case words]]
-#+BEGIN_SRC emacs-lisp
-(defadvice upcase-word (before upcase-word-advice activate)
-  (unless (looking-back "\\b")
-    (backward-word)))
-
-(defadvice downcase-word (before downcase-word-advice activate)
-  (unless (looking-back "\\b")
-    (backward-word)))
-
-;; (defadvice capitalize-word (before capitalize-word-advice activate)
-;;   (unless (looking-back "\\b")
-;;     (backward-word)))
-#+END_SRC
 *** duplicate-down
 #+BEGIN_SRC emacs-lisp
 (defun duplicate-line (arg)
@@ -1101,17 +1018,6 @@
     (if mark-active (list (region-beginning) (region-end))
       (list (line-beginning-position)
         (line-beginning-position 2)))))
-#+END_SRC
-*** COMMENT highlight-symbol
-#+BEGIN_SRC emacs-lisp
-(use-package highlight-symbol
-  :ensure t
-  :config (progn
-	    (dolist (hook '(prog-mode-hook html-mode-hook css-mode-hook))
-	      (add-hook hook 'highlight-symbol-mode)
-	      (add-hook hook 'highlight-symbol-nav-mode))
-	    (eval-after-load 'highlight-symbol
-	      '(diminish 'highlight-symbol-mode))))
 #+END_SRC
 *** prettify-symbols
 #+BEGIN_SRC emacs-lisp
@@ -1360,7 +1266,7 @@ about what flexible matching means in this context."
   (newline)                    ; insert a newline
   (switch-to-buffer nil))
 #+end_src
-*** yasnippet
+*** COMMENT yasnippet
 **** __init__
 #+begin_src emacs-lisp
 (use-package yasnippet
@@ -1401,6 +1307,69 @@ header
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** [[https://github.com/bbatsov/super-save][super-save]]
+#+begin_src emacs-lisp
+(use-package super-save
+  :config (progn
+            (super-save-initialize)
+            (setq auto-save-default nil)
+            (setq super-save-auto-save-when-idle t))
+  :ensure t)
+#+end_src
+*** delete-trailing-whitespace
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+end_src
+*** delete-other-windows
+#+begin_src emacs-lisp
+(use-package delete-other-windows
+  :no-require t
+  :bind (("C-x 1" . delete-other-windows)))
+#+end_src
+*** delete-this-file
+#+begin_src emacs-lisp
+(defun delete-this-file ()
+  "Delete the current file, and kill the buffer."
+  (interactive)
+  (or (buffer-file-name) (error "No file is currently being edited"))
+  (when (yes-or-no-p (format "Really delete '%s'?"
+                             (file-name-nondirectory buffer-file-name)))
+    (delete-file (buffer-file-name))
+    (kill-this-buffer)))
+#+end_src
+*** immortal-scratch
+#+begin_src emacs-lisp
+(setq-default initial-major-mode 'org-mode)
+
+(defun immortal-scratch ()
+  (if (eq (current-buffer) (get-buffer "*scratch*"))
+      (progn (bury-buffer) nil) t))
+(add-hook 'kill-buffer-query-functions 'immortal-scratch)
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function
+            kill-buffer-query-functions))
+#+end_src
+*** prevent-active-processes-exist
+#+begin_src emacs-lisp
+(defun prevent-active-processes-exist ()
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+    (cl-letf (((symbol-function #'process-list) (lambda ())))
+      ad-do-it)))
+(add-hook 'after-init-hook 'prevent-active-processes-exist)
+#+end_src
+*** benchmark-init
+#+begin_src emacs-lisp
+(use-package benchmark-init
+  :config (progn
+            (benchmark-init/activate))
+  :ensure t)
+#+end_src
+*** alert
+#+begin_src emacs-lisp
+(use-package alert
+  :ensure t)
+#+end_src
 *** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
 #+BEGIN_SRC emacs-lisp
 (use-package tiny
@@ -1697,8 +1666,9 @@ BEG and END (region to sort)."
 (setq enable-recursive-minibuffers t)
 (global-set-key "\C-s" 'swiper)
 (global-set-key "\C-r" 'swiper)
-(define-key swiper-map (kbd "C-r") 'previous-line)
-(define-key swiper-map (kbd "C-s") 'next-line)
+(after-load 'swiper
+    (define-key swiper-map (kbd "C-r") 'previous-line)
+    (define-key swiper-map (kbd "C-s") 'next-line))
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "<f6>") 'ivy-resume)
 (global-set-key (kbd "M-x") 'counsel-M-x)
@@ -1849,7 +1819,6 @@ BEG and END (region to sort)."
 (use-package monky
   :ensure t)
 #+end_src
-**** TODO Implement vcs-status: monky-status or magit-status?
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
@@ -2202,6 +2171,15 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
+#+begin_src emacs-lisp
+(advice-add #'display-startup-echo-area-message :override #'ignore)
+#+end_src
+*** better-defaults
+#+BEGIN_SRC emacs-lisp
+(use-package better-defaults
+  :ensure t)
+#+END_SRC
 *** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
