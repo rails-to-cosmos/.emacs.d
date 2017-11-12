@@ -425,6 +425,7 @@
 *** default bindings
 #+begin_src emacs-lisp
 (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
+(define-key global-map (kbd "C-x k") 'kill-this-buffer)
 #+end_src
 *** key-freq
 #+begin_src emacs-lisp :results silent
