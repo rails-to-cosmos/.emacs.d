@@ -43,6 +43,11 @@
 :header-args: :results silent :mkdirp yes
 :END:
 
+** better-defaults
+#+BEGIN_SRC emacs-lisp
+(use-package better-defaults
+  :ensure t)
+#+END_SRC
 ** Lisp
 *** after-load
 #+begin_src emacs-lisp
@@ -594,6 +599,7 @@
 *** org-checklist
 #+BEGIN_SRC emacs-lisp
 (use-package org-plus-contrib
+  :defer t
   :ensure t)
 
 (require 'org-checklist)
@@ -1116,7 +1122,7 @@
 (use-package flyspell
   :ensure t)
 #+end_src
-*** hippie-expand
+*** COMMENT hippie-expand
 #+BEGIN_SRC emacs-lisp
 (use-package hippie-expand
   :config (progn
@@ -1312,6 +1318,51 @@ about what flexible matching means in this context."
 (define-key global-map (kbd "C-x y i") 'yas-ido-expand)
 #+end_src
 ** Utils
+*** [#A] =Ivy=
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+  :bind (:map ivy-minibuffer-map
+         ("RET" . ivy-alt-done)
+         ("C-j" . ivy-done))
+  :config (progn
+            (setq ivy-re-builders-alist
+                  '((nil . ivy--regex-fuzzy)
+                    (t . ivy--regex-plus)))
+            (setq ivy-initial-inputs-alist nil)
+
+            (ivy-mode 1)
+            (setq ivy-use-virtual-buffers t)
+            (setq enable-recursive-minibuffers t))
+  :ensure t)
+
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+         ("C-x C-f" . counsel-find-file)
+         ("C-h f" . counsel-describe-function)
+         ("C-h v" . counsel-describe-variable)
+         ("C-h l" . counsel-find-library)
+         ("C-h i" . counsel-info-lookup-symbol)
+         ("C-h u" . counsel-unicode-char)
+         ("C-c g" . counsel-git)
+         ("C-c j" . counsel-git-grep)
+         ("C-c k" . counsel-ag)
+         ("C-x l" . counsel-locate)
+         ("C-x j j" . counsel-bookmark)
+         ("C-S-o" . counsel-rhythmbox)
+         :map read-expression-map
+         ("C-r" . counsel-expression-history))
+  :ensure t)
+
+(use-package swiper
+  :bind (("C-s" . swiper)
+         ("C-r" . swiper)
+
+         :map swiper-map
+         ("C-r" . previous-line)
+         ("C-s" . next-line))
+  :ensure t)
+
+#+END_SRC
 *** [[https://github.com/bbatsov/super-save][super-save]]
 #+begin_src emacs-lisp
 (use-package super-save
@@ -1620,44 +1671,6 @@ BEG and END (region to sort)."
   :bind ("C-x y t t" . translate-text)
   :ensure t)
 #+end_src
-*** ivy
-#+BEGIN_SRC emacs-lisp
-(use-package ivy
-  :ensure counsel
-  :ensure swiper
-  :ensure t)
-
-(setq ivy-re-builders-alist
-      '((nil . ivy--regex-fuzzy)
-        (t . ivy--regex-plus)))
-(setq ivy-initial-inputs-alist nil)
-
-(ivy-mode 1)
-(setq ivy-use-virtual-buffers t)
-(setq enable-recursive-minibuffers t)
-(global-set-key "\C-s" 'swiper)
-(global-set-key "\C-r" 'swiper)
-(after-load 'swiper
-    (define-key swiper-map (kbd "C-r") 'previous-line)
-    (define-key swiper-map (kbd "C-s") 'next-line))
-(global-set-key (kbd "C-c C-r") 'ivy-resume)
-(global-set-key (kbd "<f6>") 'ivy-resume)
-(global-set-key (kbd "M-x") 'counsel-M-x)
-(global-set-key (kbd "C-x C-f") 'counsel-find-file)
-(global-set-key (kbd "<f1> f") 'counsel-describe-function)
-(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-(global-set-key (kbd "<f1> l") 'counsel-find-library)
-(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
-(global-set-key (kbd "C-c g") 'counsel-git)
-(global-set-key (kbd "C-c j") 'counsel-git-grep)
-(global-set-key (kbd "C-c k") 'counsel-ag)
-(global-set-key (kbd "C-x l") 'counsel-locate)
-(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
-(define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
-(define-key ivy-minibuffer-map (kbd "RET") 'ivy-alt-done)
-(define-key ivy-minibuffer-map (kbd "C-j") 'ivy-done)
-#+END_SRC
 *** imenu
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
@@ -1665,13 +1678,6 @@ BEG and END (region to sort)."
             (global-unset-key "\C-xi"))
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
-#+end_src
-*** pomidor
-#+begin_src emacs-lisp :results silent
-(use-package pomidor
-  :config (progn
-            (global-set-key (kbd "<f12>") #'pomidor))
-  :ensure t)
 #+end_src
 *** rsync
 #+begin_src emacs-lisp
@@ -1743,7 +1749,7 @@ BEG and END (region to sort)."
 
   (setq ssh-connections-names (list))
   (mapc (lambda (key) (add-to-list 'ssh-connections-names (car key))) ssh-connections)
-  (setq ssh-connection-name (ido-completing-read "Choose ssh connection: " ssh-connections-names))
+  (setq ssh-connection-name (ivy-completing-read "Choose SSH connection: " ssh-connections-names))
   (open-ssh-connection ssh-connection-name))
 #+end_src
 *** wgrep
@@ -2146,11 +2152,6 @@ BEG and END (region to sort)."
 #+begin_src emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
-*** better-defaults
-#+BEGIN_SRC emacs-lisp
-(use-package better-defaults
-  :ensure t)
-#+END_SRC
 *** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
