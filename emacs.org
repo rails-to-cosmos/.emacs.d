@@ -320,88 +320,15 @@
 #+END_SRC
 *** beautify
 #+BEGIN_SRC emacs-lisp
-  (use-package dash
-    :ensure t)
+(use-package eshell-fixed-prompt
+  :ensure t)
 
-  (use-package s
-    :ensure t)
-
-  (defmacro with-face (STR &rest PROPS)
-    "Return STR propertized with PROPS."
-    `(propertize ,STR 'face (list ,@PROPS)))
-
-  (defmacro esh-section (NAME ICON FORM &rest PROPS)
-    "Build eshell section NAME with ICON prepended to evaled FORM with PROPS."
-    `(setq ,NAME
-           (lambda () (when ,FORM
-                   (->(concat esh-section-delim ,FORM)
-                      (with-face ,@PROPS))))))
-
-  (defun esh-acc (acc x)
-    "Accumulator for evaluating and concatenating esh-sections."
-    (--if-let (funcall x)
-        (if (s-blank? acc)
-            it
-          (concat acc esh-sep it))
-      acc))
-
-  (defun esh-prompt-func ()
-    "Build `eshell-prompt-function'"
-    (concat esh-header
-            (-reduce-from 'esh-acc "" eshell-funcs)
-            " >"
-            eshell-prompt-string))
-
-  (esh-section esh-dir
-               ""  ;  (faicon folder)
-               (abbreviate-file-name (eshell/pwd))
-               '(:inherit eshell-prompt))
-
-  (esh-section esh-git
-               ""
-               (magit-get-current-branch)
-               '(:inherit eshell-prompt))
-
-  (esh-section esh-hg
-               ""
-               (progn (safe-wrap (monky-current-branch)))
-               '(:inherit eshell-prompt))
-
-  (esh-section esh-clock
-               "\xf017"  ;  (clock icon)
-               (format-time-string "%H:%M" (current-time))
-               '(:inherit font-lock-comment-face))
-
-  ;; Below I implement a "prompt number" section
-  (setq esh-prompt-num 0)
-  (add-hook 'eshell-exit-hook (lambda () (setq esh-prompt-num 0)))
-  (advice-add 'eshell-send-input :before
-              (lambda (&rest args) (setq esh-prompt-num (incf esh-prompt-num))))
-
-  ;; (esh-section esh-num
-  ;;              ""
-  ;;              (number-to-string esh-prompt-num)
-  ;;              '(:foreground "brown"))
-
-  ;; Separator between esh-sections
-  (setq esh-sep " :: ")  ; or " | "
-
-  ;; Separator between an esh-section icon and form
-  (setq esh-section-delim "")
-
-  ;; Eshell prompt header
-  (setq esh-header "")  ; or "\n┌─"
-
-  ;; Eshell prompt regexp and string. Unless you are varying the prompt by eg.
-  ;; your login, these can be the same.
-  (setq eshell-prompt-regexp " ")   ; or "└─> "
-  (setq eshell-prompt-string " ")   ; or "└─> "
-
-  ;; Choose which eshell-funcs to enable
-  (setq eshell-funcs (list esh-dir esh-git esh-hg))
-
-  ;; Enable the new eshell prompt
-  (setq eshell-prompt-function 'esh-prompt-func)
+(use-package eshell-prompt-extras
+  :config (progn
+            (autoload 'epe-theme-lambda "eshell-prompt-extras")
+            (setq eshell-highlight-prompt nil
+                  eshell-prompt-function 'epe-theme-lambda))
+  :ensure t)
 #+END_SRC
 ** Window Managment
 *** ace-window
@@ -1329,8 +1256,8 @@ about what flexible matching means in this context."
          ("C-j" . ivy-done))
   :config (progn
             (setq ivy-re-builders-alist
-                  '((nil . ivy--regex-fuzzy)
-                    (t . ivy--regex-plus)))
+                  '((t . ivy--regex-fuzzy)
+                    (swiper . ivy--regex-plus)))
             (setq ivy-initial-inputs-alist nil)
 
             (ivy-mode 1)
