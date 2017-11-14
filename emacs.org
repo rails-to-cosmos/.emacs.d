@@ -185,8 +185,8 @@
 #+END_SRC
 *** omit
 #+BEGIN_SRC emacs-lisp
-(setq dired-omit-files "^\\.[^.]\\|\\.pdf$\\|\\.tex$")
-;; (setq-default dired-omit-files-p t) ; this is buffer-local variable
+(setq dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
+(setq-default dired-omit-files-p t) ; this is buffer-local variable
 #+END_SRC
 *** dired-subtree
 #+BEGIN_SRC emacs-lisp
