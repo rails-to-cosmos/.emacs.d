@@ -2097,19 +2097,9 @@ BEG and END (region to sort)."
 (blink-cursor-mode 0)
 
 (custom-set-faces
- '(default ((t (:inherit nil
-                :stipple nil
-                :inverse-video nil
-                :box nil
-                :strike-through nil
-                :overline nil
-                :underline nil
-                :slant normal
-                :weight normal
-                :height 100
-                :width normal
-                :foundry nil
-                :family "Source Code Pro")))))
+ '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
+                :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil
+                :family "Fira Code")))))
 
 (setq-default case-fold-search t
               compilation-scroll-output t
