@@ -2050,7 +2050,6 @@ BEG and END (region to sort)."
   (highlight-regexp "FIXME"))
 
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
-(add-hook 'python-mode-hook 'linum-mode)
 #+END_SRC
 **** indent
 #+BEGIN_SRC emacs-lisp
@@ -2081,6 +2080,14 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** hlinum
+#+BEGIN_SRC emacs-lisp
+(use-package hlinum
+  :config (progn
+            (add-hook 'prog-mode-hook 'linum-mode)
+            (hlinum-activate))
+  :ensure t)
+#+END_SRC
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+begin_src emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
