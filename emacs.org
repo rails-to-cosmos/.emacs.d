@@ -192,7 +192,7 @@
         ;; Use `generate-new-buffer-name' for vc-directory
         ;; which creates duplicate buffers.
         (dired-hide-details-mode -1)
-        (rename-buffer (generate-new-buffer-name (concat "dired:" dired-directory)))))
+        (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 #+END_SRC
 *** omit
 #+BEGIN_SRC emacs-lisp
@@ -1156,8 +1156,8 @@
 #+BEGIN_SRC emacs-lisp
 (use-package ivy
   :bind (:map ivy-minibuffer-map
-         ("RET" . ivy-alt-done)
-         ("C-j" . ivy-done))
+              ("RET" . ivy-alt-done)
+              ("C-j" . ivy-done))
   :config (progn
             (setq ivy-re-builders-alist
                   '((nil . ivy--regex-fuzzy)
@@ -1166,7 +1166,25 @@
 
             (ivy-mode 1)
             (setq ivy-use-virtual-buffers t)
-            (setq enable-recursive-minibuffers t))
+            (setq enable-recursive-minibuffers t)
+
+            (defun ivy--add-face (str face)
+              "Propertize STR with FACE.
+`font-lock-append-text-property' is used, since it's better than
+`propertize' or `add-face-text-property' in this case."
+              (condition-case nil
+                  (progn
+                    (let ((foreground (face-foreground face)))
+                      (when foreground
+                        (add-face-text-property
+                         0 (length str)
+                         `(:foreground ,foreground)
+                         nil
+                         str))))
+                (error
+                 (ignore-errors
+                   (font-lock-append-text-property 0 (length str) 'face face str))))
+              str))
   :ensure t)
 
 (use-package counsel
@@ -1964,12 +1982,12 @@ BEG and END (region to sort)."
                 ;; mode-line-modified
                 ;; mode-line-remote
                 ;; mode-line-frame-identification
-                "  "
+                " "
                 mode-line-buffer-identification
                 (vc-mode vc-mode)
                 ;; "   "
                 ;; mode-line-position
-                "   "
+                " "
                 ;; mode-line-modes
                 mode-line-misc-info
                 mode-line-end-spaces))
