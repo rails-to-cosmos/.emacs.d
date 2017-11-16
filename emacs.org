@@ -429,15 +429,16 @@
 **** exec from results
 #+begin_src emacs-lisp
 (defun ob-execute-block-from-results ()
-  (when (save-excursion
-          (let ((line (thing-at-point 'line)))
-            (if (string-match "#\\+RESULTS: \\(.*\\)" (thing-at-point 'line))
-                (let ((block-name (replace-regexp-in-string "#\\+RESULTS: " "" line)))
-                  (beginning-of-buffer)
-                  (search-forward (format "%s %s" "#+name:" block-name))
-                  (org-ctrl-c-ctrl-c)
-                  t)
-              nil)))))
+  (save-excursion
+    (save-restriction
+      (let ((line (thing-at-point 'line)))
+        (if (string-match "#\\+RESULTS: \\(.*\\)" (thing-at-point 'line))
+            (let ((block-name (replace-regexp-in-string "#\\+RESULTS: " "" line)))
+              (beginning-of-buffer)
+              (search-forward (format "%s %s" "#+name:" block-name))
+              (org-ctrl-c-ctrl-c)
+              t)
+          nil)))))
 (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
 #+end_src
 **** run src block
@@ -747,7 +748,7 @@
 *** Select (dropdown)
 #+begin_src emacs-lisp :results silent
 (use-package org-select
-  :load-path "packages/org")
+  :load-path "packages")
 #+end_src
 *** Show next entry, keeping other entries closed
 #+begin_src emacs-lisp
@@ -783,14 +784,14 @@
     (show-children)))
 #+end_src
 *** Unsorted Settings
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
 (setq org-startup-align-all-tables "align")
 (setq-default
  org-log-done nil
  org-special-ctrl-a/e t
  org-special-ctrl-k t
- org-completion-use-ido t
+ ;; org-completion-use-ido t
  org-edit-timestamp-down-means-later t
  org-agenda-start-on-weekday nil
  org-agenda-span 14
@@ -808,7 +809,7 @@
  org-id-locations-file (tmp/ "org-id-locations.txt")
  org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "|" "DONE(d)")
                            (sequence "PAUSED(p)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
-#+end_src
+#+END_SRC
 ** Editor
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
@@ -1149,8 +1150,8 @@
          ("C-j" . ivy-done))
   :config (progn
             (setq ivy-re-builders-alist
-                  '((t . ivy--regex-fuzzy)
-                    (swiper . ivy--regex-plus)))
+                  '((nil . ivy--regex-fuzzy)
+                    (t . ivy--regex-plus)))
             (setq ivy-initial-inputs-alist nil)
 
             (ivy-mode 1)
@@ -1502,7 +1503,7 @@ BEG and END (region to sort)."
     :ensure t)
 #+end_src
 *** rsync
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun rsync-enable ()
   "Enable rsync support."
   (interactive)
@@ -1547,7 +1548,7 @@ BEG and END (region to sort)."
          (add-hook 'after-save-hook 'auto-rsync-exec-rsync))
         (t
          (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
-#+end_src
+#+END_SRC
 *** wgrep
 #+begin_src emacs-lisp
   (use-package wgrep
@@ -1610,10 +1611,14 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.programming
 :END:
 
+*** compilation
 #+BEGIN_SRC emacs-lisp
 (define-key global-map (kbd "C-x C-m") #'compile)
 #+END_SRC
-
+*** comint
+#+BEGIN_SRC emacs-lisp
+(setq comint-prompt-read-only t)
+#+END_SRC
 *** lisp
 #+BEGIN_SRC emacs-lisp
 ;; (use-package elisp-slime-nav
@@ -1940,6 +1945,7 @@ BEG and END (region to sort)."
 (use-package hlinum
   :config (progn
             (add-hook 'prog-mode-hook 'linum-mode)
+            (setq-default linum-format " %d ")
             (hlinum-activate))
   :ensure t)
 #+END_SRC
