@@ -1237,7 +1237,7 @@
               (let ((available-bookmarks (or bookmarks (bookmark-all-names))))
                 (ivy-read "Jump to bookmark: " available-bookmarks
                           :action (lambda (bookmark)
-                                    (cond ((member bookmark (bookmark-all-names))
+                                    (cond ((member bookmark available-bookmarks)
                                            (cond ((bmkp-sequence-bookmark-p bookmark)
                                                   (counsel-bookmark (bookmark-prop-get bookmark 'sequence)))
                                                  (t (bookmark-jump bookmark))))
