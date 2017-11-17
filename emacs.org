@@ -1178,7 +1178,7 @@
 (use-package ivy
   :bind (:map ivy-minibuffer-map
               ("RET" . ivy-alt-done)
-              ("C-j" . ivy-done))
+              ("C-j" . ivy-immediate-done))
   :config (progn
             (setq ivy-re-builders-alist
                   '((nil . ivy--regex-fuzzy)
@@ -1225,9 +1225,26 @@
          ("C-S-o" . counsel-rhythmbox)
          ("C-x y g o" . counsel-org-goto)
          :map read-expression-map
-         ("C-r" . counsel-expression-history))
+         ("C-r" . counsel-minibuffer-history))
   :config (progn
-            (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$"))
+            (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
+
+            (defun counsel-bookmark (&optional bookmarks)
+              "Forward to `bookmark-jump'. I can create bookmarks by myself, guys."
+              (interactive)
+              (require 'bookmark)
+
+              (let ((available-bookmarks (or bookmarks (bookmark-all-names))))
+                (ivy-read "Jump to bookmark: " available-bookmarks
+                          :action (lambda (bookmark)
+                                    (cond ((member bookmark (bookmark-all-names))
+                                           (cond ((bmkp-sequence-bookmark-p bookmark)
+                                                  (counsel-bookmark (bookmark-prop-get bookmark 'sequence)))
+                                                 (t (bookmark-jump bookmark))))
+                                          (t
+                                           (error "Bookmark not found"))))
+                          :caller 'counsel-bookmark))))
+
   :ensure t
   :ensure smex)
 
