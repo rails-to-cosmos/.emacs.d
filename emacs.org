@@ -253,6 +253,7 @@
      (define-key map (kbd "C-d") (lambda () (interactive) (dired-switch-buffers t))) map)))
 
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
+(define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
 #+END_SRC
 *** dired-rainbow
 #+BEGIN_SRC emacs-lisp
@@ -1137,13 +1138,13 @@
   :diminish t
   :ensure t)
 #+end_src
-**** ido-expand
+**** ivy-expand
 | cmd            | map        | binding |
 |----------------+------------+---------|
-| yas-ido-expand | global-map | C-x y i |
+| yas-ivy-expand | global-map | C-x y i |
 
 #+begin_src emacs-lisp
-(defun yas-ido-expand ()
+(defun yas-ivy-expand ()
   "Lets you select (and expand) a yasnippet key"
   (interactive)
   (let ((original-point (point)))
@@ -1164,8 +1165,8 @@
         (insert key)
         (yas-expand)))))
 
-(define-key global-map (kbd "C-x y i") 'yas-ido-expand)
-#+end_src
+(define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
+#+END_SRC
 ** Utils
 *** restart-emacs
 #+BEGIN_SRC emacs-lisp
@@ -1643,18 +1644,19 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 *** magit
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package magit
   :commands (magit-get-current-branch)
   :config (progn
-            (setq magit-completing-read-function 'magit-ido-completing-read))
+            ;; (setq magit-completing-read-function 'magit-ido-completing-read)
+            )
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
          ("C-x g c" . magit-commit)
          ("C-x g p c" . magit-push-current))
   :ensure t)
-#+end_src
+#+END_SRC
 ** Programming
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
