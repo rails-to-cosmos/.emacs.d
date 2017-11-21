@@ -1,45 +1,3 @@
-- Control Panel :: hello there :)
-  - [[elisp:(elfeed)][Elfeed]]
-  - [[elisp:(benchmark-init/show-durations-tabyulated)][Show Durations]]
-  - [[elisp:(paradox-upgrade-packages)][Upgrade Packages]]
-
-#+TBLNAME: org-feed-alist
-| name                         | URL                                                                        | headline | drawer                       |
-|------------------------------+----------------------------------------------------------------------------+----------+------------------------------|
-| C'est la Z                   | http://cestlaz.github.io/rss.xml                                           | CS       | cest-la-z                    |
-| Nullprogram                  | http://nullprogram.com/feed/                                               | CS       | nullprogram                  |
-| Aaron Bieber                 | https://blog.aaronbieber.com/feed.xml                                      | CS       | aaron-bieber                 |
-| Shiyuan Gu                   | https://shiyuangu.com/feed/                                                | CS       | shiyuan                      |
-| Emacs Horrors                | http://emacshorrors.com/feed.atom                                          | Emacs    | emacs-horrors                |
-| Endless Parentheses          | http://endlessparentheses.com/atom.xml                                     | Emacs    | endless-parentheses          |
-| Kitchin Babel                | http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/                | Emacs    | kitchin-babel                |
-| Kitchin Elisp                | http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/                | Emacs    | kitchin-elisp                |
-| Kitchin Emacs Lisp           | http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/           | Emacs    | kitchin-emacs-lisp           |
-| Kitchin Emacs                | http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/                | Emacs    | kitchin-emacs                |
-| Kitchin Emacslisp            | http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/            | Emacs    | kitchin-emacslisp            |
-| Kitchin Lisp                 | http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/                 | Emacs    | kitchin-lisp                 |
-| Kitchin Literate Programming | http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/ | Emacs    | kitchin-literate-programming |
-| Kitchin Org-mode             | http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/             | Emacs    | kitchin-org-mode             |
-| Kitchin Org                  | http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/                  | Emacs    | kitchin-org                  |
-| Kitchin Orgmode              | http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/              | Emacs    | kitchin-orgmode              |
-| Pragmatic Emacs              | http://pragmaticemacs.com/feed/                                            | Emacs    | pragmatic-emacs              |
-| Sacha Chua                   | http://sachachua.com/blog/category/emacs-news/feed                         | Emacs    | sacha-chua                   |
-| Emacs-El                     | https://emacs-el.com/rss.xml                                               | Emacs    | emacs-el                     |
-| Pascal Bourguignon's Sofware | http://www.informatimago.com/blog/feed.xml                                 | Emacs    | informatimago                |
-| Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | Python   | kitchin-python               |
-| Lleo                         | http://lleo.me/dnevnik/rss.xml                                             | Life     | lleo                         |
-| Howardism                    | http://howardism.org/index.xml                                             | Emacs    | howard                       |
-
-* COMMENT Org-Feed
-#+BEGIN_SRC emacs-lisp :var feed=org-feed-alist :colnames yes
-;; (require 'org-feed)
-
-;; (let ((header (mapcar 'substring-no-properties
-;;                       (org-table-get-remote-range "org-feed-alist" "@1$<..@1$>")))
-;;       (body (mapcar 'substring-no-properties
-;;                     (org-table-get-remote-range "org-feed-alist" "@I$<..@II$>"))))
-;;   (pp body))
-#+END_SRC
 * Config
 :PROPERTIES:
 :header-args: :results silent :mkdirp yes
@@ -137,9 +95,9 @@
         (concat dir filename)
       dir)))
 
-(setq-default custom-file (tmp/ "custom.el"))
 (setq-default bookmark-default-file (sync/ "bookmarks.txt")
-              bookmark-save-flag t)
+              bookmark-save-flag t
+              custom-file (tmp/ "custom.el"))
 #+end_src
 *** osx
 #+begin_src emacs-lisp
@@ -424,6 +382,73 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
+*** org-feed
+**** org-feed-alist
+:PROPERTIES:
+:ID:       org-feed-settings
+:END:
+
+#+TBLNAME: org-feed-alist
+| name                         | URL                                                                        | file                 | headline | drawer                       |
+|------------------------------+----------------------------------------------------------------------------+----------------------+----------+------------------------------|
+| Lleo                         | http://lleo.me/dnevnik/rss.xml                                             | ~/sync/org/feeds.org | Life     | lleo                         |
+| C'est la Z                   | http://cestlaz.github.io/rss.xml                                           | ~/sync/org/feeds.org | CS       | cest-la-z                    |
+| Aaron Bieber                 | https://blog.aaronbieber.com/feed.xml                                      | ~/sync/org/feeds.org | CS       | aaron-bieber                 |
+| Nullprogram                  | http://nullprogram.com/feed/                                               | ~/sync/org/feeds.org | CS       | nullprogram                  |
+| Shiyuan Gu                   | https://shiyuangu.com/feed/                                                | ~/sync/org/feeds.org | CS       | shiyuan                      |
+| Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | ~/sync/org/feeds.org | Python   | kitchin-python               |
+| Howardism                    | http://howardism.org/index.xml                                             | ~/sync/org/feeds.org | Emacs    | howard                       |
+| Emacs Horrors                | http://emacshorrors.com/feed.atom                                          | ~/sync/org/feeds.org | Emacs    | emacs-horrors                |
+| Endless Parentheses          | http://endlessparentheses.com/atom.xml                                     | ~/sync/org/feeds.org | Emacs    | endless-parentheses          |
+| Kitchin Babel                | http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/                | ~/sync/org/feeds.org | Emacs    | kitchin-babel                |
+| Kitchin Elisp                | http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/                | ~/sync/org/feeds.org | Emacs    | kitchin-elisp                |
+| Kitchin Emacs Lisp           | http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/           | ~/sync/org/feeds.org | Emacs    | kitchin-emacs-lisp           |
+| Kitchin Emacs                | http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/                | ~/sync/org/feeds.org | Emacs    | kitchin-emacs                |
+| Kitchin Emacslisp            | http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/            | ~/sync/org/feeds.org | Emacs    | kitchin-emacslisp            |
+| Kitchin Lisp                 | http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/                 | ~/sync/org/feeds.org | Emacs    | kitchin-lisp                 |
+| Kitchin Literate Programming | http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/ | ~/sync/org/feeds.org | Emacs    | kitchin-literate-programming |
+| Kitchin Org-mode             | http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/             | ~/sync/org/feeds.org | Emacs    | kitchin-org-mode             |
+| Kitchin Org                  | http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/                  | ~/sync/org/feeds.org | Emacs    | kitchin-org                  |
+| Kitchin Orgmode              | http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/              | ~/sync/org/feeds.org | Emacs    | kitchin-orgmode              |
+| Pragmatic Emacs              | http://pragmaticemacs.com/feed/                                            | ~/sync/org/feeds.org | Emacs    | pragmatic-emacs              |
+| Sacha Chua                   | http://sachachua.com/blog/category/emacs-news/feed                         | ~/sync/org/feeds.org | Emacs    | sacha-chua                   |
+| Emacs-El                     | https://emacs-el.com/rss.xml                                               | ~/sync/org/feeds.org | Emacs    | emacs-el                     |
+
+**** code
+#+BEGIN_SRC emacs-lisp
+(require 'org-feed)
+
+(defun trim-string (string)
+  "Remove white spaces in beginning and ending of STRING.
+White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
+  (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
+
+(defun org-feed-reread ()
+  (interactive)
+  (setq org-feed-alist ())
+  (let ((header (mapcar 'substring-no-properties
+                        (org-table-get-remote-range "org-feed-settings" "@1$<..@1$>")))
+        (rows (mapcar 'substring-no-properties
+                      (org-table-get-remote-range "org-feed-settings" "@I$<..@II$>")))
+        (excludes '("name" "URL" "file" "headline")))
+    (let ((row-len (length header))
+          (cell-count (length rows)))
+      (dotimes (i (/ cell-count row-len))
+        (let ((row (subseq rows (* i row-len) (+ (* i row-len) row-len)))
+              (line-result nil)
+              (start-row-index (* i row-len)))
+          (mapcar* (lambda (h r)
+                     (when (not (member h excludes))
+                       (push (intern (concat ":" h)) line-result))
+                     (push r line-result))
+                   header row)
+          (push :template line-result)
+          (push "* %T [[%(trim-string \"%link\")][%h]]" line-result)
+          (add-to-list 'org-feed-alist (reverse line-result))))))
+  (org-feed-update-all))
+
+(run-with-idle-timer 300 t 'org-feed-reread)
+#+END_SRC
 *** Babel
 **** settings
 #+BEGIN_SRC emacs-lisp
