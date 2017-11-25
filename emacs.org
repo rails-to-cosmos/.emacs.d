@@ -458,37 +458,6 @@
   :load-path "~/stuff/org-bookmark")
 #+END_SRC
 *** org-feed
-**** org-feed-alist
-:PROPERTIES:
-:ID:       org-feed-settings
-:END:
-
-#+TBLNAME: org-feed-alist
-| name                         | URL                                                                        | file                 | headline | drawer                       |
-|------------------------------+----------------------------------------------------------------------------+----------------------+----------+------------------------------|
-| Lleo                         | http://lleo.me/dnevnik/rss.xml                                             | ~/sync/org/feeds.org | Life     | lleo                         |
-| C'est la Z                   | http://cestlaz.github.io/rss.xml                                           | ~/sync/org/feeds.org | CS       | cest-la-z                    |
-| Aaron Bieber                 | https://blog.aaronbieber.com/feed.xml                                      | ~/sync/org/feeds.org | CS       | aaron-bieber                 |
-| Nullprogram                  | http://nullprogram.com/feed/                                               | ~/sync/org/feeds.org | CS       | nullprogram                  |
-| Shiyuan Gu                   | https://shiyuangu.com/feed/                                                | ~/sync/org/feeds.org | CS       | shiyuan                      |
-| Kitchin Python               | http://kitchingroup.cheme.cmu.edu/blog/category/python/feed/               | ~/sync/org/feeds.org | Python   | kitchin-python               |
-| Howardism                    | http://howardism.org/index.xml                                             | ~/sync/org/feeds.org | Emacs    | howard                       |
-| Emacs Horrors                | http://emacshorrors.com/feed.atom                                          | ~/sync/org/feeds.org | Emacs    | emacs-horrors                |
-| Endless Parentheses          | http://endlessparentheses.com/atom.xml                                     | ~/sync/org/feeds.org | Emacs    | endless-parentheses          |
-| Kitchin Babel                | http://kitchingroup.cheme.cmu.edu/blog/category/babel/feed/                | ~/sync/org/feeds.org | Emacs    | kitchin-babel                |
-| Kitchin Elisp                | http://kitchingroup.cheme.cmu.edu/blog/category/elisp/feed/                | ~/sync/org/feeds.org | Emacs    | kitchin-elisp                |
-| Kitchin Emacs Lisp           | http://kitchingroup.cheme.cmu.edu/blog/category/emacs-lisp/feed/           | ~/sync/org/feeds.org | Emacs    | kitchin-emacs-lisp           |
-| Kitchin Emacs                | http://kitchingroup.cheme.cmu.edu/blog/category/emacs/feed/                | ~/sync/org/feeds.org | Emacs    | kitchin-emacs                |
-| Kitchin Emacslisp            | http://kitchingroup.cheme.cmu.edu/blog/category/emacslisp/feed/            | ~/sync/org/feeds.org | Emacs    | kitchin-emacslisp            |
-| Kitchin Lisp                 | http://kitchingroup.cheme.cmu.edu/blog/category/lisp/feed/                 | ~/sync/org/feeds.org | Emacs    | kitchin-lisp                 |
-| Kitchin Literate Programming | http://kitchingroup.cheme.cmu.edu/blog/category/literate-programming/feed/ | ~/sync/org/feeds.org | Emacs    | kitchin-literate-programming |
-| Kitchin Org-mode             | http://kitchingroup.cheme.cmu.edu/blog/category/org-mode/feed/             | ~/sync/org/feeds.org | Emacs    | kitchin-org-mode             |
-| Kitchin Org                  | http://kitchingroup.cheme.cmu.edu/blog/category/org/feed/                  | ~/sync/org/feeds.org | Emacs    | kitchin-org                  |
-| Kitchin Orgmode              | http://kitchingroup.cheme.cmu.edu/blog/category/orgmode/feed/              | ~/sync/org/feeds.org | Emacs    | kitchin-orgmode              |
-| Pragmatic Emacs              | http://pragmaticemacs.com/feed/                                            | ~/sync/org/feeds.org | Emacs    | pragmatic-emacs              |
-| Sacha Chua                   | http://sachachua.com/blog/category/emacs-news/feed                         | ~/sync/org/feeds.org | Emacs    | sacha-chua                   |
-| Emacs-El                     | https://emacs-el.com/rss.xml                                               | ~/sync/org/feeds.org | Emacs    | emacs-el                     |
-
 **** code
 #+BEGIN_SRC emacs-lisp
 (require 'org-feed)
@@ -1653,14 +1622,6 @@ BEG and END (region to sort)."
   (with-temp-buffer
     (insert-file-contents filePath)
     (split-string (buffer-string) "\n" t)))
-#+end_src
-*** bookmark+
-#+begin_src emacs-lisp
-(use-package bookmark+
-  :config (progn
-            (setq bmkp-bmenu-stat-file (tmp/ "emacs-bmk-bmenu-state.el"))
-            (run-with-idle-timer 60 t 'bookmark-save))
-  :ensure t)
 #+end_src
 *** firestarter
 #+begin_src emacs-lisp :results silent
