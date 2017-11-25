@@ -51,3 +51,4 @@ packages/yandex
 /ede-projects.el
 /org-clock-save.el
 /init-local.el
+.cask
