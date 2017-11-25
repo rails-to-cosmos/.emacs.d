@@ -83,7 +83,7 @@
 #+begin_src emacs-lisp
 (defun tmp/ (filename)
   "Get path to FILENAME in temp directory."
-  (let ((dir "~/tmp/emacs/"))
+  (let ((dir "~/.tmp/emacs/"))
     (make-directory dir t)
     (concat dir filename)))
 
