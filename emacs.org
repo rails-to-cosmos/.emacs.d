@@ -459,7 +459,8 @@
 *** org-bookmark
 #+BEGIN_SRC emacs-lisp
 (use-package org-bookmark
-  :bind ("C-x j j" . org-bookmark-jump)
+  :bind (("C-x j j" . org-bookmark-jump)
+         ("C-x p m" . org-bookmark-set))
   :load-path "~/stuff/org-bookmark")
 #+END_SRC
 *** org-feed
