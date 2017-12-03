@@ -494,7 +494,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                      (push r line-result))
                    header row)
           (push :template line-result)
-          (push "* %T [[%(trim-string \"%link\")][%h]]" line-result)
+          (push "* TODO [[%(trim-string \"%link\")][%h]]\nSCHEDULED: %T" line-result)
           (add-to-list 'org-feed-alist (reverse line-result))))))
   (org-feed-update-all)
   (message "Org feed is up-to-date"))
@@ -616,6 +616,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                              (ipython . t)
                              (sql . t)
                              (emacs-lisp . t)
+                             (clojure . t)
                              (http . t)
                              (shell . t)
                              (C . t)))
@@ -643,6 +644,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-vm
               org-wl
               org-w3m)))
+
+(require 'org-eshell)
 #+END_SRC
 *** org-checklist
 #+BEGIN_SRC emacs-lisp
@@ -1279,7 +1282,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               "Move line up/down."
               ("C-S-p" move-text-up "up")
               ("C-S-n" move-text-down "down")
-              ("q" nil "quit")))
+              ("<RET>" nil "quit")))
   :ensure t)
 #+END_SRC
 *** restart-emacs
@@ -2068,6 +2071,7 @@ BEG and END (region to sort)."
 (defun python2-ensure-init-file ()
   (when (not (file-exists-p "./__init__.py"))
     (shell-command (concat "touch __init__.py"))))
+;; (add-hook 'org-babel-post-tangle-hook #'python2-ensure-init-file)
 #+END_SRC
 **** highlights
 #+BEGIN_SRC emacs-lisp
