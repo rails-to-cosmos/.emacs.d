@@ -469,6 +469,10 @@
          ([(shift tab)] . org-overview))
   :ensure t)
 #+END_SRC
+*** org-contacts
+#+BEGIN_SRC emacs-lisp
+(use-package org-contacts)
+#+END_SRC
 *** org-bookmark
 #+BEGIN_SRC emacs-lisp
 (use-package org-bookmark
@@ -1255,6 +1259,15 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
 #+END_SRC
 ** Utils
+*** [[https://github.com/bbatsov/super-save][super-save]]
+#+BEGIN_SRC emacs-lisp
+(use-package super-save
+  :config (progn
+            (super-save-initialize)
+            (setq auto-save-default nil)
+            (setq super-save-auto-save-when-idle t))
+  :ensure t)
+#+END_SRC
 *** hydra
 #+BEGIN_SRC emacs-lisp
 (use-package hydra
@@ -1660,6 +1673,14 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 *** imenu
+**** imenu+
+#+BEGIN_SRC emacs-lisp
+(use-package imenu+
+    :ensure t
+    :init (add-hook 'prog-mode-hook 'imenup-add-defs-to-menubar)
+          (add-hook 'org-mode-hook  'imenup-add-defs-to-menubar))
+#+END_SRC
+**** imenu-anywhere
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
     :init (progn
