@@ -1298,15 +1298,17 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   :bind (:map ivy-minibuffer-map
               ("RET" . ivy-alt-done)
               ("C-j" . ivy-immediate-done))
+  :init (progn
+          (setq-default ivy-re-builders-alist
+                        '((nil . ivy--regex-fuzzy)
+                          (t . ivy--regex-plus))
+                        ivy-initial-inputs-alist nil
+                        ivy-use-virtual-buffers t
+                        enable-recursive-minibuffers t))
   :config (progn
-            (setq ivy-re-builders-alist
-                  '((nil . ivy--regex-fuzzy)
-                    (t . ivy--regex-plus)))
-            (setq ivy-initial-inputs-alist nil)
+
 
             (ivy-mode 1)
-            (setq ivy-use-virtual-buffers t)
-            (setq enable-recursive-minibuffers t)
 
             (defun ivy--add-face (str face)
               "Propertize STR with FACE.
