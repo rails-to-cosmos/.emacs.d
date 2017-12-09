@@ -469,6 +469,10 @@
          ([(shift tab)] . org-overview))
   :ensure t)
 #+END_SRC
+*** org-contacts
+#+BEGIN_SRC emacs-lisp
+(use-package org-contacts)
+#+END_SRC
 *** org-bookmark
 #+BEGIN_SRC emacs-lisp
 (use-package org-bookmark
@@ -507,7 +511,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                      (push r line-result))
                    header row)
           (push :template line-result)
-          (push "* %T [[%(trim-string \"%link\")][%h]]" line-result)
+          (push "* TODO [[%(trim-string \"%link\")][%h]]\nSCHEDULED: %T" line-result)
           (add-to-list 'org-feed-alist (reverse line-result))))))
   (org-feed-update-all)
   (message "Org feed is up-to-date"))
@@ -629,6 +633,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                              (ipython . t)
                              (sql . t)
                              (emacs-lisp . t)
+                             (clojure . t)
                              (http . t)
                              (shell . t)
                              (C . t)))
@@ -656,6 +661,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-vm
               org-wl
               org-w3m)))
+
+(require 'org-eshell)
 #+END_SRC
 *** org-checklist
 #+BEGIN_SRC emacs-lisp
@@ -1252,6 +1259,15 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
 #+END_SRC
 ** Utils
+*** [[https://github.com/bbatsov/super-save][super-save]]
+#+BEGIN_SRC emacs-lisp
+(use-package super-save
+  :config (progn
+            (super-save-initialize)
+            (setq auto-save-default nil)
+            (setq super-save-auto-save-when-idle t))
+  :ensure t)
+#+END_SRC
 *** hydra
 #+BEGIN_SRC emacs-lisp
 (use-package hydra
@@ -1283,7 +1299,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               "Move line up/down."
               ("C-S-p" move-text-up "up")
               ("C-S-n" move-text-down "down")
-              ("q" nil "quit")))
+              ("<RET>" nil "quit")))
   :ensure t)
 #+END_SRC
 *** restart-emacs
@@ -1659,6 +1675,14 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 *** imenu
+**** imenu+
+#+BEGIN_SRC emacs-lisp
+(use-package imenu+
+    :ensure t
+    :init (add-hook 'prog-mode-hook 'imenup-add-defs-to-menubar)
+          (add-hook 'org-mode-hook  'imenup-add-defs-to-menubar))
+#+END_SRC
+**** imenu-anywhere
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
     :init (progn
@@ -2074,6 +2098,7 @@ BEG and END (region to sort)."
 (defun python2-ensure-init-file ()
   (when (not (file-exists-p "./__init__.py"))
     (shell-command (concat "touch __init__.py"))))
+;; (add-hook 'org-babel-post-tangle-hook #'python2-ensure-init-file)
 #+END_SRC
 **** highlights
 #+BEGIN_SRC emacs-lisp
