@@ -15,13 +15,13 @@
 #+END_SRC
 ** Lisp
 *** after-load
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defmacro after-load (feature &rest body)
   "After FEATURE is loaded, evaluate BODY."
   (declare (indent defun))
   `(eval-after-load ,feature
      '(progn ,@body)))
-#+end_src
+#+END_SRC
 *** safe-wrap
 #+BEGIN_SRC emacs-lisp
 (defmacro safe-wrap (fn &rest clean-up)
@@ -85,7 +85,7 @@
   :ensure t)
 #+end_src
 *** paths
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun tmp/ (filename)
   "Get path to FILENAME in temp directory."
   (let ((dir "~/.tmp/emacs/"))
@@ -100,10 +100,8 @@
         (concat dir filename)
       dir)))
 
-(setq-default bookmark-default-file (sync/ "bookmarks.txt")
-              bookmark-save-flag t
-              custom-file (tmp/ "custom.el"))
-#+end_src
+(setq-default custom-file (tmp/ "custom.el"))
+#+END_SRC
 *** osx
 #+begin_src emacs-lisp
   (cond ((eq system-type 'darwin)
@@ -144,40 +142,41 @@
 *** dired+
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
+  :after (dired)
   :ensure t)
 #+END_SRC
 *** buffers
 #+BEGIN_SRC emacs-lisp
 (add-hook 'dired-after-readin-hook
-      (lambda ()
-        ;; Set name of dired buffers to absolute directory name.
-        ;; Use `generate-new-buffer-name' for vc-directory
-        ;; which creates duplicate buffers.
-        (dired-hide-details-mode -1)
-        (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
+          (lambda ()
+            ;; Set name of dired buffers to absolute directory name.
+            ;; Use `generate-new-buffer-name' for vc-directory
+            ;; which creates duplicate buffers.
+            (dired-hide-details-mode -1)
+            (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 #+END_SRC
 *** omit
 #+BEGIN_SRC emacs-lisp
-(setq dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
-(setq-default dired-omit-files-p t) ; this is buffer-local variable
+(setq-default dired-omit-files-p t
+              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
 #+END_SRC
 *** dired-subtree
 #+BEGIN_SRC emacs-lisp
-(put 'dired-find-alternate-file 'disabled nil)
-
-(defun dired-subtree-up-or-directory-up ()
-  (interactive)
-  (if-let (ov (dired-subtree--get-ov))
-      (progn
-        (goto-char (overlay-start ov))
-        (dired-previous-line 1))
-    (find-alternate-file "..")))
-
 (use-package dired-subtree
+  :after (:all dired dired+)
+  :bind (:map dired-mode-map
+              ("<backspace>" . dired-subtree-up-or-directory-up)
+              ("<tab>" . dired-subtree-toggle))
+  :init (progn
+          (put 'dired-find-alternate-file 'disabled nil))
   :config (progn
-            (bind-keys :map dired-mode-map
-                       ("<backspace>" . dired-subtree-up-or-directory-up)
-                       ("<tab>" . dired-subtree-toggle)))
+            (defun dired-subtree-up-or-directory-up ()
+              (interactive)
+              (if-let (ov (dired-subtree--get-ov))
+                  (progn
+                    (goto-char (overlay-start ov))
+                    (dired-previous-line 1))
+                (find-alternate-file ".."))))
   :ensure t)
 #+END_SRC
 *** dired-switch-buffers
@@ -217,6 +216,7 @@
 *** dired-rainbow
 #+BEGIN_SRC emacs-lisp
 (use-package dired-rainbow
+  :after (:all dired dired+)
   :config (progn
             (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
             (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
@@ -224,8 +224,7 @@
             (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
   :ensure t)
 #+END_SRC
-*** sorting
-**** sort directories first
+*** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
 #+BEGIN_SRC emacs-lisp
 ;; using ls-lisp with these settings gives case-insensitve
 ;; sorting on OS X
@@ -251,20 +250,6 @@
   "Sort dired listings with directories first before mark adding."
   (dired/sort))
 #+END_SRC
-**** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
-#+BEGIN_SRC emacs-lisp
-;; using ls-lisp with these settings gives case-insensitve
-;; sorting on OS X
-(require 'ls-lisp)
-(setq dired-listing-switches "-alhG")
-(setq ls-lisp-use-insert-directory-program nil)
-(setq ls-lisp-ignore-case t)
-(setq ls-lisp-use-string-collate nil)
-;; customise the appearance of the listing
-(setq ls-lisp-verbosity '(links uid))
-(setq ls-lisp-format-time-list '("%b %e %H:%M" "%b %e  %Y"))
-(setq ls-lisp-use-localized-time-format t)
-#+END_SRC
 ** EShell
 *** spawn-custom
 #+BEGIN_SRC emacs-lisp
@@ -273,78 +258,33 @@
         (eshell-buffer-name name))
     (call-interactively 'eshell)))
 #+END_SRC
-*** COMMENT suggest
-#+BEGIN_SRC emacs-lisp
-(use-package company-eshell-autosuggest
-  :ensure t)
-
-(defun company-eshell-autosuggest-candidates (prefix)
-  (let* ((history
-          (delete-dups
-           (mapcar (lambda (str)
-                     (string-trim (substring-no-properties str)))
-                   (ring-elements eshell-history-ring))))
-         (most-similar (cl-find-if
-                        (lambda (str)
-                          (string-prefix-p prefix str))
-                        history)))
-    (when most-similar
-      `(,most-similar))))
-
-(defun company-eshell-autosuggest--prefix ()
-  (let ((prefix
-         (string-trim-left
-          (buffer-substring-no-properties
-           (save-excursion
-             (eshell-bol))
-           (save-excursion (end-of-line) (point))))))
-    (if (not (string-empty-p prefix))
-        prefix
-      'stop)))
-
-(defun company-eshell-autosuggest (command &optional arg &rest ignored)
-  (interactive (list 'interactive))
-  (cl-case command
-    (interactive (company-begin-backend 'company-eshell))
-    (prefix (and (eq major-mode 'eshell-mode)
-                 (company-eshell-autosuggest--prefix)))
-    (candidates (company-eshell-autosuggest-candidates arg))))
-
-(add-hook 'eshell-mode-hook #'company-mode) ; Not needed if using global-company-mode
-
-(defun setup-eshell-autosuggest ()
-  (with-eval-after-load 'company
-    (setq-local company-backends '(company-eshell-autosuggest))
-    (setq-local company-frontends '(company-preview-frontend))))
-#+END_SRC
 *** settings
-#+begin_src emacs-lisp
-  (setq-default
-   eshell-buffer-maximum-lines 500
-   eshell-output-filter-functions
-   '(eshell-truncate-buffer
-     eshell-postoutput-scroll-to-bottom
-     eshell-handle-control-codes
-     eshell-handle-ansi-color
-     eshell-watch-for-password-prompt)
-   password-cache t
-   password-cache-expiry 3600)
+#+BEGIN_SRC emacs-lisp
+(setq-default eshell-buffer-maximum-lines 500
+              eshell-output-filter-functions
+              '(eshell-truncate-buffer
+                eshell-postoutput-scroll-to-bottom
+                eshell-handle-control-codes
+                eshell-handle-ansi-color
+                eshell-watch-for-password-prompt)
+              password-cache t
+              password-cache-expiry 3600)
 
-  ;; (eval-after-load 'tramp-mode
-  ;; (let ((process-environment tramp-remote-process-environment))
-  ;;   (setenv "LANG" "en_US.UTF-8")
-  ;;   (setenv "LC_ALL" "en_US.UTF-8")
-  ;;   (setenv "LC_CTYPE" "en_US.UTF-8")
-  ;;   (setq tramp-remote-process-environment process-environment)))
+;; (eval-after-load 'tramp-mode
+;; (let ((process-environment tramp-remote-process-environment))
+;;   (setenv "LANG" "en_US.UTF-8")
+;;   (setenv "LC_ALL" "en_US.UTF-8")
+;;   (setenv "LC_CTYPE" "en_US.UTF-8")
+;;   (setq tramp-remote-process-environment process-environment)))
 
-  (use-package exec-path-from-shell
-    :config (progn
-	      (when (memq window-system '(mac ns))
-		(exec-path-from-shell-initialize)
-		(exec-path-from-shell-copy-env "SSH_AGENT_PID")
-		(exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
-    :ensure t)
-#+end_src
+(use-package exec-path-from-shell
+  :config (progn
+            (when (memq window-system '(mac ns))
+              (exec-path-from-shell-initialize)
+              (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+              (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
+  :ensure t)
+#+END_SRC
 *** alias
 #+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'em-alias
@@ -2184,6 +2124,7 @@ BEG and END (region to sort)."
 *** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
+  :hook ((prog-mode . rainbow-delimiters-mode))
   :ensure t)
 #+END_SRC
 *** cleanups
