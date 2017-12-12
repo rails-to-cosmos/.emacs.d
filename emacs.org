@@ -667,7 +667,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-drawers (quote ("PROPERTIES" "LOGBOOK"))
               org-clock-in-switch-to-state "STARTED"
               org-clock-into-drawer t
-              org-clock-out-switch-to-state "PAUSED"
+              org-clock-out-switch-to-state "TODO"
               org-clock-out-remove-zero-time-clocks t
               org-clock-out-when-done t
               org-clock-idle-time 60
@@ -842,9 +842,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+end_src
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
-;; (add-hook 'org-mode-hook (lambda () (modify-syntax-entry (string-to-char "") "w")))
-(setq org-startup-align-all-tables "align")
 (setq-default
+ org-startup-align-all-tables "align"
  org-log-done nil
  org-special-ctrl-a/e t
  org-special-ctrl-k t
@@ -864,8 +863,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "TESTING(T)" "|" "DONE(d)")
-                           (sequence "PAUSED(p)" "SOMEDAY(S)" "|" "CANCELLED(c)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "|" "DONE(d)" "CANCELLED(c)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
