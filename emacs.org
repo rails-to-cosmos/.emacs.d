@@ -1245,7 +1245,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   :bind ("C-x y d r" . restart-emacs)
   :ensure t)
 #+END_SRC
-*** [#A] =Ivy=
+*** =Ivy=
 #+BEGIN_SRC emacs-lisp
 (use-package ivy
   :bind (:map ivy-minibuffer-map
@@ -1259,8 +1259,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                         ivy-use-virtual-buffers t
                         enable-recursive-minibuffers t))
   :config (progn
-
-
             (ivy-mode 1)
 
             (defun ivy--add-face (str face)
