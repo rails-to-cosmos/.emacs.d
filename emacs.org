@@ -825,7 +825,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (show-children)))
 #+end_src
 *** Show previous entry, keeping other entries closed
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun ded/org-show-previous-heading-tidily ()
   "Show previous entry, keeping other entries closed."
   (interactive)
@@ -839,7 +839,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (org-reveal t)
     (org-show-entry)
     (show-children)))
-#+end_src
+#+END_SRC
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
@@ -847,7 +847,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
  org-log-done nil
  org-special-ctrl-a/e t
  org-special-ctrl-k t
- ;; org-completion-use-ido t
  org-edit-timestamp-down-means-later t
  org-agenda-start-on-weekday nil
  org-agenda-span 14
@@ -863,7 +862,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "|" "DONE(d)" "CANCELLED(c)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "PENDING(p)" "|" "DONE(d)" "CANCELLED(c)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
