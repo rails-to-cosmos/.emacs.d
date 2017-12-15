@@ -868,7 +868,12 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
-
+*** origami
+#+BEGIN_SRC emacs-lisp
+(use-package origami
+  :hook ((irony-mode . origami-mode))
+  :ensure t)
+#+END_SRC
 *** duplicate-down
 #+BEGIN_SRC emacs-lisp
 (defun duplicate-line (arg)
@@ -2003,12 +2008,20 @@ BEG and END (region to sort)."
 *** c
 #+begin_src emacs-lisp
 (use-package irony
+  :mode ("\\.cpp\\'" . irony-mode)
+  :bind (:map irony-mode-map
+              ("C-c r" . irony-launch-program))
   :config (progn
             (add-hook 'c++-mode-hook 'irony-mode)
             (add-hook 'c-mode-hook 'irony-mode)
             (add-hook 'objc-mode-hook 'irony-mode)
             (add-hook 'irony-mode-hook 'irony-replace-completion-at-point)
-            (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+            (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+
+            (defun irony-launch-program ()
+              (interactive)
+              (async-shell-command (expand-file-name "main"))
+              (ace-window nil)))
   :ensure t)
 
 ;; replace the `completion-at-point' and `complete-symbol' bindings in
