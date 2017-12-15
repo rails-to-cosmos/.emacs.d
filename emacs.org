@@ -2008,7 +2008,14 @@ BEG and END (region to sort)."
   :ensure t)
 #+END_SRC
 *** c
-#+begin_src emacs-lisp
+**** modern-cpp-font-lock
+#+BEGIN_SRC emacs-lisp
+(use-package modern-cpp-font-lock
+  :hook ((irony-mode . modern-cpp-font-lock-mode))
+  :ensure t)
+#+END_SRC
+**** Irony
+#+BEGIN_SRC emacs-lisp
 (use-package irony
   :mode ("\\.cpp\\'" . irony-mode)
   :bind (:map irony-mode-map
