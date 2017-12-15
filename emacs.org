@@ -2008,6 +2008,12 @@ BEG and END (region to sort)."
   :ensure t)
 #+END_SRC
 *** c
+**** offset
+#+BEGIN_SRC emacs-lisp
+(defun my-c-offsets ()
+  (c-set-offset 'arglist-intro "+"))
+(add-hook 'c-mode-hook 'my-c-offsets)
+#+END_SRC
 **** modern-cpp-font-lock
 #+BEGIN_SRC emacs-lisp
 (use-package modern-cpp-font-lock
