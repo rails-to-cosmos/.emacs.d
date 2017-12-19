@@ -103,7 +103,7 @@
 (setq-default custom-file (tmp/ "custom.el"))
 #+END_SRC
 *** osx
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cond ((eq system-type 'darwin)
 	 (setq mac-command-modifier 'meta
 	       mac-option-modifier  'alt
@@ -137,7 +137,7 @@
 	       (t
 		(when (require 'osx-clipboard nil t)
 		  (osx-clipboard-mode +1))))))
-#+end_src
+#+END_SRC
 ** Dired
 *** dired+
 #+BEGIN_SRC emacs-lisp
