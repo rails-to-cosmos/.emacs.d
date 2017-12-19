@@ -103,7 +103,7 @@
 (setq-default custom-file (tmp/ "custom.el"))
 #+END_SRC
 *** osx
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cond ((eq system-type 'darwin)
 	 (setq mac-command-modifier 'meta
 	       mac-option-modifier  'alt
@@ -137,7 +137,7 @@
 	       (t
 		(when (require 'osx-clipboard nil t)
 		  (osx-clipboard-mode +1))))))
-#+end_src
+#+END_SRC
 ** Dired
 *** dired+
 #+BEGIN_SRC emacs-lisp
@@ -2009,16 +2009,19 @@ BEG and END (region to sort)."
   :ensure t)
 #+END_SRC
 *** c
-**** offset
+**** [[https://www.gnu.org/software/emacs/manual/html_node/efaq/Customizing-C-and-C_002b_002b-indentation.html][Customizing C and C++ indentation - GNU Emacs FAQ]]
 #+BEGIN_SRC emacs-lisp
-(defun my-c-offsets ()
-  (c-set-offset 'arglist-intro "+"))
-(add-hook 'c-mode-hook 'my-c-offsets)
+(defun set-custom-c-offsets ()
+  (c-set-offset 'arglist-intro '+)
+  (c-set-offset 'access-label '0)
+)
+(add-hook 'c-mode-hook 'set-custom-c-offsets)
+(add-hook 'c++-mode-hook 'set-custom-c-offsets)
 #+END_SRC
 **** modern-cpp-font-lock
 #+BEGIN_SRC emacs-lisp
 (use-package modern-cpp-font-lock
-  :hook ((irony-mode . modern-cpp-font-lock-mode))
+  :hook ((irony-mode . modern-c++-font-lock-mode))
   :ensure t)
 #+END_SRC
 **** Irony
