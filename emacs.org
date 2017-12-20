@@ -873,7 +873,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (use-package origami
   :hook ((irony-mode . origami-mode))
   :bind (:map origami-mode-map
-         ("C-c C-c" . origami-toggle-node))
+              ("C-c C-c" . origami-toggle-node))
   :ensure t)
 #+END_SRC
 *** duplicate-down
@@ -2012,8 +2012,7 @@ BEG and END (region to sort)."
 #+BEGIN_SRC emacs-lisp
 (defun set-custom-c-offsets ()
   (c-set-offset 'arglist-intro '+)
-  (c-set-offset 'access-label '0)
-)
+  (c-set-offset 'access-label '-))
 (add-hook 'c-mode-hook 'set-custom-c-offsets)
 (add-hook 'c++-mode-hook 'set-custom-c-offsets)
 #+END_SRC
@@ -2026,7 +2025,7 @@ BEG and END (region to sort)."
 **** Irony
 #+BEGIN_SRC emacs-lisp
 (use-package irony
-  :mode ("\\.cpp\\'" . irony-mode)
+  :mode ("\\.cpp\\'" . c++-mode)
   :bind (:map irony-mode-map
               ("C-c r" . irony-launch-program))
   :config (progn
