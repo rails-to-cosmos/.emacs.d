@@ -395,7 +395,16 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
+*** [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][org-tag-search]]
+#+BEGIN_SRC emacs-lisp
+(org-add-link-type
+ "tag" 'endless/follow-tag-link)
 
+(defun endless/follow-tag-link (tag)
+  "Display a list of TODO headlines with tag TAG.
+With prefix argument, also display headlines without a TODO keyword."
+  (org-tags-view (null current-prefix-arg) tag))
+#+END_SRC
 *** org
 #+BEGIN_SRC emacs-lisp
 (use-package org
