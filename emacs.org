@@ -396,7 +396,7 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
-*** org-edna
+*** [[http://www.nongnu.org/org-edna-el/][org-edna]]
 SCHEDULED: <2017-12-26 Tue>
 #+BEGIN_SRC emacs-lisp
 (use-package org-edna
