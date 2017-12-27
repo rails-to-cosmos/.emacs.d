@@ -1,7 +1,8 @@
 * Whoami
 #+BEGIN_SRC emacs-lisp
-(setq-default user-mail-address "akatovda@yandex.com"
-              user-full-name "Dmitry Akatov")
+(setq-default
+ user-mail-address "akatovda@yandex.com"
+ user-full-name "Dmitry Akatov")
 #+END_SRC
 * Config
 :PROPERTIES:
