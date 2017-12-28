@@ -2193,12 +2193,12 @@ BEG and END (region to sort)."
 (set-fontset-font "fontset-default"
                   (cons (decode-char 'ucs #x0400)
                         (decode-char 'ucs #x052F))
-                  (font-spec :size 10 :name "Inconsolata"))
+                  (font-spec :size 10 :name "Source Code Pro Regular"))
 
 (custom-set-faces
  '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
-                         :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil
-                         :family '("Fira Code" "Consolas" "Inconsolata"))))))
+                :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil :name "Mateur"
+                :family "Fira Code")))))
 
 (setq-default
  case-fold-search t
