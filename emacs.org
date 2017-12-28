@@ -2144,20 +2144,10 @@ BEG and END (region to sort)."
 (display-time-mode -1)
 (display-battery-mode -1)
 (setq-default mode-line-format
-              '("%e"
-                ;; mode-line-front-space
-                ;; mode-line-mule-info
-                ;; mode-line-client
-                ;; mode-line-modified
-                ;; mode-line-remote
-                ;; mode-line-frame-identification
-                " "
+              '("%e "
+                "%m "
                 mode-line-buffer-identification
                 (vc-mode vc-mode)
-                ;; "   "
-                ;; mode-line-position
-                " "
-                ;; mode-line-modes
                 mode-line-misc-info
                 mode-line-end-spaces))
 #+END_SRC
@@ -2192,36 +2182,37 @@ BEG and END (region to sort)."
 
 (custom-set-faces
  '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
-                :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil
-                :family "Fira Code")))))
+                         :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil
+                         :family "Fira Code")))))
 
-(setq-default case-fold-search t
-              compilation-scroll-output t
-              ediff-split-window-function 'split-window-horizontally
-              ediff-window-setup-function 'ediff-setup-windows-plain
-              grep-highlight-matches t
-              grep-scroll-output t
-              make-backup-files nil
-              mouse-yank-at-point t
-              save-interprogram-paste-before-kill t
-              scroll-preserve-screen-position 'always
-              set-mark-command-repeat-pop t
-              show-trailing-whitespace nil
-              tooltip-delay 1.5
-              truncate-lines nil
-              truncate-partial-width-windows nil
-              indent-tabs-mode nil
-              x-use-underline-position-properties t
-              underline-minimum-offset 3
-              inhibit-startup-screen t
-              line-spacing 7
-              visible-bell nil
-              ring-bell-function 'ignore
-              cursor-type 'box
-              split-width-threshold 160
-              split-height-threshold nil
-              frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b")))
-              buffers-menu-max-size 30)
+(setq-default
+ case-fold-search t
+ compilation-scroll-output t
+ ediff-split-window-function 'split-window-horizontally
+ ediff-window-setup-function 'ediff-setup-windows-plain
+ grep-highlight-matches t
+ grep-scroll-output t
+ make-backup-files nil
+ mouse-yank-at-point t
+ save-interprogram-paste-before-kill t
+ scroll-preserve-screen-position 'always
+ set-mark-command-repeat-pop t
+ show-trailing-whitespace nil
+ tooltip-delay 1.5
+ truncate-lines nil
+ truncate-partial-width-windows nil
+ indent-tabs-mode nil
+ x-use-underline-position-properties t
+ underline-minimum-offset 3
+ inhibit-startup-screen t
+ line-spacing 7
+ visible-bell nil
+ ring-bell-function 'ignore
+ cursor-type 'box
+ split-width-threshold 160
+ split-height-threshold nil
+ frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b")))
+ buffers-menu-max-size 30)
 #+END_SRC
 *** themes
 **** Default
