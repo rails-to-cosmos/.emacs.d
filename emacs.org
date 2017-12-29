@@ -406,6 +406,15 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
+*** org-table-fixed
+#+BEGIN_SRC emacs-lisp
+(defconst org-table-separator-space
+  " "
+  ;; (propertize " " 'display '(space :width 1))
+  "Space used around fields when aligning the table.
+This space serves as a segment separator for the purposes of the
+bidirectional reordering.")
+#+END_SRC
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
 #+BEGIN_SRC emacs-lisp
 (use-package org-edna
@@ -2212,7 +2221,6 @@ BEG and END (region to sort)."
  save-interprogram-paste-before-kill t
  scroll-preserve-screen-position 'always
  set-mark-command-repeat-pop t
- show-trailing-whitespace nil
  tooltip-delay 1.5
  truncate-lines nil
  truncate-partial-width-windows nil
