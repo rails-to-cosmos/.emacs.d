@@ -1302,10 +1302,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                           (t . ivy--regex-plus))
                         ivy-initial-inputs-alist nil
                         ivy-use-virtual-buffers t
-                        enable-recursive-minibuffers t))
+                        enable-recursive-minibuffers t)
+          (ivy-mode 1))
   :config (progn
-            (ivy-mode 1)
-
             (defun ivy--add-face (str face)
               "Propertize STR with FACE.
 `font-lock-append-text-property' is used, since it's better than
@@ -2161,7 +2160,7 @@ BEG and END (region to sort)."
 #+BEGIN_SRC emacs-lisp
 (line-number-mode -1)
 (display-time-mode -1)
-(display-battery-mode -1)
+;; (display-battery-mode -1)
 (setq-default mode-line-format
               '("%e "
                 "%m "
@@ -2172,7 +2171,8 @@ BEG and END (region to sort)."
 #+END_SRC
 *** fringes
 #+BEGIN_SRC emacs-lisp
-(set-fringe-mode '(1 . 1))
+(when (fboundp 'set-fringe-mode)
+  (set-fringe-mode '(1 . 1)))
 #+END_SRC
 *** hlinum
 #+BEGIN_SRC emacs-lisp
@@ -2199,15 +2199,15 @@ BEG and END (region to sort)."
 (delete-selection-mode 1)
 (blink-cursor-mode 0)
 
-(set-fontset-font "fontset-default"
-                  (cons (decode-char 'ucs #x0400)
-                        (decode-char 'ucs #x052F))
-                  (font-spec :size 10 :name "Source Code Pro Regular"))
-
 (custom-set-faces
  '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
                 :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil
                 :family "Fira Code")))))
+
+(set-fontset-font "fontset-default"
+                  (cons (decode-char 'ucs #x0400)
+                        (decode-char 'ucs #x052F))
+                  (font-spec :size 10 :name "Source Code Pro Regular"))
 
 (setq-default
  case-fold-search t
