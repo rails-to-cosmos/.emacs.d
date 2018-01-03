@@ -406,6 +406,43 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
+*** org-movies
+Playing around with youtube-dl in org-mode.
+
+#+BEGIN_SRC emacs-lisp
+(defun seek-in-buffer (regexp)
+  (let ((report (substring-no-properties (buffer-string))))
+    (substring report (string-match regexp report) (match-end 0))))
+
+(defun async-shell-observer (id buffer)
+  (with-current-buffer buffer
+    (let ((progress-prop "Progress")
+          (progress (seek-in-buffer "\\([0-9.]+%\\)")))
+
+      (save-window-excursion
+        (org-id-goto id)
+        (org-set-property progress-prop progress))
+
+      (if (string-equal progress "100%")
+          (let ((fn (seek-in-buffer "[0-9]+\\.mp4")))
+            (kill-this-buffer)
+            (save-window-excursion
+              (org-id-goto id)
+              (org-attach-attach fn nil 'mv)
+              (org-delete-property progress-prop)))
+        (run-at-time "1 sec" nil 'async-shell-observer id buffer)))))
+
+(defun open-attach (&optional link)
+  (interactive)
+  (if (member "ATTACH" (org-get-tags-at))
+      (call-interactively 'org-attach-reveal)
+    (let ((buffer (make-temp-name "*Async Shell Command*"))
+          (id (org-id-get-create))
+          (cmd (format "youtube-dl --id %s" link)))
+      (org-set-property "ID" id)
+      (async-shell-command cmd buffer)
+      (run-at-time "3 sec" nil 'async-shell-observer id (get-buffer-create buffer)))))
+#+END_SRC
 *** org-table-fixed
 #+BEGIN_SRC emacs-lisp
 (defconst org-table-separator-space
@@ -469,7 +506,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (defun org-feed-reread ()
   (interactive)
   (message "Updating org feed...")
-  (setq org-feed-alist ())
+  (setq org-feed-alist '())
   (let ((header (mapcar 'substring-no-properties
                         (org-table-get-remote-range "org-feed-settings" "@1$<..@1$>")))
         (rows (mapcar 'substring-no-properties
