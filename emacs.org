@@ -432,7 +432,7 @@ Playing around with youtube-dl in org-mode.
               (org-delete-property progress-prop)))
         (run-at-time "1 sec" nil 'async-shell-observer id buffer)))))
 
-(defun open-attach (&optional link)
+(defun attach-this (&optional link)
   (interactive)
   (if (member "ATTACH" (org-get-tags-at))
       (call-interactively 'org-attach-reveal)
