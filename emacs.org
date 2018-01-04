@@ -405,7 +405,11 @@
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
-
+*** structure-templates
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'org-structure-template-alist
+             '("ls" "# Local Variables:\n?\n# End:"))
+#+END_SRC
 *** org-movies
 Playing around with youtube-dl in org-mode.
 
@@ -1815,7 +1819,24 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+*** clojure
+#+BEGIN_SRC emacs-lisp
+(require 'ob-clojure)
 
+(use-package cider
+  :config (setq-default
+           nrepl-hide-special-buffers t
+           cider-repl-pop-to-buffer-on-connect nil
+           cider-popup-stacktraces nil
+           cider-repl-popup-stacktraces t
+           org-babel-clojure-backend 'cider
+           inferior-lisp-program (executable-find "sbcl"))
+  :ensure t)
+
+;; Useful keybindings when using Clojure from Org
+;; (org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
+;; (org-defkey org-mode-map "\C-c\C-d" 'cider-doc)
+#+END_SRC
 *** compilation
 #+BEGIN_SRC emacs-lisp
 (define-key global-map (kbd "C-x C-m") #'compile)
