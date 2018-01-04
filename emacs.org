@@ -414,6 +414,8 @@
 Playing around with youtube-dl in org-mode.
 
 #+BEGIN_SRC emacs-lisp
+(require 'org-attach)
+
 (defun seek-in-buffer (regexp)
   (let ((report (substring-no-properties (buffer-string))))
     (substring report (string-match regexp report) (match-end 0))))
