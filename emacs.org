@@ -4,6 +4,13 @@
  user-mail-address "akatovda@yandex.com"
  user-full-name "Dmitry Akatov")
 #+END_SRC
+* Books and Articles
+** Mastering Emacs
+:PROPERTIES:
+:ATTACH_DIR: ~/sync/understanding/emacs
+:Attachments: mastering-emacs-v2.pdf
+:END:
+** [[http://joaotavora.github.io/sly/#A-SLY-tour-for-SLIME-users][SLY User Manual, version 1.0.0-beta-2]]
 * Useful Configs
 - [[https://github.com/howardabrams/dot-files][GitHub - howardabrams/dot-files: My Emacs initialization code and standard scripts I use for client and servers alike.]]
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
