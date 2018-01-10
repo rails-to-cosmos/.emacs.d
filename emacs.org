@@ -416,6 +416,7 @@
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
 (require 'org-mouse)
+(require 'clojure-mode)
 
 (setq scimax-src-block-keymaps
       `(("clojure" . ,(let ((map (make-composed-keymap
@@ -792,15 +793,15 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (setq org-highlight-latex-and-related '(latex))
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
 #+END_SRC
-*** [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
+*** COMMENT [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
 #+begin_src emacs-lisp
 (setq help/default-gc-cons-threshold gc-cons-threshold)
 (defun help/set-mem-max ()
   (setq gc-cons-threshold most-positive-fixnum))
 (defun help/set-mem-default ()
   (setq gc-cons-threshold help/default-gc-cons-threshold))
-(add-hook 'org-babel-pre-tangle-hook #'help/set-mem-max)
-(add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
+;; (add-hook 'org-babel-pre-tangle-hook #'help/set-mem-max)
+;; (add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
 #+end_src
 *** Clock
 #+begin_src emacs-lisp
