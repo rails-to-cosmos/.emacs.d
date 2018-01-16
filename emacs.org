@@ -836,10 +836,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
             (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
   :ensure t)
 #+end_src
-*** Hierarchical Statistics
-#+begin_src emacs-lisp
-(setq org-hierarchical-todo-statistics nil)
-#+end_src
 *** Insert page heading on org-insert-link
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
@@ -981,7 +977,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+BEGIN_SRC emacs-lisp
 (setq-default
  org-startup-align-all-tables "align"
- org-log-done nil
+ org-log-done t
  org-special-ctrl-a/e t
  org-special-ctrl-k t
  org-edit-timestamp-down-means-later t
