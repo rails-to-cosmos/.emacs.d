@@ -423,7 +423,7 @@
                                   `(,clojure-mode-map)
                                   org-mode-map)))
                         ;; In org-mode I define RET so we f
-                        (define-key map (kbd "C-x C-e") 'cider-eval-last-sexp)
+                        (define-key map (kbd "C-q") 'cider-eval-last-sexp)
                         map))))
 
 (defun scimax-spoof-mode (orig-func &rest args)
@@ -793,16 +793,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (setq org-highlight-latex-and-related '(latex))
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
 #+END_SRC
-*** COMMENT [[https://www.wisdomandwonder.com/article/10630/how-fast-can-you-tangle-in-org-mode][Faster tangling]]
-#+begin_src emacs-lisp
-(setq help/default-gc-cons-threshold gc-cons-threshold)
-(defun help/set-mem-max ()
-  (setq gc-cons-threshold most-positive-fixnum))
-(defun help/set-mem-default ()
-  (setq gc-cons-threshold help/default-gc-cons-threshold))
-;; (add-hook 'org-babel-pre-tangle-hook #'help/set-mem-max)
-;; (add-hook 'org-babel-post-tangle-hook #'help/set-mem-default)
-#+end_src
 *** Clock
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
@@ -1275,11 +1265,11 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   :ensure t)
 #+end_src
 *** increment-number
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package increment-number
   :no-require t
-  :bind (("C-c +" . increment-number-at-point)
-         ("C-c -" . decrement-number-at-point))
+  :bind (("S-<up>" . increment-number-at-point)
+         ("S-<down>" . decrement-number-at-point))
   :init (progn
           (defun increment-number-at-point ()
             (interactive)
@@ -1294,8 +1284,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
             (or (looking-at "[0-9]+")
                 (error "No number at point"))
             (replace-match (number-to-string (1- (string-to-number (match-string 0))))))))
-
-#+end_src
+#+END_SRC
 *** save-macro
 #+begin_src emacs-lisp
 (defun save-macro (name)
@@ -1474,14 +1463,14 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   :ensure t
   :ensure smex)
 
-(use-package swiper
-  :bind (("C-s" . swiper)
-         ("C-r" . swiper)
+;; (use-package swiper
+;;   :bind (("C-s" . swiper)
+;;          ("C-r" . swiper)
 
-         :map swiper-map
-         ("C-r" . previous-line)
-         ("C-s" . next-line))
-  :ensure t)
+;;          :map swiper-map
+;;          ("C-r" . previous-line)
+;;          ("C-s" . next-line))
+;;   :ensure t)
 #+END_SRC
 *** delete-trailing-whitespace
 #+begin_src emacs-lisp
@@ -1760,10 +1749,38 @@ BEG and END (region to sort)."
                                            ("[а-яА-Я]" . ("ru" "en"))))
               (dolist (lang-regex lang-regexes)
                 (if (string-match (car lang-regex) sentence)
-                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))))
+                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))
+              (after-translation-hydra/body))
   :bind ("C-x y t t" . translate-text)
   :ensure t)
 #+end_src
+**** after translation hydra
+#+BEGIN_SRC emacs-lisp
+(defun insert-translation-at-point ()
+  (save-window-excursion
+    (switch-to-buffer "*Google Translate*")
+    (beginning-of-buffer)
+
+    (dotimes (i 3)
+      (forward-sentence))
+
+    (let ((beg (point)))
+      (backward-sentence)
+      (copy-region-as-kill beg (point))))
+  (yank))
+
+(defun after-translation-hydra-pre ()
+  (let ((timer (timer-create)))
+    (timer-set-time timer (timer-relative-time (current-time) 5))
+    (timer-set-function timer 'hydra-keyboard-quit)
+    (timer-activate timer)))
+
+(defhydra after-translation-hydra (:body-pre after-translation-hydra-pre
+                                   :color blue
+                                   :hint "Translation manipulations")
+  ("i" insert-translation-at-point "Insert translation at point")
+  ("<RET>" nil "Quit"))
+#+END_SRC
 *** imenu
 **** imenu+
 #+BEGIN_SRC emacs-lisp
@@ -1894,6 +1911,7 @@ BEG and END (region to sort)."
 (require 'ob-clojure)
 
 (use-package cider
+  :hook ((clojure-mode . paredit-mode))
   :config (progn
             (setq-default
              nrepl-hide-special-buffers t

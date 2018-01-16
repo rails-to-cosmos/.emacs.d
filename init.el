@@ -8,7 +8,7 @@
          '(("melpa" . "http://melpa.milkbox.net/packages/")
            ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
            ("org" . "http://orgmode.org/elpa/")
-           ;; ("marmalade" . "http://marmalade-repo.org/packages/")
+           ("marmalade" . "http://marmalade-repo.org/packages/")
            ("elpy" . "https://jorgenschaefer.github.io/packages/")))
   (add-to-list 'package-archives package-archive))
 (package-initialize)
