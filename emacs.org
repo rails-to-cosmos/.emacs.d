@@ -987,6 +987,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
  org-agenda-window-setup 'current-window
  org-fast-tag-selection-single-key 'expert
  org-export-kill-product-buffer-when-displayed t
+ org-agenda-use-tag-inheritance nil
  org-tags-column 80
  org-refile-use-outline-path (quote file)
  org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
