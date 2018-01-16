@@ -1378,7 +1378,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
          ("C-S-n" . hydra-move-text/body))
   :config (progn
             (defhydra hydra-move-text ()
-              "Move line up/down."
+              "Move line up/down"
               ("C-S-p" move-text-up "up")
               ("C-S-n" move-text-down "down")
               ("<RET>" nil "quit")))
