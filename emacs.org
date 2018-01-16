@@ -1757,6 +1757,7 @@ BEG and END (region to sort)."
 **** after translation hydra
 #+BEGIN_SRC emacs-lisp
 (defun insert-translation-at-point ()
+  (interactive)
   (save-window-excursion
     (switch-to-buffer "*Google Translate*")
     (beginning-of-buffer)
@@ -1779,6 +1780,7 @@ BEG and END (region to sort)."
                                    :color blue
                                    :hint "Translation manipulations")
   ("i" insert-translation-at-point "Insert translation at point")
+  ("ш" insert-translation-at-point "Insert translation at point")
   ("<RET>" nil "Quit"))
 #+END_SRC
 *** imenu
