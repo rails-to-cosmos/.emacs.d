@@ -1749,7 +1749,7 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 *** google-translate
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package google-translate
   :config (progn
             (defun translate-text (sentence)
@@ -1760,10 +1760,11 @@ BEG and END (region to sort)."
               (dolist (lang-regex lang-regexes)
                 (if (string-match (car lang-regex) sentence)
                     (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))
-              (after-translation-hydra/body))
+              (after-translation-hydra/body)))
   :bind ("C-x y t t" . translate-text)
   :ensure t)
-#+end_src
+#+END_SRC
+
 **** after translation hydra
 #+BEGIN_SRC emacs-lisp
 (defun insert-translation-at-point ()
