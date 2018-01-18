@@ -5,12 +5,24 @@
  user-full-name "Dmitry Akatov")
 #+END_SRC
 * Books and Articles
-** Mastering Emacs
+** Mastering Emacs                                                             :Emacs:ATTACH:
 :PROPERTIES:
 :ATTACH_DIR: ~/sync/understanding/emacs
 :Attachments: mastering-emacs-v2.pdf
+:CATEGORY: Books
 :END:
-** [[http://joaotavora.github.io/sly/#A-SLY-tour-for-SLIME-users][SLY User Manual, version 1.0.0-beta-2]]
+** [[http://joaotavora.github.io/sly/#A-SLY-tour-for-SLIME-users][SLY User Manual, version 1.0.0-beta-2]]                                       :Emacs:
+:PROPERTIES:
+:CATEGORY: Articles
+:END:
+** [[https://vxlabs.com/2017/06/03/querying-restful-webservices-into-emacs-orgmode-tables/][Querying RESTful webservices into Emacs orgmode tables – vxlabs]]             :Emacs:Org:
+:PROPERTIES:
+:CATEGORY: Articles
+:END:
+** [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][Use Org-Mode Links for Absolutely Anything · Endless Parentheses]]            :Emacs:Org:
+:PROPERTIES:
+:CATEGORY: Articles
+:END:
 * Useful Configs
 - [[https://github.com/howardabrams/dot-files][GitHub - howardabrams/dot-files: My Emacs initialization code and standard scripts I use for client and servers alike.]]
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
@@ -988,6 +1000,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
  org-fast-tag-selection-single-key 'expert
  org-export-kill-product-buffer-when-displayed t
  org-agenda-use-tag-inheritance nil
+ org-use-tag-inheritance nil
  org-tags-column 80
  org-refile-use-outline-path (quote file)
  org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
