@@ -435,7 +435,7 @@
                                   `(,clojure-mode-map)
                                   org-mode-map)))
                         ;; In org-mode I define RET so we f
-                        (define-key map (kbd "C-q") 'cider-eval-last-sexp)
+                        (define-key map (kbd "C-q") 'cider-eval-defun-at-point)
                         map))))
 
 (defun scimax-spoof-mode (orig-func &rest args)
