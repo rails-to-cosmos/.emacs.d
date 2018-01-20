@@ -425,6 +425,22 @@
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
+*** autotagging
+#+BEGIN_SRC emacs-lisp
+(defun org-auto-tag ()
+  (interactive)
+  (let ((autotags org-autotags)
+        (headline-words (split-string (org-get-heading t t))))
+    (mapcar (lambda (word) (if-let (tag (alist-get (intern word) autotags nil))
+                               (org-toggle-tag tag 'on)))
+            headline-words)))
+
+(add-hook 'org-capture-before-finalize-hook 'org-auto-tag)
+
+(setq-default org-autotags
+              '((hello . "@hello")
+                (b . "ololo")))
+#+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
 (require 'org-mouse)
@@ -837,6 +853,50 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (define-key global-map (kbd "C-c C-x n") 'org-clock-add-note)
 #+end_src
 *** UI
+**** Org todo keyword faces
+***** Initialization
+#+BEGIN_SRC emacs-lisp
+(eval-after-load 'org-faces
+ '(progn
+    (defcustom org-todo-keyword-faces nil
+      "Faces for specific TODO keywords.
+This is a list of cons cells, with TODO keywords in the car and
+faces in the cdr.  The face can be a symbol, a color, or a
+property list of attributes, like (:foreground \"blue\" :weight
+bold :underline t)."
+      :group 'org-faces
+      :group 'org-todo
+      :type '(repeat
+              (cons
+               (string :tag "Keyword")
+               (choice color (sexp :tag "Face")))))))
+
+(eval-after-load 'org
+ '(progn
+    (defun org-get-todo-face-from-color (color)
+      "Returns a specification for a face that inherits from org-todo
+ face and has the given color as foreground. Returns nil if
+ color is nil."
+      (when color
+        `(:inherit org-warning :foreground ,color)))
+
+    (defun org-get-todo-face (kwd)
+      "Get the right face for a TODO keyword KWD.
+If KWD is a number, get the corresponding match group."
+      (if (numberp kwd) (setq kwd (match-string kwd)))
+      (or (let ((face (cdr (assoc kwd org-todo-keyword-faces))))
+            (if (stringp face)
+                (org-get-todo-face-from-color face)
+              face))
+          (and (member kwd org-done-keywords) 'org-done)
+          'org-todo))))
+#+END_SRC
+***** Colors
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keyword-faces '(("STARTED" . "#749AF7")
+                               ("PENDING" . "#A4C2EB")
+                               ("DELEGATED" . "#8B7FD7")))
+#+END_SRC
 **** Emphasis
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers nil)
