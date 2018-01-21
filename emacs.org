@@ -112,7 +112,7 @@
 
 (use-package font-utils
   :ensure t)
-#+end_src
+#+END_SRC
 *** paths
 #+BEGIN_SRC emacs-lisp
 (defun tmp/ (filename)
@@ -367,15 +367,15 @@
   :ensure t)
 #+END_SRC
 *** ace-window
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package ace-window
   :config (progn
             (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)))
   :bind (("C-x o" . ace-window))
   :ensure t)
-#+end_src
+#+END_SRC
 *** split-window
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun split-window-func-with-other-buffer (split-function)
   (lexical-let ((s-f split-function))
     (lambda ()
@@ -393,38 +393,78 @@
 
 (define-key global-map (kbd "C-x 2") 'split-window-vertically-swap)
 (define-key global-map (kbd "C-x 3") 'split-window-horizontally-swap)
-#+end_src
+#+END_SRC
 ** Keyboard
 *** default bindings
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
 (define-key global-map (kbd "C-x k") 'kill-this-buffer)
-#+end_src
+#+END_SRC
 *** key-freq
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package keyfreq
   :config (progn
             (keyfreq-mode 1)
             (keyfreq-autosave-mode 1))
   :ensure t)
-#+end_src
+#+END_SRC
 *** mwe-log-commands
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package mwe-log-commands
   :ensure t)
-#+end_src
+#+END_SRC
 *** reverse-im
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
   :ensure t)
-#+end_src
+#+END_SRC
 ** Org
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
+*** screen
+#+BEGIN_SRC emacs-lisp
+(require 'term)
+
+(defun ash-org-goto-screen (name)
+  "Open the screen with the specified name in the window"
+  (interactive "MScreen name: ")
+  (let ((screen-buffer-name (ash-org-screen-buffer-name name)))
+    (if (member screen-buffer-name
+                (mapcar 'buffer-name (buffer-list)))
+        (switch-to-buffer screen-buffer-name)
+      (switch-to-buffer (ash-org-screen-helper name "-dr")))))
+
+(defun ash-org-screen-buffer-name (name)
+  "Returns the buffer name corresponding to the screen name given."
+  (concat "*screen " name "*"))
+
+(defun ash-org-screen-helper (name arg)
+  ;; Pick the name of the new buffer.
+  (let ((term-ansi-buffer-name
+         (generate-new-buffer-name
+          (ash-org-screen-buffer-name name))))
+    (setq term-ansi-buffer-name
+          (term-ansi-make-term
+           term-ansi-buffer-name "/usr/bin/screen" nil arg name))
+    (set-buffer term-ansi-buffer-name)
+    (term-mode)
+    (term-char-mode)
+    (term-set-escape-char ?\C-x)
+    term-ansi-buffer-name))
+
+(defun ash-org-screen (name)
+  "Start a screen session with name"
+  (interactive "MScreen name: ")
+  (save-excursion
+    (ash-org-screen-helper name "-S"))
+  (insert-string (concat "[[screen:" name "]]")))
+
+(add-to-list 'org-link-abbrev-alist '("screen" . "elisp:(ash-org-goto-screen \"%s\")"))
+#+END_SRC
 *** autotagging
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-tag ()
@@ -663,7 +703,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 ;; (add-hook 'org-babel-post-tangle-hook #'run-program-async)
 #+END_SRC
 **** exec from results
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun ob-execute-block-from-results ()
   (save-excursion
     (save-restriction
@@ -676,29 +716,29 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               t)
           nil)))))
 (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
-#+end_src
+#+END_SRC
 **** run src block
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun org-babel-execute-block-by-id (name)
   (save-excursion
     (org-id-goto name)
-    (search-forward "#+begin_src")
+    (search-forward "#+BEGIN_SRC")
     (org-babel-execute-maybe)))
-#+end_src
+#+END_SRC
 **** SOMEDAY [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
 **** SOMEDAY [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
 **** ob-http
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package ob-http
   :ensure t)
-#+end_src
+#+END_SRC
 **** ob-async
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package ob-async
   :ensure t)
-#+end_src
+#+END_SRC
 **** ob-ipython
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package ob-ipython
   :config (progn
             (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -741,9 +781,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 ;;                  (->> result (assoc 'image/svg+xml) cdr (ob-ipython--write-string-to-file file)))
 ;;                 (file (error "%s is currently an unsupported file extension." (f-ext file)))
 ;;                 (t (->> result (assoc 'text/plain) cdr))))))))
-#+end_src
+#+END_SRC
 **** ob-languages
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq-default ob-languages '((python . t)
                              (ipython . t)
                              (sql . t)
@@ -754,7 +794,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                              (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
-#+end_src
+#+END_SRC
 *** modules
 #+BEGIN_SRC emacs-lisp
 (setq org-modules
@@ -786,12 +826,12 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   :ensure t)
 
 (require 'org-checklist)
-#+end_src
+#+END_SRC
 *** habit
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 ; position the habit graph on the agenda to the right of the default
 (setq org-habit-graph-column 75)
-#+end_src
+#+END_SRC
 *** org-view
 #+BEGIN_SRC emacs-lisp
 (defun org-view/evaluate-at-point (state)
@@ -822,7 +862,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
 #+END_SRC
 *** Clock
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
               org-clock-persist-query-resume nil
@@ -851,7 +891,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
       (org-clock-in)))
 
 (define-key global-map (kbd "C-c C-x n") 'org-clock-add-note)
-#+end_src
+#+END_SRC
 *** UI
 **** Org todo keyword faces
 ***** Initialization
@@ -898,18 +938,18 @@ If KWD is a number, get the corresponding match group."
                                ("DELEGATED" . "#8B7FD7")))
 #+END_SRC
 **** Emphasis
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq org-hide-emphasis-markers nil)
-#+end_src
+#+END_SRC
 **** Bullets
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package org-bullets
   :config (progn
             (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
   :ensure t)
-#+end_src
+#+END_SRC
 *** Insert page heading on org-insert-link
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
 (defun my/org-get-link-current-kill ()
@@ -945,13 +985,13 @@ If KWD is a number, get the corresponding match group."
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 
 (define-key org-mode-map (kbd "C-c l") 'my/org-insert-link)
-#+end_src
+#+END_SRC
 *** Narrowing
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (setq org-indirect-buffer-display 'current-window)
-#+end_src
+#+END_SRC
 *** Scimax autoformat mode
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defcustom scimax-autoformat-ordinals t
   "Determines if scimax autoformats ordinal numbers."
   :group 'scimax)
@@ -1006,14 +1046,14 @@ If KWD is a number, get the corresponding match group."
     (remove-hook 'post-self-insert-hook #'scimax-org-autoformat 'local)))
 
 (add-hook 'org-mode-hook (lambda () (scimax-autoformat-mode)))
-#+end_src
+#+END_SRC
 *** Select (dropdown)
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package org-select
   :load-path "packages")
-#+end_src
+#+END_SRC
 *** Show next entry, keeping other entries closed
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun ded/org-show-next-heading-tidily ()
   "Show next entry, keeping other entries closed."
   (interactive)
@@ -1028,7 +1068,7 @@ If KWD is a number, get the corresponding match group."
     (org-reveal t)
     (org-show-entry)
     (show-children)))
-#+end_src
+#+END_SRC
 *** Show previous entry, keeping other entries closed
 #+BEGIN_SRC emacs-lisp
 (defun ded/org-show-previous-heading-tidily ()
@@ -1309,7 +1349,7 @@ If KWD is a number, get the corresponding match group."
   :ensure t)
 #+END_SRC
 *** expand-region
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package expand-region
   :config (progn
             (setq shift-select-mode nil))
@@ -1317,9 +1357,9 @@ If KWD is a number, get the corresponding match group."
 
 ;; from http://endlessparentheses.com/where-do-you-bind-expand-region.html
 (global-set-key (kbd "M-2") #'er/expand-region)
-#+end_src
+#+END_SRC
 *** flycheck
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :config (progn
             (setq-default
@@ -1328,12 +1368,12 @@ If KWD is a number, get the corresponding match group."
              flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
             (global-flycheck-mode))
   :ensure t)
-#+end_src
+#+END_SRC
 *** flyspell
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package flyspell
   :ensure t)
-#+end_src
+#+END_SRC
 *** increment-number
 #+BEGIN_SRC emacs-lisp
 (use-package increment-number
@@ -1356,7 +1396,7 @@ If KWD is a number, get the corresponding match group."
             (replace-match (number-to-string (1- (string-to-number (match-string 0))))))))
 #+END_SRC
 *** save-macro
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun save-macro (name)
   "Save a macro. Take a name as argument and save the last
      defined macro under this name at the end of your .emacs"
@@ -1368,10 +1408,10 @@ If KWD is a number, get the corresponding match group."
   (insert-kbd-macro name)      ; copy the macro
   (newline)                    ; insert a newline
   (switch-to-buffer nil))
-#+end_src
+#+END_SRC
 *** yasnippet
 **** __init__
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package yasnippet
   :config (progn
             (add-to-list 'yas-snippet-dirs (sync/ "snippets"))
@@ -1379,13 +1419,13 @@ If KWD is a number, get the corresponding match group."
             (yas-global-mode t))
   :diminish t
   :ensure t)
-#+end_src
+#+END_SRC
 **** ivy-expand
 | cmd            | map        | binding |
 |----------------+------------+---------|
 | yas-ivy-expand | global-map | C-x y i |
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun yas-ivy-expand ()
   "Lets you select (and expand) a yasnippet key"
   (interactive)
@@ -1543,17 +1583,17 @@ If KWD is a number, get the corresponding match group."
 ;;   :ensure t)
 #+END_SRC
 *** delete-trailing-whitespace
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-#+end_src
+#+END_SRC
 *** delete-other-windows
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package delete-other-windows
   :no-require t
   :bind (("C-x 1" . delete-other-windows)))
-#+end_src
+#+END_SRC
 *** delete-this-file
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun delete-this-file ()
   "Delete the current file, and kill the buffer."
   (interactive)
@@ -1562,9 +1602,9 @@ If KWD is a number, get the corresponding match group."
                              (file-name-nondirectory buffer-file-name)))
     (delete-file (buffer-file-name))
     (kill-this-buffer)))
-#+end_src
+#+END_SRC
 *** immortal-scratch
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq-default initial-major-mode 'org-mode)
 
 (defun immortal-scratch ()
@@ -1574,28 +1614,28 @@ If KWD is a number, get the corresponding match group."
 (setq kill-buffer-query-functions
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
-#+end_src
+#+END_SRC
 *** prevent-active-processes-exist
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun prevent-active-processes-exist ()
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
   (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
     (cl-letf (((symbol-function #'process-list) (lambda ())))
       ad-do-it)))
 (add-hook 'after-init-hook 'prevent-active-processes-exist)
-#+end_src
+#+END_SRC
 *** benchmark-init
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package benchmark-init
   :config (progn
             (benchmark-init/activate))
   :ensure t)
-#+end_src
+#+END_SRC
 *** alert
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package alert
   :ensure t)
-#+end_src
+#+END_SRC
 *** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
 #+BEGIN_SRC emacs-lisp
 (use-package tiny
@@ -1617,7 +1657,7 @@ If KWD is a number, get the corresponding match group."
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 #+END_SRC
 *** rename-this-file-and-buffer
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun rename-this-file-and-buffer (new-name)
   "Renames both current buffer and file it's visiting to NEW-NAME."
   (interactive "sNew name: ")
@@ -1632,7 +1672,7 @@ If KWD is a number, get the corresponding match group."
           (rename-file filename new-name 1))
         (rename-buffer new-name)
         (set-visited-file-name new-name)))))
-#+end_src
+#+END_SRC
 *** pdf
 #+BEGIN_SRC emacs-lisp
 (use-package pdf-tools
@@ -1683,7 +1723,7 @@ This is like `define-key', except the definition
 ;;   (not (org-in-src-block-p)))
 #+END_SRC
 *** air-going
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun air--org-global-custom-ids ()
   "Find custom ID fields in all org agenda files."
   (let ((files (org-agenda-files))
@@ -1733,9 +1773,9 @@ This is like `define-key', except the definition
              (file (car id-parts))
              (line (string-to-int (cadr id-parts))))
         (org-insert-link nil (concat file "::#" custom-id) custom-id)))))
-#+end_src
+#+END_SRC
 *** tiny-menu
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package tiny-menu
   :config (progn
             (setq tiny-menu-items
@@ -1759,9 +1799,9 @@ This is like `define-key', except the definition
             ;; (define-key global-map (kbd "C-x y g") (tiny-menu-run-item "org-things"))
             )
   :ensure t)
-#+end_src
+#+END_SRC
 *** uniq-lines
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun uniq-lines (beg end)
   "Unique lines in region.
 Called from a program, there are two arguments:
@@ -1780,34 +1820,34 @@ BEG and END (region to sort)."
                (format "^%s" (regexp-quote (car kill-ring))) nil t)
             (replace-match "" nil nil))
           (goto-char next-line))))))
-#+end_src
+#+END_SRC
 *** hierarchy
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package hierarchy
   :ensure t)
-#+end_src
+#+END_SRC
 *** suggest
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; https://github.com/webyrd/Barliman/
 (use-package suggest
   :ensure t)
-#+end_src
+#+END_SRC
 *** read-lines
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun read-lines (filePath)
   "Return a list of lines of a file at filePath."
   (with-temp-buffer
     (insert-file-contents filePath)
     (split-string (buffer-string) "\n" t)))
-#+end_src
+#+END_SRC
 *** firestarter
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (use-package firestarter
   :config (progn
             (firestarter-mode)
             (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
   :ensure t)
-#+end_src
+#+END_SRC
 *** google-translate
 #+BEGIN_SRC emacs-lisp
 (use-package google-translate
@@ -1863,13 +1903,13 @@ BEG and END (region to sort)."
           (add-hook 'org-mode-hook  'imenup-add-defs-to-menubar))
 #+END_SRC
 **** imenu-anywhere
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (use-package imenu-anywhere
     :init (progn
             (global-unset-key "\C-xi"))
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
-#+end_src
+#+END_SRC
 *** rsync
 #+BEGIN_SRC emacs-lisp
 (defun rsync-enable ()
@@ -1918,18 +1958,18 @@ BEG and END (region to sort)."
          (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
 #+END_SRC
 *** wgrep
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (use-package wgrep
     :ensure t)
-#+end_src
+#+END_SRC
 *** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (defun set-region-read-only (begin end)
   (interactive "r")
   (add-text-properties begin end '(read-only t)))
-#+end_src
+#+END_SRC
 *** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
-#+begin_src emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp :results silent
 (defcustom default-messages-to-show 10
   "Default number of messages for `show-some-last-messages'.")
 
@@ -1954,13 +1994,13 @@ BEG and END (region to sort)."
 			(point))
 		  (point-max))))
 	  (delete-region (point-max) prev-point-max))))
-#+end_src
+#+END_SRC
 ** Version Control
 *** monky
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package monky
   :ensure t)
-#+end_src
+#+END_SRC
 *** magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -2305,7 +2345,7 @@ BEG and END (region to sort)."
     'irony-completion-at-point-async)
   (define-key irony-mode-map [remap complete-symbol]
     'irony-completion-at-point-async))
-#+end_src
+#+END_SRC
 *** python
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming.python
@@ -2348,23 +2388,23 @@ BEG and END (region to sort)."
   :ensure t)
 #+END_SRC
 **** offset
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq python-indent-offset 4
       python-indent-guess-indent-offset nil)
-#+end_src
+#+END_SRC
 **** ipython-shell-interpreter
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i"
       python-shell-completion-native nil)
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
-#+end_src
+#+END_SRC
 *** sql
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package sql-indent
   :ensure t)
-#+end_src
+#+END_SRC
 ** UI
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.ui
@@ -2404,9 +2444,9 @@ BEG and END (region to sort)."
   :ensure t)
 #+END_SRC
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
-#+end_src
+#+END_SRC
 *** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
