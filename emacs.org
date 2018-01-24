@@ -933,9 +933,13 @@ If KWD is a number, get the corresponding match group."
 #+END_SRC
 ***** Colors
 #+BEGIN_SRC emacs-lisp
-(setq org-todo-keyword-faces '(("STARTED" . "#749AF7")
-                               ("PENDING" . "#A4C2EB")
-                               ("DELEGATED" . "#8B7FD7")))
+(eval-after-load 'org
+  '(progn
+     (setq-default
+      org-todo-keyword-faces
+      '(("STARTED" . "#749AF7")
+        ("PENDING" . "#A4C2EB")
+        ("DELEGATED" . "#8B7FD7")))))
 #+END_SRC
 **** Emphasis
 #+BEGIN_SRC emacs-lisp
