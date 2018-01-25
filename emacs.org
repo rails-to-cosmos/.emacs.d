@@ -68,7 +68,7 @@
 *** welcome
 #+BEGIN_SRC emacs-lisp
 (setq-default initial-scratch-message
-              (concat "# I've always thought they were lighthouses...\n\n"))
+              (concat "# I've always thought they were lighthouses\n\n"))
 #+END_SRC
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
 #+BEGIN_SRC emacs-lisp
@@ -933,13 +933,13 @@ If KWD is a number, get the corresponding match group."
 #+END_SRC
 ***** Colors
 #+BEGIN_SRC emacs-lisp
-(eval-after-load 'org
-  '(progn
-     (setq-default
-      org-todo-keyword-faces
-      '(("STARTED" . "#749AF7")
-        ("PENDING" . "#A4C2EB")
-        ("DELEGATED" . "#8B7FD7")))))
+(add-hook 'org-mode-hook
+          (progn
+            (setq-default
+             org-todo-keyword-faces
+             '(("STARTED" . "#749AF7")
+               ("PENDING" . "#A4C2EB")
+               ("DELEGATED" . "#8B7FD7")))))
 #+END_SRC
 **** Emphasis
 #+BEGIN_SRC emacs-lisp
