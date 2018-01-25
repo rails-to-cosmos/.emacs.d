@@ -934,7 +934,7 @@ If KWD is a number, get the corresponding match group."
 ***** Colors
 #+BEGIN_SRC emacs-lisp
 (add-hook 'org-mode-hook
-          (progn
+          (lambda ()
             (setq-default
              org-todo-keyword-faces
              '(("STARTED" . "#749AF7")
