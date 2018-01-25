@@ -7,7 +7,7 @@
 (dolist (package-archive
          '(("melpa" . "http://melpa.milkbox.net/packages/")
            ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
-           ("org" . "http://orgmode.org/elpa/")
+           ("org" . "https://orgmode.org/elpa/")
            ("marmalade" . "http://marmalade-repo.org/packages/")
            ("elpy" . "https://jorgenschaefer.github.io/packages/")))
   (add-to-list 'package-archives package-archive))
