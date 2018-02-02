@@ -691,11 +691,16 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+END_SRC
 **** tangle-block
 #+BEGIN_SRC emacs-lisp
-(defun org-babel-tangle-block()
+(defun org-babel-tangle-block ()
   (interactive)
   (org-babel-when-in-src-block
    (let ((current-prefix-arg '(4)))
      (call-interactively 'org-babel-tangle))))
+
+;; (defun org-babel-tangle-relative-blocks ()
+;;   (interactive)
+;;   (when org-at-table-p
+;;     ))
 
 ;; (defun run-program-async ()
 ;;   (message "Running async: " (buffer-file-name))
