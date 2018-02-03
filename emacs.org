@@ -697,10 +697,26 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
    (let ((current-prefix-arg '(4)))
      (call-interactively 'org-babel-tangle))))
 
-;; (defun org-babel-tangle-relative-blocks ()
-;;   (interactive)
-;;   (when org-at-table-p
-;;     ))
+(defun org-table-get-name ()
+  (save-excursion
+    (while (org-at-table-p)
+      (previous-line))
+
+    (if (string-match org-babel-name-regexp (substring-no-properties (org-current-line-string)))
+        (progn
+          (beginning-of-line)
+          (search-forward ": ")
+          (substring-no-properties (thing-at-point 'symbol)))
+      (error "Table name is not specified."))))
+
+(defun org-babel-tangle-relatives ()
+  (interactive)
+  (if-let (tbl-name (org-table-get-name))
+      (save-excursion
+        (beginning-of-buffer)
+        (while (re-search-forward tbl-name nil 1)
+          (org-babel-when-in-src-block
+           (org-babel-tangle-block))))))
 
 ;; (defun run-program-async ()
 ;;   (message "Running async: " (buffer-file-name))
