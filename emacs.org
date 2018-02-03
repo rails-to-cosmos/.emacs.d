@@ -728,7 +728,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
         (setq deactivate-mark nil))
     (error "Not in table")))
 
-(defun org-table-get-name ()
+(defun orgtbl-get-name-at-point ()
   (save-excursion
     (while (org-at-table-p)
       (previous-line))
@@ -744,18 +744,18 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   (while (org-at-table-p)
     (next-line)))
 
-(defun org-babel-tangle-relatives ()
+(defun orgtbl-tangle-relatives ()
   (interactive)
-  (if-let (tbl-name (org-table-get-name))
+  (if-let (tbl-name (orgtbl-get-name-at-point))
       (save-excursion
         (beginning-of-buffer)
         (while (re-search-forward (format "=%s " tbl-name) nil 1)
           (org-babel-when-in-src-block
            (org-babel-tangle-block))))))
 
-(defun org-babel-execute-relatives ()
+(defun orgtbl-execute-relatives ()
   (interactive)
-  (if-let (tbl-name (org-table-get-name))
+  (if-let (tbl-name (orgtbl-get-name-at-point))
       (save-excursion
         (beginning-of-buffer)
         (while (re-search-forward (format "=%s " tbl-name) nil 1)
