@@ -697,6 +697,37 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
    (let ((current-prefix-arg '(4)))
      (call-interactively 'org-babel-tangle))))
 
+(defun org-babel-remove-result-at-point ()
+  (interactive)
+  (when (string-match org-babel-result-regexp (thing-at-point 'line t))
+    (delete-region
+     (save-excursion
+       (beginning-of-line)
+       (skip-chars-backward " \r\t\n")
+       (line-beginning-position 2))
+     (progn (forward-line) (org-babel-result-end)))))
+
+(defun orgtbl-to-select-query ()
+  (interactive)
+  (if (org-at-table-p)
+      (let ((name (org-table-get-name))
+            (cols (mapconcat 'identity (car (org-table-to-lisp)) ", ")))
+        (orgtbl-end-of-table)
+        (save-excursion
+          (org-babel-goto-named-result name)
+          (org-babel-remove-result-at-point))
+        (insert "\n")
+        (org-babel--insert-results-keyword name nil)
+        (forward-line)
+        (insert (format "#+BEGIN_SRC sql\n%s\n#+END_SRC\n" (format "SELECT %s FROM %s;" cols name)))
+        (previous-line)
+        (org-babel-goto-src-block-head)
+
+        (set-mark-command nil)
+        (org-babel-mark-block)
+        (setq deactivate-mark nil))
+    (error "Not in table")))
+
 (defun org-table-get-name ()
   (save-excursion
     (while (org-at-table-p)
@@ -708,6 +739,10 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
           (search-forward ": ")
           (substring-no-properties (thing-at-point 'symbol)))
       (error "Table name is not specified."))))
+
+(defun orgtbl-end-of-table ()
+  (while (org-at-table-p)
+    (next-line)))
 
 (defun org-babel-tangle-relatives ()
   (interactive)
