@@ -53,3 +53,4 @@ packages/yandex
 /init-local.el
 .cask
 /bookmarks.org
+/abbrev_defs
