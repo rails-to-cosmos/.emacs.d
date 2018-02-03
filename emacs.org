@@ -438,6 +438,42 @@
   :ensure t)
 #+END_SRC
 
+*** org-compl-char
+#+BEGIN_SRC emacs-lisp
+(defmacro org-compl-char (char cond completions handler)
+  "Complete CHAR if COND is non-nil:
+Read from COMPLETIONS and run HANDLER on item.
+When COND is nil, insert CHAR."
+
+  `(if (,cond)
+       (let ((item (org-completing-read "Choose item: " ,completions)))
+         (,handler item))
+     (insert ,char)))
+#+END_SRC
+*** compl-staff
+#+BEGIN_SRC emacs-lisp
+(defun org-compl-staff ()
+  (interactive)
+  (org-compl-char
+   "@"
+   (lambda () (and (looking-back "\\W") (string= (org-get-category) "Yandex")))
+   staff-persons
+   (lambda (item) (insert (format "[[staff:%s][%s@]]" item item)))))
+(define-key org-mode-map (kbd "@") 'org-compl-staff)
+#+END_SRC
+*** compl-templates
+#+BEGIN_SRC emacs-lisp
+(defun org-compl-structure ()
+  (interactive)
+  (org-compl-char "<"
+                  (lambda () (looking-at "^[[:space:]]*$"))
+                  org-structure-template-alist
+                  (lambda (item) (org-complete-expand-structure-template
+                             (+ -1 (point-at-bol)
+                                (match-beginning 1))
+                             (assoc item org-structure-template-alist)))))
+(define-key org-mode-map (kbd "<") 'org-compl-structure)
+#+END_SRC
 *** screen
 #+BEGIN_SRC emacs-lisp
 (require 'term)
