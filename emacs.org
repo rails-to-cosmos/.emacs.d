@@ -468,10 +468,11 @@ When COND is nil, insert CHAR."
   (org-compl-char "<"
                   (lambda () (looking-at "^[[:space:]]*$"))
                   org-structure-template-alist
-                  (lambda (item) (org-complete-expand-structure-template
-                             (+ -1 (point-at-bol)
-                                (match-beginning 1))
-                             (assoc item org-structure-template-alist)))))
+                  (lambda (item) (progn (insert "\n")
+                                   (org-complete-expand-structure-template
+                                    (+ -1 (point-at-bol)
+                                       (match-beginning 1))
+                                    (assoc item org-structure-template-alist))))))
 (define-key org-mode-map (kbd "<") 'org-compl-structure)
 #+END_SRC
 *** screen
