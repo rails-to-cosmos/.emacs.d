@@ -1316,6 +1316,13 @@ If KWD is a number, get the corresponding match group."
             (add-hook 'css-mode-hook 'paredit-everywhere-mode))
   :ensure t)
 #+END_SRC
+*** smartparens
+#+BEGIN_SRC emacs-lisp
+(use-package smartparens
+  :config (progn
+            (require 'smartparens-config))
+  :ensure t)
+#+END_SRC
 *** multiple-cursors
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
