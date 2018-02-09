@@ -458,7 +458,10 @@ When COND is nil, insert CHAR."
    "@"
    (lambda () (and (looking-back "\\W") (string= (org-get-category) "Yandex")))
    staff-persons
-   (lambda (item) (insert (format "[[staff:%s][%s@]]" item item)))))
+   (lambda (item) (progn
+               (insert (format "[[staff:%s][%s@]]" item item))
+               (org-toggle-tag (format "@%s" item) 'on)))))
+
 (define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+END_SRC
 *** compl-templates
