@@ -990,12 +990,11 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (defun org-clock-add-note ()
   (interactive)
-  (save-excursion
-      (org-clock-goto)
-      (org-clock-out)
-      (org-clock-in)))
+  (save-window-excursion
+    (org-clock-goto)
+    (org-add-note)))
 
-(define-key global-map (kbd "C-c C-x n") 'org-clock-add-note)
+(define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 #+END_SRC
 *** UI
 **** Org todo keyword faces
