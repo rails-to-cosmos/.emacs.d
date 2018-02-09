@@ -984,7 +984,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-log-into-drawer t
               org-log-done (quote time)
               org-log-state-notes-insert-after-drawers nil
-              org-log-note-clock-out t)
+              org-log-note-clock-out nil)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 
