@@ -750,7 +750,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (defun orgtbl-to-select-query ()
   (interactive)
   (if (org-at-table-p)
-      (let ((name (org-table-get-name))
+      (let ((name (orgtbl-get-name-at-point))
             (cols (mapconcat 'identity (car (org-table-to-lisp)) ", ")))
         (orgtbl-end-of-table)
         (save-excursion
@@ -761,12 +761,25 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
         (forward-line)
         (insert (format "#+BEGIN_SRC sql\n%s\n#+END_SRC\n" (format "SELECT %s FROM %s;" cols name)))
         (previous-line)
-        (org-babel-goto-src-block-head)
+        (org-babel-goto-src-block-head))
+    (error "Table not found")))
 
-        (set-mark-command nil)
-        (org-babel-mark-block)
-        (setq deactivate-mark nil))
-    (error "Not in table")))
+;; (defun orgtbl-to-python-tuples ()
+;;   (interactive)
+;;   (if (org-at-table-p)
+;;       (let ((name (orgtbl-get-name-at-point))
+;;             (cols (mapconcat 'identity (org-table-to-lisp) ", ")))
+;;         (orgtbl-end-of-table)
+;;         (save-excursion
+;;           (org-babel-goto-named-result name)
+;;           (org-babel-remove-result-at-point))
+;;         (insert "\n")
+;;         (org-babel--insert-results-keyword name nil)
+;;         (forward-line)
+;;         (insert (format "#+BEGIN_SRC python\n%s\n#+END_SRC\n" (format "%s = [\n%s\n]" name cols)))
+;;         (previous-line)
+;;         (org-babel-goto-src-block-head))
+;;     (error "Table not found")))
 
 (defun orgtbl-get-name-at-point ()
   (save-excursion
@@ -788,11 +801,13 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   (interactive)
   (when (org-at-table-p)
     (if-let (tbl-name (orgtbl-get-name-at-point))
+
         (save-excursion
           (beginning-of-buffer)
-          (while (re-search-forward (format "=%s " tbl-name) nil 1)
+          (while (search-forward (format "%s" tbl-name) nil 1)
             (org-babel-when-in-src-block
-             (org-babel-tangle-block))))))
+             (org-babel-tangle-block)))
+          )))
 
   (org-babel-when-in-src-block (org-babel-tangle-block)))
 
@@ -1220,7 +1235,7 @@ If KWD is a number, get the corresponding match group."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "PENDING(p)" "|" "DONE(d)" "CANCELLED(c)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "PENDING(p)" "|" "DONE(d)" "DOCUMENTED(O)" "CANCELLED(c)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
