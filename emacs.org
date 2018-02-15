@@ -306,6 +306,10 @@
 ;;   (setenv "LC_CTYPE" "en_US.UTF-8")
 ;;   (setq tramp-remote-process-environment process-environment)))
 
+(setenv "LANG" "C")
+(setenv "LC_ALL" "C")
+(setenv "LC_CTYPE" "C")
+
 (use-package exec-path-from-shell
   :config (progn
             (when (memq window-system '(mac ns))
@@ -747,11 +751,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
        (line-beginning-position 2))
      (progn (forward-line) (org-babel-result-end)))))
 
-(defun orgtbl-to-select-query ()
-  (interactive)
+(defun orgtbl-write-results (results)
   (if (org-at-table-p)
-      (let ((name (orgtbl-get-name-at-point))
-            (cols (mapconcat 'identity (car (org-table-to-lisp)) ", ")))
+      (let ((name (orgtbl-get-name-at-point)))
         (orgtbl-end-of-table)
         (save-excursion
           (org-babel-goto-named-result name)
@@ -759,10 +761,33 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
         (insert "\n")
         (org-babel--insert-results-keyword name nil)
         (forward-line)
-        (insert (format "#+BEGIN_SRC sql\n%s\n#+END_SRC\n" (format "SELECT %s FROM %s;" cols name)))
-        (previous-line)
+        (insert results)
+        (previous-line))
+    (error "Table not found")))
+
+(defun orgtbl-to-select-query ()
+  (interactive)
+  (if (org-at-table-p)
+      (let ((name (orgtbl-get-name-at-point))
+            (cols (mapconcat 'identity (car (org-table-to-lisp)) ", ")))
+        (orgtbl-write-results (format "#+BEGIN_SRC sql\n%s\n#+END_SRC\n" (format "SELECT %s FROM %s;" cols name)))
         (org-babel-goto-src-block-head))
     (error "Table not found")))
+
+(defun orgtbl-to-str ()
+  (interactive)
+  (if (org-at-table-p)
+      (let* ((name (orgtbl-get-name-at-point))
+             (cols (mapconcat 'identity (car (org-table-to-lisp)) ", "))
+             (values (remove 'hline (cdr (org-table-to-lisp))))
+             (columns (mapcar (lambda (col) (string-join col " ")) values)))
+        (orgtbl-write-results (format "#+BEGIN_SRC org\n%s\n#+END_SRC\n" (string-join columns "\n"))))
+    (error "Table not found")))
+
+(setq test-values '())
+
+(let ((a '("a" "b")))
+  (string-join a " "))
 
 ;; (defun orgtbl-to-python-tuples ()
 ;;   (interactive)
@@ -1059,8 +1084,10 @@ If KWD is a number, get the corresponding match group."
           (lambda ()
             (setq-default
              org-todo-keyword-faces
-             '(("STARTED" . "#749AF7")
-               ("PENDING" . "#A4C2EB")
+             '(("DOCUMENTED" . "#53D253")
+               ("CANCELLED" . "#7B9ED2")
+               ("STARTED" . "#749AF7")
+               ("PENDING" . "#D0E1F9")
                ("DELEGATED" . "#8B7FD7")))))
 #+END_SRC
 **** Emphasis
@@ -1235,7 +1262,7 @@ If KWD is a number, get the corresponding match group."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s)" "DELEGATED(D@/!)" "PENDING(p)" "|" "DONE(d)" "DOCUMENTED(O)" "CANCELLED(c)"))))
+ org-todo-keywords (quote ((sequence "TODO(t!)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "TESTED(T!)" "DOCUMENTED(O!)" "CANCELLED(c!)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
