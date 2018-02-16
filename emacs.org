@@ -368,8 +368,10 @@
 #+BEGIN_SRC emacs-lisp :results silent
 (use-package ace-window
   :config (progn
-            (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)))
-  :bind (("C-x o" . ace-window))
+            (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
+                  aw-scope 'frame))
+  :bind (("C-x o" . ace-window)
+         ("M-o" . ace-window))
   :ensure t)
 #+END_SRC
 *** split-window
