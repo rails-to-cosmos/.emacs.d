@@ -5,12 +5,6 @@
  user-full-name "Dmitry Akatov")
 #+END_SRC
 * Books and Articles
-** Mastering Emacs                                                             :Emacs:ATTACH:
-:PROPERTIES:
-:ATTACH_DIR: ~/sync/understanding/emacs
-:Attachments: mastering-emacs-v2.pdf
-:CATEGORY: Books
-:END:
 ** [[http://joaotavora.github.io/sly/#A-SLY-tour-for-SLIME-users][SLY User Manual, version 1.0.0-beta-2]]                                       :Emacs:
 :PROPERTIES:
 :CATEGORY: Articles
@@ -541,7 +535,9 @@ When COND is nil, insert CHAR."
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
 (require 'org-mouse)
-(require 'clojure-mode)
+
+(use-package clojure-mode
+  :ensure t)
 
 (setq scimax-src-block-keymaps
       `(("clojure" . ,(let ((map (make-composed-keymap
@@ -666,7 +662,8 @@ bidirectional reordering.")
 (defun endless/follow-tag-link (tag)
   "Display a list of TODO headlines with tag TAG.
 With prefix argument, also display headlines without a TODO keyword."
-  (org-tags-view (null current-prefix-arg) tag))
+  (org-tags-view nil ;; (null current-prefix-arg)
+                 tag))
 #+END_SRC
 *** org-contacts
 #+BEGIN_SRC emacs-lisp
