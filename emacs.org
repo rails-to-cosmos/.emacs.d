@@ -438,6 +438,15 @@
   :ensure t)
 #+END_SRC
 
+*** org-auto-property
+#+BEGIN_SRC emacs-lisp
+(defun org-auto-property-qa ()
+  (if (org-edna-entry-has-tags-p "QA")
+      (org-set-property "LOGGING" "DONE(@/!)")
+    (org-delete-property "LOGGING")))
+
+(add-hook 'org-after-tags-change-hook 'org-auto-property-qa)
+#+END_SRC
 *** org-compl-char
 #+BEGIN_SRC emacs-lisp
 (defmacro org-compl-char (char cond completions handler)
@@ -525,7 +534,7 @@ When COND is nil, insert CHAR."
   (let ((autotags org-autotags)
         (headline-words (split-string (org-get-heading t t))))
     (mapcar (lambda (word) (if-let (tag (alist-get (intern word) autotags nil))
-                               (org-toggle-tag tag 'on)))
+                          (org-toggle-tag tag 'on)))
             headline-words)))
 
 (add-hook 'org-capture-before-finalize-hook 'org-auto-tag)
@@ -1083,7 +1092,7 @@ If KWD is a number, get the corresponding match group."
           (lambda ()
             (setq-default
              org-todo-keyword-faces
-             '(("DOCUMENTED" . "#53D253")
+             '(;; ("DOCUMENTED" . "#53D253")
                ("CANCELLED" . "#7B9ED2")
                ("STARTED" . "#749AF7")
                ("PENDING" . "#D0E1F9")
@@ -1261,7 +1270,7 @@ If KWD is a number, get the corresponding match group."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t!)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "TESTED(T!)" "DOCUMENTED(O!)" "CANCELLED(c!)"))))
+ org-todo-keywords (quote ((sequence "TODO(t!)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "TESTED(T!)" "CANCELLED(c!)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
