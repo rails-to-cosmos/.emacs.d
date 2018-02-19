@@ -438,6 +438,8 @@
   :ensure t)
 #+END_SRC
 
+[[https://orgmode.org/worg/doc.html][Hooks documentation]]
+
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-property-qa ()
