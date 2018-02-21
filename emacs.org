@@ -440,6 +440,16 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** org-appt
+#+BEGIN_SRC emacs-lisp
+;; implement ids
+(defun org-appt-insert-timestamp ()
+  (when (and (org-edna-entry-has-tags-p "Appt")
+             (string= (org-get-todo-state) "DONE"))
+    (org-schedule nil)))
+
+(add-hook 'org-after-todo-state-change-hook 'org-appt-insert-timestamp)
+#+END_SRC
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-property-qa ()
@@ -451,7 +461,7 @@
 #+END_SRC
 *** org-compl-char
 #+BEGIN_SRC emacs-lisp
-(defmacro org-compl-char (char cond completions handler)
+(defmacro org-compl-char (char completions cond handler)
   "Complete CHAR if COND is non-nil:
 Read from COMPLETIONS and run HANDLER on item.
 When COND is nil, insert CHAR."
@@ -465,13 +475,11 @@ When COND is nil, insert CHAR."
 #+BEGIN_SRC emacs-lisp
 (defun org-compl-staff ()
   (interactive)
-  (org-compl-char
-   "@"
-   (lambda () (and (looking-back "\\W") (string= (org-get-category) "Yandex")))
-   staff-persons
-   (lambda (item) (progn
-               (insert (format "[[staff:%s][%s@]]" item item))
-               (org-toggle-tag (format "@%s" item) 'on)))))
+  (org-compl-char "@" staff-persons
+                  (lambda () (and (looking-back "\\W") (string= (org-get-category) "Yandex")))
+                  (lambda (item) (progn
+                              (insert (format "[[staff:%s][%s@]]" item item))
+                              (org-toggle-tag (replace-regexp-in-string "-" "_" (format "@%s" item)) 'on)))))
 
 (define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+END_SRC
@@ -479,9 +487,8 @@ When COND is nil, insert CHAR."
 #+BEGIN_SRC emacs-lisp
 (defun org-compl-structure ()
   (interactive)
-  (org-compl-char "<"
+  (org-compl-char "<" org-structure-template-alist
                   (lambda () (looking-at "^[[:space:]]*$"))
-                  org-structure-template-alist
                   (lambda (item) (progn (insert "\n")
                                    (org-complete-expand-structure-template
                                     (+ -1 (point-at-bol)
@@ -535,15 +542,18 @@ When COND is nil, insert CHAR."
   (interactive)
   (let ((autotags org-autotags)
         (headline-words (split-string (org-get-heading t t))))
-    (mapcar (lambda (word) (if-let (tag (alist-get (intern word) autotags nil))
+    (mapcar (lambda (word) (if-let (tag (alist-get (intern (downcase word)) autotags nil))
                           (org-toggle-tag tag 'on)))
             headline-words)))
 
 (add-hook 'org-capture-before-finalize-hook 'org-auto-tag)
 
 (setq-default org-autotags
-              '((hello . "@hello")
-                (b . "ololo")))
+              '((купить . "Wish")
+                (buy . "Wish")
+                (ммб . "Orienteering")
+                (сплав . "Water_Trek")
+                (велопокатушки . "Bicycle_Trek")))
 #+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
@@ -1272,7 +1282,7 @@ If KWD is a number, get the corresponding match group."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t!)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "TESTED(T!)" "CANCELLED(c!)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c!)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
