@@ -473,10 +473,18 @@ When COND is nil, insert CHAR."
 #+END_SRC
 *** compl-staff
 #+BEGIN_SRC emacs-lisp
+(defun org-babel-at-src-block-p ()
+  (if (memq (org-element-type (org-element-context)) '(inline-src-block src-block))
+      t
+    nil))
+
 (defun org-compl-staff ()
   (interactive)
   (org-compl-char "@" staff-persons
-                  (lambda () (and (looking-back "\\W") (string= (org-get-category) "Yandex")))
+                  (lambda () (and (not (org-babel-at-src-block-p))
+                             (looking-back "\\W"))
+                    ;; (and (looking-back "\\W") (string= (org-get-category) "Yandex"))
+                    )
                   (lambda (item) (progn
                               (insert (format "[[staff:%s][%s@]]" item item))
                               (org-toggle-tag (replace-regexp-in-string "-" "_" (format "@%s" item)) 'on)))))
