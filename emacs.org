@@ -440,6 +440,60 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** edna-ext
+SCHEDULED: <2018-02-28 Wed 08:30-09:30>
+#+BEGIN_SRC emacs-lisp
+(defun org-edna--increment-numeric-property-by (pom property &optional by decrement)
+  "Return the incremented value of PROPERTY at POM.
+
+If optional argument DECREMENT is non-nil, decrement the property
+value instead."
+  (let* ((prop-value (org-entry-get pom property)))
+    (unless prop-value
+      (error "Attempted to increment/decrement unset property %s" property))
+    (unless (org-edna--string-is-numeric-p prop-value)
+      (error "Property %s doesn't have a numeric value (got %s)" property prop-value))
+    (number-to-string (+ (if decrement -by by) (string-to-number prop-value)))))
+
+(defun org-edna-action/set-property-extended! (_last-entry property value by)
+  "Action to set the property PROPERTY of a target heading to VALUE.
+
+Edna Syntax: set-property-extended!(\"PROPERTY\" \"VALUE\" \"BY\")
+
+PROPERTY and VALUE are both strings.  PROPERTY must be a valid
+org mode property."
+  (pcase value
+    ((pred stringp)
+     (org-entry-put (point) property value))
+    ((or `inc `dec)
+     (let* ((new-value (org-edna--increment-numeric-property-by (point) property
+                                                                (string-to-number (org-entry-get (point) by))
+                                                                (eq value 'dec))))
+       (org-entry-put (point) property new-value)))
+    ((or `next `prev `previous)
+     (org-edna--cycle-property (point) property (memq value '(prev previous))))))
+
+;; Prop finder
+(defun org-edna-finder/prop (id prop)
+  (let* ((entry (org-id-find id 'marker))
+         (val (org-entry-get entry prop)))
+    (when val
+      (list entry))))
+
+(defun org-edna-finder/prop-mod (id prop denom exp)
+  (let* ((entry (org-id-find id 'marker))
+         (val (string-to-number (org-entry-get entry prop))))
+    (if (= (mod val denom) exp)
+        (list entry)
+      (list nil))))
+
+(defun org-edna-action/scheduled-times! (last-entry &rest times)
+  (org-add-planning-info 'scheduled
+                         (car (sort times
+                                    (lambda (a b)
+                                      (< (org-time-stamp-to-now (timestamp-from-string a))
+                                         (org-time-stamp-to-now (timestamp-from-string b))))))))
+#+END_SRC
 *** org-appt
 #+BEGIN_SRC emacs-lisp
 ;; implement ids
