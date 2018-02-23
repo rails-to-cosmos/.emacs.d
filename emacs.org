@@ -506,12 +506,11 @@ org mode property."
 #+END_SRC
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
-(defun org-auto-property-qa ()
-  (if (org-edna-entry-has-tags-p "QA")
-      (org-set-property "LOGGING" "DONE(@/!)")
-    (org-delete-property "LOGGING")))
+(defun org-auto-properties ()
+  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))
+        ((org-edna-entry-has-tags-p "Stuff") (org-set-property "TRIGGER" "self scheduled-times!(\"Fri 08:00-12:00\" \"Sat\" \"Sun\") todo!(\"TODO\")"))))
 
-(add-hook 'org-after-tags-change-hook 'org-auto-property-qa)
+(add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+END_SRC
 *** org-compl-char
 #+BEGIN_SRC emacs-lisp
@@ -615,7 +614,8 @@ When COND is nil, insert CHAR."
                 (buy . "Wish")
                 (ммб . "Orienteering")
                 (сплав . "Water_Trek")
-                (велопокатушки . "Bicycle_Trek")))
+                (велопокатушки . "Bicycle_Trek")
+                (implement . "Stuff")))
 #+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
