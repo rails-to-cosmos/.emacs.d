@@ -441,7 +441,6 @@
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
 *** edna-ext
-SCHEDULED: <2018-02-28 Wed 08:30-09:30>
 #+BEGIN_SRC emacs-lisp
 (defun org-edna--increment-numeric-property-by (pom property &optional by decrement)
   "Return the incremented value of PROPERTY at POM.
@@ -487,12 +486,20 @@ org mode property."
         (list entry)
       (list nil))))
 
+(defun org-timestamp-from-string (time)
+  (when (stringp time)
+    (let ((default-time (org-current-time)))
+      (format-time-string (org-time-stamp-format t)
+                            (apply #'encode-time
+                                   (org-read-date-analyze
+                                    time default-time (decode-time default-time)))))))
+
 (defun org-edna-action/scheduled-times! (last-entry &rest times)
   (org-add-planning-info 'scheduled
                          (car (sort times
                                     (lambda (a b)
-                                      (< (org-time-stamp-to-now (timestamp-from-string a))
-                                         (org-time-stamp-to-now (timestamp-from-string b))))))))
+                                      (< (org-time-stamp-to-now (org-timestamp-from-string a))
+                                         (org-time-stamp-to-now (org-timestamp-from-string b))))))))
 #+END_SRC
 *** org-appt
 #+BEGIN_SRC emacs-lisp
