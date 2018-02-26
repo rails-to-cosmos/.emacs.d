@@ -441,6 +441,67 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** edna-ext
+#+BEGIN_SRC emacs-lisp
+(defun org-edna--increment-numeric-property-by (pom property &optional by decrement)
+  "Return the incremented value of PROPERTY at POM.
+
+If optional argument DECREMENT is non-nil, decrement the property
+value instead."
+  (let* ((prop-value (org-entry-get pom property)))
+    (unless prop-value
+      (error "Attempted to increment/decrement unset property %s" property))
+    (unless (org-edna--string-is-numeric-p prop-value)
+      (error "Property %s doesn't have a numeric value (got %s)" property prop-value))
+    (number-to-string (+ (if decrement -by by) (string-to-number prop-value)))))
+
+(defun org-edna-action/set-property-extended! (_last-entry property value by)
+  "Action to set the property PROPERTY of a target heading to VALUE.
+
+Edna Syntax: set-property-extended!(\"PROPERTY\" \"VALUE\" \"BY\")
+
+PROPERTY and VALUE are both strings.  PROPERTY must be a valid
+org mode property."
+  (pcase value
+    ((pred stringp)
+     (org-entry-put (point) property value))
+    ((or `inc `dec)
+     (let* ((new-value (org-edna--increment-numeric-property-by (point) property
+                                                                (string-to-number (org-entry-get (point) by))
+                                                                (eq value 'dec))))
+       (org-entry-put (point) property new-value)))
+    ((or `next `prev `previous)
+     (org-edna--cycle-property (point) property (memq value '(prev previous))))))
+
+;; Prop finder
+(defun org-edna-finder/prop (id prop)
+  (let* ((entry (org-id-find id 'marker))
+         (val (org-entry-get entry prop)))
+    (when val
+      (list entry))))
+
+(defun org-edna-finder/prop-mod (id prop denom exp)
+  (let* ((entry (org-id-find id 'marker))
+         (val (string-to-number (org-entry-get entry prop))))
+    (if (= (mod val denom) exp)
+        (list entry)
+      (list nil))))
+
+(defun org-timestamp-from-string (time)
+  (when (stringp time)
+    (let ((default-time (org-current-time)))
+      (format-time-string (org-time-stamp-format t)
+                            (apply #'encode-time
+                                   (org-read-date-analyze
+                                    time default-time (decode-time default-time)))))))
+
+(defun org-edna-action/scheduled-times! (last-entry &rest times)
+  (org-add-planning-info 'scheduled
+                         (car (sort times
+                                    (lambda (a b)
+                                      (< (org-time-stamp-to-now (org-timestamp-from-string a))
+                                         (org-time-stamp-to-now (org-timestamp-from-string b))))))))
+#+END_SRC
 *** org-appt
 #+BEGIN_SRC emacs-lisp
 (defun org-appt-insert-timestamp ()
@@ -452,12 +513,11 @@
 #+END_SRC
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
-(defun org-auto-property-qa ()
-  (if (org-edna-entry-has-tags-p "QA" "Goal")
-      (org-set-property "LOGGING" "DONE(@/!)")
-    (org-delete-property "LOGGING")))
+(defun org-auto-properties ()
+  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))
+        ((org-edna-entry-has-tags-p "Stuff") (org-set-property "TRIGGER" "self scheduled-times!(\"Fri 08:00-12:00\" \"Sat\" \"Sun\") todo!(\"TODO\")"))))
 
-(add-hook 'org-after-tags-change-hook 'org-auto-property-qa)
+(add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+END_SRC
 *** org-compl-char
 #+BEGIN_SRC emacs-lisp
@@ -561,7 +621,8 @@ When COND is nil, insert CHAR."
                 (buy . "Wish")
                 (ммб . "Orienteering")
                 (сплав . "Water_Trek")
-                (велопокатушки . "Bicycle_Trek")))
+                (велопокатушки . "Bicycle_Trek")
+                (implement . "Stuff")))
 #+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
