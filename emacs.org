@@ -371,6 +371,7 @@
             (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
                   aw-scope 'frame))
   :bind (("C-x o" . ace-window)
+         ("C-x C-o" . other-frame)
          ("M-o" . ace-window))
   :ensure t)
 #+END_SRC
@@ -442,7 +443,6 @@
 
 *** org-appt
 #+BEGIN_SRC emacs-lisp
-;; implement ids
 (defun org-appt-insert-timestamp ()
   (when (and (org-edna-entry-has-tags-p "Appt")
              (string= (org-get-todo-state) "DONE"))
@@ -453,7 +453,7 @@
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-property-qa ()
-  (if (org-edna-entry-has-tags-p "QA")
+  (if (org-edna-entry-has-tags-p "QA" "Goal")
       (org-set-property "LOGGING" "DONE(@/!)")
     (org-delete-property "LOGGING")))
 
