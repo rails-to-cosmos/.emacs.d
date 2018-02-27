@@ -488,18 +488,29 @@ org mode property."
 
 (defun org-timestamp-from-string (time)
   (when (stringp time)
-    (let ((default-time (org-current-time)))
-      (format-time-string (org-time-stamp-format t)
-                            (apply #'encode-time
-                                   (org-read-date-analyze
-                                    time default-time (decode-time default-time)))))))
+    (setq org-read-date-prefer-future t)
+    (let* ((default-time (org-current-time))
+           (decoded-time (decode-time default-time nil))
+           (analyzed-time (org-read-date-analyze time default-time decoded-time))
+           (encoded-time (apply #'encode-time analyzed-time)))
+      (format-time-string (org-time-stamp-format t) encoded-time))))
 
 (defun org-edna-action/scheduled-times! (last-entry &rest times)
-  (org-add-planning-info 'scheduled
-                         (car (sort times
-                                    (lambda (a b)
-                                      (< (org-time-stamp-to-now (org-timestamp-from-string a))
-                                         (org-time-stamp-to-now (org-timestamp-from-string b))))))))
+  (cl-flet ((diff (time)
+                  (- (time-to-days (org-time-string-to-time (org-timestamp-from-string time)))
+                     (time-to-days (org-current-time)))))
+    (let* ((comparator
+            (lambda (a b)
+              (< (diff a) (diff b))))
+           (stimes (sort times comparator))
+           (nearest (car stimes)))
+      (org-add-planning-info 'scheduled nearest)
+      )))
+
+;; (sort (list "Tue 18:00-19:00" "Thu 18:00-19:00" "Sat 14:00-15:00")
+;;       (lambda (a b)
+;;         (< (org-time-stamp-to-now (org-timestamp-from-string a))
+;;            (org-time-stamp-to-now (org-timestamp-from-string b)))))
 #+END_SRC
 *** org-appt
 #+BEGIN_SRC emacs-lisp
