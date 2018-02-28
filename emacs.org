@@ -1341,7 +1341,6 @@ If KWD is a number, get the corresponding match group."
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
- org-log-states-order-reversed nil
  org-startup-align-all-tables "align"
  org-log-done t
  org-special-ctrl-a/e t
