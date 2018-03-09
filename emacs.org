@@ -2884,6 +2884,16 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** transparency
+#+BEGIN_SRC emacs-lisp
+(defun make-frame-more-transparent ()
+  (interactive)
+  (set-frame-parameter (selected-frame) 'alpha (cons (- (car (frame-parameter (selected-frame) 'alpha)) 15) 50)))
+
+(defun make-frame-more-opaque ()
+  (interactive)
+  (set-frame-parameter (selected-frame) 'alpha (cons (+ (car (frame-parameter (selected-frame) 'alpha)) 15) 50)))
+#+END_SRC
 *** rainbow-mode
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
