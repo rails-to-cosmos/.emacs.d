@@ -441,8 +441,117 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** reports
+#+BEGIN_SRC emacs-lisp
+(defun write-afterclass-report--vocals ()
+  (let* ((price (get-property "PRICE"))
+         (duration (get-property "DURATION"))
+         (schedule (cadr (read (get-property "SCHEDULE"))))
+         (next-time (get-nearest-date schedule)))
+
+    (inc-property "times" (self) 1 "times")
+    (inc-property "time-spent" (self) duration "hours")
+    (inc-property "money-spent" (self) price "RUB")
+
+    (set-scheduled next-time)
+    (set-todo-state "TODO")))
+
+(defun write-afterclass-report--gym ()
+  (let* ((duration (get-property "DURATION"))
+         (gym-pass (select (ids "Gym_Pass"))))
+    (inc-property "time-spent" (self) duration "hours")
+    (inc-property "times" (self) 1 "times")
+    (set-property "time-spent"
+                  (format "%0.1f %s"
+                          (+ (string-to-number (get-property "time-spent" (ids "Gym_Class")))
+                             (string-to-number (get-property "time-spent" (ids "Gym_Cardio"))))
+                          "hours")
+                  (ids "Gym"))
+
+    (let* ((schedule (cadr (read (get-property "SCHEDULE" (self)))))
+           (next-time (get-nearest-date schedule)))
+      (set-scheduled next-time (self))
+      (set-todo-state "TODO" (self))
+      (when (equal (mod (string-to-number (get-property "times" (self))) 12) 0)
+        (set-todo-state "TODO" (ids "Gym_Pass"))
+        (set-scheduled next-time (ids "Gym_Pass"))))))
+
+(defun write-afterclass-report--cardio ()
+  (let* ((duration (get-property "DURATION"))
+         (schedule (cadr (read (get-property "SCHEDULE"))))
+         (next-time (get-nearest-date schedule)))
+    (inc-property "time-spent" (self) duration "hours")
+    (inc-property "times" (self) 1 "times")
+    (set-scheduled next-time)
+    (set-todo-state "TODO")))
+
+(defun write-purchase-report--gym ()
+  (let* ((price (get-property "PRICE" (self))))
+    (inc-property "money-spent" (self) price "RUB")
+    (set-property "money-spent" (get-property "money-spent") (ids "Gym"))))
+
+(defun gym-pass-purchased-p ()
+  (equal (get-todo-state (car (select (ids "Gym_Pass")))) "DONE"))
+#+END_SRC
 *** lisp-edna
-**** TODO blockers
+**** wrapper
+#+BEGIN_SRC emacs-lisp
+(defun org-edna-dsl-init (&optional dsl)
+  (let ((dsl (or dsl 'org-edna)))
+    (defvar org-edna-dsl dsl "Language that edna uses for triggers and blockers.")
+    (defvar org-edna-dsl-trigger-handler "Org-edna custom trigger wrapper.")
+    (defvar org-edna-dsl-blocker-handler "Org-edna custom blocker wrapper.")
+
+    (setq-default org-edna-dsl dsl
+                  org-edna-dsl-trigger-handler (case dsl
+                                                 ('org-edna #'org-edna-trigger-function)
+                                                 ('emacs-lisp #'org-edna-trigger-function-emacs-lisp))
+                  org-edna-dsl-blocker-handler (case dsl
+                                                 ('org-edna #'org-edna-blocker-function)
+                                                 ('emacs-lisp #'org-edna-blocker-function-emacs-lisp)))
+
+    (advice-add 'org-edna-trigger-function :around #'org-edna-dsl-specifier-trigger)
+    (advice-add 'org-edna-blocker-function :around #'org-edna-dsl-specifier-blocker)))
+
+(defun org-edna-dsl-specifier-trigger (orig-fun &rest args)
+  "Wrap edna's triggers.
+
+ORIG-FUN is a trigger function called with ARGS."
+  (apply org-edna-dsl-trigger-handler args))
+
+(defun org-edna-dsl-specifier-blocker (orig-fun &rest args)
+  "Wrap edna's blockers.
+
+ORIG-FUN is a blocker function called with ARGS."
+  (apply org-edna-dsl-blocker-handler args))
+
+(defun org-edna-trigger-function-emacs-lisp (change-plist)
+  "Trigger function work-horse.
+
+See `emacs-edna-run' for CHANGE-PLIST explanation.
+
+This shouldn't be run from outside of `org-trigger-hook'."
+  (org-edna-run change-plist
+    (-when-let* ((form (org-entry-get (point) "TRIGGER" org-edna-use-inheritance)))
+      (eval (read form)))))
+
+(defun org-edna-blocker-function-emacs-lisp (change-plist)
+  "Trigger function work-horse.
+
+See `emacs-edna-run' for CHANGE-PLIST explanation.
+
+This shouldn't be run from outside of `org-trigger-hook'."
+  (org-edna-run change-plist
+    (if-let* ((form (org-entry-get pos "BLOCKER" org-edna-use-inheritance)))
+        ;; Return nil if there is no blocking entry
+        (not (setq org-block-entry-blocking (eval (read form))))
+      t)))
+#+END_SRC
+**** DONE blockers
+CLOSED: [2018-03-10 Sat 19:08]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-03-10 Sat 19:08]
+:END:
 org-blocker-hook
 org-trigger-hook
 
@@ -466,10 +575,7 @@ CLOSED: [2018-03-04 Sun 22:13]
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun org-edna-finder/self ()
-  "Finder for the current heading.
-
-Edna Syntax: self"
+(defun self ()
   (list (point-marker)))
 #+END_SRC
 ***** DONE ids
@@ -549,25 +655,36 @@ CLOCK: [2018-03-04 Sun 22:03]--[2018-03-04 Sun 22:05] =>  0:02
 
 **** properties
 #+BEGIN_SRC emacs-lisp
-(defun set-property (property value marker)
-  (org-entry-put marker property
-                 (cond ((numberp value) (number-to-string value))
-                       ((stringp value) value)
-                       (t "Error"))))
+(defun set-property (property value &optional marker)
+  (dolist (mark (or marker (self)))
+    (org-entry-put
+     mark property
+     (cond ((numberp value) (number-to-string value))
+           ((stringp value) value)
+           (t "Unknown value type")))))
 
-(defun get-property (property marker)
-  (org-entry-get marker property))
+(defun get-property (property &optional marker)
+  (let ((mark
+         (cond
+          (marker
+           (cond
+            ((listp marker) (car marker))
+            (t marker)))
+          (t (car (self))))))
+    (or (org-entry-get mark property)
+        (error "Property not specified"))))
 
-(defun inc-property (property marker &optional val description)
-  (let* ((full-prop-value (or (get-property property marker) "0"))
-         (inc-value (cond ((and (stringp val) (string-is-numeric-p val)) (string-to-number val))
-                          ((numberp val) val)
-                          (t 1)))
-         (prop-number (string-to-number (car (split-string full-prop-value))))
-         (prop-label (or description (key-description (cdr (split-string full-prop-value)))))
-         (result-value (s-trim (concat (number-to-string (+ inc-value prop-number)) " " prop-label))))
-    (set-property property result-value marker)
-    result-value))
+(defun inc-property (property &optional marker val units)
+  (dolist (mark (or marker (self)))
+    (let* ((full-prop-value (or (get-property property mark) "0"))
+           (inc-value (cond ((and (stringp val) (string-is-numeric-p val)) (string-to-number val))
+                            ((numberp val) val)
+                            (t 1)))
+           (prop-number (string-to-number (car (split-string full-prop-value))))
+           (prop-label (or units (key-description (cdr (split-string full-prop-value)))))
+           (result-value (s-trim (concat (number-to-string (+ inc-value prop-number)) " " prop-label))))
+      (set-property property result-value (list mark))
+      result-value)))
 #+END_SRC
 **** aux
 #+BEGIN_SRC emacs-lisp
@@ -581,12 +698,19 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
 #+END_SRC
 **** todo-state
 #+BEGIN_SRC emacs-lisp
-(defun get-todo-state (marker)
-  (save-excursion
-    (with-current-buffer
-      (marker-buffer marker)
-      (goto-char marker)
-      (substring-no-properties (org-get-todo-state)))))
+(defun get-todo-state (&optional marker)
+  (let ((mark (car (or marker (self)))))
+    (save-excursion
+      (with-current-buffer (marker-buffer mark)
+        (goto-char mark)
+        (substring-no-properties (org-get-todo-state))))))
+
+(defun set-todo-state (state &optional marker)
+  (let ((mark (car (or marker (self)))))
+    (save-excursion
+      (with-current-buffer (marker-buffer mark)
+        (goto-char mark)
+        (org-todo state)))))
 #+END_SRC
 **** scheduling
 #+BEGIN_SRC emacs-lisp
@@ -596,27 +720,27 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
 ;; (get-nearest-date (list "Mon 09:00" "Mon 10:00" "Mon 12:00" "Mon 21:00" "Tue 17:00-18:00" "Thu 17:00-18:00" "Sat 13:00-14:00"))
 ;; (- (org-time-string-to-seconds (org-timestamp-from-string "Mon 09:00")) (time-to-seconds (org-current-time)))
 
-(defun set-scheduled (timestamp markers)
-  (cl-labels
+(defun set-scheduled (timestamp &optional marker)
+  (let ((mark (or marker (self))))
+    (cl-labels
       ((set-scheduled-on (mts)
-                         (let ((pom (car mts))
-                               (ts (cdr mts)))
+                         (let ((pom (car mts)) (ts (cdr mts)))
                            (with-current-buffer
                                (marker-buffer pom)
                              (goto-char pom)
                              (org-add-planning-info 'scheduled ts)
-                             ts)
-                           )))
-    (mapcar #'set-scheduled-on (-zip markers (-repeat (length markers) timestamp)))))
+                             ts))))
+    (mapcar #'set-scheduled-on (-zip mark (-repeat (length mark) timestamp))))))
 
 (defun get-nearest-date (times)
   (cl-flet* ((diff (time)
-                   (let* ((current-time-sec (time-to-seconds (org-current-time)))
-                          (target-time-sec (org-time-string-to-seconds (org-timestamp-from-string time)))
-                          (diff-time-sec (- target-time-sec current-time-sec)))
-                     (if (< diff-time-sec 604800)
-                         diff-time-sec
-                       (- diff-time-sec 604800))))
+                   (let* ((current-sec (time-to-seconds (org-current-time)))
+                          (target-sec (org-time-string-to-seconds (org-timestamp-from-string time)))
+                          (diff-sec (- target-sec current-sec)))
+                     (message (format "%s current=%d target=%d diff=%d" time current-sec target-sec diff-sec))
+                     (cond ((and (> diff-sec 0) (< diff-sec 604800)) diff-sec)
+                           ((< diff-sec 0) (+ diff-sec 604800))
+                           ((> diff-sec 604800) (- diff-sec 604800)))))
              (comparator (a b) (< (diff a) (diff b))))
     (car (sort times #'comparator))))
 
@@ -634,99 +758,11 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
          (encoded-time (apply #'encode-time analyzed-time)))
     (format-time-string (org-time-stamp-format t t) encoded-time)))
 #+END_SRC
-*** COMMENT edna-ext
-#+BEGIN_SRC emacs-lisp
-(defun org-edna--increment-numeric-property-by (pom property &optional by decrement)
-  "Return the incremented value of PROPERTY at POM.
-
-If optional argument DECREMENT is non-nil, decrement the property
-value instead."
-  (let* ((prop-value (org-entry-get pom property)))
-    (unless prop-value
-      (error "Attempted to increment/decrement unset property %s" property))
-    (unless (org-edna--string-is-numeric-p prop-value)
-      (error "Property %s doesn't have a numeric value (got %s)" property prop-value))
-    (number-to-string (+ (if decrement -by by) (string-to-number prop-value)))))
-
-(defun org-edna-action/set-property-extended! (_last-entry property value by)
-  "Action to set the property PROPERTY of a target heading to VALUE.
-
-Edna Syntax: set-property-extended!(\"PROPERTY\" \"VALUE\" \"BY\")
-
-PROPERTY and VALUE are both strings.  PROPERTY must be a valid
-org mode property."
-  (pcase value
-    ((pred stringp)
-     (org-entry-put (point) property value))
-    ((or `inc `dec)
-     (let* ((new-value (org-edna--increment-numeric-property-by (point) property
-                                                                (string-to-number (org-entry-get (point) by))
-                                                                (eq value 'dec))))
-       (org-entry-put (point) property new-value)))
-    ((or `next `prev `previous)
-     (org-edna--cycle-property (point) property (memq value '(prev previous))))))
-
-;; Prop finder
-(defun org-edna-finder/prop (id prop)
-  (let* ((entry (org-id-find id 'marker))
-         (val (org-entry-get entry prop)))
-    (when val
-      (list entry))))
-
-(defun org-edna-finder/prop-mod (id prop denom exp)
-  (let* ((entry (org-id-find id 'marker))
-         (val (string-to-number (org-entry-get entry prop))))
-    (if (= (mod val denom) exp)
-        (list entry)
-      (list nil))))
-
-(defun org-timestamp-from-string (time)
-  (when (stringp time)
-    (let* ((default-time (org-current-time))
-           (decoded-time (decode-time default-time nil))
-           (analyzed-time (org-read-date-analyze time default-time decoded-time))
-           (encoded-time (apply #'encode-time analyzed-time)))
-      (format-time-string (org-time-stamp-format t) encoded-time))))
-
-(defun org-edna-action/scheduled-times! (last-entry &rest times)
-  (cl-flet ((diff (time)
-                  (- (time-to-days (org-time-string-to-time (org-timestamp-from-string time)))
-                     (time-to-days (org-current-time)))))
-    (let* ((comparator
-            (lambda (a b)
-              (< (diff a) (diff b))))
-           (stimes (sort times comparator))
-           (nearest (car stimes)))
-      (org-add-planning-info 'scheduled nearest)
-      )))
-
-
-(let ((foo (car (ids "test-goal"))))
-  (with-current-buffer
-      (marker-buffer foo)
-    (goto-char foo)
-    ()))
-
-
-;; (sort (list "Tue 18:00-19:00" "Thu 18:00-19:00" "Sat 14:00-15:00")
-;;       (lambda (a b)
-;;         (< (org-time-stamp-to-now (org-timestamp-from-string a))
-;;            (org-time-stamp-to-now (org-timestamp-from-string b)))))
-#+END_SRC
-*** COMMENT org-appt
-#+BEGIN_SRC emacs-lisp
-(defun org-appt-insert-timestamp ()
-  (when (and (org-edna-entry-has-tags-p "Appt")
-             (string= (org-get-todo-state) "DONE"))
-    (org-schedule nil)))
-
-(add-hook 'org-after-todo-state-change-hook 'org-appt-insert-timestamp)
-#+END_SRC
-*** COMMENT org-auto-property
+*** org-auto-property
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))
-        ((org-edna-entry-has-tags-p "Stuff") (org-set-property "TRIGGER" "self scheduled-times!(\"Fri 08:00-12:00\" \"Sat\" \"Sun\") todo!(\"TODO\")"))))
+        ))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+END_SRC
@@ -954,7 +990,8 @@ bidirectional reordering.")
 #+BEGIN_SRC emacs-lisp
 (use-package org-edna
   :config (progn
-            (org-edna-load))
+            (org-edna-load)
+            (org-edna-dsl-init 'emacs-lisp))
   :ensure t)
 #+END_SRC
 *** [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][org-tag-search]]
