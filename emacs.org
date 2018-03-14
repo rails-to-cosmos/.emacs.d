@@ -589,21 +589,19 @@ of the item (the part at the beginning separated by ::)."
 #+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
-(defun write-afterclass-report--eng ()
-  (let* ((price (get-property "PRICE"))
-         (duration (get-property "DURATION"))
-         (schedule (cadr (read (get-property "SCHEDULE"))))
-         (next-time (get-nearest-date schedule)))
+;; (defun write-afterclass-report--eng ()
+;;   (let ((price (get-property "PRICE"))
+;;         (duration (get-property "DURATION")))
 
-    (inc-property "times" (self) 1 "times")
-    (inc-property "time-spent" (self) duration "hours")
-    (inc-property "money-spent" (self) price "RUB")
+;;     (inc-property "times" 1 "times")
+;;     (inc-property "time-spent" duration "hours")
+;;     (inc-property "money-spent" price "RUB")
 
-    (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Eng")))
-    (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Eng")))
+;;     (set-property "time-spent" (get-property "time-spent") (select (ids "Eng")))
+;;     (set-property "money-spent" (get-property "money-spent") (select (ids "Eng")))
 
-    (set-scheduled next-time)
-    (set-todo-state "TODO")))
+;;     ;; (set-todo-state "TODO" (select (ids "music-class-reservation")))
+;;     (set-scheduled next-time)))
 
 (defun write-afterclass-report--vocals ()
   (let* ((price (get-property "PRICE"))
@@ -611,9 +609,9 @@ of the item (the part at the beginning separated by ::)."
          (schedule (cadr (read (get-property "SCHEDULE"))))
          (next-time (get-nearest-date schedule)))
 
-    (inc-property "times" (self) 1 "times")
-    (inc-property "time-spent" (self) duration "hours")
-    (inc-property "money-spent" (self) price "RUB")
+    (inc-property "times" 1 "times")
+    (inc-property "time-spent" duration "hours")
+    (inc-property "money-spent" price "RUB")
 
     (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Vocals")))
     (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Vocals")))
@@ -624,8 +622,8 @@ of the item (the part at the beginning separated by ::)."
 (defun write-afterclass-report--gym ()
   (let* ((duration (get-property "DURATION"))
          (gym-pass (select (ids "Gym_Pass"))))
-    (inc-property "time-spent" (self) duration "hours")
-    (inc-property "times" (self) 1 "times")
+    (inc-property "time-spent" duration "hours")
+    (inc-property "times" 1 "times")
     (set-property "time-spent"
                   (format "%0.1f %s"
                           (+ (string-to-number (get-property "time-spent" (ids "Gym_Class")))
@@ -645,14 +643,14 @@ of the item (the part at the beginning separated by ::)."
   (let* ((duration (get-property "DURATION"))
          (schedule (cadr (read (get-property "SCHEDULE"))))
          (next-time (get-nearest-date schedule)))
-    (inc-property "time-spent" (self) duration "hours")
-    (inc-property "times" (self) 1 "times")
+    (inc-property "time-spent" duration "hours")
+    (inc-property "times" 1 "times")
     (set-scheduled next-time)
     (set-todo-state "TODO")))
 
 (defun write-purchase-report--gym ()
   (let* ((price (get-property "PRICE" (self))))
-    (inc-property "money-spent" (self) price "RUB")
+    (inc-property "money-spent" price "RUB")
     (set-property "money-spent" (get-property "money-spent") (ids "Gym"))))
 
 (defun gym-pass-purchased-p ()
@@ -839,7 +837,7 @@ CLOCK: [2018-03-04 Sun 22:03]--[2018-03-04 Sun 22:05] =>  0:02
     (or (org-entry-get mark property)
         default)))
 
-(defun inc-property (property &optional marker val units)
+(defun inc-property (property &optional val units marker)
   (dolist (mark (or marker (self)))
     (let* ((full-prop-value (get-property property mark "0"))
            (inc-value (cond ((and (stringp val) (string-is-numeric-p val)) (string-to-number val))
@@ -1529,7 +1527,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-log-into-drawer t
               org-log-done (quote time)
               org-log-state-notes-insert-after-drawers nil
-              org-log-note-clock-out nil)
+              org-log-note-clock-out nil
+              org-log-states-order-reversed nil)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 
