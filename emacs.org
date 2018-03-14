@@ -598,6 +598,10 @@ of the item (the part at the beginning separated by ::)."
     (inc-property "times" (self) 1 "times")
     (inc-property "time-spent" (self) duration "hours")
     (inc-property "money-spent" (self) price "RUB")
+
+    (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Eng")))
+    (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Eng")))
+
     (set-scheduled next-time)
     (set-todo-state "TODO")))
 
@@ -610,6 +614,9 @@ of the item (the part at the beginning separated by ::)."
     (inc-property "times" (self) 1 "times")
     (inc-property "time-spent" (self) duration "hours")
     (inc-property "money-spent" (self) price "RUB")
+
+    (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Vocals")))
+    (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Vocals")))
 
     (set-scheduled next-time)
     (set-todo-state "TODO")))
