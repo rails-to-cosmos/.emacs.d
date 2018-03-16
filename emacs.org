@@ -603,6 +603,20 @@ of the item (the part at the beginning separated by ::)."
 ;;     ;; (set-todo-state "TODO" (select (ids "music-class-reservation")))
 ;;     (set-scheduled next-time)))
 
+(defun write-afterclass-report--algorave ()
+  (let* ((price (get-property "PRICE"))
+         (duration (get-property "DURATION"))
+         (schedule (cadr (read (get-property "SCHEDULE"))))
+         (next-time (get-nearest-date schedule)))
+
+    (inc-property "times" 1 "times")
+    (inc-property "time-spent" duration "hours")
+    (inc-property "money-spent" price "RUB")
+    (set-todo-state "TODO" (select (ids "music-class-reservation")))
+    (set-todo-state "TODO")
+    (set-scheduled (active-timestamp "now") (select (ids "music-class-reservation")))
+    (set-scheduled next-time)))
+
 (defun write-afterclass-report--vocals ()
   (let* ((price (get-property "PRICE"))
          (duration (get-property "DURATION"))
@@ -615,7 +629,6 @@ of the item (the part at the beginning separated by ::)."
 
     (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Vocals")))
     (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Vocals")))
-
     (set-scheduled next-time)
     (set-todo-state "TODO")))
 
@@ -870,7 +883,7 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
 
 (defun set-todo-state (state &optional marker)
   (let ((mark (car (or marker (self)))))
-    (save-excursion
+    (save-mark-and-excursion
       (with-current-buffer (marker-buffer mark)
         (goto-char mark)
         (org-todo state)))))
@@ -885,7 +898,8 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
 
 (defun set-scheduled (timestamp &optional marker)
   (let ((mark (or marker (self))))
-    (cl-labels
+    (save-mark-and-excursion
+     (cl-labels
       ((set-scheduled-on (mts)
                          (let ((pom (car mts)) (ts (cdr mts)))
                            (with-current-buffer
@@ -893,7 +907,7 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
                              (goto-char pom)
                              (org-add-planning-info 'scheduled ts)
                              ts))))
-    (mapcar #'set-scheduled-on (-zip mark (-repeat (length mark) timestamp))))))
+    (mapcar #'set-scheduled-on (-zip mark (-repeat (length mark) timestamp)))))))
 
 (defun get-nearest-date (times)
   (cl-flet* ((diff (time)
