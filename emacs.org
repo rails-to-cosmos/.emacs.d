@@ -3106,11 +3106,11 @@ BEG and END (region to sort)."
 #+BEGIN_SRC emacs-lisp
 (defun make-frame-more-transparent ()
   (interactive)
-  (set-frame-parameter (selected-frame) 'alpha (cons (- (car (frame-parameter (selected-frame) 'alpha)) 15) 50)))
+  (set-frame-parameter (selected-frame) 'alpha 0.8))
 
 (defun make-frame-more-opaque ()
   (interactive)
-  (set-frame-parameter (selected-frame) 'alpha (cons (+ (car (frame-parameter (selected-frame) 'alpha)) 15) 50)))
+  (set-frame-parameter (selected-frame) 'alpha 1.0))
 #+END_SRC
 *** rainbow-mode
 #+BEGIN_SRC emacs-lisp
