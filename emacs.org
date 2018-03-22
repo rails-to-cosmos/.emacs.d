@@ -449,19 +449,39 @@
 #+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
-;; (defun write-afterclass-report--eng ()
-;;   (let ((price (get-property "PRICE"))
-;;         (duration (get-property "DURATION")))
+(defun write-afterclass-report--eng ()
+  (let* ((price (get-property "PRICE"))
+         (duration (get-property "DURATION"))
+         (schedule (cadr (read (get-property "SCHEDULE"))))
+         (next-time (get-nearest-date schedule)))
 
-;;     (inc-property "times" 1 "times")
-;;     (inc-property "time-spent" duration "hours")
-;;     (inc-property "money-spent" price "RUB")
+    (inc-property "times" 1 "times")
 
-;;     (set-property "time-spent" (get-property "time-spent") (select (ids "Eng")))
-;;     (set-property "money-spent" (get-property "money-spent") (select (ids "Eng")))
+    (inc-property "time-spent" duration "hours")
+    (inc-property "time-spent" duration "hours" (select (ids "Eng")))
 
-;;     ;; (set-todo-state "TODO" (select (ids "music-class-reservation")))
-;;     (set-scheduled next-time)))
+    (inc-property "money-spent" price "RUB")
+    (inc-property "money-spent" price "RUB" (select (ids "Eng")))
+
+    (set-scheduled next-time)
+    (set-todo-state "TODO")))
+
+(defun write-afterclass-report--choir ()
+  (let* ((price (get-property "PRICE"))
+         (duration (get-property "DURATION"))
+         (schedule (cadr (read (get-property "SCHEDULE"))))
+         (next-time (get-nearest-date schedule)))
+
+    (inc-property "times" 1 "times")
+
+    (inc-property "time-spent" duration "hours")
+    (inc-property "time-spent" duration "hours" (select (ids "Vocals")))
+
+    (inc-property "money-spent" price "RUB")
+    (inc-property "money-spent" price "RUB" (select (ids "Vocals")))
+
+    (set-scheduled next-time)
+    (set-todo-state "TODO")))
 
 (defun write-afterclass-report--algorave ()
   (let* ((price (get-property "PRICE"))
@@ -484,8 +504,11 @@
          (next-time (get-nearest-date schedule)))
 
     (inc-property "times" 1 "times")
+
     (inc-property "time-spent" duration "hours")
+    (inc-property "time-spent" duration "hours" (select (ids "Vocals")))
     (inc-property "money-spent" price "RUB")
+    (inc-property "money-spent" price "RUB" (select (ids "Vocals")))
 
     (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Vocals")))
     (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Vocals")))
@@ -774,12 +797,12 @@ Examples of valid numeric strings are \"1\", \"-3\", or \"123\"."
                    (let* ((current-sec (time-to-seconds (org-current-time)))
                           (target-sec (org-time-string-to-seconds (active-timestamp time)))
                           (diff-sec (- target-sec current-sec)))
-                     (message (format "%s current=%d target=%d diff=%d" time current-sec target-sec diff-sec))
                      (cond ((and (> diff-sec 0) (< diff-sec 604800)) diff-sec)
                            ((< diff-sec 0) (+ diff-sec 604800))
                            ((> diff-sec 604800) (- diff-sec 604800)))))
              (comparator (a b) (< (diff a) (diff b))))
-    (car (sort times #'comparator))))
+    (let ((nearest-date (car (sort times #'comparator))))
+      nearest-date)))
 
 (defun active-timestamp (str)
   (let* ((default-time (org-current-time))
@@ -1630,6 +1653,7 @@ If KWD is a number, get the corresponding match group."
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
+ org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
  org-log-done t
  org-special-ctrl-a/e t
