@@ -1139,14 +1139,33 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
         (previous-line))
     (error "Table not found")))
 
+(defun org-babel-src-block-create (lang contents)
+  (format "#+BEGIN_SRC %s\n%s\n#+END_SRC\n" lang contents))
+
+(defun orgtbl-to-insert-query ()
+  (interactive)
+
+  (when (not (org-at-table-p))
+    (error "Table not found"))
+
+  (let* ((name (orgtbl-get-name-at-point))
+         (lisp-table (org-table-to-lisp))
+         (cols (mapconcat 'identity (car lisp-table) "\", \""))
+         (rows (mapconcat 'identity (mapcar #'(lambda (el) (mapconcat 'identity el ", ")) (remove 'hline (cdr lisp-table))) "), \n(")))
+    (orgtbl-write-results
+     (org-babel-src-block-create
+      "sql" (format "INSERT INTO %s (\"%s\")\n (%s);" name cols rows)))
+    (org-babel-goto-src-block-head)))
+
 (defun orgtbl-to-select-query ()
   (interactive)
-  (if (org-at-table-p)
-      (let ((name (orgtbl-get-name-at-point))
-            (cols (mapconcat 'identity (car (org-table-to-lisp)) ", ")))
-        (orgtbl-write-results (format "#+BEGIN_SRC sql\n%s\n#+END_SRC\n" (format "SELECT %s FROM %s;" cols name)))
-        (org-babel-goto-src-block-head))
-    (error "Table not found")))
+  (when (not (org-at-table-p))
+    (error "Table not found"))
+
+  (let ((name (orgtbl-get-name-at-point))
+        (cols (mapconcat 'identity (car (org-table-to-lisp)) ", ")))
+    (orgtbl-write-results (format "#+BEGIN_SRC sql\n%s\n#+END_SRC\n" (format "SELECT %s FROM %s;" cols name)))
+    (org-babel-goto-src-block-head)))
 
 (defun orgtbl-to-str ()
   (interactive)
@@ -1157,11 +1176,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
              (columns (mapcar (lambda (col) (string-join col " ")) values)))
         (orgtbl-write-results (format "#+BEGIN_SRC org\n%s\n#+END_SRC\n" (string-join columns "\n"))))
     (error "Table not found")))
-
-(setq test-values '())
-
-(let ((a '("a" "b")))
-  (string-join a " "))
 
 ;; (defun orgtbl-to-python-tuples ()
 ;;   (interactive)
