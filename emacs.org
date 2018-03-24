@@ -441,7 +441,7 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
-*** COMMENT custom agenda
+*** custom agenda
 #+BEGIN_SRC emacs-lisp
 (require 'org-agenda)
 
