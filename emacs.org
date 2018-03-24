@@ -440,6 +440,26 @@
 #+END_SRC
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
+
+*** COMMENT custom agenda
+#+BEGIN_SRC emacs-lisp
+(require 'org-agenda)
+
+(defun my-skip-unless-hometask ()
+  "Skip trees that are not waiting"
+  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+    (if (re-search-forward ":hometask:" subtree-end t)
+        nil          ; tag found, do not skip
+      subtree-end))) ; tag not found, continue after end of subtree
+
+(defun my-add-agenda-custom-commands ()
+  (add-to-list 'org-agenda-custom-commands '("h" "Hometasks" todo "TODO"
+                                             ((org-agenda-skip-function 'my-skip-unless-hometask)
+                                              (org-agenda-overriding-header "Hometasks: ")))))
+
+(eval-after-load 'org-agenda #'my-add-agenda-custom-commands)
+
+#+END_SRC
 *** [[https://github.com/Fuco1/org-radiobutton][radio]]
 #+BEGIN_SRC emacs-lisp
 (use-package org-radiobutton
