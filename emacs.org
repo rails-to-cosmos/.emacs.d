@@ -443,6 +443,48 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** clocktable-by-tag
+#+BEGIN_SRC emacs-lisp
+(defun clocktable-by-tag/shift-cell (n)
+  (let ((str ""))
+    (dotimes (i n)
+      (setq str (concat str "| ")))
+    str))
+
+(defun clocktable-by-tag/insert-tag (params)
+  (let ((tag (plist-get params :tags)))
+    (insert "|--\n")
+    (insert (format "| %s | *Tag time* |\n" tag))
+    (let ((total 0))
+      (mapcar
+       (lambda (file)
+         (let ((clock-data (with-current-buffer (find-file-noselect file)
+                             (org-clock-get-table-data (buffer-name) params))))
+           (when (> (nth 1 clock-data) 0)
+             (setq total (+ total (nth 1 clock-data)))
+             (dolist (entry (nth 2 clock-data))
+               (insert (format "| | . %s%s | %s %.2f |\n"
+                               (org-clocktable-indent-string (nth 0 entry))
+                               (nth 1 entry)
+                               (clocktable-by-tag/shift-cell (nth 0 entry))
+                               (/ (nth 3 entry) 60.0)))))))
+       (org-agenda-files))
+      (save-excursion
+        (re-search-backward "*Tag time*")
+        (org-table-next-field)
+        (org-table-blank-field)
+        (insert (format "*%.2f*" (/ total 60.0)))))
+    (org-table-align)))
+
+(defun org-dblock-write:clocktable-by-tag (params)
+  (insert "| Tag | Headline | Time (h) |\n")
+  (insert "|     |          | <r>  |\n")
+  (let ((tags (plist-get params :tags)))
+    (mapcar (lambda (tag)
+              (setq params (plist-put params :tags tag))
+              (clocktable-by-tag/insert-tag params))
+            tags)))
+#+END_SRC
 *** custom agenda
 #+BEGIN_SRC emacs-lisp
 (defun my-skip-unless-hometask ()
@@ -942,10 +984,25 @@ When COND is nil, insert CHAR."
 (setq-default org-autotags
               '((купить . "Wish")
                 (buy . "Wish")
-                (ммб . "Orienteering")
-                (сплав . "Water_Trek")
-                (велопокатушки . "Bicycle_Trek")
-                (implement . "Stuff")))
+
+                (ммб . "Orienteering:healthy")
+                (сплав . "Water_Trek:healthy")
+                (велопокатушки . "Bicycle_Trek:healthy")
+
+                (приём . "healthy")
+                (терапевт . "healthy")
+
+                (запилить . "Stuff:nerdy")
+                (implement . "Stuff:nerdy")
+                (emacs . "emacs_stuff:nerdy")
+                (autocomplete . "emacs_stuff:nerdy")
+                (org . "emacs_stuff:nerdy")
+                (org-mode . "emacs_stuff:nerdy")
+                (yasnippet . "emacs_stuff:nerdy")
+
+                (подумать . "Understanding:nerdy")
+
+                (пёсик . "@eric")))
 #+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
@@ -1681,8 +1738,8 @@ If KWD is a number, get the corresponding match group."
  org-agenda-window-setup 'current-window
  org-fast-tag-selection-single-key 'expert
  org-export-kill-product-buffer-when-displayed t
- org-agenda-use-tag-inheritance nil
- org-use-tag-inheritance nil
+ org-agenda-use-tag-inheritance t
+ org-use-tag-inheritance t
  org-tags-column 80
  org-refile-use-outline-path (quote file)
  org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
@@ -1691,7 +1748,7 @@ If KWD is a number, get the corresponding match group."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c!)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c@/!)"))))
 #+END_SRC
 ** Editor
 :PROPERTIES:
