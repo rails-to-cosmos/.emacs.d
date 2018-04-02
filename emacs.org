@@ -1513,7 +1513,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+BEGIN_SRC emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
-              org-clock-out-remove-zero-time-clocks nil
               org-clock-persist-query-resume nil
               org-clock-in-resume t
               org-clock-auto-clock-resolution (quote when-no-clock-is-running)
@@ -1522,7 +1521,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-clock-in-switch-to-state "STARTED"
               org-clock-into-drawer t
               org-clock-out-switch-to-state "TODO"
-              org-clock-out-remove-zero-time-clocks t
+              org-clock-out-remove-zero-time-clocks nil
               org-clock-out-when-done t
               org-clock-idle-time 60
               org-log-into-drawer t
