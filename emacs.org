@@ -431,7 +431,7 @@
   :ensure t)
 #+END_SRC
 *** reverse-im
-#+BEGIN_SRC emacs-lisp :results silent
+#+BEGIN_SRC emacs-lisp
 (use-package reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
@@ -459,6 +459,15 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** org-auto-done
+#+BEGIN_SRC emacs-lisp
+(defun org-summary-todo (n-done n-not-done)
+  "Switch entry to DONE when all subentries are done, to TODO otherwise."
+  (let (org-log-done org-log-states)   ; turn off logging
+    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+(add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+#+END_SRC
 *** clocktable-by-tag
 #+BEGIN_SRC emacs-lisp
 (defun clocktable-by-tag/shift-cell (n)
