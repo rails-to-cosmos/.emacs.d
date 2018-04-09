@@ -554,6 +554,10 @@
     (ledna-price-counter))
   (ledna-advanced-schedule))
 
+(defun ledna-touch (&optional target)
+  (set-scheduled (active-timestamp "now") target)
+  (set-todo-state "TODO" target))
+
 (defun write-afterclass-report--gym ()
   (let* ((gym-pass (select (ids "Gym_Pass")))
          (current-state (get-todo-state))
@@ -570,27 +574,11 @@
     (ledna-advanced-schedule)))
 
 (defun write-afterclass-report--algorave ()
-  (let* ((price (get-property "PRICE"))
-         (duration (get-property "DURATION"))
-         (schedule (cadr (read (get-property "SCHEDULE"))))
-         (next-time (get-nearest-date schedule)))
-
-    (inc-property "times" 1 "times")
-    (inc-property "time-spent" duration "hours")
-    (inc-property "money-spent" price "RUB")
-    (set-todo-state "TODO" (select (ids "music-class-reservation")))
-    (set-todo-state "TODO")
-    (set-scheduled (active-timestamp "now") (select (ids "music-class-reservation")))
-    (set-scheduled next-time)))
-
-(defun write-afterclass-report--cardio ()
-  (let* ((duration (get-property "DURATION"))
-         (schedule (cadr (read (get-property "SCHEDULE"))))
-         (next-time (get-nearest-date schedule)))
-    (inc-property "time-spent" duration "hours")
-    (inc-property "times" 1 "times")
-    (set-scheduled next-time)
-    (set-todo-state "TODO")))
+  (when (string= (get-todo-state) "DONE")
+    (ledna-touch (select (ids "music-class-reservation")))
+    (ledna-time-counter)
+    (ledna-price-counter))
+  (ledna-advanced-schedule))
 
 (defun gym-pass-purchased-p ()
   (equal (get-todo-state (select (ids "Gym_Pass"))) "DONE"))
