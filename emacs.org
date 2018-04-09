@@ -530,41 +530,44 @@
             (add-hook 'org-mode-hook 'org-radiobutton-mode))
   :ensure t)
 #+END_SRC
-*** reports
+*** TODO reports
 #+BEGIN_SRC emacs-lisp
-(defun write-afterclass-report--eng ()
-  (let* ((price (get-property "PRICE"))
-         (duration (get-property "DURATION"))
+(defun ledna-price-counter (&optional target currency)
+  (when-let (price (get-property "PRICE"))
+    (inc-property "money-spent" price (or currency "RUB") target)))
+
+(defun ledna-time-counter (&optional target)
+  (when-let (duration (get-property "DURATION"))
+    (inc-property "time-spent" duration "hours" target)
+    (inc-property "times" 1 "times" target)))
+
+(defun ledna-advanced-schedule (&optional target)
+  (when-let (schedule-prop (get-property "SCHEDULE"))
+    (let* ((schedule (cadr (read schedule-prop)))
+           (next-time (get-nearest-date schedule)))
+      (set-scheduled next-time target)
+      (set-todo-state "TODO" target))))
+
+(defun ledna-money-time-report ()
+  (when (string= (get-todo-state) "DONE")
+    (ledna-time-counter)
+    (ledna-price-counter))
+  (ledna-advanced-schedule))
+
+(defun write-afterclass-report--gym ()
+  (let* ((gym-pass (select (ids "Gym_Pass")))
+         (current-state (get-todo-state))
          (schedule (cadr (read (get-property "SCHEDULE"))))
          (next-time (get-nearest-date schedule)))
 
-    (inc-property "times" 1 "times")
+    (when (string= current-state "DONE")
+      (ledna-time-counter)
 
-    (inc-property "time-spent" duration "hours")
-    (inc-property "time-spent" duration "hours" (select (ids "Eng")))
+      (when (equal (mod (string-to-number (get-property "times")) 12) 0)
+        (set-todo-state "TODO" (ids "Gym_Pass"))
+        (set-scheduled next-time (ids "Gym_Pass"))))
 
-    (inc-property "money-spent" price "RUB")
-    (inc-property "money-spent" price "RUB" (select (ids "Eng")))
-
-    (set-scheduled next-time)
-    (set-todo-state "TODO")))
-
-(defun write-afterclass-report--choir ()
-  (let* ((price (get-property "PRICE"))
-         (duration (get-property "DURATION"))
-         (schedule (cadr (read (get-property "SCHEDULE"))))
-         (next-time (get-nearest-date schedule)))
-
-    (inc-property "times" 1 "times")
-
-    (inc-property "time-spent" duration "hours")
-    (inc-property "time-spent" duration "hours" (select (ids "Vocals")))
-
-    (inc-property "money-spent" price "RUB")
-    (inc-property "money-spent" price "RUB" (select (ids "Vocals")))
-
-    (set-scheduled next-time)
-    (set-todo-state "TODO")))
+    (ledna-advanced-schedule)))
 
 (defun write-afterclass-report--algorave ()
   (let* ((price (get-property "PRICE"))
@@ -580,44 +583,6 @@
     (set-scheduled (active-timestamp "now") (select (ids "music-class-reservation")))
     (set-scheduled next-time)))
 
-(defun write-afterclass-report--vocals ()
-  (let* ((price (get-property "PRICE"))
-         (duration (get-property "DURATION"))
-         (schedule (cadr (read (get-property "SCHEDULE"))))
-         (next-time (get-nearest-date schedule)))
-
-    (inc-property "times" 1 "times")
-
-    (inc-property "time-spent" duration "hours")
-    (inc-property "time-spent" duration "hours" (select (ids "Vocals")))
-    (inc-property "money-spent" price "RUB")
-    (inc-property "money-spent" price "RUB" (select (ids "Vocals")))
-
-    (set-property "time-spent" (get-property "time-spent" (self)) (select (ids "Vocals")))
-    (set-property "money-spent" (get-property "money-spent" (self)) (select (ids "Vocals")))
-    (set-scheduled next-time)
-    (set-todo-state "TODO")))
-
-(defun write-afterclass-report--gym ()
-  (let* ((duration (get-property "DURATION"))
-         (gym-pass (select (ids "Gym_Pass"))))
-    (inc-property "time-spent" duration "hours")
-    (inc-property "times" 1 "times")
-    (set-property "time-spent"
-                  (format "%0.1f %s"
-                          (+ (string-to-number (get-property "time-spent" (ids "Gym_Class")))
-                             (string-to-number (get-property "time-spent" (ids "Gym_Cardio"))))
-                          "hours")
-                  (ids "Gym"))
-
-    (let* ((schedule (cadr (read (get-property "SCHEDULE" (self)))))
-           (next-time (get-nearest-date schedule)))
-      (set-scheduled next-time (self))
-      (set-todo-state "TODO" (self))
-      (when (equal (mod (string-to-number (get-property "times" (self))) 12) 0)
-        (set-todo-state "TODO" (ids "Gym_Pass"))
-        (set-scheduled next-time (ids "Gym_Pass"))))))
-
 (defun write-afterclass-report--cardio ()
   (let* ((duration (get-property "DURATION"))
          (schedule (cadr (read (get-property "SCHEDULE"))))
@@ -626,11 +591,6 @@
     (inc-property "times" 1 "times")
     (set-scheduled next-time)
     (set-todo-state "TODO")))
-
-(defun write-purchase-report--gym ()
-  (let* ((price (get-property "PRICE" (self))))
-    (inc-property "money-spent" price "RUB")
-    (set-property "money-spent" (get-property "money-spent") (ids "Gym"))))
 
 (defun gym-pass-purchased-p ()
   (equal (get-todo-state (select (ids "Gym_Pass"))) "DONE"))
