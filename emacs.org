@@ -290,32 +290,8 @@
   (dired/sort))
 #+END_SRC
 ** EShell
-*** spawn-custom
+*** env
 #+BEGIN_SRC emacs-lisp
-(defun spawn-custom-shell (name)
-  (let ((current-prefix-arg '(4))
-        (eshell-buffer-name name))
-    (call-interactively 'eshell)))
-#+END_SRC
-*** settings
-#+BEGIN_SRC emacs-lisp
-(setq-default eshell-buffer-maximum-lines 500
-              eshell-output-filter-functions
-              '(eshell-truncate-buffer
-                eshell-postoutput-scroll-to-bottom
-                eshell-handle-control-codes
-                eshell-handle-ansi-color
-                eshell-watch-for-password-prompt)
-              password-cache t
-              password-cache-expiry 3600)
-
-;; (eval-after-load 'tramp-mode
-;; (let ((process-environment tramp-remote-process-environment))
-;;   (setenv "LANG" "en_US.UTF-8")
-;;   (setenv "LC_ALL" "en_US.UTF-8")
-;;   (setenv "LC_CTYPE" "en_US.UTF-8")
-;;   (setq tramp-remote-process-environment process-environment)))
-
 (setenv "LANG" "C")
 (setenv "LC_ALL" "C")
 (setenv "LC_CTYPE" "C")
@@ -327,6 +303,32 @@
               (exec-path-from-shell-copy-env "SSH_AGENT_PID")
               (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
   :ensure t)
+
+;; (eval-after-load 'tramp-mode
+;; (let ((process-environment tramp-remote-process-environment))
+;;   (setenv "LANG" "en_US.UTF-8")
+;;   (setenv "LC_ALL" "en_US.UTF-8")
+;;   (setenv "LC_CTYPE" "en_US.UTF-8")
+;;   (setq tramp-remote-process-environment process-environment)))
+#+END_SRC
+*** spawn-custom
+#+BEGIN_SRC emacs-lisp
+(defun spawn-custom-shell (name)
+  (let ((current-prefix-arg '(4))
+        (eshell-buffer-name name))
+    (call-interactively 'eshell)))
+#+END_SRC
+*** defaults
+#+BEGIN_SRC emacs-lisp
+(setq-default eshell-buffer-maximum-lines 500
+              eshell-output-filter-functions
+              '(eshell-truncate-buffer
+                eshell-postoutput-scroll-to-bottom
+                eshell-handle-control-codes
+                eshell-handle-ansi-color
+                eshell-watch-for-password-prompt)
+              password-cache t
+              password-cache-expiry 3600)
 #+END_SRC
 *** alias
 #+BEGIN_SRC emacs-lisp
@@ -350,6 +352,8 @@
 *** beautify
 #+BEGIN_SRC emacs-lisp
 (use-package eshell-fixed-prompt
+  :config (progn
+            (add-hook 'eshell-mode-hook 'eshell-fixed-prompt-mode))
   :ensure t)
 
 (use-package eshell-prompt-extras
@@ -527,7 +531,7 @@
             (add-hook 'org-mode-hook 'org-radiobutton-mode))
   :ensure t)
 #+END_SRC
-*** TODO reports
+*** reports
 #+BEGIN_SRC emacs-lisp
 (defun ledna-price-counter (&optional target currency)
   (when-let (price (get-property "PRICE"))
@@ -557,25 +561,15 @@
 
 (defun write-afterclass-report--gym ()
   (let* ((gym-pass (select (ids "Gym_Pass")))
-         (current-state (get-todo-state))
-         (schedule (cadr (read (get-property "SCHEDULE"))))
-         (next-time (get-nearest-date schedule)))
+         (current-state (get-todo-state)))
 
     (when (string= current-state "DONE")
       (ledna-time-counter)
 
       (when (equal (mod (string-to-number (get-property "times")) 12) 0)
-        (set-todo-state "TODO" (ids "Gym_Pass"))
-        (set-scheduled next-time (ids "Gym_Pass"))))
+        (ledna-touch (ids "Gym_Pass"))))
 
     (ledna-advanced-schedule)))
-
-(defun write-afterclass-report--algorave ()
-  (when (string= (get-todo-state) "DONE")
-    (ledna-touch (select (ids "music-class-reservation")))
-    (ledna-time-counter)
-    (ledna-price-counter))
-  (ledna-advanced-schedule))
 
 (defun gym-pass-purchased-p ()
   (equal (get-todo-state (select (ids "Gym_Pass"))) "DONE"))
