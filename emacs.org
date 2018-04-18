@@ -37,6 +37,39 @@
   :ensure t)
 #+END_SRC
 ** Lisp
+*** [[http://kitchingroup.cheme.cmu.edu/blog/2014/01/20/Alternatives-to-long-complex-format-statements-in-emacs-lisp/][python-like-template-expanding]]
+#+BEGIN_SRC emacs-lisp
+(defun expand-template (s plist)
+  "expand a template containing {:keyword} with the definitions in plist"
+  (replace-regexp-in-string "{\\(:[^}]+\\)}"
+                            (lambda (arg)
+                              (let ((keyword (intern (substring arg 1 -1))))
+                                (format "%s" (plist-get plist keyword)))) s))
+
+;; (let ((template "
+;;  :PROPERTIES:
+;;   :Custom_ID: {:key}
+;;   :AUTHOR: {:author}
+;;   :JOURNAL: {:journal}
+;;   :YEAR: {:year}
+;;   :VOLUME: {:volume}
+;;   :PAGES: {:pages}
+;;   :DOI: {:doi}
+;;   :URL: {:url}
+;;  :END:
+;; [[cite:{:key}]] [[file:{:pdf-dir}/{:key}.pdf][pdf]]\n\n"))
+
+;; (expand-template template
+;;                  '(:key "kitchin-2014"
+;;                         :author "Kitchin, J. R."
+;;                         :journal "HACS"
+;;                         :year 2014
+;;                         :volume 1
+;;                         :pages "1--10"
+;;                         :doi "10.1.1.109/hacs.1.10"
+;;                         :url "http://hacs.org/10.1.1.109/hacs.1.10"
+;;                         :pdf-dir "/home/jkitchin/pdfs")))
+#+END_SRC
 *** after-load
 #+BEGIN_SRC emacs-lisp
 (defmacro after-load (feature &rest body)
@@ -351,10 +384,10 @@
 #+END_SRC
 *** beautify
 #+BEGIN_SRC emacs-lisp
-(use-package eshell-fixed-prompt
-  :config (progn
-            (add-hook 'eshell-mode-hook 'eshell-fixed-prompt-mode))
-  :ensure t)
+;; (use-package eshell-fixed-prompt
+;;   :config (progn
+;;             (add-hook 'eshell-mode-hook 'eshell-fixed-prompt-mode))
+;;   :ensure t)
 
 (use-package eshell-prompt-extras
   :config (progn
@@ -465,7 +498,8 @@
 (defun org-summary-todo (n-done n-not-done)
   "Switch entry to DONE when all subentries are done, to TODO otherwise."
   (let (org-log-done org-log-states)   ; turn off logging
-    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+    (when (= n-not-done 0)
+      (org-todo "DONE"))))
 
 (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
 #+END_SRC
@@ -1034,6 +1068,18 @@ It is for commands that depend on the major mode. One example is
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'org-structure-template-alist
              '("ls" "# Local Variables:\n?\n# End:"))
+
+;; add <p for python expansion
+(add-to-list 'org-structure-template-alist
+             '("py" "#+BEGIN_SRC python\n?\n#+END_SRC" "<src lang=\"python\">\n?\n</src>"))
+
+;; add <el for emacs-lisp expansion
+(add-to-list 'org-structure-template-alist
+             '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC" "<src lang=\"emacs-lisp\">\n?\n</src>"))
+
+(add-to-list 'org-structure-template-alist
+             '("sql" "#+BEGIN_SRC sql\n?\n#+END_SRC" "<src lang=\"sql\">\n?\n</src>"))
+
 #+END_SRC
 *** org-movies
 Playing around with youtube-dl in org-mode.
@@ -1719,6 +1765,13 @@ If KWD is a number, get the corresponding match group."
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** string-inflection
+#+BEGIN_SRC emacs-lisp
+(use-package string-inflection
+  :config (progn
+            (global-set-key (kbd "M-p") 'string-inflection-cycle))
+  :ensure t)
+#+END_SRC
 *** abbrev
 #+BEGIN_SRC emacs-lisp
 (add-hook 'prog-mode-hook 'abbrev-mode)
