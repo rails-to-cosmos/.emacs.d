@@ -1441,6 +1441,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+END_SRC
 *** modules
 #+BEGIN_SRC emacs-lisp
+(require 'org-eshell)
+
 (setq org-modules
       (quote (org-bbdb
               org-bibtex
@@ -1460,8 +1462,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-vm
               org-wl
               org-w3m)))
-
-(require 'org-eshell)
 #+END_SRC
 *** org-checklist
 #+BEGIN_SRC emacs-lisp
@@ -2457,22 +2457,22 @@ This is like `define-key', except the definition
 #+BEGIN_SRC emacs-lisp
 (use-package tiny-menu
   :config (progn
-            (setq tiny-menu-items
-                  '(("org-things"   ("Things"
-                                     ((?t "Tag"     org-tags-view)
-                                      (?i "ID"      air-org-goto-custom-id)
-                                      (?k "Keyword" org-search-view))))
-                    ("org-links"    ("Links"
-                                     ((?c "Capture"   org-store-link)
-                                      (?l "Insert"    org-insert-link)
-                                      (?i "Custom ID" air-org-insert-custom-id-link))))
-                    ("yandex-tasks"   ("Tasks"
-                                       ((?a "Add subtask"     yandex-add-subtask)
-                                        (?i "Insert branch"   yandex-insert-branch)
-                                        (?t "Insert ticket"   yandex-insert-ticket)
-                                        (?g "Go to org"       yandex-goto-org-task)
-                                        (?s "Startrek ticket" yandex-browse-task)
-                                        (?r "Release ticket"  yandex-browse-release))))))
+            (setq-default tiny-menu-items
+                          '(("org-things"   ("Things"
+                                             ((?t "Tag"     org-tags-view)
+                                              (?i "ID"      air-org-goto-custom-id)
+                                              (?k "Keyword" org-search-view))))
+                            ("org-links"    ("Links"
+                                             ((?c "Capture"   org-store-link)
+                                              (?l "Insert"    org-insert-link)
+                                              (?i "Custom ID" air-org-insert-custom-id-link))))
+                            ("yandex-tasks"   ("Tasks"
+                                               ((?a "Add subtask"     yandex-add-subtask)
+                                                (?i "Insert branch"   yandex-insert-branch)
+                                                (?t "Insert ticket"   yandex-insert-ticket)
+                                                (?g "Go to org"       yandex-goto-org-task)
+                                                (?s "Startrek ticket" yandex-browse-task)
+                                                (?r "Release ticket"  yandex-browse-release))))))
             (define-key global-map (kbd "C-x y b") (tiny-menu-run-item "yandex-tasks"))
             (define-key global-map (kbd "C-x y o") (tiny-menu-run-item "org-links"))
             ;; (define-key global-map (kbd "C-x y g") (tiny-menu-run-item "org-things"))
