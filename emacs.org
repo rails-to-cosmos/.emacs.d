@@ -28,6 +28,7 @@
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
 - [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
+- [[https://github.com/jkitchin/jmax][jmax]]
 * Config
 :PROPERTIES:
 :header-args: :results silent :mkdirp yes
@@ -1750,8 +1751,8 @@ If KWD is a number, get the corresponding match group."
  org-agenda-window-setup 'current-window
  org-fast-tag-selection-single-key 'expert
  org-export-kill-product-buffer-when-displayed t
- org-agenda-use-tag-inheritance t
- org-use-tag-inheritance t
+ org-agenda-use-tag-inheritance nil
+ org-use-tag-inheritance nil
  org-tags-column 80
  org-refile-use-outline-path (quote file)
  org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
