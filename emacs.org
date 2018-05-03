@@ -2708,6 +2708,7 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+
 *** clojure
 #+BEGIN_SRC emacs-lisp
 (require 'ob-clojure)
@@ -3098,6 +3099,7 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.ui
 :END:
+
 *** vscroll
 #+BEGIN_SRC emacs-lisp
 (setq-default auto-window-vscroll nil)
