@@ -496,6 +496,12 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** poporg
+#+BEGIN_SRC emacs-lisp
+(use-package poporg
+      :bind (("C-c /" . poporg-dwim))
+      :ensure t)
+#+END_SRC
 *** org-auto-done
 #+BEGIN_SRC emacs-lisp
 (defun org-summary-todo (n-done n-not-done)
