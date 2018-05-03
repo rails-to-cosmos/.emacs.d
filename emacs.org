@@ -547,7 +547,10 @@
     (let* ((schedule (cadr (read schedule-prop)))
            (next-time (get-nearest-date schedule)))
       (set-scheduled next-time target)
-      (set-todo-state "TODO" target))))
+      (set-todo-state "TODO" target)
+      (org-entry-put nil "LAST_REPEAT" (format-time-string
+					      (org-time-stamp-format t t)
+					      (current-time))))))
 
 (defun ledna-money-time-report ()
   (when (string= (get-todo-state) "DONE")
