@@ -1748,6 +1748,8 @@ If KWD is a number, get the corresponding match group."
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
+ org-log-reschedule 'time
+ org-log-redeadline 'time
  org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
  org-log-done t
