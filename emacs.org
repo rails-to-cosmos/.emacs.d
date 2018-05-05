@@ -349,10 +349,17 @@
 #+END_SRC
 *** spawn-custom
 #+BEGIN_SRC emacs-lisp
-(defun spawn-custom-shell (name)
-  (let ((current-prefix-arg '(4))
-        (eshell-buffer-name name))
-    (call-interactively 'eshell)))
+(defun spawn-custom-shell (name &optional initial-path)
+  (if-let (exbuf (get-buffer name))
+      (progn
+        (switch-to-buffer exbuf)
+        (end-of-buffer))
+    (let ((current-prefix-arg '(4))
+          (eshell-buffer-name name))
+      (call-interactively 'eshell))
+    (when initial-path
+      (insert (format "cd %s" initial-path))
+      (eshell-send-input))))
 #+END_SRC
 *** defaults
 #+BEGIN_SRC emacs-lisp
