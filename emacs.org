@@ -503,6 +503,22 @@
 
 [[https://orgmode.org/worg/doc.html][Hooks documentation]]
 
+*** Glance
+#+BEGIN_SRC emacs-lisp
+(require 'cl-lib)
+
+(defun get-conflicted-files (dir)
+  (cl-remove-if-not (lambda (str) (string-match "^.+([0-9]+).[a-z]+$" str)) (directory-files dir)))
+
+(defun glance-report (message outputs)
+  (save-window-excursion
+    (org-id-goto "GLANCE")
+    (org-insert-todo-heading-respect-content t)
+    (org-demote-subtree)
+    (insert (format "%s\n\n- " message))
+    (insert (string-join outputs "\n- "))
+    (ledna-touch)))
+#+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
 (use-package poporg
