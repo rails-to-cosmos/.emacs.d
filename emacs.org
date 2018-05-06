@@ -501,8 +501,28 @@
   :ensure t)
 #+END_SRC
 
-[[https://orgmode.org/worg/doc.html][Hooks documentation]]
+*** ledna-clone
+#+BEGIN_SRC emacs-lisp
+(defun ledna-clone (&optional target)
+  (let* ((beg (save-excursion (org-beginning-of-line) (forward-word) (forward-char) (point)))
+         (end (save-excursion (org-end-of-line) (point)))
+         (props (org-entry-properties))
+         (ignored-keys '("CLOSED" "TIMESTAMP_IA" "TODO" "FILE")))
 
+    (org-insert-heading-respect-content)
+    (insert (buffer-substring beg end))
+    (set-todo-state "TODO")
+
+    ;; clone properties
+    (mapc #'(lambda (prop)
+              (let ((key (car prop))
+                    (val (cdr prop)))
+                (when (not (-elem-indices key ignored-keys))
+                  (org-set-property key val)))) props)
+
+    ;; TODO: customize possibility
+    (ledna-advanced-schedule)))
+#+END_SRC
 *** Glance
 #+BEGIN_SRC emacs-lisp
 (require 'cl-lib)
@@ -601,12 +621,12 @@
 #+BEGIN_SRC emacs-lisp
 (defun ledna-price-counter (&optional target currency)
   (when-let (price (get-property "PRICE"))
-    (inc-property "money-spent" price (or currency "RUB") target)))
+    (inc-property "MONEY-SPENT" price (or currency "RUB") target)))
 
 (defun ledna-time-counter (&optional target)
   (when-let (duration (get-property "DURATION"))
-    (inc-property "time-spent" duration "hours" target)
-    (inc-property "times" 1 "times" target)))
+    (inc-property "TIME-SPENT" duration "hours" target)
+    (inc-property "TIMES" 1 "times" target)))
 
 (defun ledna-advanced-schedule (&optional target)
   (when-let (schedule-prop (get-property "SCHEDULE"))
@@ -635,7 +655,7 @@
     (when (string= current-state "DONE")
       (ledna-time-counter)
 
-      (when (equal (mod (string-to-number (get-property "times")) 12) 0)
+      (when (equal (mod (string-to-number (get-property "TIMES")) 12) 0)
         (ledna-touch (ids "Gym_Pass"))))
 
     (ledna-advanced-schedule)))
@@ -1553,7 +1573,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-clock-out-remove-zero-time-clocks nil
               org-clock-out-when-done t
               org-clock-idle-time 60
-              org-log-into-drawer t
+              org-log-into-drawer nil
               org-log-done (quote time)
               org-log-state-notes-insert-after-drawers nil
               org-log-note-clock-out nil
