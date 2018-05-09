@@ -1575,7 +1575,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-clock-idle-time 60
               org-log-into-drawer nil
               org-log-done (quote time)
-              org-log-state-notes-insert-after-drawers nil
+              org-log-state-notes-insert-after-drawers t
               org-log-note-clock-out nil
               org-log-states-order-reversed nil)
 (org-clock-persistence-insinuate)
@@ -1642,7 +1642,7 @@ If KWD is a number, get the corresponding match group."
 #+END_SRC
 **** Emphasis
 #+BEGIN_SRC emacs-lisp
-(setq org-hide-emphasis-markers nil)
+(setq org-hide-emphasis-markers t)
 #+END_SRC
 **** Bullets
 #+BEGIN_SRC emacs-lisp :results silent
