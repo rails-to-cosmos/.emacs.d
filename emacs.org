@@ -524,7 +524,8 @@
       (pop-to-buffer-same-window (marker-buffer m))
       (goto-char m)
       (kill-region m (org-end-of-subtree))
-      (kill-line))))
+      (kill-line)
+      (org-update-statistics-cookies))))
 
 (defun glance-report (id msg details)
   (message msg)
