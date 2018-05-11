@@ -932,7 +932,6 @@ With prefix argument, also display headlines without a TODO keyword."
   :load-path "~/stuff/org-bookmark")
 #+END_SRC
 *** org-feed
-**** code
 #+BEGIN_SRC emacs-lisp
 (require 'org-feed)
 
