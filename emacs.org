@@ -503,14 +503,17 @@
 
 *** ledna-clone
 #+BEGIN_SRC emacs-lisp
-(defun ledna-clone (&optional target)
-  (let* ((beg (save-excursion (org-beginning-of-line) (forward-word) (forward-char) (point)))
-         (end (save-excursion (org-end-of-line) (point)))
-         (props (org-entry-properties))
-         (ignored-keys '("CLOSED" "TIMESTAMP_IA" "TODO" "FILE")))
+;; TODO: (ledna-clone (self)
+;;        :state "TODO"
+;;        :properties '(SCHEDULE TRIGGER)
+;;        :insert-after (self))
+
+(defun ledna-clone ()
+  (let* ((props (org-entry-properties))
+         (ignored-keys '("CLOSED" "TIMESTAMP_IA" "TODO" "FILE" "ITEM")))
 
     (org-insert-heading-respect-content)
-    (insert (buffer-substring beg end))
+    (insert (cdr (assoc-string "ITEM" props)))
     (set-todo-state "TODO")
 
     ;; clone properties
@@ -746,7 +749,9 @@ CLOSED: [2018-03-04 Sun 22:13]
 
 #+BEGIN_SRC emacs-lisp
 (defun self ()
-  (list (point-marker)))
+  (save-excursion
+    (goto-char (org-entry-beginning-position))
+    (list (point-marker))))
 #+END_SRC
 ***** DONE ids
 CLOSED: [2018-03-04 Sun 22:06]
