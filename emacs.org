@@ -518,16 +518,17 @@
     (ledna-touch)
     (org-set-property "ID" id)))
 
-(defun glance-report (id msg details)
-  (message msg)
-
+(defun glance-kill-entry (id)
   (save-window-excursion
     (when-let ((m (org-id-find id 'marker)))
       (pop-to-buffer-same-window (marker-buffer m))
       (goto-char m)
       (kill-region m (org-end-of-subtree))
-      (kill-line)))
+      (kill-line))))
 
+(defun glance-report (id msg details)
+  (message msg)
+  (glance-kill-entry)
   (glance-spawn-entry id msg details))
 #+END_SRC
 *** poporg
