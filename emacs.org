@@ -1290,21 +1290,20 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-clock-out-remove-zero-time-clocks nil
               org-clock-out-when-done t
               org-clock-idle-time 60
-              org-log-into-drawer nil
+              org-log-into-drawer t
               org-log-done (quote time)
-              org-log-state-notes-insert-after-drawers t
+              org-log-state-notes-insert-after-drawers nil
               org-log-note-clock-out nil
               org-log-states-order-reversed nil)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 
-(defun org-clock-add-note ()
-  (interactive)
-  (save-window-excursion
-    (org-clock-goto)
-    (org-add-note)))
-
-(define-key global-map (kbd "C-x y n") 'org-clock-add-note)
+;; (defun org-clock-add-note ()
+;;   (interactive)
+;;   (save-window-excursion
+;;     (org-clock-goto)
+;;     (org-add-note)))
+;; (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 #+END_SRC
 *** UI
 **** Org todo keyword faces
