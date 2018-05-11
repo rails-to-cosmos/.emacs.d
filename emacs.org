@@ -508,14 +508,27 @@
 (defun get-conflicted-files (dir)
   (cl-remove-if-not (lambda (str) (string-match "^.+([0-9]+).[a-z]+$" str)) (directory-files dir)))
 
-(defun glance-report (message outputs)
+(defun glance-spawn-entry (id msg details)
   (save-window-excursion
     (org-id-goto "GLANCE")
     (org-insert-todo-heading-respect-content t)
     (org-demote-subtree)
-    (insert (format "%s\n\n- " message))
-    (insert (string-join outputs "\n- "))
-    (ledna-touch)))
+    (insert (format "%s\n\n- " msg))
+    (insert (string-join details "\n- "))
+    (ledna-touch)
+    (org-set-property "ID" id)))
+
+(defun glance-report (id msg details)
+  (message msg)
+
+  (save-window-excursion
+    (when-let ((m (org-id-find id 'marker)))
+      (pop-to-buffer-same-window (marker-buffer m))
+      (goto-char m)
+      (kill-region m (org-end-of-subtree))
+      (kill-line)))
+
+  (glance-spawn-entry id msg details))
 #+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
