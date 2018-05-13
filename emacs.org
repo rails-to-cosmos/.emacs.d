@@ -592,16 +592,17 @@
 #+END_SRC
 *** custom agenda
 #+BEGIN_SRC emacs-lisp
-(defun my-skip-unless-hometask ()
-  "Skip trees that are not waiting"
-  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-    (if (re-search-forward ":hometask:" subtree-end t)
-        nil          ; tag found, do not skip
-      subtree-end))) ; tag not found, continue after end of subtree
+;; (defun my-skip-unless-hometask ()
+;;   "Skip trees that are not waiting"
+;;   (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+;;     (if (re-search-forward ":hometask:" subtree-end t)
+;;         nil          ; tag found, do not skip
+;;       subtree-end)))
+                                        ; tag not found, continue after end of subtree
 
-(add-to-list 'org-agenda-custom-commands '("h" "Hometasks" todo "TODO"
-                                           ((org-agenda-skip-function 'my-skip-unless-hometask)
-                                            (org-agenda-overriding-header "Hometasks: "))))
+;; (add-to-list 'org-agenda-custom-commands '("h" "Hometasks" todo "TODO"
+;;                                            ((org-agenda-skip-function 'my-skip-unless-hometask)
+;;                                             (org-agenda-overriding-header "Hometasks: "))))
 #+END_SRC
 *** [[https://github.com/Fuco1/org-radiobutton][radio]]
 #+BEGIN_SRC emacs-lisp
@@ -612,35 +613,6 @@
 #+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
-(defun ledna-price-counter (&optional target currency)
-  (when-let (price (get-property "PRICE"))
-    (inc-property "MONEY-SPENT" price (or currency "RUB") target)))
-
-(defun ledna-time-counter (&optional target)
-  (when-let (duration (get-property "DURATION"))
-    (inc-property "TIME-SPENT" duration "hours" target)
-    (inc-property "TIMES" 1 "times" target)))
-
-(defun ledna-advanced-schedule (&optional target)
-  (when-let (schedule-prop (get-property "SCHEDULE"))
-    (let* ((schedule (cadr (read schedule-prop)))
-           (next-time (get-nearest-date schedule)))
-      (set-scheduled next-time target)
-      (set-todo-state "TODO" target)
-      (org-entry-put nil "LAST_REPEAT" (format-time-string
-					      (org-time-stamp-format t t)
-					      (current-time))))))
-
-(defun ledna-money-time-report ()
-  (when (string= (get-todo-state) "DONE")
-    (ledna-time-counter)
-    (ledna-price-counter))
-  (ledna-advanced-schedule))
-
-(defun ledna-touch (&optional target)
-  (set-scheduled (active-timestamp "now") target)
-  (set-todo-state "TODO" target))
-
 (defun write-afterclass-report--gym ()
   (let* ((gym-pass (select (ids "Gym_Pass")))
          (current-state (get-todo-state)))
@@ -659,8 +631,7 @@
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))
-        ))
+  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+END_SRC
@@ -1372,7 +1343,7 @@ If KWD is a number, get the corresponding match group."
 #+END_SRC
 **** Emphasis
 #+BEGIN_SRC emacs-lisp
-(setq org-hide-emphasis-markers t)
+(setq org-hide-emphasis-markers nil)
 #+END_SRC
 **** Bullets
 #+BEGIN_SRC emacs-lisp :results silent
