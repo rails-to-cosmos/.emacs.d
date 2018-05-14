@@ -285,8 +285,34 @@
    (let ((map (make-sparse-keymap)))
      (define-key map (kbd "C-d") (lambda () (interactive) (dired-switch-buffers t))) map)))
 
-(define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
-(define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
+(defun dired-eshell-switch ()
+  "Quickly switch between dired buffers."
+  (interactive)
+
+  (if (eq major-mode 'dired-mode)
+      (spawn-custom-shell (s-replace "dired" "eshell" (buffer-name)) (dired-current-directory))
+      (dired default-directory))
+
+  ;; (if dired-buffer-list
+  ;;     (progn
+  ;;       (when (eq (buffer-name (current-buffer)) (car dired-buffer-list))
+  ;;         (setq dired-buffer-list (rot-left 1 dired-buffer-list)))
+
+  ;;       (switch-to-buffer (car dired-buffer-list))
+  ;;       (setq dired-buffer-list (rot-left 1 dired-buffer-list)))
+  ;;   (dired default-directory))
+
+  (set-transient-map
+   (let ((map (make-sparse-keymap)))
+     (define-key map (kbd "C-d") (lambda () (interactive) (dired-eshell-switch))) map)))
+
+;; (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
+
+(define-key global-map (kbd "C-x C-d")
+  (lambda () (interactive)
+    (if (eq major-mode 'dired-mode)
+        (spawn-custom-shell (s-replace "dired" "eshell" (buffer-name)) (dired-current-directory))
+      (dired default-directory))))
 #+END_SRC
 *** dired-rainbow
 #+BEGIN_SRC emacs-lisp
