@@ -2456,6 +2456,13 @@ BEG and END (region to sort)."
 		  (point-max))))
 	  (delete-region (point-max) prev-point-max))))
 #+END_SRC
+*** symon
+#+BEGIN_SRC emacs-lisp
+(use-package symon
+  :config (progn
+            (symon-mode))
+  :ensure t)
+#+END_SRC
 ** Version Control
 *** monky
 #+BEGIN_SRC emacs-lisp
