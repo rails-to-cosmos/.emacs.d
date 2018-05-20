@@ -1905,6 +1905,19 @@ If KWD is a number, get the corresponding match group."
 (define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
 #+END_SRC
 ** Utils
+*** num-with-ordinal-indicator
+#+BEGIN_SRC emacs-lisp
+(defun num-with-ordinal-indicator (num)
+  (let* ((suffixes '(th st nd rd))
+         (offset (mod num 100))
+         (skipper (- offset 20))
+         (teenth (cond ((> skipper 0) (mod skipper 10))
+                       (t (- (mod skipper 10))))))
+
+    (format "%d^{%s}" num (or (nth (mod teenth 10) suffixes)
+                           (nth offset suffixes)
+                           (car suffixes)))))
+#+END_SRC
 *** volatile-highlights
 #+BEGIN_SRC emacs-lisp
 (use-package volatile-highlights
