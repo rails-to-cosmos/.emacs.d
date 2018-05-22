@@ -2491,7 +2491,7 @@ BEG and END (region to sort)."
   :commands (magit-get-current-branch)
   :config (progn
             ;; (setq magit-completing-read-function 'magit-ido-completing-read)
-            )
+            (global-magit-file-mode 0))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
