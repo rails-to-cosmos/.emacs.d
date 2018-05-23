@@ -769,8 +769,8 @@ When COND is nil, insert CHAR."
                 (сплав . "Water_Trek:healthy")
                 (велопокатушки . "Bicycle_Trek:healthy")
 
-                (приём . "healthy")
-                (терапевт . "healthy")
+                (приём . "Medicine")
+                (терапевт . "Medicine")
 
                 (запилить . "Stuff:nerdy")
                 (implement . "Stuff:nerdy")
