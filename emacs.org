@@ -1907,16 +1907,50 @@ If KWD is a number, get the corresponding match group."
 ** Utils
 *** num-with-ordinal-indicator
 #+BEGIN_SRC emacs-lisp
-(defun num-with-ordinal-indicator (num)
-  (let* ((suffixes '(th st nd rd))
-         (offset (mod num 100))
-         (skipper (- offset 20))
-         (teenth (cond ((> skipper 0) (mod skipper 10))
-                       (t (- (mod skipper 10))))))
+(defun get-ordinal-indicator (num)
+  (let* ((two-digs (mod num 100))
+         (one-dig (mod num 10)))
+    (cond ((and (> two-digs 3) (< two-digs 21)) 'th)
+          ((= one-dig 1) 'st)
+          ((= one-dig 2) 'nd)
+          ((= one-dig 3) 'rd)
+          (t 'th))))
 
-    (format "%d^{%s}" num (or (nth (mod teenth 10) suffixes)
-                           (nth offset suffixes)
-                           (car suffixes)))))
+(defun num-with-ordinal-indicator (num)
+  (format "%d^{%s}" num (get-ordinal-indicator num)))
+#+END_SRC
+
+**** COMMENT test
+#+BEGIN_SRC emacs-lisp
+(let ((cases '((1 . st)
+               (2 . nd)
+               (3 . rd)
+               (4 . th)
+               (5 . th)
+               (6 . th)
+               (7 . th)
+               (8 . th)
+               (9 . th)
+               (10 . th)
+               (11 . th)
+               (12 . th)
+               (13 . th)
+               (14 . th)
+               (15 . th)
+               (16 . th)
+               (17 . th)
+               (18 . th)
+               (19 . th)
+               (20 . th)
+               (21 . st)
+               (22 . nd)
+               (23 . rd))))
+  (dolist (cs cases)
+    (let* ((num (car cs))
+           (obtained (get-ordinal-indicator num))
+           (expected (cdr cs)))
+      (when (not (eq (get-ordinal-indicator num) expected))
+        (message "%d %s %s" num obtained expected)))))
 #+END_SRC
 *** volatile-highlights
 #+BEGIN_SRC emacs-lisp
