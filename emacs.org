@@ -782,7 +782,9 @@ When COND is nil, insert CHAR."
 
                 (подумать . "Understanding:nerdy")
 
-                (пёсик . "@eric")))
+                (пёсик . "@eric")
+                (Эрик . "@eric")
+                (Эрика . "@eric")))
 #+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
 #+BEGIN_SRC emacs-lisp
