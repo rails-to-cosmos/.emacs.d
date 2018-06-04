@@ -1365,6 +1365,7 @@ If KWD is a number, get the corresponding match group."
             (setq-default
              org-todo-keyword-faces
              '(;; ("DOCUMENTED" . "#53D253")
+               ("CVS" . "#F00")
                ("CANCELLED" . "#7B9ED2")
                ("STARTED" . "#749AF7")
                ("PENDING" . "#D0E1F9")
