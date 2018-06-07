@@ -2432,13 +2432,6 @@ BEG and END (region to sort)."
   ("<RET>" nil "Quit"))
 #+END_SRC
 *** imenu
-**** imenu+
-#+BEGIN_SRC emacs-lisp
-(use-package imenu+
-    :ensure t
-    :init (add-hook 'prog-mode-hook 'imenup-add-defs-to-menubar)
-          (add-hook 'org-mode-hook  'imenup-add-defs-to-menubar))
-#+END_SRC
 **** imenu-anywhere
 #+BEGIN_SRC emacs-lisp
   (use-package imenu-anywhere
@@ -2993,14 +2986,16 @@ BEG and END (region to sort)."
 (when (fboundp 'set-fringe-mode)
   (set-fringe-mode '(1 . 1)))
 #+END_SRC
-*** hlinum
+*** line numbers
 #+BEGIN_SRC emacs-lisp
-(use-package hlinum
-  :config (progn
-            (add-hook 'prog-mode-hook 'linum-mode)
-            (setq-default linum-format " %d ")
-            (hlinum-activate))
-  :ensure t)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+
+;; (use-package hlinum
+;;   :config (progn
+;;             (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+;;             (setq-default linum-format " %d ")
+;;             (hlinum-activate))
+;;   :ensure t)
 #+END_SRC
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+BEGIN_SRC emacs-lisp
