@@ -3013,6 +3013,10 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** window-treshold
+#+BEGIN_SRC emacs-lisp
+(setq split-width-threshold 75)
+#+END_SRC
 *** vscroll
 #+BEGIN_SRC emacs-lisp
 (setq-default auto-window-vscroll nil)
