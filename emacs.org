@@ -1943,40 +1943,7 @@ If KWD is a number, get the corresponding match group."
           (t 'th))))
 
 (defun num-with-ordinal-indicator (num)
-  (format "%d^{%s}" num (get-ordinal-indicator num)))
-#+END_SRC
-
-**** COMMENT test
-#+BEGIN_SRC emacs-lisp
-(let ((cases '((1 . st)
-               (2 . nd)
-               (3 . rd)
-               (4 . th)
-               (5 . th)
-               (6 . th)
-               (7 . th)
-               (8 . th)
-               (9 . th)
-               (10 . th)
-               (11 . th)
-               (12 . th)
-               (13 . th)
-               (14 . th)
-               (15 . th)
-               (16 . th)
-               (17 . th)
-               (18 . th)
-               (19 . th)
-               (20 . th)
-               (21 . st)
-               (22 . nd)
-               (23 . rd))))
-  (dolist (cs cases)
-    (let* ((num (car cs))
-           (obtained (get-ordinal-indicator num))
-           (expected (cdr cs)))
-      (when (not (eq (get-ordinal-indicator num) expected))
-        (message "%d %s %s" num obtained expected)))))
+  (format "%d%s" num (get-ordinal-indicator num)))
 #+END_SRC
 *** volatile-highlights
 #+BEGIN_SRC emacs-lisp
@@ -3013,9 +2980,21 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
-*** window-treshold
+*** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
 #+BEGIN_SRC emacs-lisp
-(setq split-width-threshold 75)
+(setq split-width-threshold (- (window-width) 10))
+(setq split-height-threshold nil)
+
+(defun count-visible-buffers (&optional frame)
+  "Count how many buffers are currently being shown. Defaults to selected frame."
+  (length (mapcar #'window-buffer (window-list frame))))
+
+(defun do-not-split-more-than-two-windows (window &optional horizontal)
+  (if (and horizontal (> (count-visible-buffers) 1))
+      nil
+    t))
+
+(advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
 #+END_SRC
 *** vscroll
 #+BEGIN_SRC emacs-lisp
