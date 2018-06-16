@@ -973,6 +973,7 @@ With prefix argument, also display headlines without a TODO keyword."
 #+END_SRC
 *** org-feed
 #+BEGIN_SRC emacs-lisp
+(require 'org-table)
 (require 'org-feed)
 
 (defun trim-string (string)
