@@ -942,6 +942,7 @@ With prefix argument, also display headlines without a TODO keyword."
 #+END_SRC
 *** org-feed
 #+BEGIN_SRC emacs-lisp
+(require 'org-table)
 (require 'org-feed)
 
 (defun trim-string (string)
@@ -1912,40 +1913,7 @@ If KWD is a number, get the corresponding match group."
           (t 'th))))
 
 (defun num-with-ordinal-indicator (num)
-  (format "%d^{%s}" num (get-ordinal-indicator num)))
-#+END_SRC
-
-**** COMMENT test
-#+BEGIN_SRC emacs-lisp
-(let ((cases '((1 . st)
-               (2 . nd)
-               (3 . rd)
-               (4 . th)
-               (5 . th)
-               (6 . th)
-               (7 . th)
-               (8 . th)
-               (9 . th)
-               (10 . th)
-               (11 . th)
-               (12 . th)
-               (13 . th)
-               (14 . th)
-               (15 . th)
-               (16 . th)
-               (17 . th)
-               (18 . th)
-               (19 . th)
-               (20 . th)
-               (21 . st)
-               (22 . nd)
-               (23 . rd))))
-  (dolist (cs cases)
-    (let* ((num (car cs))
-           (obtained (get-ordinal-indicator num))
-           (expected (cdr cs)))
-      (when (not (eq (get-ordinal-indicator num) expected))
-        (message "%d %s %s" num obtained expected)))))
+  (format "%d%s" num (get-ordinal-indicator num)))
 #+END_SRC
 *** volatile-highlights
 #+BEGIN_SRC emacs-lisp
@@ -2526,6 +2494,70 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.programming
 :END:
 
+*** [[https://vxlabs.com/2018/06/08/python-language-server-with-emacs-and-lsp-mode/][lsp magic]]
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-mode
+  :ensure t)
+
+(use-package lsp-ui
+  :ensure t)
+
+(use-package company-lsp
+  :ensure t)
+
+(use-package find-file-in-project
+  :ensure t)
+
+(use-package lsp-mode
+  :ensure t
+  :config
+
+  ;; make sure we have lsp-imenu everywhere we have LSP
+  (require 'lsp-imenu)
+  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+  ;; get lsp-python-enable defined
+  ;; NB: use either projectile-project-root or ffip-get-project-root-directory
+  ;;     or any other function that can be used to find the root directory of a project
+  (lsp-define-stdio-client lsp-python "python"
+                           #'projectile-project-root
+                           '("pyls"))
+
+  ;; make sure this is activated when python-mode is activated
+  ;; lsp-python-enable is created by macro above
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (lsp-python-enable)))
+
+  ;; lsp extras
+  (use-package lsp-ui
+    :ensure t
+    :config
+    (setq lsp-ui-sideline-ignore-duplicate t)
+    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+  (use-package company-lsp
+    :config
+    (push 'company-lsp company-backends))
+
+  ;; NB: only required if you prefer flake8 instead of the default
+  ;; send pyls config via lsp-after-initialize-hook -- harmless for
+  ;; other servers due to pyls key, but would prefer only sending this
+  ;; when pyls gets initialised (:initialize function in
+  ;; lsp-define-stdio-client is invoked too early (before server
+  ;; start)) -- cpbotha
+  (defun lsp-set-cfg ()
+    (let ((lsp-cfg `(:pyls (:configurationSources ("flake8")))))
+      ;; TODO: check lsp--cur-workspace here to decide per server / project
+      (lsp--set-configuration lsp-cfg)))
+
+  (add-hook 'lsp-after-initialize-hook 'lsp-set-cfg))
+
+(use-package pyvenv
+  :ensure t)
+
+(use-package projectile
+  :ensure t)
+#+END_SRC
 *** clojure
 #+BEGIN_SRC emacs-lisp
 (require 'ob-clojure)
@@ -2857,6 +2889,7 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming.python
 :END:
+
 **** elpygen
 #+BEGIN_SRC emacs-lisp
 (use-package elpygen
@@ -2918,6 +2951,22 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
+#+BEGIN_SRC emacs-lisp
+(setq split-width-threshold (- (window-width) 10))
+(setq split-height-threshold nil)
+
+(defun count-visible-buffers (&optional frame)
+  "Count how many buffers are currently being shown. Defaults to selected frame."
+  (length (mapcar #'window-buffer (window-list frame))))
+
+(defun do-not-split-more-than-two-windows (window &optional horizontal)
+  (if (and horizontal (> (count-visible-buffers) 1))
+      nil
+    t))
+
+(advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
+#+END_SRC
 *** vscroll
 #+BEGIN_SRC emacs-lisp
 (setq-default auto-window-vscroll nil)
@@ -2956,14 +3005,16 @@ BEG and END (region to sort)."
 (when (fboundp 'set-fringe-mode)
   (set-fringe-mode '(1 . 1)))
 #+END_SRC
-*** hlinum
+*** line numbers
 #+BEGIN_SRC emacs-lisp
-(use-package hlinum
-  :config (progn
-            (add-hook 'prog-mode-hook 'linum-mode)
-            (setq-default linum-format " %d ")
-            (hlinum-activate))
-  :ensure t)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+
+;; (use-package hlinum
+;;   :config (progn
+;;             (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+;;             (setq-default linum-format " %d ")
+;;             (hlinum-activate))
+;;   :ensure t)
 #+END_SRC
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+BEGIN_SRC emacs-lisp
