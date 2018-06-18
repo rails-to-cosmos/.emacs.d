@@ -65,36 +65,36 @@ enjoy using a lot.
 #+END_SRC
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2014/01/20/Alternatives-to-long-complex-format-statements-in-emacs-lisp/][python-like-template-expanding]]
 #+BEGIN_SRC emacs-lisp
-(defun expand-template (s plist)
-  "expand a template containing {:keyword} with the definitions in plist"
-  (replace-regexp-in-string "{\\(:[^}]+\\)}"
-                            (lambda (arg)
-                              (let ((keyword (intern (substring arg 1 -1))))
-                                (format "%s" (plist-get plist keyword)))) s))
+  (defun expand-template (s plist)
+    "expand a template containing {:keyword} with the definitions in plist"
+    (replace-regexp-in-string "{\\(:[^}]+\\)}"
+                              (lambda (arg)
+                                (let ((keyword (intern (substring arg 1 -1))))
+                                  (format "%s" (plist-get plist keyword)))) s))
 
-;; (let ((template "
-;;  :PROPERTIES:
-;;   :Custom_ID: {:key}
-;;   :AUTHOR: {:author}
-;;   :JOURNAL: {:journal}
-;;   :YEAR: {:year}
-;;   :VOLUME: {:volume}
-;;   :PAGES: {:pages}
-;;   :DOI: {:doi}
-;;   :URL: {:url}
-;;  :END:
-;; [[cite:{:key}]] [[file:{:pdf-dir}/{:key}.pdf][pdf]]\n\n"))
+  ;; (let ((template "
+  ;;  :PROPERTIES:
+  ;;   :Custom_ID: {:key}
+  ;;   :AUTHOR: {:author}
+  ;;   :JOURNAL: {:journal}
+  ;;   :YEAR: {:year}
+  ;;   :VOLUME: {:volume}
+  ;;   :PAGES: {:pages}
+  ;;   :DOI: {:doi}
+  ;;   :URL: {:url}
+  ;;  :END:
+  ;; [[cite:{:key}]] [[file:{:pdf-dir}/{:key}.pdf][pdf]]\n\n"))
 
-;; (expand-template template
-;;                  '(:key "kitchin-2014"
-;;                         :author "Kitchin, J. R."
-;;                         :journal "HACS"
-;;                         :year 2014
-;;                         :volume 1
-;;                         :pages "1--10"
-;;                         :doi "10.1.1.109/hacs.1.10"
-;;                         :url "http://hacs.org/10.1.1.109/hacs.1.10"
-;;                         :pdf-dir "/home/jkitchin/pdfs")))
+  ;; (expand-template template
+  ;;                  '(:key "kitchin-2014"
+  ;;                         :author "Kitchin, J. R."
+  ;;                         :journal "HACS"
+  ;;                         :year 2014
+  ;;                         :volume 1
+  ;;                         :pages "1--10"
+  ;;                         :doi "10.1.1.109/hacs.1.10"
+  ;;                         :url "http://hacs.org/10.1.1.109/hacs.1.10"
+  ;;                         :pdf-dir "/home/jkitchin/pdfs")))
 #+END_SRC
 *** after-load
 #+BEGIN_SRC emacs-lisp
@@ -237,7 +237,7 @@ enjoy using a lot.
 		  (osx-clipboard-mode +1))))))
 #+END_SRC
 ** Dired
-*** dired+
+*** COMMENT dired+
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
   :after (dired)
@@ -553,37 +553,6 @@ enjoy using a lot.
   :ensure t)
 #+END_SRC
 
-*** Glance
-#+BEGIN_SRC emacs-lisp
-(require 'cl-lib)
-
-(defun get-conflicted-files (dir)
-  (cl-remove-if-not (lambda (str) (string-match "^.+([0-9]+).[a-z]+$" str)) (directory-files dir)))
-
-(defun glance-spawn-entry (id msg details)
-  (save-window-excursion
-    (org-id-goto "GLANCE")
-    (org-insert-todo-heading-respect-content t)
-    (org-demote-subtree)
-    (insert (format "%s\n\n- " msg))
-    (insert (string-join details "\n- "))
-    (ledna-touch)
-    (org-set-property "ID" id)))
-
-(defun glance-kill-entry (id)
-  (save-window-excursion
-    (when-let ((m (org-id-find id 'marker)))
-      (pop-to-buffer-same-window (marker-buffer m))
-      (goto-char m)
-      (kill-region m (org-end-of-subtree))
-      (kill-line)
-      (org-update-statistics-cookies))))
-
-(defun glance-report (id msg details)
-  (message msg)
-  (glance-kill-entry)
-  (glance-spawn-entry id msg details))
-#+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
 (use-package poporg
@@ -1008,7 +977,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 ;; (run-with-idle-timer 300 t 'org-feed-reread)
 #+END_SRC
-*** Babel
+*** COMMENT Babel
 **** settings
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t
@@ -1195,7 +1164,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (use-package ob-ipython
   :config (progn
             (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-            (setq python-shell-prompt-detect-failure-warning nil))
+            (setq-default python-shell-prompt-detect-failure-warning nil))
   :ensure t)
 
 ;; (defun ob-ipython-inline-image (b64-string)
@@ -2432,13 +2401,6 @@ BEG and END (region to sort)."
   ("<RET>" nil "Quit"))
 #+END_SRC
 *** imenu
-**** imenu+
-#+BEGIN_SRC emacs-lisp
-(use-package imenu+
-    :ensure t
-    :init (add-hook 'prog-mode-hook 'imenup-add-defs-to-menubar)
-          (add-hook 'org-mode-hook  'imenup-add-defs-to-menubar))
-#+END_SRC
 **** imenu-anywhere
 #+BEGIN_SRC emacs-lisp
   (use-package imenu-anywhere
@@ -2532,7 +2494,7 @@ BEG and END (region to sort)."
 		  (point-max))))
 	  (delete-region (point-max) prev-point-max))))
 #+END_SRC
-*** symon
+*** COMMENT symon
 #+BEGIN_SRC emacs-lisp
 (use-package symon
   :config (progn
@@ -2939,7 +2901,8 @@ BEG and END (region to sort)."
 #+END_SRC
 **** ipython-shell-interpreter
 #+BEGIN_SRC emacs-lisp
-(setq python-shell-interpreter "ipython"
+(require 'python)
+(setq-default python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i"
       python-shell-completion-native nil)
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
