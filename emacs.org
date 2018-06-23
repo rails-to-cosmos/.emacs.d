@@ -237,7 +237,7 @@ enjoy using a lot.
 		  (osx-clipboard-mode +1))))))
 #+END_SRC
 ** Dired
-*** COMMENT dired+
+*** dired+
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
   :after (dired)
@@ -978,7 +978,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 ;; (run-with-idle-timer 300 t 'org-feed-reread)
 #+END_SRC
-*** COMMENT Babel
+*** Babel
 **** settings
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t
@@ -1101,14 +1101,11 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   (interactive)
   (when (org-at-table-p)
     (if-let (tbl-name (orgtbl-get-name-at-point))
-
         (save-excursion
           (beginning-of-buffer)
           (while (search-forward (format "%s" tbl-name) nil 1)
             (org-babel-when-in-src-block
-             (org-babel-tangle-block)))
-          )))
-
+             (org-babel-tangle-block))))))
   (org-babel-when-in-src-block (org-babel-tangle-block)))
 
 (defun orgtbl-execute-relatives ()
