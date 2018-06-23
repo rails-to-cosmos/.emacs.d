@@ -3081,8 +3081,9 @@ BEG and END (region to sort)."
 #+END_SRC
 ** Local
 #+BEGIN_SRC emacs-lisp
-(let ((local-init-file (format "init-%s.el" system-type)))
-  (if (file-exists-p (sync/ local-init-file))
-      (load-file (sync/ local-init-file))
-    (message (format "%s was not loaded." (sync/ local-init-file)))))
+  (let ((local-init-file (format "init-%s.el"
+                                 (string-join (s-split-words (symbol-name system-type))))))
+    (if (file-exists-p (sync/ local-init-file))
+        (load-file (sync/ local-init-file))
+      (message (format "%s was not loaded." (sync/ local-init-file)))))
 #+END_SRC
