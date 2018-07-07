@@ -6,6 +6,45 @@
  user-mail-address "akatovda@yandex.com"
  user-full-name "Dmitry Akatov")
 #+END_SRC
+* Ideas [0/7]
+** TODO org-staff                                                              :emacs_stuff:
+:PROPERTIES:
+:LAST_REPEAT: [2018-02-25 Sun 23:53]
+:END:
+:LOGBOOK:
+- State "CANCELLED"  from "TODO"       [2018-02-25 Sun 23:53]
+- State "CANCELLED"  from "TODO"       [2018-02-18 Sun 16:23]
+:END:
+
+- @ trigger
+- fast search/insert
+- exports
+  - osx contacts
+  - yandex staff
+  - google contacts
+  - ...
+** TODO Show all categories in use                                             :emacs_stuff:
+** TODO Autocomplete                                                           :emacs_stuff:
+:PROPERTIES:
+:ON:       Mondays
+:END:
+
+- https://www.emacswiki.org/emacs/AutoComplete
+- https://stackoverflow.com/questions/22044148/how-to-tab-to-auto-complete-with-org-mode
+
+** TODO Python in emacs http://skybert.net/emacs/programming-python-in-emacs/
+** TODO Telegram -- org-mode                                                   :emacs_stuff:
+:PROPERTIES:
+:ON:       Holidays
+:END:
+
+- https://otann.github.io/web-fandango/chroma-bot-telegram-api/
+** TODO Emacs: Repeat task until date                                          :emacs_stuff:Idea:
+:PROPERTIES:
+:TRIGGER: (org-archive-subtree)
+:ON:       Holidays
+:END:
+** TODO Придумать такой тип задач, которые появляются в агенде только в пятницу/субботу, а в другое время скрыты :emacs_stuff:Idea:
 * Books and Articles
 ** [[http://joaotavora.github.io/sly/#A-SLY-tour-for-SLIME-users][SLY User Manual, version 1.0.0-beta-2]]                                       :Emacs:
 :PROPERTIES:
@@ -1554,6 +1593,19 @@ If KWD is a number, get the corresponding match group."
   :ensure t)
 #+END_SRC
 *** abbrev
+#+TBLNAME: abbrev
+| Baseline | Expansion                             |
+|----------+---------------------------------------|
+| bc       | because                               |
+| wo       | without                               |
+| wi       | with                                  |
+| ex       | For example,                          |
+| qm       | sacha@sachachua.com                   |
+
+#+begin_src emacs-lisp :exports code :var data=abbrev :results silent
+(mapc (lambda (x) (define-global-abbrev (car x) (cadr x))) data)
+#+end_src
+
 #+BEGIN_SRC emacs-lisp
 (add-hook 'prog-mode-hook 'abbrev-mode)
 (add-hook 'org-mode-hook 'abbrev-mode)
