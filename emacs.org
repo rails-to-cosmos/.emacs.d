@@ -598,16 +598,6 @@ enjoy using a lot.
       :bind (("C-c /" . poporg-dwim))
       :ensure t)
 #+END_SRC
-*** org-auto-done
-#+BEGIN_SRC emacs-lisp
-(defun org-summary-todo (n-done n-not-done)
-  "Switch entry to DONE when all subentries are done, to TODO otherwise."
-  (let (org-log-done org-log-states)   ; turn off logging
-    (when (= n-not-done 0)
-      (org-todo "DONE"))))
-
-(add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-#+END_SRC
 *** clocktable-by-tag
 #+BEGIN_SRC emacs-lisp
 (defun clocktable-by-tag/shift-cell (n)
@@ -3101,7 +3091,7 @@ BEG and END (region to sort)."
 
 (custom-set-faces
  '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
-                :underline nil :slant normal :weight normal :height 100 :width normal :foundry nil
+                :underline nil :slant normal :weight normal :height 120 :width normal :foundry nil
                 :family "Fira Code")))))
 
 (setq-default
