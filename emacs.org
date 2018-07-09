@@ -683,7 +683,8 @@ When COND is nil, insert CHAR."
 (defun org-compl-structure ()
   (interactive)
   (org-compl-char "<" org-structure-template-alist
-                  (lambda () (looking-at "^[[:space:]]*$"))
+                  (lambda () (and (looking-at "^[[:space:]]*$")
+                             (not (org-in-src-block-p))))
                   (lambda (item) (progn (insert "\n")
                                    (org-complete-expand-structure-template
                                     (+ -1 (point-at-bol)
@@ -1870,7 +1871,7 @@ If KWD is a number, get the corresponding match group."
   (interactive)
   (let ((original-point (point)))
     (while (and
-            (not (= (point) (point-min) ))
+            (not (= (point) (point-min)))
             (not (string-match "[[:space:]\n]" (char-to-string (char-before)))))
       (backward-word 1))
     (let* ((init-word (point))
