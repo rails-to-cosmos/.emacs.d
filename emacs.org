@@ -700,9 +700,7 @@ When COND is nil, insert CHAR."
 *** compl-staff
 #+BEGIN_SRC emacs-lisp
 (defun org-babel-at-src-block-p ()
-  (if (memq (org-element-type (org-element-context)) '(inline-src-block src-block))
-      t
-    nil))
+  (memq (org-element-type (org-element-context)) '(inline-src-block src-block)))
 
 (defun org-compl-staff ()
   (interactive)
