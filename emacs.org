@@ -3059,13 +3059,6 @@ BEG and END (region to sort)."
 *** line numbers
 #+BEGIN_SRC emacs-lisp
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-
-;; (use-package hlinum
-;;   :config (progn
-;;             (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-;;             (setq-default linum-format " %d ")
-;;             (hlinum-activate))
-;;   :ensure t)
 #+END_SRC
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
 #+BEGIN_SRC emacs-lisp
