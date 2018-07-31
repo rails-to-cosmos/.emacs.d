@@ -591,7 +591,31 @@ enjoy using a lot.
             (require 'org-agenda))
   :ensure t)
 #+END_SRC
+*** password manager
+#+BEGIN_SRC emacs-lisp
+(defun org-traverse(fn fun)
+  (save-window-excursion
+    (find-file fn)
+    (counsel-org-goto)
+    (org-decrypt-entry)
+    (funcall fun)))
 
+(defun org-launch-password-manager()
+  (interactive)
+  (cl-labels ((extract-sec-data ()
+                                (let* ((sec-data (buffer-substring-no-properties
+                                                  (org-entry-beginning-position)
+                                                  (org-entry-end-position)))
+                                       (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
+                                       (keys (mapcar #'cadr matches))
+                                       (values (mapcar #'caddr matches))
+                                       (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal)))
+                                  (kill-new (nth index values))
+                                  "Success")))
+    (org-traverse "~/sync/pwd.org" #'extract-sec-data)))
+
+(global-set-key (kbd "C-x y p") 'org-launch-password-manager)
+#+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
 (use-package poporg
@@ -2169,7 +2193,7 @@ If KWD is a number, get the corresponding match group."
 *** prodigy
 #+BEGIN_SRC emacs-lisp
 (use-package prodigy
-  :bind ("C-x y p" . prodigy)
+  ;; :bind ("C-x y p" . prodigy)
   :ensure t)
 #+END_SRC
 *** what-face
