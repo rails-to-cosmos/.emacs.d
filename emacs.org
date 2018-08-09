@@ -6,6 +6,8 @@
  user-mail-address "akatovda@yandex.com"
  user-full-name "Dmitry Akatov")
 #+END_SRC
+* Links
+- https://github.com/alphapapa/emacs-package-dev-handbook
 * Ideas [0/7]
 ** TODO org-staff                                                              :emacs_stuff:
 :PROPERTIES:
@@ -601,28 +603,45 @@ enjoy using a lot.
 
 *** password manager
 #+BEGIN_SRC emacs-lisp
-(defun org-traverse(fn fun)
-  (save-window-excursion
-    (find-file fn)
+(defun org-traverse(&optional fn fun)
+  (let ((cached-buffer (current-buffer))
+        (fn-buffer nil))
+
+    (when fn
+      (find-file fn)
+      (setq fn-buffer (current-buffer)))
+
     (counsel-org-goto)
-    (org-decrypt-entry)
-    (funcall fun)))
+
+    (when fun
+      (funcall fun))
+
+    ;; (when (eq fn-buffer (current-buffer))
+    ;;   (switch-to-buffer cached-buffer))
+    ))
+
+;; (defun org-launch-bookmark-manager()
+;;   (interactive)
+;;   (org-traverse "~/sync/emacs/bookmarks.org" #'org-open-at-point))
 
 (defun org-launch-password-manager()
   (interactive)
-  (cl-labels ((extract-sec-data () (let* ((sec-data (buffer-substring-no-properties
-                                                     (org-entry-beginning-position)
-                                                     (org-entry-end-position)))
-                                          (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
-                                          (keys (mapcar #'cadr matches))
-                                          (values (mapcar #'caddr matches))
-                                          (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal)))
-                                     (kill-new (nth index values))
-                                     (save-buffer)
-                                     (kill-buffer)
-                                     (run-with-timer 15 nil #'(lambda () (kill-new "") (setq kill-ring nil))))))
+  (cl-labels ((extract-sec-data ()
+                (when (or (org-decrypt-entry) 1)
+                  (let* ((sec-data (buffer-substring-no-properties
+                                    (org-entry-beginning-position)
+                                    (org-entry-end-position)))
+                       (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
+                       (keys (mapcar #'cadr matches))
+                       (values (mapcar #'caddr matches))
+                       (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal)))
+                  (kill-new (nth index values))
+                  (save-buffer)
+                  (kill-buffer)
+                  (run-with-timer 15 nil #'(lambda () (kill-new "") (setq kill-ring nil)))))))
     (org-traverse "~/sync/pwd.org" #'extract-sec-data)))
 
+(global-set-key (kbd "C-x j j") 'org-bookmark-jump)
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
 #+END_SRC
 *** poporg
