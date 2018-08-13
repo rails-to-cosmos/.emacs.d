@@ -603,6 +603,8 @@ enjoy using a lot.
 
 *** password manager
 #+BEGIN_SRC emacs-lisp
+(setq org-sec-file "~/sync/pwd.org")
+
 (defun org-traverse(&optional fn fun)
   (let ((cached-buffer (current-buffer))
         (fn-buffer nil))
@@ -616,32 +618,31 @@ enjoy using a lot.
     (when fun
       (funcall fun))
 
-    ;; (when (eq fn-buffer (current-buffer))
-    ;;   (switch-to-buffer cached-buffer))
-    ))
-
-;; (defun org-launch-bookmark-manager()
-;;   (interactive)
-;;   (org-traverse "~/sync/emacs/bookmarks.org" #'org-open-at-point))
+    (kill-buffer fn-buffer)))
 
 (defun org-launch-password-manager()
   (interactive)
-  (cl-labels ((extract-sec-data ()
-                (when (or (org-decrypt-entry) 1)
-                  (let* ((sec-data (buffer-substring-no-properties
-                                    (org-entry-beginning-position)
-                                    (org-entry-end-position)))
-                       (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
-                       (keys (mapcar #'cadr matches))
-                       (values (mapcar #'caddr matches))
-                       (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal)))
-                  (kill-new (nth index values))
-                  (save-buffer)
-                  (kill-buffer)
-                  (run-with-timer 15 nil #'(lambda () (kill-new "") (setq kill-ring nil)))))))
-    (org-traverse "~/sync/pwd.org" #'extract-sec-data)))
+  (org-traverse org-sec-file #'org-password-manager/extract-sec-data))
 
-(global-set-key (kbd "C-x j j") 'org-bookmark-jump)
+(defun org-password-manager/extract-sec-data (&optional key)
+  (when (or (org-decrypt-entry) 1)
+    (let* ((title (ledna/get-property "ITEM"))
+           (beg (org-entry-beginning-position))
+           (end (org-entry-end-position))
+           (sec-data (buffer-substring-no-properties beg end))
+           (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
+           (keys (mapcar #'cadr matches))
+           (values (mapcar #'caddr matches))
+           ;; (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal))
+           (tiny-menu-items (list (list "secure-data" (list title (loop for key in keys
+                                                                        for val in values
+                                                                        collect (list (string-to-char key) key (lexical-let ((v val)) (lambda () (kill-new v)))))))))
+           (tiny-menu-forever t))
+      (message (tiny-menu "secure-data"))
+      (save-buffer)
+      (kill-buffer)
+      (run-with-timer 15 nil #'(lambda () (kill-new "") (setq kill-ring nil))))))
+
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
 #+END_SRC
 *** poporg
