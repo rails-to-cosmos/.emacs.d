@@ -1313,6 +1313,19 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+END_SRC
+**** cpp
+#+BEGIN_SRC emacs-lisp
+(defun cpp/handy-local-vars ()
+  (when (string= major-mode "c++-mode")
+    (end-of-buffer)
+    (insert "\n// Local Variables:")
+    (insert "\n// compile-command: \"clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main\"")
+    (insert "\n// mode: C++")
+    (insert "\n// fill-column: 80")
+    (insert "\n// End:")))
+
+(add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
+#+END_SRC
 *** modules
 #+BEGIN_SRC emacs-lisp
 (require 'org-eshell)
