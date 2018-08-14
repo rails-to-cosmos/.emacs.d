@@ -633,10 +633,11 @@ enjoy using a lot.
            (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
            (keys (mapcar #'cadr matches))
            (values (mapcar #'caddr matches))
-           ;; (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal))
-           (tiny-menu-items (list (list "secure-data" (list title (loop for key in keys
-                                                                        for val in values
-                                                                        collect (list (string-to-char key) key (lexical-let ((v val)) (lambda () (kill-new v)))))))))
+           (tiny-menu-items (list (list "secure-data"
+                                        (list title
+                                              (loop for key in keys
+                                                    for val in values
+                                                    collect (list (string-to-char key) key (lexical-let ((v val)) (lambda () (kill-new v)))))))))
            (tiny-menu-forever t))
       (message (tiny-menu "secure-data"))
       (save-buffer)
@@ -938,6 +939,9 @@ It is for commands that depend on the major mode. One example is
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'org-structure-template-alist
              '("ls" "# Local Variables:\n?\n# End:"))
+
+(add-to-list 'org-structure-template-alist
+             '("cpp" "#+BEGIN_SRC C++\n?\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
 
 ;; add <p for python expansion
 (add-to-list 'org-structure-template-alist
@@ -1451,7 +1455,8 @@ If KWD is a number, get the corresponding match group."
             (setq-default
              org-todo-keyword-faces
              '(;; ("DOCUMENTED" . "#53D253")
-               ("CVS" . "#F00")
+               ("TEST" . "#F00")
+               ("DEPLOY" . "#292")
                ("CANCELLED" . "#7B9ED2")
                ("STARTED" . "#749AF7")
                ("PENDING" . "#D0E1F9")
