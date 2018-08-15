@@ -717,20 +717,19 @@ enjoy using a lot.
 #+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
-(defun write-afterclass-report--gym ()
-  (let* ((gym-pass (select (ids "Gym_Pass")))
-         (current-state (get-todo-state)))
-
-    (when (string= current-state "DONE")
-      (ledna-time-counter)
-
-      (when (equal (mod (string-to-number (get-property "TIMES")) 12) 0)
-        (ledna-touch (ids "Gym_Pass"))))
-
-    (ledna-advanced-schedule)))
-
-(defun gym-pass-purchased-p ()
-  (equal (get-todo-state (select (ids "Gym_Pass"))) "DONE"))
+(defun purchase-subscription-maybe ()
+  (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
+         (lessons-passed-count (string-to-number (car (ledna/inc-property "$PASSED" 1 "" subscription-ticket))))
+         (lessons-in-subscription 12))
+    (when (= (% lessons-passed-count lessons-in-subscription) 0)
+      (let* ((schedule-prop (ledna/get-property "$SCHEDULE"))
+             (schedule (cadr (read schedule-prop)))
+             (next-time (get-nearest-date schedule)))
+        (set-scheduled next-time subscription-ticket)
+        (ledna/set-todo-state "TODO" subscription-ticket)
+        (org-entry-put nil "LAST_REPEAT" (format-time-string
+					  (org-time-stamp-format t t)
+					  (current-time)))))))
 #+END_SRC
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
