@@ -717,7 +717,8 @@ enjoy using a lot.
 #+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
-(defun purchase-subscription-maybe ()
+(defun gym-purchase-subscription-maybe ()
+  (ledna/circ-property "TRAIN_TYPE" 3)
   (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
          (lessons-passed-count (string-to-number (car (ledna/inc-property "$PASSED" 1 "" subscription-ticket))))
          (lessons-in-subscription 12))
