@@ -624,25 +624,27 @@ enjoy using a lot.
   (interactive)
   (org-traverse org-sec-file #'org-password-manager/extract-sec-data))
 
-(defun org-password-manager/extract-sec-data (&optional key)
+(defun org-password-manager/extract-sec-data ()
   (when (or (org-decrypt-entry) 1)
-    (let* ((title (ledna/get-property "ITEM"))
-           (beg (org-entry-beginning-position))
-           (end (org-entry-end-position))
-           (sec-data (buffer-substring-no-properties beg end))
-           (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
-           (keys (mapcar #'cadr matches))
-           (values (mapcar #'caddr matches))
+    (let* ((title (ledna/get-title))
+           (entries (org-edna-finder/children))
+           (tiny-menu-forever t)
            (tiny-menu-items (list (list "secure-data"
                                         (list title
-                                              (loop for key in keys
-                                                    for val in values
-                                                    collect (list (string-to-char key) key (lexical-let ((v val)) (lambda () (kill-new v)))))))))
-           (tiny-menu-forever t))
-      (message (tiny-menu "secure-data"))
+                                              (loop for entry in entries
+                                                    collect (let* ((entry-title (ledna/get-title entry))
+                                                                   (entry-first-char (string-to-char entry-title))
+                                                                   (entry-value (ledna/get-property "VALUE" entry ""))
+                                                                   (entry-handler (ledna/get-property "HANDLER" entry "kill-new")))
+                                                              (list entry-first-char entry-title
+                                                                    (lexical-let
+                                                                        ((val entry-value)
+                                                                         (handler entry-handler))
+                                                                      (lambda () (funcall (read handler) val)))))))))))
       (save-buffer)
       (kill-buffer)
-      (run-with-timer 15 nil #'(lambda () (kill-new "") (setq kill-ring nil))))))
+      (message (tiny-menu "secure-data"))
+      (run-with-timer 30 nil #'(lambda () (kill-new "") (setq kill-ring nil))))))
 
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
 #+END_SRC
