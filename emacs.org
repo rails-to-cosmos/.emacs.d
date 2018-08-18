@@ -576,10 +576,13 @@ enjoy using a lot.
 #+END_SRC
 ** EMMS
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path "~/stuff/emms/lisp")
-(require 'emms-setup)
-(emms-standard)
-(emms-default-players)
+(use-package emms
+  :config (progn
+            (add-to-list 'load-path "~/stuff/emms/lisp")
+            (require 'emms-setup)
+            (emms-standard)
+            (emms-default-players))
+  :ensure t)
 #+END_SRC
 ** Org
 :PROPERTIES:
