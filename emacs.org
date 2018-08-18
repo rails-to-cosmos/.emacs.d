@@ -606,6 +606,42 @@ enjoy using a lot.
 
 *** password manager
 #+BEGIN_SRC emacs-lisp
+(setq org-sec-file "~/sync/pwd.org")
+
+(defun tiny-menu-quit-override (&optional menu)
+  "Display the items in MENU and run the selected item.
+
+If MENU is not given, a dynamically generated menu of available menus
+is displayed."
+  (interactive)
+  (if (< (length tiny-menu-items) 1)
+      (message "Configure tiny-menu-items first.")
+    (setq menu (tiny-menu--lookup-transition nil (or menu "root")))
+    (while menu
+      (let* ((title (car menu))
+             (items (if (member "quit" (mapcar #'(lambda (row) (car (last row))) (cadr menu)))
+                        (cadr menu)
+                      (append (cadr menu) '((?q "Quit" nil "quit")))))
+             (prompt (concat (propertize (concat title ": ") 'face 'default)
+                             (mapconcat (lambda (i)
+                                          (concat
+                                           (propertize (concat
+                                                        "[" (char-to-string (nth 0 i)) "] ")
+                                                       'face 'tiny-menu-heading-face)
+                                           (nth 1 i)))
+                                        items ", ")))
+             (choices (mapcar (lambda (i) (nth 0 i)) items))
+             (choice (assoc (read-char-choice prompt choices) items)))
+        (when (functionp (nth 2 choice))
+          (progn (message "")
+                 (condition-case nil
+                     (call-interactively (nth 2 choice))
+                   ((wrong-type-argument)
+                    (funcall (nth 2 choice))))))
+        (setq menu (tiny-menu--lookup-transition menu (nth 3 choice)))))
+    (if (not (current-message))
+        (message "Menu ended."))))
+
 (defun org-traverse(&optional fn fun)
   (let ((cached-buffer (current-buffer))
         (fn-buffer nil))
@@ -619,32 +655,35 @@ enjoy using a lot.
     (when fun
       (funcall fun))
 
-    ;; (when (eq fn-buffer (current-buffer))
-    ;;   (switch-to-buffer cached-buffer))
-    ))
-
-;; (defun org-launch-bookmark-manager()
-;;   (interactive)
-;;   (org-traverse "~/sync/emacs/bookmarks.org" #'org-open-at-point))
+    (kill-buffer fn-buffer)))
 
 (defun org-launch-password-manager()
   (interactive)
-  (cl-labels ((extract-sec-data ()
-                (when (or (org-decrypt-entry) 1)
-                  (let* ((sec-data (buffer-substring-no-properties
-                                    (org-entry-beginning-position)
-                                    (org-entry-end-position)))
-                       (matches (s-match-strings-all "^- \\(.*\\) :: \\(.*\\)$" sec-data))
-                       (keys (mapcar #'cadr matches))
-                       (values (mapcar #'caddr matches))
-                       (index (cl-position (ivy-completing-read "Key: " keys) keys :test 'equal)))
-                  (kill-new (nth index values))
-                  (save-buffer)
-                  (kill-buffer)
-                  (run-with-timer 15 nil #'(lambda () (kill-new "") (setq kill-ring nil)))))))
-    (org-traverse "~/sync/pwd.org" #'extract-sec-data)))
+  (org-traverse org-sec-file #'org-password-manager/extract-sec-data))
 
-(global-set-key (kbd "C-x j j") 'org-bookmark-jump)
+(defun org-password-manager/extract-sec-data ()
+  (when (or (org-decrypt-entry) 1)
+    (let* ((title (ledna/get-title))
+           (entries (org-edna-finder/children))
+           (tiny-menu-header "secure-data")
+           (tiny-menu-forever t)
+           (tiny-menu-items (list (list tiny-menu-header
+                                        (list title
+                                              (loop for entry in entries
+                                                    collect (let* ((entry-title (ledna/get-title entry))
+                                                                   (entry-first-char (string-to-char entry-title))
+                                                                   (entry-value (ledna/get-property "VALUE" entry ""))
+                                                                   (entry-handler (ledna/get-property "HANDLER" entry "kill-new")))
+                                                              (list entry-first-char entry-title
+                                                                    (lexical-let
+                                                                        ((val entry-value)
+                                                                         (handler entry-handler))
+                                                                      (lambda () (funcall (read handler) val)))))
+                                                    into tiny-menu-items
+                                                    finally (return (nconc tiny-menu-items (list (list ?q "Quit: " (lambda () (kill-new "") (setq kill-ring nil)) "quit"))))))))))
+      (save-buffer) (kill-buffer)
+      (tiny-menu-quit-override tiny-menu-header))))
+
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
 #+END_SRC
 *** poporg
@@ -718,20 +757,20 @@ enjoy using a lot.
 #+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
-(defun write-afterclass-report--gym ()
-  (let* ((gym-pass (select (ids "Gym_Pass")))
-         (current-state (get-todo-state)))
-
-    (when (string= current-state "DONE")
-      (ledna-time-counter)
-
-      (when (equal (mod (string-to-number (get-property "TIMES")) 12) 0)
-        (ledna-touch (ids "Gym_Pass"))))
-
-    (ledna-advanced-schedule)))
-
-(defun gym-pass-purchased-p ()
-  (equal (get-todo-state (select (ids "Gym_Pass"))) "DONE"))
+(defun gym-purchase-subscription-maybe ()
+  (ledna/circ-property "TRAIN_TYPE" 3)
+  (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
+         (lessons-passed-count (string-to-number (car (ledna/inc-property "$PASSED" 1 "" subscription-ticket))))
+         (lessons-in-subscription 12))
+    (when (= (% lessons-passed-count lessons-in-subscription) 0)
+      (let* ((schedule-prop (ledna/get-property "$SCHEDULE"))
+             (schedule (cadr (read schedule-prop)))
+             (next-time (get-nearest-date schedule)))
+        (set-scheduled next-time subscription-ticket)
+        (ledna/set-todo-state "TODO" subscription-ticket)
+        (org-entry-put nil "LAST_REPEAT" (format-time-string
+					  (org-time-stamp-format t t)
+					  (current-time)))))))
 #+END_SRC
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
@@ -940,6 +979,9 @@ It is for commands that depend on the major mode. One example is
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'org-structure-template-alist
              '("ls" "# Local Variables:\n?\n# End:"))
+
+(add-to-list 'org-structure-template-alist
+             '("cpp" "#+BEGIN_SRC C++\n?\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
 
 ;; add <p for python expansion
 (add-to-list 'org-structure-template-alist
@@ -1307,9 +1349,32 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                              (clojure . t)
                              (http . t)
                              (shell . t)
+                             (restclient . t)
                              (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+END_SRC
+**** ob-restclient
+#+BEGIN_SRC emacs-lisp
+(use-package restclient
+  :ensure t)
+
+(use-package ob-restclient
+  :ensure t)
+#+END_SRC
+**** cpp
+#+BEGIN_SRC emacs-lisp
+(defun cpp/handy-local-vars ()
+  (when (string= major-mode "c++-mode")
+    (end-of-buffer)
+    (insert "\n// Local Variables:")
+    (insert "\n// compile-command: \"clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main\"")
+    (insert "\n// mode: C++")
+    (insert "\n// fill-column: 80")
+    (insert "\n// End:")
+    (save-buffer)))
+
+(add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
 *** modules
 #+BEGIN_SRC emacs-lisp
@@ -1453,7 +1518,8 @@ If KWD is a number, get the corresponding match group."
             (setq-default
              org-todo-keyword-faces
              '(;; ("DOCUMENTED" . "#53D253")
-               ("CVS" . "#F00")
+               ("TEST" . "#F00")
+               ("DEPLOY" . "#292")
                ("CANCELLED" . "#7B9ED2")
                ("STARTED" . "#749AF7")
                ("PENDING" . "#D0E1F9")
