@@ -32,3 +32,6 @@
 
 (provide 'init)
 ;;; init.el ends here
+
+(fset 'jesshop-dup-inc-size
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([3 112 16 134217830 4 14 134217826 134217830 134217830 escape 120 return 134217830 escape 120 return escape 120 return 1 tab] 0 "%d")) arg)))
