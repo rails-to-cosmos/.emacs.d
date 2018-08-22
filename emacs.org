@@ -297,7 +297,8 @@ enjoy using a lot.
 *** omit
 #+BEGIN_SRC emacs-lisp
 (setq-default dired-omit-files-p t
-              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
+              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin$"
+              dired-omit-verbose nil)
 #+END_SRC
 *** dired-subtree
 #+BEGIN_SRC emacs-lisp
@@ -760,10 +761,10 @@ is displayed."
 (defun gym-purchase-subscription-maybe ()
   (ledna/circ-property "TRAIN_TYPE" 3)
   (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
-         (lessons-passed-count (string-to-number (car (ledna/inc-property "$PASSED" 1 "" subscription-ticket))))
+         (lessons-passed-count (string-to-number (car (ledna/inc-property "_PASSED" 1 "" subscription-ticket))))
          (lessons-in-subscription 12))
     (when (= (% lessons-passed-count lessons-in-subscription) 0)
-      (let* ((schedule-prop (ledna/get-property "$SCHEDULE"))
+      (let* ((schedule-prop (ledna/get-property ledna-props-schedule))
              (schedule (cadr (read schedule-prop)))
              (next-time (get-nearest-date schedule)))
         (set-scheduled next-time subscription-ticket)
@@ -814,7 +815,7 @@ When COND is nil, insert CHAR."
                                 (with-temp-file org-contacts-file
                                   (insert-file-contents-literally org-contacts-file)
                                   (end-of-buffer)
-                                  (insert (format "* %s" item))))
+                                  (insert (format "* %s\n" item))))
                               (insert (format "[[staff:%s][%s@]]" item item))
                               (org-toggle-tag (replace-regexp-in-string "-" "_" (format "@%s" item)) 'on)
                               (org-align-all-tags)))))
