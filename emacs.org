@@ -3216,17 +3216,6 @@ BEG and END (region to sort)."
 (use-package danneskjold-theme
   :ensure t)
 #+END_SRC
-*** proper cyrillic fontset
-#+BEGIN_SRC emacs-lisp
-(defun set-proper-cyrillic-fontset ()
-  (interactive)
-  (when (fboundp 'set-fontset-font)
-    (set-fontset-font "fontset-default"
-                      (cons (decode-char 'ucs #x0400)
-                            (decode-char 'ucs #x052F))
-                      (font-spec :size 10 :name "Source Code Pro Regular"))))
-(add-hook 'org-mode-hook 'set-proper-cyrillic-fontset)
-#+END_SRC
 *** cleanups
 #+BEGIN_SRC emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -3236,7 +3225,7 @@ BEG and END (region to sort)."
 (custom-set-faces
  '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
                 :underline nil :slant normal :weight normal :height 120 :width normal :foundry nil
-                :family "Fira Code")))))
+                :family "Inconsolata LGC")))))
 
 (setq-default
  case-fold-search t
