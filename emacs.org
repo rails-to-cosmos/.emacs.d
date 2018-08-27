@@ -999,7 +999,7 @@ It is for commands that depend on the major mode. One example is
              '("ls" "# Local Variables:\n?\n# End:"))
 
 (add-to-list 'org-structure-template-alist
-             '("cpp" "#+BEGIN_SRC C++\n?\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
+             '("cpp" "#+BEGIN_SRC C++\n#include <iostream>\n\nusing namespace std;\n\nint main(int argc, char *argv[])\n{\n  ?\n  return 0;\n}\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
 
 ;; add <p for python expansion
 (add-to-list 'org-structure-template-alist
@@ -1390,7 +1390,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (insert "\n// mode: C++")
     (insert "\n// fill-column: 80")
     (insert "\n// End:")
-    (save-buffer)))
+    (save-buffer)
+    (compile "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main")))
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
@@ -2684,7 +2685,7 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.programming
 :END:
 
-*** [[https://vxlabs.com/2018/06/08/python-language-server-with-emacs-and-lsp-mode/][lsp magic]]
+*** COMMENT [[https://vxlabs.com/2018/06/08/python-language-server-with-emacs-and-lsp-mode/][lsp magic]]
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :ensure t)
