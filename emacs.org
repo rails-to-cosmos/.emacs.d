@@ -2093,6 +2093,31 @@ If KWD is a number, get the corresponding match group."
 (define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
 #+END_SRC
 ** Utils
+*** syncthing-conflict-manager
+#+BEGIN_SRC emacs-lisp
+(defun syncthing-get-conflicted-files ()
+  (let* ((bfn (buffer-file-name))
+         (sefn (file-name-base bfn))
+         (dir (file-name-directory bfn))
+         (files (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" sefn))))
+    files))
+
+(defun syncthing-diff-conflict ()
+  (interactive)
+  (if-let ((files (syncthing-get-conflicted-files)))
+      (progn
+        (diff (buffer-file-name) (car files))
+        (car files))
+    (progn
+      (message "No conflicts found.")
+      nil)))
+
+(defun syncthing-trash-conflicted ()
+  (interactive)
+  (when-let ((file (syncthing-diff-conflict)))
+    (when (y-or-n-p "Do you really want to move conflicted file to trash?")
+      (move-file-to-trash file))))
+#+END_SRC
 *** num-with-ordinal-indicator
 #+BEGIN_SRC emacs-lisp
 (defun get-ordinal-indicator (num)
