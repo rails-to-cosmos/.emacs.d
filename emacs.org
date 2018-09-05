@@ -2115,7 +2115,7 @@ If KWD is a number, get the corresponding match group."
   (interactive)
   (if-let ((files (syncthing-get-conflicted-files)))
       (progn
-        (diff (buffer-file-name) (car files))
+        (diff (car files) (buffer-file-name))
         (car files))
     (progn
       (message "No conflicts found.")
