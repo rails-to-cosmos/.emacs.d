@@ -625,6 +625,12 @@ directory."
 #+END_SRC
 *** password manager
 #+BEGIN_SRC emacs-lisp
+(use-package pinentry
+  :config (progn
+            (setq epa-pinentry-mode 'loopback)
+            (pinentry-start))
+  :ensure t)
+
 (setq org-sec-file "~/sync/pwd.org")
 
 (defun tiny-menu-quit-override (&optional menu)
