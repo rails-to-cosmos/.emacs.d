@@ -2486,6 +2486,7 @@ This is like `define-key', except the definition
                                               (?i "Custom ID" air-org-insert-custom-id-link))))
                             ("yandex-tasks"   ("Tasks"
                                                ((?a "Add subtask"     yandex-add-subtask)
+                                                (?m "Commit message"  yandex-insert-commit-message)
                                                 (?i "Insert branch"   yandex-insert-branch)
                                                 (?t "Insert ticket"   yandex-insert-ticket)
                                                 (?g "Go to org"       yandex-goto-org-task)
