@@ -934,6 +934,11 @@ When COND is nil, insert CHAR."
                 (подумать . "Understanding")
                 (придумать . "Idea")
 
+                (Cloud . "Cloud")
+                (Облако . "Cloud")
+                (Stager . "Stager")
+                (stager . "Stager")
+
                 (пёсик . "@eric")
                 (Эрик . "@eric")
                 (Эрика . "@eric")))
