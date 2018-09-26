@@ -1411,7 +1411,11 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (defun cpp/mine-compile ()
   (let ((fn (ob-async--generate-uuid)))
-    (compile (format "clang++ -std=c++1z -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))
+    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))))
+
+(defun cpp/mine-compile-run ()
+  (let ((fn (ob-async--generate-uuid)))
+    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))
     (sit-for 1)
     (async-shell-command (expand-file-name fn))))
 
@@ -1420,6 +1424,12 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile)
   (save-buffer)
   (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile))
+
+(defun cpp/tangle-compile-run ()
+  (interactive)
+  (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run)
+  (save-buffer)
+  (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run))
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
