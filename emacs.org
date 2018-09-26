@@ -783,7 +783,12 @@ is displayed."
 *** reports
 #+BEGIN_SRC emacs-lisp
 (defun gym-purchase-subscription-maybe ()
-  (ledna/next-allowed-value "TRAIN_TYPE")
+  ;; subscription-ticket (wat select entry from current-file where type="Subscription")
+  ;; lessons-passed (wat select _PASSED from current-file where entry=subscription-ticket)
+  ;; lessons-passed (wat select _PASSED from subscription-ticket)
+  ;; (wat update SUBSCRIPTION-TICKET set _PASSED += 1)
+  ;; (wat update SUBSCRIPTION-TICKET do (inc-property _PASSED) (...))
+
   (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
          (lessons-passed-count (string-to-number (car (ledna/inc-property "_PASSED" 1 "" subscription-ticket))))
          (lessons-in-subscription 12))
