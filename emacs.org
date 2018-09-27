@@ -604,7 +604,13 @@ enjoy using a lot.
             (require 'org-agenda))
   :ensure t)
 #+END_SRC
-
+*** org-stuck-projects
+#+BEGIN_SRC emacs-lisp
+(setq org-stuck-projects
+      '("+PROJECT/-MAYBE-DONE"
+        ("NEXT" "TODO") ("@SHOP")
+        "\\<IGNORE\\>"))
+#+END_SRC
 *** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
 #+BEGIN_SRC emacs-lisp
 (defun org-insert-file (filename)
