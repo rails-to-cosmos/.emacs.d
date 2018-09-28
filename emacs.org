@@ -605,6 +605,21 @@ enjoy using a lot.
   :ensure t)
 #+END_SRC
 
+*** org-ql
+#+BEGIN_SRC emacs-lisp
+(use-package org-ql
+  :load-path "~/stuff/org-ql")
+
+(use-package org-ql-agenda
+  :load-path "~/stuff/org-ql")
+#+END_SRC
+*** org-stuck-projects
+#+BEGIN_SRC emacs-lisp
+(setq org-stuck-projects
+      '("+PROJECT/-MAYBE-DONE"
+        ("NEXT" "TODO") ("@SHOP")
+        "\\<IGNORE\\>"))
+#+END_SRC
 *** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
 #+BEGIN_SRC emacs-lisp
 (defun org-insert-file (filename)
@@ -1368,7 +1383,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                              (http . t)
                              (shell . t)
                              (restclient . t)
-                             (C . t)))
+                             (C . t)
+                             (lilypond . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+END_SRC
@@ -1482,6 +1498,77 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (setq org-highlight-latex-and-related '(latex))
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
 #+END_SRC
+*** Log
+#+BEGIN_SRC emacs-lisp
+(setq-default org-log-into-drawer t
+              org-log-done 'time
+              org-log-state-notes-insert-after-drawers nil
+              org-log-note-clock-out nil
+              org-log-states-order-reversed nil
+              org-log-reschedule 'time
+              org-log-redeadline 'time)
+
+(setq org-log-note-headings '((done . "CLOSING NOTE T:%t")
+                              (state . "State %-12s from %-12S T:%t")
+                              (note . "Note taken on T:%t")
+                              (reschedule . "Rescheduled from %S on T:%t")
+                              (delschedule . "Not scheduled, was %S on T:%t")
+                              (redeadline . "New deadline from %S on T:%t")
+                              (deldeadline . "Removed deadline, was %S on T:%t")
+                              (refile . "Refiled on T:%t")
+                              (clock-out . "Clocked out on T:%t")))
+
+(defun +org/find-state (&optional end)
+  "Used to search through the logbook of subtrees.
+
+    Looking for T:[2018-09-14 Fri 10:50] kind of time stamp in logbook."
+  (let* ((closed (re-search-forward "^CLOSED: \\[" end t))
+         (created (if (not closed) (re-search-forward "^:CREATED: \\[" end t)))
+         (logbook (if (not closed) (re-search-forward ".*T:\\[" end t)))
+         (result (or closed logbook created)))
+    result))
+
+(defun +org/date-diff (start end &optional compare)
+  "Calculate difference between  selected timestamp to current date.
+
+  The difference between the dates is calculated in days.
+  START and END define the region within which the timestamp is found.
+  Optional argument COMPARE allows for comparison to a specific date rather than to current date."
+  (let* ((start-date (if compare compare (calendar-current-date))))
+    (- (calendar-absolute-from-gregorian start-date) (org-time-string-to-absolute (buffer-substring-no-properties start end)))))
+
+(defun +org/last-update-before (since)
+  "List Agenda items that updated before SINCE day."
+  (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+    (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+           (subtree-valid (save-excursion
+                            (forward-line 1)
+                            (if (and (< (point) subtree-end)
+                                     ;; Find the timestamp to test
+                                     (+org/find-state subtree-end))
+                                (let ((startpoint (point)))
+                                  (forward-word 3)
+                                  ;; Convert timestamp into days difference from today
+                                  (+org/date-diff startpoint (point)))
+                              (point-max)))))
+      (if (and subtree-valid (>= subtree-valid since))
+          next-headline
+        nil))))
+
+(defun +org/has-child-and-last-update-before (day)
+  (if (+org/has-child-p) (point)
+    (+org/last-update-before day)))
+
+(defun +org/has-child-p ()
+(save-excursion (org-goto-first-child)))
+
+(setq org-agenda-custom-commands
+      '(("R" "Recent activity"
+         ((tags "*"
+                ((org-agenda-overriding-header "Recent Activity")
+                 (org-agenda-skip-function '(+org/has-child-and-last-update-before 7)))))
+         nil nil)))
+#+END_SRC
 *** Clock
 #+BEGIN_SRC emacs-lisp
 (setq-default org-clock-persistence-insinuate t
@@ -1496,12 +1583,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-clock-out-switch-to-state "TODO"
               org-clock-out-remove-zero-time-clocks nil
               org-clock-out-when-done t
-              org-clock-idle-time 60
-              org-log-into-drawer t
-              org-log-done (quote time)
-              org-log-state-notes-insert-after-drawers nil
-              org-log-note-clock-out nil
-              org-log-states-order-reversed nil)
+              org-clock-idle-time 60)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 
@@ -1716,8 +1798,6 @@ If KWD is a number, get the corresponding match group."
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
- org-log-reschedule 'time
- org-log-redeadline 'time
  org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
  org-log-done t
