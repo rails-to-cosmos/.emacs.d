@@ -682,18 +682,35 @@ is displayed."
     (if (not (current-message))
         (message "Menu ended."))))
 
+(defun org-traverse(&rest args)
+  (lexical-let*
+      ((file      (or (plist-get args :file)            buffer-file-name))
+       (filter    (or (plist-get args :filter)         (lambda nil t)))
+       (mapper    (or (plist-get args :map)            (lambda nil t)))
+       (separator (or (plist-get args :separator)       " → ")))
 
-(defun org-traverse(&optional fn fun)
-  (with-temp-buffer
-    (org-mode)
-    (insert-file-contents-literally fn)
-    (counsel-org-goto)
-    (when fun
-      (funcall fun))))
+    (cl-flet ((traverse () (let* ((mark (point-marker))
+                                  (title (s-join separator (org-get-outline-path t))))
+                             (when (funcall filter)
+                               (cons title mark)))))
+      (with-temp-buffer
+        (org-mode)
+        (insert-file-contents-literally file)
+        (let* ((title-marker (remove 'nil (org-map-entries #'traverse)))
+               (marker (cdr (assoc-string (org-completing-read "Glance: " title-marker) title-marker))))
+          (org-goto-marker-or-bmk marker)
+          (funcall mapper))))))
+
+(defun org-password-manager/entry-encrypted-p ()
+  (when-let* ((entry-tags (org-get-tags-at)))
+    (seq-intersection (list "crypt") entry-tags)))
 
 (defun org-launch-password-manager()
   (interactive)
-  (org-traverse org-sec-file #'org-password-manager/extract-sec-data))
+  (org-traverse
+   :file org-sec-file
+   :map #'org-password-manager/extract-sec-data
+   :filter #'org-password-manager/entry-encrypted-p))
 
 (defun org-password-manager/extract-sec-data ()
   (when (or (org-decrypt-entry) 1)
