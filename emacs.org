@@ -715,7 +715,13 @@ is displayed."
    :action #'org-password-manager/extract-sec-data
    :filter 'encrypted))
 
+(defun org-build ()
+  (interactive)
+  (org-glance
+   :filter (lambda () (seq-intersection (list "build") (org-get-tags-at)))))
+
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
+(global-set-key (kbd "C-x y m") 'org-build)
 #+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
