@@ -297,7 +297,8 @@ enjoy using a lot.
 *** omit
 #+BEGIN_SRC emacs-lisp
 (setq-default dired-omit-files-p t
-              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin|\\.$")
+              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin|\\.$"
+              dired-omit-verbose nil)
 #+END_SRC
 *** dired-subtree
 #+BEGIN_SRC emacs-lisp
@@ -610,9 +611,52 @@ enjoy using a lot.
             (require 'org-agenda))
   :ensure t)
 #+END_SRC
+*** org-glance
+#+BEGIN_SRC emacs-lisp
+(use-package org-glance
+  :load-path "~/stuff/org-glance")
+#+END_SRC
+*** org-ql
+#+BEGIN_SRC emacs-lisp
+(use-package org-ql
+  :load-path "~/stuff/org-ql")
 
+(use-package org-ql-agenda
+  :load-path "~/stuff/org-ql")
+#+END_SRC
+*** org-stuck-projects
+#+BEGIN_SRC emacs-lisp
+(setq org-stuck-projects
+      '("+PROJECT/-MAYBE-DONE"
+        ("NEXT" "TODO") ("@SHOP")
+        "\\<IGNORE\\>"))
+#+END_SRC
+*** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
+#+BEGIN_SRC emacs-lisp
+(defun org-insert-file (filename)
+      "Insert Elisp code block recreating FILE in the current
+directory."
+      (interactive "f")
+      (let ((basename (file-name-nondirectory filename))
+	    (base64-string
+	     (with-temp-buffer
+	       (insert-file-contents-literally filename)
+	       (base64-encode-region (point-min) (point-max))
+	       (buffer-string))))
+	(save-excursion
+	  (insert (format "[[./%s]]\n#+BEGIN_SRC emacs-lisp :results output silent\n  (with-temp-file %S\n    (insert (base64-decode-string\n      %S)))\n#+END_SRC" basename basename base64-string)))
+	(forward-line)
+	(copy-file filename basename 1)
+	(org-display-inline-images)))
+#+END_SRC
 *** password manager
 #+BEGIN_SRC emacs-lisp
+(use-package pinentry
+  :config (progn
+            (setq epa-pinentry-mode 'loopback)
+            (pinentry-start))
+  :ensure t)
+
 (setq org-sec-file "~/sync/pwd.org")
 
 (defun tiny-menu-quit-override (&optional menu)
@@ -649,25 +693,6 @@ is displayed."
     (if (not (current-message))
         (message "Menu ended."))))
 
-(defun org-traverse(&optional fn fun)
-  (let ((cached-buffer (current-buffer))
-        (fn-buffer nil))
-
-    (when fn
-      (find-file fn)
-      (setq fn-buffer (current-buffer)))
-
-    (counsel-org-goto)
-
-    (when fun
-      (funcall fun))
-
-    (kill-buffer fn-buffer)))
-
-(defun org-launch-password-manager()
-  (interactive)
-  (org-traverse org-sec-file #'org-password-manager/extract-sec-data))
-
 (defun org-password-manager/extract-sec-data ()
   (when (or (org-decrypt-entry) 1)
     (let* ((title (ledna/get-title))
@@ -688,10 +713,22 @@ is displayed."
                                                                       (lambda () (funcall (read handler) val)))))
                                                     into tiny-menu-items
                                                     finally (return (nconc tiny-menu-items (list (list ?q "Quit: " (lambda () (kill-new "") (setq kill-ring nil)) "quit"))))))))))
-      (save-buffer) (kill-buffer)
       (tiny-menu-quit-override tiny-menu-header))))
 
+(defun org-launch-password-manager()
+  (interactive)
+  (org-glance
+   :scope org-sec-file
+   :action #'org-password-manager/extract-sec-data
+   :filter 'encrypted))
+
+(defun org-build ()
+  (interactive)
+  (org-glance
+   :filter (lambda () (seq-intersection (list "build") (org-get-tags-at)))))
+
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
+(global-set-key (kbd "C-x y m") 'org-build)
 #+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
@@ -765,12 +802,17 @@ is displayed."
 *** reports
 #+BEGIN_SRC emacs-lisp
 (defun gym-purchase-subscription-maybe ()
-  (ledna/circ-property "TRAIN_TYPE" 3)
+  ;; subscription-ticket (wat select entry from current-file where type="Subscription")
+  ;; lessons-passed (wat select _PASSED from current-file where entry=subscription-ticket)
+  ;; lessons-passed (wat select _PASSED from subscription-ticket)
+  ;; (wat update SUBSCRIPTION-TICKET set _PASSED += 1)
+  ;; (wat update SUBSCRIPTION-TICKET do (inc-property _PASSED) (...))
+
   (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
-         (lessons-passed-count (string-to-number (car (ledna/inc-property "$PASSED" 1 "" subscription-ticket))))
+         (lessons-passed-count (string-to-number (car (ledna/inc-property "_PASSED" 1 "" subscription-ticket))))
          (lessons-in-subscription 12))
     (when (= (% lessons-passed-count lessons-in-subscription) 0)
-      (let* ((schedule-prop (ledna/get-property "$SCHEDULE"))
+      (let* ((schedule-prop (ledna/get-property ledna-props-schedule))
              (schedule (cadr (read schedule-prop)))
              (next-time (get-nearest-date schedule)))
         (set-scheduled next-time subscription-ticket)
@@ -821,7 +863,7 @@ When COND is nil, insert CHAR."
                                 (with-temp-file org-contacts-file
                                   (insert-file-contents-literally org-contacts-file)
                                   (end-of-buffer)
-                                  (insert (format "* %s" item))))
+                                  (insert (format "* %s\n" item))))
                               (insert (format "[[staff:%s][%s@]]" item item))
                               (org-toggle-tag (replace-regexp-in-string "-" "_" (format "@%s" item)) 'on)
                               (org-align-all-tags)))))
@@ -916,6 +958,11 @@ When COND is nil, insert CHAR."
                 (подумать . "Understanding")
                 (придумать . "Idea")
 
+                (Cloud . "Cloud")
+                (Облако . "Cloud")
+                (Stager . "Stager")
+                (stager . "Stager")
+
                 (пёсик . "@eric")
                 (Эрик . "@eric")
                 (Эрика . "@eric")))
@@ -984,23 +1031,13 @@ It is for commands that depend on the major mode. One example is
 #+END_SRC
 *** structure-templates
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'org-structure-template-alist
-             '("ls" "# Local Variables:\n?\n# End:"))
-
-(add-to-list 'org-structure-template-alist
-             '("cpp" "#+BEGIN_SRC C++\n?\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
-
-;; add <p for python expansion
-(add-to-list 'org-structure-template-alist
-             '("py" "#+BEGIN_SRC python\n?\n#+END_SRC" "<src lang=\"python\">\n?\n</src>"))
-
-;; add <el for emacs-lisp expansion
-(add-to-list 'org-structure-template-alist
-             '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC" "<src lang=\"emacs-lisp\">\n?\n</src>"))
-
-(add-to-list 'org-structure-template-alist
-             '("sql" "#+BEGIN_SRC sql\n?\n#+END_SRC" "<src lang=\"sql\">\n?\n</src>"))
-
+(loop for tpl in '(("ls" "# Local Variables:\n?\n# End:")
+                   ("py" "#+BEGIN_SRC python\n?\n#+END_SRC" "<src lang=\"python\">\n?\n</src>")
+                   ("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC" "<src lang=\"emacs-lisp\">\n?\n</src>")
+                   ("sql" "#+BEGIN_SRC sql\n?\n#+END_SRC" "<src lang=\"sql\">\n?\n</src>")
+                   ("bash" "#+BEGIN_SRC bash :async\n?\n#+END_SRC" "<src lang=\"bash\">\n?\n</src>")
+                   ("cpp" "#+BEGIN_SRC C++\n#include <iostream>\n\nusing namespace std;\n\nint main(int argc, char *argv[])\n{\n  ?\n  return 0;\n}\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
+      do (add-to-list 'org-structure-template-alist tpl))
 #+END_SRC
 *** org-movies
 Playing around with youtube-dl in org-mode.
@@ -1357,7 +1394,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                              (http . t)
                              (shell . t)
                              (restclient . t)
-                             (C . t)))
+                             (C . t)
+                             (lilypond . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+END_SRC
@@ -1380,6 +1418,28 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (insert "\n// fill-column: 80")
     (insert "\n// End:")
     (save-buffer)))
+
+(defun cpp/mine-compile ()
+  (let ((fn (ob-async--generate-uuid)))
+    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))))
+
+(defun cpp/mine-compile-run ()
+  (let ((fn (ob-async--generate-uuid)))
+    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))
+    (sit-for 1)
+    (async-shell-command (expand-file-name fn))))
+
+(defun cpp/tangle-compile ()
+  (interactive)
+  (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile)
+  (save-buffer)
+  (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile))
+
+(defun cpp/tangle-compile-run ()
+  (interactive)
+  (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run)
+  (save-buffer)
+  (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run))
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
@@ -1442,12 +1502,83 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (org-crypt-use-before-save-magic)
 (setq org-tags-exclude-from-inheritance (quote ("crypt")))
 ; GPG key to use for encryption
-(setq org-crypt-key "F0B66B40")
+;; (setq org-crypt-key "")
 #+END_SRC
 *** Export
 #+BEGIN_SRC emacs-lisp
 (setq org-highlight-latex-and-related '(latex))
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
+#+END_SRC
+*** Log
+#+BEGIN_SRC emacs-lisp
+(setq-default org-log-into-drawer t
+              org-log-done 'time
+              org-log-state-notes-insert-after-drawers nil
+              org-log-note-clock-out nil
+              org-log-states-order-reversed nil
+              org-log-reschedule 'time
+              org-log-redeadline 'time)
+
+(setq org-log-note-headings '((done . "CLOSING NOTE T:%t")
+                              (state . "State %-12s from %-12S T:%t")
+                              (note . "Note taken on T:%t")
+                              (reschedule . "Rescheduled from %S on T:%t")
+                              (delschedule . "Not scheduled, was %S on T:%t")
+                              (redeadline . "New deadline from %S on T:%t")
+                              (deldeadline . "Removed deadline, was %S on T:%t")
+                              (refile . "Refiled on T:%t")
+                              (clock-out . "Clocked out on T:%t")))
+
+(defun +org/find-state (&optional end)
+  "Used to search through the logbook of subtrees.
+
+    Looking for T:[2018-09-14 Fri 10:50] kind of time stamp in logbook."
+  (let* ((closed (re-search-forward "^CLOSED: \\[" end t))
+         (created (if (not closed) (re-search-forward "^:CREATED: \\[" end t)))
+         (logbook (if (not closed) (re-search-forward ".*T:\\[" end t)))
+         (result (or closed logbook created)))
+    result))
+
+(defun +org/date-diff (start end &optional compare)
+  "Calculate difference between  selected timestamp to current date.
+
+  The difference between the dates is calculated in days.
+  START and END define the region within which the timestamp is found.
+  Optional argument COMPARE allows for comparison to a specific date rather than to current date."
+  (let* ((start-date (if compare compare (calendar-current-date))))
+    (- (calendar-absolute-from-gregorian start-date) (org-time-string-to-absolute (buffer-substring-no-properties start end)))))
+
+(defun +org/last-update-before (since)
+  "List Agenda items that updated before SINCE day."
+  (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+    (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+           (subtree-valid (save-excursion
+                            (forward-line 1)
+                            (if (and (< (point) subtree-end)
+                                     ;; Find the timestamp to test
+                                     (+org/find-state subtree-end))
+                                (let ((startpoint (point)))
+                                  (forward-word 3)
+                                  ;; Convert timestamp into days difference from today
+                                  (+org/date-diff startpoint (point)))
+                              (point-max)))))
+      (if (and subtree-valid (>= subtree-valid since))
+          next-headline
+        nil))))
+
+(defun +org/has-child-and-last-update-before (day)
+  (if (+org/has-child-p) (point)
+    (+org/last-update-before day)))
+
+(defun +org/has-child-p ()
+(save-excursion (org-goto-first-child)))
+
+(setq org-agenda-custom-commands
+      '(("R" "Recent activity"
+         ((tags "*"
+                ((org-agenda-overriding-header "Recent Activity")
+                 (org-agenda-skip-function '(+org/has-child-and-last-update-before 7)))))
+         nil nil)))
 #+END_SRC
 *** Clock
 #+BEGIN_SRC emacs-lisp
@@ -1463,12 +1594,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-clock-out-switch-to-state "TODO"
               org-clock-out-remove-zero-time-clocks nil
               org-clock-out-when-done t
-              org-clock-idle-time 60
-              org-log-into-drawer t
-              org-log-done (quote time)
-              org-log-state-notes-insert-after-drawers nil
-              org-log-note-clock-out nil
-              org-log-states-order-reversed nil)
+              org-clock-idle-time 60)
 (org-clock-persistence-insinuate)
 (define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
 
@@ -1683,8 +1809,6 @@ If KWD is a number, get the corresponding match group."
 *** Unsorted Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
- org-log-reschedule 'time
- org-log-redeadline 'time
  org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
  org-log-done t
@@ -2080,6 +2204,31 @@ If KWD is a number, get the corresponding match group."
 (define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
 #+END_SRC
 ** Utils
+*** syncthing-conflict-manager
+#+BEGIN_SRC emacs-lisp
+(defun syncthing-get-conflicted-files ()
+  (let* ((bfn (buffer-file-name))
+         (sefn (file-name-base bfn))
+         (dir (file-name-directory bfn))
+         (files (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" sefn))))
+    files))
+
+(defun syncthing-diff-conflict ()
+  (interactive)
+  (if-let ((files (syncthing-get-conflicted-files)))
+      (progn
+        (diff (car files) (buffer-file-name))
+        (car files))
+    (progn
+      (message "No conflicts found.")
+      nil)))
+
+(defun syncthing-trash-conflicted ()
+  (interactive)
+  (when-let ((file (syncthing-diff-conflict)))
+    (when (y-or-n-p "Do you really want to move conflicted file to trash?")
+      (move-file-to-trash file))))
+#+END_SRC
 *** num-with-ordinal-indicator
 #+BEGIN_SRC emacs-lisp
 (defun get-ordinal-indicator (num)
@@ -2297,7 +2446,7 @@ If KWD is a number, get the corresponding match group."
 *** prodigy
 #+BEGIN_SRC emacs-lisp
 (use-package prodigy
-  ;; :bind ("C-x y p" . prodigy)
+  :bind ("C-x y r" . prodigy)
   :ensure t)
 #+END_SRC
 *** what-face
@@ -2442,6 +2591,7 @@ This is like `define-key', except the definition
                                               (?i "Custom ID" air-org-insert-custom-id-link))))
                             ("yandex-tasks"   ("Tasks"
                                                ((?a "Add subtask"     yandex-add-subtask)
+                                                (?m "Commit message"  yandex-insert-commit-message)
                                                 (?i "Insert branch"   yandex-insert-branch)
                                                 (?t "Insert ticket"   yandex-insert-ticket)
                                                 (?g "Go to org"       yandex-goto-org-task)
@@ -2673,7 +2823,7 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.programming
 :END:
 
-*** [[https://vxlabs.com/2018/06/08/python-language-server-with-emacs-and-lsp-mode/][lsp magic]]
+*** COMMENT [[https://vxlabs.com/2018/06/08/python-language-server-with-emacs-and-lsp-mode/][lsp magic]]
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :ensure t)
@@ -3204,27 +3354,28 @@ BEG and END (region to sort)."
 (use-package danneskjold-theme
   :ensure t)
 #+END_SRC
-*** proper cyrillic fontset
-#+BEGIN_SRC emacs-lisp
-(defun set-proper-cyrillic-fontset ()
-  (interactive)
-  (when (fboundp 'set-fontset-font)
-    (set-fontset-font "fontset-default"
-                      (cons (decode-char 'ucs #x0400)
-                            (decode-char 'ucs #x052F))
-                      (font-spec :size 10 :name "Source Code Pro Regular"))))
-(add-hook 'org-mode-hook 'set-proper-cyrillic-fontset)
-#+END_SRC
 *** cleanups
 #+BEGIN_SRC emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (blink-cursor-mode 0)
 
-(custom-set-faces
- '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
-                :underline nil :slant normal :weight normal :height 120 :width normal :foundry nil
-                :family "Fira Code")))))
+(lexical-let ((font-size 12)
+              (font-name "Inconsolata LGC"))
+  (custom-set-faces
+   (list 'default (list (list t (list :inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
+                                      :underline nil :slant 'normal :weight 'normal :height (* font-size 10) :width 'normal :foundry nil
+                                      :family font-name)))))
+
+  (defun set-proper-cyrillic-font ()
+    (when (fboundp 'set-fontset-font)
+      (set-fontset-font "fontset-default"
+                        (cons (decode-char 'ucs #x0400)
+                              (decode-char 'ucs #x052F))
+                        (font-spec :size font-size :name font-name))))
+
+  (add-hook 'org-mode-hook #'set-proper-cyrillic-font))
+
 
 (setq-default
  case-fold-search t
