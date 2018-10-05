@@ -711,9 +711,10 @@ is displayed."
 (defun org-launch-password-manager()
   (interactive)
   (org-glance
-   :scope org-sec-file
+   :scope (list org-sec-file 'org-clocking-buffer 'current-buffer)
    :action #'org-password-manager/extract-sec-data
-   :filter 'encrypted))
+   :filter 'encrypted
+   :outline-path-ignore '("# Passwords")))
 
 (defun org-build ()
   (interactive)
@@ -2343,7 +2344,6 @@ If KWD is a number, get the corresponding match group."
          ("C-c k" . counsel-ag)
          ("C-x l" . counsel-locate)
          ("C-S-o" . counsel-rhythmbox)
-         ("C-x y g o" . counsel-org-goto)
          :map read-expression-map
          ("C-r" . counsel-minibuffer-history))
   :config (progn
@@ -2367,15 +2367,6 @@ If KWD is a number, get the corresponding match group."
 
   :ensure t
   :ensure smex)
-
-;; (use-package swiper
-;;   :bind (("C-s" . swiper)
-;;          ("C-r" . swiper)
-
-;;          :map swiper-map
-;;          ("C-r" . previous-line)
-;;          ("C-s" . next-line))
-;;   :ensure t)
 #+END_SRC
 *** delete-trailing-whitespace
 #+BEGIN_SRC emacs-lisp
