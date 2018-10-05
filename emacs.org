@@ -281,8 +281,8 @@ enjoy using a lot.
 *** dired+
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
-  :after (dired)
-  :ensure t)
+  ;; :after (dired)
+  :load-path "~/stuff")
 #+END_SRC
 *** buffers
 #+BEGIN_SRC emacs-lisp
@@ -297,16 +297,17 @@ enjoy using a lot.
 *** omit
 #+BEGIN_SRC emacs-lisp
 (setq-default dired-omit-files-p t
-              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin$"
+              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin|\\.$"
               dired-omit-verbose nil)
 #+END_SRC
 *** dired-subtree
 #+BEGIN_SRC emacs-lisp
 (use-package dired-subtree
-  :after (:all dired dired+)
-  :bind (:map dired-mode-map
-              ("<backspace>" . dired-subtree-up-or-directory-up)
-              ("<tab>" . dired-subtree-toggle))
+  ;; :after (:all dired dired+)
+  ;; :bind (:map dired-mode-map
+  ;;             ("<backspace>" . dired-subtree-up-or-directory-up)
+  ;;             ("<del>" . dired-subtree-up-or-directory-up)
+  ;;             ("<tab>" . dired-subtree-toggle))
   :init (progn
           (put 'dired-find-alternate-file 'disabled nil))
   :config (progn
@@ -317,7 +318,13 @@ enjoy using a lot.
                     (goto-char (overlay-start ov))
                     (dired-previous-line 1))
                 (find-alternate-file ".."))))
+
   :ensure t)
+
+(define-key dired-mode-map (kbd "<DEL>") 'dired-subtree-up-or-directory-up)
+  ;; (unbind-key "<DEL>" dired-mode-map)
+  ;; (unbind-key "<ARROW-UP>" dired-mode-map)
+
 #+END_SRC
 *** dired-switch-buffers
 #+BEGIN_SRC emacs-lisp
