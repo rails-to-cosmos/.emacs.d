@@ -1283,7 +1283,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (defun orgtbl-tangle-relatives ()
   (interactive)
   (when (org-at-table-p)
-    (if-let (tbl-name (orgtbl-get-name-at-point))
+
+    (if-let (tbl-name (condition-case nil (orgtbl-get-name-at-point) (error nil)))
         (save-excursion
           (beginning-of-buffer)
           (while (search-forward (format "%s" tbl-name) nil 1)
