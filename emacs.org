@@ -1839,7 +1839,11 @@ If KWD is a number, get the corresponding match group."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
-
+*** sudoedit
+#+BEGIN_SRC emacs-lisp
+(use-package sudo-edit
+  :ensure t)
+#+END_SRC
 *** string-inflection
 #+BEGIN_SRC emacs-lisp
 (use-package string-inflection
