@@ -597,8 +597,9 @@ enjoy using a lot.
 :CUSTOM_ID: emacs.config.org-mode
 :END:
 
+*** org-plus-contrib
 #+BEGIN_SRC emacs-lisp
-(use-package org
+(use-package org-plus-contrib
   :bind (("C-x l" . org-store-link)
          ("C-c a" . org-agenda)
          ("C-c c" . org-capture)
@@ -610,6 +611,38 @@ enjoy using a lot.
   :config (progn
             (require 'org-agenda))
   :ensure t)
+#+END_SRC
+*** modules
+#+BEGIN_SRC emacs-lisp
+(require 'org-eshell)
+
+(setq org-modules
+      '(org-bbdb
+        org-bibtex
+        org-crypt
+        org-eshell
+        org-gnus
+        org-id
+        org-info
+        org-jsinfo
+        org-habit
+        org-inlinetask
+        org-irc
+        org-mew
+        org-mhe
+        org-protocol
+        org-rmail
+        org-vm
+        org-wl
+        org-w3m
+        org-drill))
+#+END_SRC
+*** [[https://bitbucket.org/eeeickythump/org-drill][org-drill]]
+#+BEGIN_SRC emacs-lisp
+(use-package org-drill
+  :config (progn
+            (setq org-drill-save-buffers-after-drill-sessions-p t)
+            (setq org-drill-maximum-duration 90)))
 #+END_SRC
 *** org-glance
 #+BEGIN_SRC emacs-lisp
@@ -1112,10 +1145,6 @@ With prefix argument, also display headlines without a TODO keyword."
   (org-tags-view nil ;; (null current-prefix-arg)
                  tag))
 #+END_SRC
-*** org-contacts
-#+BEGIN_SRC emacs-lisp
-(use-package org-contacts)
-#+END_SRC
 *** org-bookmark
 #+BEGIN_SRC emacs-lisp
 (use-package org-bookmark
@@ -1445,37 +1474,13 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
-*** modules
-#+BEGIN_SRC emacs-lisp
-(require 'org-eshell)
-
-(setq org-modules
-      (quote (org-bbdb
-              org-bibtex
-              org-crypt
-              org-eshell
-              org-gnus
-              org-id
-              org-info
-              org-jsinfo
-              org-habit
-              org-inlinetask
-              org-irc
-              org-mew
-              org-mhe
-              org-protocol
-              org-rmail
-              org-vm
-              org-wl
-              org-w3m)))
-#+END_SRC
 *** org-checklist
 #+BEGIN_SRC emacs-lisp
-(use-package org-plus-contrib
-  :defer t
-  :ensure t)
+;; (use-package org-plus-contrib
+;;   :defer t
+;;   :ensure t)
 
-(require 'org-checklist)
+;; (require 'org-checklist)
 #+END_SRC
 *** habit
 #+BEGIN_SRC emacs-lisp :results silent
@@ -1577,10 +1582,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (setq org-agenda-custom-commands
       '(("R" "Recent activity"
-         ((tags "*"
-                ((org-agenda-overriding-header "Recent Activity")
-                 (org-agenda-skip-function '(+org/has-child-and-last-update-before 7)))))
-         nil nil)))
+         agenda ""
+         ((org-agenda-overriding-header "Recent Activity")
+          (org-agenda-skip-function '(+org/has-child-and-last-update-before 7))))))
 #+END_SRC
 *** Clock
 #+BEGIN_SRC emacs-lisp
@@ -1839,6 +1843,39 @@ If KWD is a number, get the corresponding match group."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+*** loccur
+#+BEGIN_SRC emacs-lisp
+(use-package loccur
+  :config (progn
+            ;; defines shortcut for loccur of the current word
+            (define-key global-map [(control o)] 'loccur-current)
+            ;; defines shortcut for the interactive loccur command
+            (define-key global-map [(control meta o)] 'loccur)
+            ;; defines shortcut for the loccur of the previously found word
+            (define-key global-map [(control shift o)] 'loccur-previous-match)
+
+            (define-key-after global-map
+              [menu-bar extra-tools]
+              (cons "Extra Tools"
+                    (easy-menu-create-menu "Extra Tools" nil))
+              'tools)
+
+            (easy-menu-define my-loccur-menu nil "Menu for Loccur."
+              '("Loccur" :visible (featurep 'loccur)
+                ["Loccur Current Word" loccur-current :help "Call `loccur' for the current word."]
+                "--"
+                ["Loccur ..." loccur :help "Perform a simple grep in current buffer.\n\nThis command hides all lines from the current buffer except those\ncontaining the regular expression REGEX.  A second call of the function\nunhides lines again.\n\nWhen called interactively, either prompts the user for REGEXP or,\nwhen called with an active region, uses the content of the\nregion.\n\n(fn REGEX)"]
+                ["Loccur, but Don't Highlight" loccur-no-highlight :help "Perform search like loccur, but temporary removing match highlight.\nREGEX is regexp to search\n\n(fn REGEX)"]
+                "--"
+                ["Loccur Previous Match" loccur-previous-match :help "Call `loccur' for the previously found word."]
+                "--"
+                ["Highlight Matches" loccur-toggle-highlight :style toggle :selected loccur-highlight-matching-regexp :help "Toggle the highlighting of the match."]
+                ["Loccur Mode" loccur-mode :style toggle :selected loccur-mode :help "Minor mode for navigating through the file.\nHides all lines without matches like `occur' does, but without opening\na new window.\n\n(fn &optional ARG)"]
+                ))
+
+            (easy-menu-add-item (current-global-map) '("menu-bar" "extra-tools") my-loccur-menu))
+  :ensure t)
+#+END_SRC
 *** sudoedit
 #+BEGIN_SRC emacs-lisp
 (use-package sudo-edit
