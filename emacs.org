@@ -756,13 +756,7 @@ is displayed."
    :filter 'encrypted
    :outline-path-ignore '("# Passwords")))
 
-(defun org-build ()
-  (interactive)
-  (org-glance
-   :filter (lambda () (seq-intersection (list "build") (org-get-tags-at)))))
-
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
-(global-set-key (kbd "C-x y m") 'org-build)
 #+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
@@ -1149,6 +1143,7 @@ With prefix argument, also display headlines without a TODO keyword."
 #+BEGIN_SRC emacs-lisp
 (use-package org-bookmark
   :bind (("C-x j j" . org-bookmark-jump)
+         ("C-x j l" . org-bookmark-jump-local)
          ("C-x p m" . org-bookmark-set))
   :load-path "~/stuff/org-bookmark")
 #+END_SRC
@@ -1843,6 +1838,16 @@ If KWD is a number, get the corresponding match group."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+
+*** vlf
+#+BEGIN_SRC emacs-lisp
+(use-package vlf
+  :config (progn
+            (require 'vlf-setup)
+            (custom-set-variables
+             '(vlf-application 'dont-ask)))
+  :ensure t)
+#+END_SRC
 *** loccur
 #+BEGIN_SRC emacs-lisp
 (use-package loccur
