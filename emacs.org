@@ -641,8 +641,9 @@ enjoy using a lot.
 #+BEGIN_SRC emacs-lisp
 (use-package org-drill
   :config (progn
-            (setq org-drill-save-buffers-after-drill-sessions-p t)
-            (setq org-drill-maximum-duration 90)))
+            (setq org-drill-save-buffers-after-drill-sessions-p t
+                  org-drill-maximum-duration 90
+                  org-drill-scope 'agenda)))
 #+END_SRC
 *** org-glance
 #+BEGIN_SRC emacs-lisp
