@@ -232,7 +232,7 @@ enjoy using a lot.
     (concat dir filename)))
 
 (defun sync/ (&optional filename)
-  "Get path to FILENAME in shared directory."
+  "Get path to FILENAME in sync directory."
   (let ((dir "~/sync/emacs/"))
     (make-directory dir t)
     (if filename
@@ -282,7 +282,7 @@ enjoy using a lot.
 #+BEGIN_SRC emacs-lisp
 (use-package dired+
   ;; :after (dired)
-  :load-path "~/stuff")
+  :load-path "~/sync/stuff")
 #+END_SRC
 *** buffers
 #+BEGIN_SRC emacs-lisp
@@ -586,7 +586,7 @@ enjoy using a lot.
 #+BEGIN_SRC emacs-lisp
 (use-package emms
   :config (progn
-            (add-to-list 'load-path "~/stuff/emms/lisp")
+            (add-to-list 'load-path "~/sync/stuff/emms/lisp")
             (require 'emms-setup)
             (emms-standard)
             (emms-default-players))
@@ -648,15 +648,15 @@ enjoy using a lot.
 *** org-glance
 #+BEGIN_SRC emacs-lisp
 (use-package org-glance
-  :load-path "~/stuff/org-glance")
+  :load-path "~/sync/stuff/org-glance")
 #+END_SRC
 *** org-ql
 #+BEGIN_SRC emacs-lisp
 (use-package org-ql
-  :load-path "~/stuff/org-ql")
+  :load-path "~/sync/stuff/org-ql")
 
 (use-package org-ql-agenda
-  :load-path "~/stuff/org-ql")
+  :load-path "~/sync/stuff/org-ql")
 #+END_SRC
 *** org-stuck-projects
 #+BEGIN_SRC emacs-lisp
@@ -1119,7 +1119,7 @@ bidirectional reordering.")
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
 #+BEGIN_SRC emacs-lisp
 (use-package ledna
-  :load-path "~/stuff/ledna")
+  :load-path "~/sync/stuff/ledna")
 
 (use-package org-edna
   :config (progn
@@ -1146,7 +1146,9 @@ With prefix argument, also display headlines without a TODO keyword."
   :bind (("C-x j j" . org-bookmark-jump)
          ("C-x j l" . org-bookmark-jump-local)
          ("C-x p m" . org-bookmark-set))
-  :load-path "~/stuff/org-bookmark")
+  :config (progn
+            (setq org-bookmark-file "~/sync/notes/bookmarks.org"))
+  :load-path "~/sync/stuff/org-bookmark")
 #+END_SRC
 *** org-feed
 #+BEGIN_SRC emacs-lisp
@@ -1325,11 +1327,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
         (while (re-search-forward (format "=%s " tbl-name) nil 1)
           (org-babel-when-in-src-block
            (org-ctrl-c-ctrl-c))))))
-
-;; (defun run-program-async ()
-;;   (message "Running async: " (buffer-file-name))
-;;   (async-shell-command (buffer-file-name)))
-;; (add-hook 'org-babel-post-tangle-hook #'run-program-async)
 #+END_SRC
 **** exec from results
 #+BEGIN_SRC emacs-lisp
