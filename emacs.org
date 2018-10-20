@@ -2912,6 +2912,7 @@ BEG and END (region to sort)."
 #+BEGIN_SRC emacs-lisp
 (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
+(setq byte-compile-warnings '(not cl-functions))
 
 ;; (use-package elisp-slime-nav
 ;;   :ensure t)
