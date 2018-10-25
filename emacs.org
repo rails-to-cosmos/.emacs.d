@@ -836,18 +836,11 @@ is displayed."
   ;; (wat update SUBSCRIPTION-TICKET set _PASSED += 1)
   ;; (wat update SUBSCRIPTION-TICKET do (inc-property _PASSED) (...))
 
-  (let* ((subscription-ticket (tags "TYPE=\"Subscription\"" 'file))
+  (let* ((subscription-ticket (ledna/search "TYPE=\"Subscription\"" 'file))
          (lessons-passed-count (string-to-number (car (ledna/inc-property "_PASSED" 1 "" subscription-ticket))))
          (lessons-in-subscription 12))
     (when (= (% lessons-passed-count lessons-in-subscription) 0)
-      (let* ((schedule-prop (ledna/get-property ledna-props-schedule))
-             (schedule (cadr (read schedule-prop)))
-             (next-time (get-nearest-date schedule)))
-        (set-scheduled next-time subscription-ticket)
-        (ledna/set-todo-state "TODO" subscription-ticket)
-        (org-entry-put nil "LAST_REPEAT" (format-time-string
-					  (org-time-stamp-format t t)
-					  (current-time)))))))
+      (ledna/advanced-schedule subscription-ticket))))
 #+END_SRC
 *** org-auto-property
 #+BEGIN_SRC emacs-lisp
@@ -3191,6 +3184,11 @@ BEG and END (region to sort)."
 :CUSTOM_ID: emacs.config.programming.python
 :END:
 
+**** realgud
+#+BEGIN_SRC emacs-lisp
+(use-package realgud
+  :ensure t)
+#+END_SRC
 **** elpygen
 #+BEGIN_SRC emacs-lisp
 (use-package elpygen
