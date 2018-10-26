@@ -596,7 +596,6 @@ enjoy using a lot.
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.org-mode
 :END:
-
 *** org-plus-contrib
 #+BEGIN_SRC emacs-lisp
 (use-package org-plus-contrib
@@ -610,6 +609,12 @@ enjoy using a lot.
          ([(shift tab)] . org-overview))
   :config (progn
             (require 'org-agenda))
+  :ensure t)
+#+END_SRC
+*** org-super-agenda
+#+BEGIN_SRC emacs-lisp
+(use-package org-super-agenda
+  :config (org-super-agenda-mode)
   :ensure t)
 #+END_SRC
 *** modules
@@ -1509,7 +1514,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
               org-log-note-clock-out nil
               org-log-states-order-reversed nil
               org-log-reschedule 'time
-              org-log-redeadline 'time)
+              org-log-redeadline 'time
+              org-deadline-warning-days 360)
 
 (setq org-log-note-headings '((done . "CLOSING NOTE T:%t")
                               (state . "State %-12s from %-12S T:%t")
