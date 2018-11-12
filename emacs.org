@@ -736,7 +736,7 @@ is displayed."
 
 (defun org-launch-password-manager()
   (interactive)
-  (setq org-sec-file "~/sync/notes/pwd.org")
+  (setq org-sec-file "~/sync/glance/passwords.org")
   (org-glance
    :scope (list org-sec-file 'org-clocking-buffer 'current-buffer)
    :action #'org-password-manager/extract-sec-data
@@ -1070,7 +1070,7 @@ With prefix argument, also display headlines without a TODO keyword."
          ("C-x j l" . org-bookmark-jump-local)
          ("C-x p m" . org-bookmark-set))
   :config (progn
-            (setq org-bookmark-file "~/sync/notes/bookmarks.org"))
+            (setq org-bookmark-file "~/sync/glance/bookmarks.org"))
   :load-path "~/sync/stuff/org-bookmark")
 #+END_SRC
 *** org-feed
