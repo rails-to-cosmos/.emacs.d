@@ -593,84 +593,66 @@ enjoy using a lot.
   :ensure t)
 #+END_SRC
 ** Org
-:PROPERTIES:
-:CUSTOM_ID: emacs.config.org-mode
-:END:
-*** org-plus-contrib
-#+BEGIN_SRC emacs-lisp
-(use-package org-plus-contrib
-  :bind (("C-x l" . org-store-link)
-         ("C-c a" . org-agenda)
-         ("C-c c" . org-capture)
-         :map org-mode-map
-         ("C-M-n" . ded/org-show-next-heading-tidily)
-         ("C-M-p" . ded/org-show-previous-heading-tidily)
-         ("C-c f" . org-sparse-tree)
-         ([(shift tab)] . org-overview))
-  :config (progn
-            (require 'org-agenda))
-  :ensure t)
-#+END_SRC
-*** org-super-agenda
-#+BEGIN_SRC emacs-lisp
-(use-package org-super-agenda
-  :config (org-super-agenda-mode)
-  :ensure t)
-#+END_SRC
-*** modules
-#+BEGIN_SRC emacs-lisp
-(require 'org-eshell)
+*** experiments
+**** org-movies
+Playing around with youtube-dl in org-mode.
 
-(setq org-modules
-      '(org-bbdb
-        org-bibtex
-        org-crypt
-        org-eshell
-        org-gnus
-        org-id
-        org-info
-        org-jsinfo
-        org-habit
-        org-inlinetask
-        org-irc
-        org-mew
-        org-mhe
-        org-protocol
-        org-rmail
-        org-vm
-        org-wl
-        org-w3m
-        org-drill))
-#+END_SRC
-*** [[https://bitbucket.org/eeeickythump/org-drill][org-drill]]
 #+BEGIN_SRC emacs-lisp
-(use-package org-drill
-  :config (progn
-            (setq org-drill-save-buffers-after-drill-sessions-p t
-                  org-drill-maximum-duration 90
-                  org-drill-scope 'agenda)))
+(require 'org-attach)
+
+(defun seek-in-buffer (regexp)
+  (let ((report (substring-no-properties (buffer-string))))
+    (substring report (string-match regexp report) (match-end 0))))
+
+(defun async-shell-observer (id buffer)
+  (with-current-buffer buffer
+    (let ((progress-prop "Progress")
+          (progress (seek-in-buffer "\\([0-9.]+%\\)")))
+
+      (save-window-excursion
+        (org-id-goto id)
+        (org-set-property progress-prop progress))
+
+      (if (string-equal progress "100%")
+          (let ((fn (seek-in-buffer "[0-9]+\\.mp4")))
+            (kill-this-buffer)
+            (save-window-excursion
+              (org-id-goto id)
+              (org-attach-attach fn nil 'mv)
+              (org-delete-property progress-prop)))
+        (run-at-time "1 sec" nil 'async-shell-observer id buffer)))))
+
+(defun attach-this (&optional link)
+  (interactive)
+  (if (member "ATTACH" (org-get-tags-at))
+      (call-interactively 'org-attach-reveal)
+    (let ((buffer (make-temp-name "*Async Shell Command*"))
+          (id (org-id-get-create))
+          (cmd (format "youtube-dl --id %s" link)))
+      (org-set-property "ID" id)
+      (async-shell-command cmd buffer)
+      (run-at-time "3 sec" nil 'async-shell-observer id (get-buffer-create buffer)))))
 #+END_SRC
-*** org-glance
+**** [[https://github.com/Fuco1/org-radiobutton][radio]]
+#+BEGIN_SRC emacs-lisp
+(use-package org-radiobutton
+  :config (progn
+            (add-hook 'org-mode-hook 'org-radiobutton-mode))
+  :ensure t)
+#+END_SRC
+**** org-auto-property
+#+BEGIN_SRC emacs-lisp
+(defun org-auto-properties ()
+  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
+
+(add-hook 'org-after-tags-change-hook 'org-auto-properties)
+#+END_SRC
+**** org-glance
 #+BEGIN_SRC emacs-lisp
 (use-package org-glance
   :load-path "~/sync/stuff/org-glance")
 #+END_SRC
-*** org-ql
-#+BEGIN_SRC emacs-lisp
-(use-package org-ql
-  :load-path "~/sync/stuff/org-ql")
-
-(use-package org-ql-agenda
-  :load-path "~/sync/stuff/org-ql")
-#+END_SRC
-*** org-stuck-projects
-#+BEGIN_SRC emacs-lisp
-(setq org-stuck-projects
-      '("+PROJECT/-MAYBE-DONE"
-        ("NEXT" "TODO") ("@SHOP")
-        "\\<IGNORE\\>"))
-#+END_SRC
-*** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
+**** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
 #+BEGIN_SRC emacs-lisp
 (defun org-insert-file (filename)
       "Insert Elisp code block recreating FILE in the current
@@ -688,7 +670,7 @@ directory."
 	(copy-file filename basename 1)
 	(org-display-inline-images)))
 #+END_SRC
-*** password manager
+**** password-manager
 #+BEGIN_SRC emacs-lisp
 (use-package pinentry
   :config (progn
@@ -765,79 +747,69 @@ is displayed."
 
 (global-set-key (kbd "C-x y p") 'org-launch-password-manager)
 #+END_SRC
+*** org-plus-contrib
+#+BEGIN_SRC emacs-lisp
+(use-package org-plus-contrib
+  :bind (("C-c l" . org-store-link)
+         ("C-c a" . org-agenda)
+         ("C-c c" . org-capture)
+         :map org-mode-map
+         ("C-M-n" . ded/org-show-next-heading-tidily)
+         ("C-M-p" . ded/org-show-previous-heading-tidily)
+         ("C-c f" . org-sparse-tree)
+         ([(shift tab)] . org-overview))
+  :config (progn
+            (require 'org-agenda))
+  :ensure t)
+#+END_SRC
+*** org-super-agenda
+#+BEGIN_SRC emacs-lisp
+(use-package org-super-agenda
+  :config (org-super-agenda-mode)
+  :ensure t)
+#+END_SRC
+*** modules
+#+BEGIN_SRC emacs-lisp
+(require 'org-eshell)
+
+(setq org-modules
+      '(org-bbdb
+        org-bibtex
+        org-crypt
+        org-eshell
+        org-gnus
+        org-id
+        org-info
+        org-jsinfo
+        org-habit
+        org-inlinetask
+        org-irc
+        org-mew
+        org-mhe
+        org-protocol
+        org-rmail
+        org-vm
+        org-wl
+        org-w3m
+        org-drill))
+#+END_SRC
+*** [[https://bitbucket.org/eeeickythump/org-drill][org-drill]]
+#+BEGIN_SRC emacs-lisp
+(use-package org-drill
+  :config (setq org-drill-save-buffers-after-drill-sessions-p t
+                org-drill-maximum-duration 90
+                org-drill-scope 'agenda))
+#+END_SRC
 *** poporg
 #+BEGIN_SRC emacs-lisp
 (use-package poporg
       :bind (("C-c /" . poporg-dwim))
       :ensure t)
 #+END_SRC
-*** clocktable-by-tag
-#+BEGIN_SRC emacs-lisp
-(defun clocktable-by-tag/shift-cell (n)
-  (let ((str ""))
-    (dotimes (i n)
-      (setq str (concat str "| ")))
-    str))
-
-(defun clocktable-by-tag/insert-tag (params)
-  (let ((tag (plist-get params :tags)))
-    (insert "|--\n")
-    (insert (format "| %s | *Tag time* |\n" tag))
-    (let ((total 0))
-      (mapcar
-       (lambda (file)
-         (let ((clock-data (with-current-buffer (find-file-noselect file)
-                             (org-clock-get-table-data (buffer-name) params))))
-           (when (> (nth 1 clock-data) 0)
-             (setq total (+ total (nth 1 clock-data)))
-             (dolist (entry (nth 2 clock-data))
-               (insert (format "| | . %s%s | %s %.2f |\n"
-                               (org-clocktable-indent-string (nth 0 entry))
-                               (nth 1 entry)
-                               (clocktable-by-tag/shift-cell (nth 0 entry))
-                               (/ (nth 3 entry) 60.0)))))))
-       (org-agenda-files))
-      (save-excursion
-        (re-search-backward "*Tag time*")
-        (org-table-next-field)
-        (org-table-blank-field)
-        (insert (format "*%.2f*" (/ total 60.0)))))
-    (org-table-align)))
-
-(defun org-dblock-write:clocktable-by-tag (params)
-  (insert "| Tag | Headline | Time (h) |\n")
-  (insert "|     |          | <r>  |\n")
-  (let ((tags (plist-get params :tags)))
-    (mapcar (lambda (tag)
-              (setq params (plist-put params :tags tag))
-              (clocktable-by-tag/insert-tag params))
-            tags)))
-#+END_SRC
-*** custom agenda
-#+BEGIN_SRC emacs-lisp
-;; (defun my-skip-unless-hometask ()
-;;   "Skip trees that are not waiting"
-;;   (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-;;     (if (re-search-forward ":hometask:" subtree-end t)
-;;         nil          ; tag found, do not skip
-;;       subtree-end)))
-                                        ; tag not found, continue after end of subtree
-
-;; (add-to-list 'org-agenda-custom-commands '("h" "Hometasks" todo "TODO"
-;;                                            ((org-agenda-skip-function 'my-skip-unless-hometask)
-;;                                             (org-agenda-overriding-header "Hometasks: "))))
-#+END_SRC
-*** [[https://github.com/Fuco1/org-radiobutton][radio]]
-#+BEGIN_SRC emacs-lisp
-(use-package org-radiobutton
-  :config (progn
-            (add-hook 'org-mode-hook 'org-radiobutton-mode))
-  :ensure t)
-#+END_SRC
 *** reports
 #+BEGIN_SRC emacs-lisp
 (defun gym-purchase-subscription-maybe ()
-  ;; subscription-ticket (wat select entry from current-file where type="Subscription")
+  ;; subscription-ticket (wat :select entry :from current-file :where type="Subscription")
   ;; lessons-passed (wat select _PASSED from current-file where entry=subscription-ticket)
   ;; lessons-passed (wat select _PASSED from subscription-ticket)
   ;; (wat update SUBSCRIPTION-TICKET set _PASSED += 1)
@@ -848,13 +820,6 @@ is displayed."
          (lessons-in-subscription 12))
     (when (= (% lessons-passed-count lessons-in-subscription) 0)
       (ledna/advanced-schedule subscription-ticket))))
-#+END_SRC
-*** org-auto-property
-#+BEGIN_SRC emacs-lisp
-(defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
-
-(add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+END_SRC
 *** org-compl-char
 #+BEGIN_SRC emacs-lisp
@@ -948,7 +913,7 @@ When COND is nil, insert CHAR."
   (interactive "MScreen name: ")
   (save-excursion
     (ash-org-screen-helper name "-S"))
-  (insert-string (concat "[[screen:" name "]]")))
+  (insert (concat "[[screen:" name "]]")))
 
 (add-to-list 'org-link-abbrev-alist '("screen" . "elisp:(ash-org-goto-screen \"%s\")"))
 #+END_SRC
@@ -1066,45 +1031,6 @@ It is for commands that depend on the major mode. One example is
                    ("bash" "#+BEGIN_SRC bash :async\n?\n#+END_SRC" "<src lang=\"bash\">\n?\n</src>")
                    ("cpp" "#+BEGIN_SRC C++\n#include <iostream>\n\nusing namespace std;\n\nint main(int argc, char *argv[])\n{\n  ?\n  return 0;\n}\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
       do (add-to-list 'org-structure-template-alist tpl))
-#+END_SRC
-*** org-movies
-Playing around with youtube-dl in org-mode.
-
-#+BEGIN_SRC emacs-lisp
-(require 'org-attach)
-
-(defun seek-in-buffer (regexp)
-  (let ((report (substring-no-properties (buffer-string))))
-    (substring report (string-match regexp report) (match-end 0))))
-
-(defun async-shell-observer (id buffer)
-  (with-current-buffer buffer
-    (let ((progress-prop "Progress")
-          (progress (seek-in-buffer "\\([0-9.]+%\\)")))
-
-      (save-window-excursion
-        (org-id-goto id)
-        (org-set-property progress-prop progress))
-
-      (if (string-equal progress "100%")
-          (let ((fn (seek-in-buffer "[0-9]+\\.mp4")))
-            (kill-this-buffer)
-            (save-window-excursion
-              (org-id-goto id)
-              (org-attach-attach fn nil 'mv)
-              (org-delete-property progress-prop)))
-        (run-at-time "1 sec" nil 'async-shell-observer id buffer)))))
-
-(defun attach-this (&optional link)
-  (interactive)
-  (if (member "ATTACH" (org-get-tags-at))
-      (call-interactively 'org-attach-reveal)
-    (let ((buffer (make-temp-name "*Async Shell Command*"))
-          (id (org-id-get-create))
-          (cmd (format "youtube-dl --id %s" link)))
-      (org-set-property "ID" id)
-      (async-shell-command cmd buffer)
-      (run-at-time "3 sec" nil 'async-shell-observer id (get-buffer-create buffer)))))
 #+END_SRC
 *** org-table-fixed
 #+BEGIN_SRC emacs-lisp
@@ -1466,15 +1392,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
-*** org-checklist
-#+BEGIN_SRC emacs-lisp
-;; (use-package org-plus-contrib
-;;   :defer t
-;;   :ensure t)
-
-;; (require 'org-checklist)
-#+END_SRC
-*** habit
+*** org-habit
 #+BEGIN_SRC emacs-lisp :results silent
 ; position the habit graph on the agenda to the right of the default
 (setq org-habit-graph-column 75)
@@ -1498,7 +1416,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (setq epa-file-select-keys nil)
 (require 'org-crypt)
 ; Encrypt all entries before saving
-(org-crypt-use-before-save-magic)
+;; (org-crypt-use-before-save-magic)
 (setq org-tags-exclude-from-inheritance (quote ("crypt")))
 ; GPG key to use for encryption
 ;; (setq org-crypt-key "")
@@ -2250,6 +2168,12 @@ If KWD is a number, get the corresponding match group."
 (define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
 #+END_SRC
 ** Utils
+*** find file in project
+#+BEGIN_SRC emacs-lisp
+(use-package find-file-in-project
+  :bind ("C-x f" . find-file-in-current-directory)
+  :ensure t)
+#+END_SRC
 *** syncthing-conflict-manager
 #+BEGIN_SRC emacs-lisp
 (defun syncthing-get-conflicted-files ()
