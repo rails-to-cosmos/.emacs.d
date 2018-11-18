@@ -756,7 +756,9 @@ is displayed."
   (interactive)
   (setq org-sec-file "~/sync/glance/passwords.org")
   (org-glance
-   :scope (list org-sec-file 'org-clocking-buffer 'current-buffer)
+   :scope (list org-sec-file 'org-clocking-buffer ;; 'current-buffer
+                )
+
    :action #'org-password-manager/extract-sec-data
    :filter 'encrypted
    :outline-path-ignore '("# Passwords")))
@@ -3161,7 +3163,7 @@ BEG and END (region to sort)."
 **** Irony
 #+BEGIN_SRC emacs-lisp
 (use-package irony
-  :mode ("\\.cpp\\'" . c++-mode)
+  :mode ("\\.cpp\\'" . irony-mode)
   :bind (:map irony-mode-map
               ("C-c r" . irony-launch-program))
   :config (progn
