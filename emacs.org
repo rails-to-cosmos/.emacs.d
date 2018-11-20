@@ -1230,10 +1230,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   (while (org-at-table-p)
     (next-line)))
 
-(defun orgtbl-tangle-relatives ()
+(defun org-babel-tangle-relatives ()
   (interactive)
   (when (org-at-table-p)
-
     (if-let (tbl-name (condition-case nil (orgtbl-get-name-at-point) (error nil)))
         (save-excursion
           (beginning-of-buffer)
@@ -1366,26 +1365,15 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (insert "\n// End:")
     (save-buffer)))
 
-(defun cpp/mine-compile ()
-  (let ((fn (ob-async--generate-uuid)))
-    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))))
-
 (defun cpp/mine-compile-run ()
-  (let ((fn (ob-async--generate-uuid)))
-    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))
-    (sit-for 1)
-    (async-shell-command (expand-file-name fn))))
-
-(defun cpp/tangle-compile ()
-  (interactive)
-  (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile)
-  (save-buffer)
-  (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile))
+  (compile "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main")
+  (sit-for 1)
+  (async-shell-command (expand-file-name "main")))
 
 (defun cpp/tangle-compile-run ()
   (interactive)
   (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run)
-  (save-buffer)
+  (org-babel-tangle-relatives)
   (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run))
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
