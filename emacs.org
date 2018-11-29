@@ -1029,7 +1029,7 @@ It is for commands that depend on the major mode. One example is
                    ("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC" "<src lang=\"emacs-lisp\">\n?\n</src>")
                    ("sql" "#+BEGIN_SRC sql\n?\n#+END_SRC" "<src lang=\"sql\">\n?\n</src>")
                    ("bash" "#+BEGIN_SRC bash :async\n?\n#+END_SRC" "<src lang=\"bash\">\n?\n</src>")
-                   ("cpp" "#+BEGIN_SRC C++\n#include <iostream>\n\nusing namespace std;\n\nint main(int argc, char *argv[])\n{\n  ?\n  return 0;\n}\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
+                   ("cpp" "#+BEGIN_SRC C++\n?\n#+END_SRC" "<src lang=\"cpp\">\n?\n</src>"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+END_SRC
 *** org-table-fixed
@@ -3087,11 +3087,12 @@ BEG and END (region to sort)."
 **** Irony
 #+BEGIN_SRC emacs-lisp
 (use-package irony
-  :mode ("\\.cpp\\'" . irony-mode)
+  :mode ("\\.cpp\\'" . c++-mode)
   :bind (:map irony-mode-map
               ("C-c r" . irony-launch-program))
   :config (progn
             (add-hook 'c++-mode-hook 'irony-mode)
+            (add-hook 'c++-mode-hook 'paredit-mode)
             (add-hook 'c-mode-hook 'irony-mode)
             (add-hook 'objc-mode-hook 'irony-mode)
             (add-hook 'irony-mode-hook 'irony-replace-completion-at-point)
