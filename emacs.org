@@ -672,80 +672,9 @@ directory."
 #+END_SRC
 **** password-manager
 #+BEGIN_SRC emacs-lisp
-(use-package pinentry
-  :config (progn
-            (setq epa-pinentry-mode 'loopback)
-            (pinentry-start))
-  :ensure t)
-
-(defun tiny-menu-quit-override (&optional menu)
-  "Display the items in MENU and run the selected item.
-
-If MENU is not given, a dynamically generated menu of available menus
-is displayed."
-  (interactive)
-  (if (< (length tiny-menu-items) 1)
-      (message "Configure tiny-menu-items first.")
-    (setq menu (tiny-menu--lookup-transition nil (or menu "root")))
-    (while menu
-      (let* ((title (car menu))
-             (items (if (member "quit" (mapcar #'(lambda (row) (car (last row))) (cadr menu)))
-                        (cadr menu)
-                      (append (cadr menu) '((?q "Quit" nil "quit")))))
-             (prompt (concat (propertize (concat title ": ") 'face 'default)
-                             (mapconcat (lambda (i)
-                                          (concat
-                                           (propertize (concat
-                                                        "[" (char-to-string (nth 0 i)) "] ")
-                                                       'face 'tiny-menu-heading-face)
-                                           (nth 1 i)))
-                                        items ", ")))
-             (choices (mapcar (lambda (i) (nth 0 i)) items))
-             (choice (assoc (read-char-choice prompt choices) items)))
-        (when (functionp (nth 2 choice))
-          (progn (message "")
-                 (condition-case nil
-                     (call-interactively (nth 2 choice))
-                   ((wrong-type-argument)
-                    (funcall (nth 2 choice))))))
-        (setq menu (tiny-menu--lookup-transition menu (nth 3 choice)))))
-    (if (not (current-message))
-        (message "Menu ended."))))
-
-(defun org-password-manager/extract-sec-data ()
-  (when (or (org-decrypt-entry) 1)
-    (let* ((title (ledna/get-title))
-           (entries (org-edna-finder/children))
-           (tiny-menu-header "secure-data")
-           (tiny-menu-forever t)
-           (tiny-menu-items (list (list tiny-menu-header
-                                        (list title
-                                              (loop for entry in entries
-                                                    collect (let* ((entry-title (ledna/get-title entry))
-                                                                   (entry-first-char (string-to-char entry-title))
-                                                                   (entry-value (ledna/get-property "VALUE" entry ""))
-                                                                   (entry-handler (ledna/get-property "HANDLER" entry "kill-new")))
-                                                              (list entry-first-char entry-title
-                                                                    (lexical-let
-                                                                        ((val entry-value)
-                                                                         (handler entry-handler))
-                                                                      (lambda () (funcall (read handler) val)))))
-                                                    into tiny-menu-items
-                                                    finally (return (nconc tiny-menu-items (list (list ?q "Quit: " (lambda () (kill-new "") (setq kill-ring nil)) "quit"))))))))))
-      (tiny-menu-quit-override tiny-menu-header))))
-
-(defun org-launch-password-manager()
-  (interactive)
-  (setq org-sec-file "~/sync/glance/passwords.org")
-  (org-glance
-   :scope (list org-sec-file 'org-clocking-buffer ;; 'current-buffer
-                )
-
-   :action #'org-password-manager/extract-sec-data
-   :filter 'encrypted
-   :outline-path-ignore '("# Passwords")))
-
-(global-set-key (kbd "C-x y p") 'org-launch-password-manager)
+(use-package org-glance-password-manager
+  :bind ("C-x y p" . org-launch-password-manager)
+  :load-path "~/sync/stuff/org-glance-password-manager")
 #+END_SRC
 *** org-plus-contrib
 #+BEGIN_SRC emacs-lisp
@@ -1232,10 +1161,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
   (while (org-at-table-p)
     (next-line)))
 
-(defun orgtbl-tangle-relatives ()
+(defun org-babel-tangle-relatives ()
   (interactive)
   (when (org-at-table-p)
-
     (if-let (tbl-name (condition-case nil (orgtbl-get-name-at-point) (error nil)))
         (save-excursion
           (beginning-of-buffer)
@@ -1368,26 +1296,15 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (insert "\n// End:")
     (save-buffer)))
 
-(defun cpp/mine-compile ()
-  (let ((fn (ob-async--generate-uuid)))
-    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))))
-
 (defun cpp/mine-compile-run ()
-  (let ((fn (ob-async--generate-uuid)))
-    (compile (format "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o %s" fn))
-    (sit-for 1)
-    (async-shell-command (expand-file-name fn))))
-
-(defun cpp/tangle-compile ()
-  (interactive)
-  (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile)
-  (save-buffer)
-  (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile))
+  (compile "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main")
+  (sit-for 1)
+  (async-shell-command (expand-file-name "main")))
 
 (defun cpp/tangle-compile-run ()
   (interactive)
   (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run)
-  (save-buffer)
+  (org-babel-tangle-relatives)
   (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run))
 
 (add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
