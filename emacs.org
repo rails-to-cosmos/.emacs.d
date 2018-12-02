@@ -2760,7 +2760,25 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+*** ggtags
+#+BEGIN_SRC emacs-lisp
+(use-package ggtags
+  :config (progn
+            (require 'ggtags)
+            (add-hook 'c-mode-common-hook
+                      (lambda ()
+                        (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+                          (ggtags-mode 1))))
 
+            (define-key ggtags-mode-map (kbd "C-c y g s") 'ggtags-find-other-symbol)
+            (define-key ggtags-mode-map (kbd "C-c y g h") 'ggtags-view-tag-history)
+            (define-key ggtags-mode-map (kbd "C-c y g r") 'ggtags-find-reference)
+            (define-key ggtags-mode-map (kbd "C-c y g f") 'ggtags-find-file)
+            (define-key ggtags-mode-map (kbd "C-c y g c") 'ggtags-create-tags)
+            (define-key ggtags-mode-map (kbd "C-c y g u") 'ggtags-update-tags)
+            (define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark))
+  :ensure t)
+#+END_SRC
 *** clojure
 #+BEGIN_SRC emacs-lisp
 (require 'ob-clojure)
