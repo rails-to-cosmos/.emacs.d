@@ -637,22 +637,23 @@ enjoy using a lot.
 #+END_SRC
 **** build
 #+BEGIN_SRC emacs-lisp
-(defun literate-devtools/build ()
+(defun literate-devtools-build ()
   (interactive)
   (let ((project-files (files-in-below-directory "./")))
     (org-babel-tangle)
     (mapc 'load-file project-files)
     (mapc 'byte-compile-file project-files)
 
-    (let* ((ert-stats (ert-run-tests-interactively test-selector test-buffer))
+    (let* ((ert-stats (ert-run-tests-interactively org-literate-test-selector org-literate-test-buffer))
            (expected (ert-stats-completed-expected ert-stats))
            (unexpected (ert-stats-completed-unexpected ert-stats))
            (skipped (ert-stats-skipped ert-stats))
            (total (ert-stats-total ert-stats))
-           (report (list total expected unexpected skipped)))
-      (apply 'message (append '("Build finished. Ran %d tests, %d were as expected, %d failed, %d skipped") report)))))
+           (report (list "Build finished. Ran %d tests, %d were as expected, %d failed, %d skipped"
+                         total expected unexpected skipped)))
+      (apply 'message report))))
 
-(global-set-key (kbd "C-x y m") 'literate-devtools/build)
+(global-set-key (kbd "C-x y m") 'literate-devtools-build)
 #+END_SRC
 *** experiments
 **** org-movies
