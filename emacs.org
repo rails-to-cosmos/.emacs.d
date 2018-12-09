@@ -594,6 +594,196 @@ enjoy using a lot.
 #+END_SRC
 ** Org
 *** literate-devtools
+**** tangle-relatives
+#+BEGIN_SRC emacs-lisp
+(defun org-literate-devtools/tangle-relatives (&optional arg target-file lang)
+  "Write code blocks to source-specific files.
+Extract the bodies of all source code blocks from the current
+file into their own source-specific files.
+With one universal prefix argument, only tangle the block at point.
+When two universal prefix arguments, only tangle blocks for the
+tangle file of the block at point.
+Optional argument TARGET-FILE can be used to specify a default
+export file for all source blocks.  Optional argument LANG can be
+used to limit the exported source code blocks by language."
+  (interactive "P")
+  (run-hooks 'org-babel-pre-tangle-hook)
+  ;; Possibly Restrict the buffer to the current code block
+  (save-restriction
+    (save-excursion
+      (when (equal arg '(4))
+	(let ((head (org-babel-where-is-src-block-head)))
+	  (if head
+	      (goto-char head)
+	    (user-error "Point is not in a source code block"))))
+      (let ((block-counter 0)
+	    (org-babel-default-header-args
+	     (if target-file
+		 (org-babel-merge-params org-babel-default-header-args
+					 (list (cons :tangle target-file)))
+	       org-babel-default-header-args))
+	    (tangle-file
+	     (when (equal arg '(16))
+	       (or (cdr (assq :tangle (nth 2 (org-babel-get-src-block-info 'light))))
+		   (user-error "Point is not in a source code block"))))
+	    path-collector)
+	(mapc ;; map over all languages
+	 (lambda (by-lang)
+	   (let* ((lang (car by-lang))
+		  (specs (cdr by-lang))
+		  (ext (or (cdr (assoc lang org-babel-tangle-lang-exts)) lang))
+		  (lang-f (intern
+			   (concat
+			    (or (and (cdr (assoc lang org-src-lang-modes))
+				     (symbol-name
+				      (cdr (assoc lang org-src-lang-modes))))
+				lang)
+			    "-mode")))
+		  she-banged)
+	     (mapc
+	      (lambda (spec)
+		(let ((get-spec (lambda (name) (cdr (assoc name (nth 4 spec))))))
+		  (let* ((tangle (funcall get-spec :tangle))
+			 (she-bang (let ((sheb (funcall get-spec :shebang)))
+                                     (when (> (length sheb) 0) sheb)))
+			 (tangle-mode (funcall get-spec :tangle-mode))
+			 (base-name (cond
+				     ((string= "yes" tangle)
+				      (file-name-sans-extension
+				       (nth 1 spec)))
+				     ((string= "no" tangle) nil)
+				     ((> (length tangle) 0) tangle)))
+			 (file-name (when base-name
+				      ;; decide if we want to add ext to base-name
+				      (if (and ext (string= "yes" tangle))
+					  (concat base-name "." ext) base-name))))
+		    (when file-name
+		      ;; Possibly create the parent directories for file.
+		      (let ((m (funcall get-spec :mkdirp))
+			    (fnd (file-name-directory file-name)))
+			(and m fnd (not (string= m "no"))
+			     (make-directory fnd 'parents)))
+		      ;; delete any old versions of file
+		      (and (file-exists-p file-name)
+			   (not (member file-name (mapcar #'car path-collector)))
+			   (delete-file file-name))
+		      ;; drop source-block to file
+		      (with-temp-buffer
+			(when (fboundp lang-f) (ignore-errors (funcall lang-f)))
+			(when (and she-bang (not (member file-name she-banged)))
+			  (insert (concat she-bang "\n"))
+			  (setq she-banged (cons file-name she-banged)))
+			(org-babel-spec-to-string spec)
+			;; We avoid append-to-file as it does not work with tramp.
+			(let ((content (buffer-string)))
+			  (with-temp-buffer
+			    (when (file-exists-p file-name)
+			      (insert-file-contents file-name))
+			    (goto-char (point-max))
+			    ;; Handle :padlines unless first line in file
+			    (unless (or (string= "no" (cdr (assq :padline (nth 4 spec))))
+					(= (point) (point-min)))
+			      (insert "\n"))
+			    (insert content)
+			    (write-region nil nil file-name))))
+		      ;; if files contain she-bangs, then make the executable
+		      (when she-bang
+			(unless tangle-mode (setq tangle-mode #o755)))
+		      ;; update counter
+		      (setq block-counter (+ 1 block-counter))
+		      (unless (assoc file-name path-collector)
+			(push (cons file-name tangle-mode) path-collector))))))
+	      specs)))
+         (org-literate-devtools/collect-relative-blocks))
+
+	;; run `org-babel-post-tangle-hook' in all tangled files
+	(when org-babel-post-tangle-hook
+	  (mapc
+	   (lambda (file)
+	     (org-babel-with-temp-filebuffer file
+	       (run-hooks 'org-babel-post-tangle-hook)))
+	   (mapcar #'car path-collector)))
+	;; set permissions on tangled files
+	(mapc (lambda (pair)
+		(when (cdr pair) (set-file-modes (car pair) (cdr pair))))
+	      path-collector)
+
+        (message "Tangled %d code block%s from %s to %s" block-counter
+		 (if (= block-counter 1) "" "s")
+		 (file-name-nondirectory
+		  (buffer-file-name
+		   (or (buffer-base-buffer) (current-buffer))))
+                 (caar path-collector))))))
+
+(defun org-literate-devtools/collect-relative-blocks ()
+  (let* ((counter 0) last-heading-pos blocks
+         (info (org-babel-get-src-block-info 'light))
+         (babel-params (nth 2 info))
+         (src-tfile (alist-get :tangle babel-params))
+         (src-lang (car info)))
+
+    (org-babel-map-src-blocks (buffer-file-name)
+      (unless (org-in-commented-heading-p)
+	(let* ((info (org-babel-get-src-block-info 'light))
+               (params (nth 2 info))
+               (tangle-file (alist-get :tangle params))
+               (block (unless (or (string= src-tfile "no")
+		                  (and tangle-file (not (equal tangle-file src-tfile))))
+                        (cl-incf counter)
+                        (org-babel-tangle-single-block counter))))
+          (push (cons src-lang (list block)) blocks))))
+
+    ;; Ensure blocks are in the correct order.
+    (nreverse blocks)))
+#+END_SRC
+**** compile tangled file
+#+BEGIN_SRC emacs-lisp
+(defun org-literate-devtools/compile-tangled-file()
+  (interactive)
+  (save-window-excursion
+    (org-literate-devtools/tangle-relatives)
+    (org-literate-devtools/goto-tangled-file)
+    (org-literate-devtools/ensure-local-var 'compile-command)
+
+    ;; clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main
+    (compile compile-command))
+  (switch-to-buffer-other-window "*compilation*"))
+
+(org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
+#+END_SRC
+**** get tangled files from subtree
+#+BEGIN_SRC emacs-lisp
+(defun org-literate-devtools/get-tangle-files-from-subtree()
+  (interactive)
+  (if (org-babel-at-src-block-p)
+      (list (nth 2 (org-babel-get-src-block-info 'light)))
+    (save-restriction
+      (org-narrow-to-subtree)
+      (let ((-compare-fn #'string=))
+        (-distinct
+         (-flatten
+          (org-element-map (org-element-parse-buffer 'headline) 'headline
+            (lambda (hl)
+              (save-excursion
+                (let ((begin (org-element-property :begin hl)))
+                  (goto-char begin)
+                  (loop for params in (org-babel-params-from-properties)
+                        collect (alist-get :tangle params))))))))))))
+#+END_SRC
+**** goto tangled file
+#+BEGIN_SRC emacs-lisp
+(defun org-literate-devtools/goto-tangle-file()
+  (interactive)
+  (let ((tf (org-literate-devtools/get-tangle-files-from-subtree)))
+    (unless tf
+      (error "No tangle files all the way down"))
+    (find-file
+     (if (> (length tf) 1)
+         (org-completing-read "Choose file to visit: " tf)
+       (car tf)))))
+
+(org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/goto-tangle-file)
+#+END_SRC
 **** locate el files
 #+BEGIN_SRC emacs-lisp
 (defun files-in-below-directory (directory)
@@ -1129,148 +1319,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+BEGIN_SRC emacs-lisp
 (setq org-src-window-setup 'current-window)
 #+END_SRC
-**** tangle-relatives
-#+BEGIN_SRC emacs-lisp
-(defun org-babel-tangle-relative-blocks (&optional arg target-file lang)
-  "Write code blocks to source-specific files.
-Extract the bodies of all source code blocks from the current
-file into their own source-specific files.
-With one universal prefix argument, only tangle the block at point.
-When two universal prefix arguments, only tangle blocks for the
-tangle file of the block at point.
-Optional argument TARGET-FILE can be used to specify a default
-export file for all source blocks.  Optional argument LANG can be
-used to limit the exported source code blocks by language."
-  (interactive "P")
-  (run-hooks 'org-babel-pre-tangle-hook)
-  ;; Possibly Restrict the buffer to the current code block
-  (save-restriction
-    (save-excursion
-      (when (equal arg '(4))
-	(let ((head (org-babel-where-is-src-block-head)))
-	  (if head
-	      (goto-char head)
-	    (user-error "Point is not in a source code block"))))
-      (let ((block-counter 0)
-	    (org-babel-default-header-args
-	     (if target-file
-		 (org-babel-merge-params org-babel-default-header-args
-					 (list (cons :tangle target-file)))
-	       org-babel-default-header-args))
-	    (tangle-file
-	     (when (equal arg '(16))
-	       (or (cdr (assq :tangle (nth 2 (org-babel-get-src-block-info 'light))))
-		   (user-error "Point is not in a source code block"))))
-	    path-collector)
-	(mapc ;; map over all languages
-	 (lambda (by-lang)
-	   (let* ((lang (car by-lang))
-		  (specs (cdr by-lang))
-		  (ext (or (cdr (assoc lang org-babel-tangle-lang-exts)) lang))
-		  (lang-f (intern
-			   (concat
-			    (or (and (cdr (assoc lang org-src-lang-modes))
-				     (symbol-name
-				      (cdr (assoc lang org-src-lang-modes))))
-				lang)
-			    "-mode")))
-		  she-banged)
-	     (mapc
-	      (lambda (spec)
-		(let ((get-spec (lambda (name) (cdr (assoc name (nth 4 spec))))))
-		  (let* ((tangle (funcall get-spec :tangle))
-			 (she-bang (let ((sheb (funcall get-spec :shebang)))
-                                     (when (> (length sheb) 0) sheb)))
-			 (tangle-mode (funcall get-spec :tangle-mode))
-			 (base-name (cond
-				     ((string= "yes" tangle)
-				      (file-name-sans-extension
-				       (nth 1 spec)))
-				     ((string= "no" tangle) nil)
-				     ((> (length tangle) 0) tangle)))
-			 (file-name (when base-name
-				      ;; decide if we want to add ext to base-name
-				      (if (and ext (string= "yes" tangle))
-					  (concat base-name "." ext) base-name))))
-		    (when file-name
-		      ;; Possibly create the parent directories for file.
-		      (let ((m (funcall get-spec :mkdirp))
-			    (fnd (file-name-directory file-name)))
-			(and m fnd (not (string= m "no"))
-			     (make-directory fnd 'parents)))
-		      ;; delete any old versions of file
-		      (and (file-exists-p file-name)
-			   (not (member file-name (mapcar #'car path-collector)))
-			   (delete-file file-name))
-		      ;; drop source-block to file
-		      (with-temp-buffer
-			(when (fboundp lang-f) (ignore-errors (funcall lang-f)))
-			(when (and she-bang (not (member file-name she-banged)))
-			  (insert (concat she-bang "\n"))
-			  (setq she-banged (cons file-name she-banged)))
-			(org-babel-spec-to-string spec)
-			;; We avoid append-to-file as it does not work with tramp.
-			(let ((content (buffer-string)))
-			  (with-temp-buffer
-			    (when (file-exists-p file-name)
-			      (insert-file-contents file-name))
-			    (goto-char (point-max))
-			    ;; Handle :padlines unless first line in file
-			    (unless (or (string= "no" (cdr (assq :padline (nth 4 spec))))
-					(= (point) (point-min)))
-			      (insert "\n"))
-			    (insert content)
-			    (write-region nil nil file-name))))
-		      ;; if files contain she-bangs, then make the executable
-		      (when she-bang
-			(unless tangle-mode (setq tangle-mode #o755)))
-		      ;; update counter
-		      (setq block-counter (+ 1 block-counter))
-		      (unless (assoc file-name path-collector)
-			(push (cons file-name tangle-mode) path-collector))))))
-	      specs)))
-         (org-babel-tangle-collect-relative-blocks))
-
-	;; run `org-babel-post-tangle-hook' in all tangled files
-	(when org-babel-post-tangle-hook
-	  (mapc
-	   (lambda (file)
-	     (org-babel-with-temp-filebuffer file
-	       (run-hooks 'org-babel-post-tangle-hook)))
-	   (mapcar #'car path-collector)))
-	;; set permissions on tangled files
-	(mapc (lambda (pair)
-		(when (cdr pair) (set-file-modes (car pair) (cdr pair))))
-	      path-collector)
-
-        (message "Tangled %d code block%s from %s to %s" block-counter
-		 (if (= block-counter 1) "" "s")
-		 (file-name-nondirectory
-		  (buffer-file-name
-		   (or (buffer-base-buffer) (current-buffer))))
-                 (caar path-collector))))))
-
-(defun org-babel-tangle-collect-relative-blocks ()
-  (let* ((counter 0) last-heading-pos blocks
-         (info (org-babel-get-src-block-info 'light))
-         (babel-params (nth 2 info))
-         (src-tfile (alist-get :tangle babel-params))
-         (src-lang (car info)))
-
-    (org-babel-map-src-blocks (buffer-file-name)
-      (unless (org-in-commented-heading-p)
-	(let* ((info (org-babel-get-src-block-info 'light))
-               (params (nth 2 info))
-               (tangle-file (alist-get :tangle params))
-               (block (unless (or (string= src-tfile "no")
-		                  (and tangle-file (not (equal tangle-file src-tfile))))
-                        (cl-incf counter)
-                        (org-babel-tangle-single-block counter))))
-          (push (cons src-lang (list block)) blocks))))
-
-    ;; Ensure blocks are in the correct order.
-    (nreverse blocks)))
-#+END_SRC
 **** tangle-block
 #+BEGIN_SRC emacs-lisp
 (defun org-babel-tangle-block ()
@@ -1496,31 +1544,6 @@ used to limit the exported source code blocks by language."
 
 (use-package ob-restclient
   :ensure t)
-#+END_SRC
-**** cpp
-#+BEGIN_SRC emacs-lisp
-(defun cpp/handy-local-vars ()
-  (when (string= major-mode "c++-mode")
-    (end-of-buffer)
-    (insert "\n// Local Variables:")
-    (insert "\n// compile-command: \"clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main\"")
-    (insert "\n// mode: C++")
-    (insert "\n// fill-column: 80")
-    (insert "\n// End:")
-    (save-buffer)))
-
-(defun cpp/mine-compile-run ()
-  (compile "clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main")
-  (sit-for 1)
-  (async-shell-command (expand-file-name "main")))
-
-(defun cpp/tangle-compile-run ()
-  (interactive)
-  (add-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run)
-  (org-babel-tangle-relatives)
-  (remove-hook 'org-babel-post-tangle-hook 'cpp/mine-compile-run))
-
-(add-hook 'org-babel-post-tangle-hook 'cpp/handy-local-vars)
 #+END_SRC
 *** org-habit
 #+BEGIN_SRC emacs-lisp :results silent
@@ -1871,9 +1894,9 @@ If KWD is a number, get the corresponding match group."
  org-agenda-use-tag-inheritance nil
  org-use-tag-inheritance nil
  org-tags-column 80
- org-refile-use-outline-path (quote file)
+ org-refile-use-outline-path nil
  org-refile-targets (quote ((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
- org-outline-path-complete-in-steps t
+ org-outline-path-complete-in-steps nil
  org-ellipsis " ↓"
  org-hide-leading-stars t
  org-startup-indented t
@@ -3412,7 +3435,7 @@ BEG and END (region to sort)."
 (delete-selection-mode 1)
 (blink-cursor-mode 0)
 
-(lexical-let ((font-size 12)
+(lexical-let ((font-size 10)
               (font-name "Inconsolata LGC"))
   (custom-set-faces
    (list 'default (list (list t (list :inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
