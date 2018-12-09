@@ -635,14 +635,23 @@ enjoy using a lot.
     ;; return the filenames
     el-files-list))
 #+END_SRC
+**** ensure local vars
+#+BEGIN_SRC emacs-lisp
+(defun org-literate-devtools/ensure-local-var(symbol)
+  (unless (boundp symbol)
+    (let ((value (read-string (format "%s: " (symbol-name symbol)))))
+      (add-file-local-variable symbol value))))
+#+END_SRC
 **** build
 #+BEGIN_SRC emacs-lisp
-(defun literate-devtools-build ()
+(defun org-literate-devtools/build ()
   (interactive)
   (let ((project-files (files-in-below-directory "./")))
     (org-babel-tangle)
     (mapc 'load-file project-files)
     (mapc 'byte-compile-file project-files)
+    (mapc 'org-literate-devtools/ensure-local-var
+          '(org-literate-test-selector org-literate-test-buffer))
 
     (let* ((ert-stats (ert-run-tests-interactively org-literate-test-selector org-literate-test-buffer))
            (expected (ert-stats-completed-expected ert-stats))
@@ -653,7 +662,7 @@ enjoy using a lot.
                          total expected unexpected skipped)))
       (apply 'message report))))
 
-(global-set-key (kbd "C-x y m") 'literate-devtools-build)
+(global-set-key (kbd "C-x y m") 'org-literate-devtools/build)
 #+END_SRC
 *** experiments
 **** org-movies
