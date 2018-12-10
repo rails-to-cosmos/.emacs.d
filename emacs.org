@@ -742,7 +742,7 @@ used to limit the exported source code blocks by language."
   (interactive)
   (save-window-excursion
     (org-literate-devtools/tangle-relatives)
-    (org-literate-devtools/goto-tangled-file)
+    (org-literate-devtools/goto-tangle-file)
     (org-literate-devtools/ensure-local-var 'compile-command)
 
     ;; clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main
@@ -751,26 +751,36 @@ used to limit the exported source code blocks by language."
 
 (org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
 #+END_SRC
-**** get tangled files from subtree
+**** get tangle files from subtree
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/get-tangle-files-from-subtree()
   (interactive)
-  (if (org-babel-at-src-block-p)
-      (list (nth 2 (org-babel-get-src-block-info 'light)))
-    (save-restriction
-      (org-narrow-to-subtree)
-      (let ((-compare-fn #'string=))
-        (-distinct
-         (-flatten
-          (org-element-map (org-element-parse-buffer 'headline) 'headline
-            (lambda (hl)
-              (save-excursion
-                (let ((begin (org-element-property :begin hl)))
-                  (goto-char begin)
-                  (loop for params in (org-babel-params-from-properties)
-                        collect (alist-get :tangle params))))))))))))
+
+  (save-restriction
+    (condition-case nil
+        (org-narrow-to-subtree)
+      (error nil))
+
+    (let ((-compare-fn (lambda (S1 S2) (string= (expand-file-name S1) (expand-file-name S2)))))
+      (-distinct
+       (append
+
+        ;; extract tangle files from babel blocks
+        (org-element-map (org-element-parse-buffer 'element) 'src-block
+          (lambda (src-block)
+            (alist-get :tangle
+                       (org-babel-parse-header-arguments
+                        (org-element-property :parameters src-block)))))
+
+        ;; extract tangle files from headline properties
+        (org-element-map (org-element-parse-buffer 'element) 'node-property
+          (lambda (node-property)
+            (when (string= "HEADER-ARGS" (upcase (org-element-property :key node-property)))
+              (alist-get :tangle
+                         (org-babel-parse-header-arguments
+                          (org-element-property :value node-property)))))))))))
 #+END_SRC
-**** goto tangled file
+**** goto tangle file
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/goto-tangle-file()
   (interactive)
