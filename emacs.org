@@ -753,32 +753,40 @@ used to limit the exported source code blocks by language."
 #+END_SRC
 **** get tangle files from subtree
 #+BEGIN_SRC emacs-lisp
-(defun org-literate-devtools/get-tangle-files-from-subtree()
-  (interactive)
+(defun org-literate-devtools/get-tangle-files-from-buffer ()
+  (-distinct
+   (-flatten
+    (org-element-map (org-element-parse-buffer 'element) 'src-block
+      (lambda (datum)
+        (let* ((lang (org-element-property :language datum))
+               (ext (or (cdr (assoc lang org-babel-tangle-lang-exts)) lang))
+               (point (org-element-property :begin datum)))
 
+          (org-with-point-at point
+            (loop for (key . value) in
+                  (-flatten
+                   (append
+                    (org-babel-params-from-properties lang)
+                    (mapcar #'org-babel-parse-header-arguments
+	                    (cons (org-element-property :parameters datum)
+	                          (org-element-property :header datum)))))
+                  when (eq key :tangle)
+                  when (string= value "yes")
+                  collect (expand-file-name
+                           (concat
+                            (file-name-sans-extension
+                             (buffer-file-name)) "." ext))
+                  else
+                  unless (string= value "no")
+                  collect (expand-file-name value)))))))))
+
+(defun org-literate-devtools/get-tangle-files-from-subtree ()
+  (interactive)
   (save-restriction
     (condition-case nil
         (org-narrow-to-subtree)
       (error nil))
-
-    (let ((-compare-fn (lambda (S1 S2) (string= (expand-file-name S1) (expand-file-name S2)))))
-      (-distinct
-       (append
-
-        ;; extract tangle files from babel blocks
-        (org-element-map (org-element-parse-buffer 'element) 'src-block
-          (lambda (src-block)
-            (alist-get :tangle
-                       (org-babel-parse-header-arguments
-                        (org-element-property :parameters src-block)))))
-
-        ;; extract tangle files from headline properties
-        (org-element-map (org-element-parse-buffer 'element) 'node-property
-          (lambda (node-property)
-            (when (string= "HEADER-ARGS" (upcase (org-element-property :key node-property)))
-              (alist-get :tangle
-                         (org-babel-parse-header-arguments
-                          (org-element-property :value node-property)))))))))))
+    (org-literate-devtools/get-source-blocks-from-buffer)))
 #+END_SRC
 **** goto tangle file
 #+BEGIN_SRC emacs-lisp
@@ -789,7 +797,7 @@ used to limit the exported source code blocks by language."
       (error "No tangle files all the way down"))
     (find-file
      (if (> (length tf) 1)
-         (org-completing-read "Choose file to visit: " tf)
+         (org-completing-read "Choose tangle file to visit: " tf)
        (car tf)))))
 
 (org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/goto-tangle-file)
