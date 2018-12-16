@@ -745,7 +745,6 @@ used to limit the exported source code blocks by language."
     (org-literate-devtools/goto-tangle-file)
     (org-literate-devtools/ensure-local-var 'compile-command)
 
-    ;; clang++ -std=c++14 -O2 -Wall -Werror -Wsign-compare main.cpp -o main
     (compile compile-command))
   (switch-to-buffer-other-window "*compilation*"))
 
@@ -786,7 +785,7 @@ used to limit the exported source code blocks by language."
     (condition-case nil
         (org-narrow-to-subtree)
       (error nil))
-    (org-literate-devtools/get-source-blocks-from-buffer)))
+    (org-literate-devtools/get-tangle-files-from-buffer)))
 #+END_SRC
 **** goto tangle file
 #+BEGIN_SRC emacs-lisp
@@ -1017,17 +1016,12 @@ directory."
 *** reports
 #+BEGIN_SRC emacs-lisp
 (defun gym-purchase-subscription-maybe ()
-  ;; subscription-ticket (wat :select entry :from current-file :where type="Subscription")
-  ;; lessons-passed (wat select _PASSED from current-file where entry=subscription-ticket)
-  ;; lessons-passed (wat select _PASSED from subscription-ticket)
-  ;; (wat update SUBSCRIPTION-TICKET set _PASSED += 1)
-  ;; (wat update SUBSCRIPTION-TICKET do (inc-property _PASSED) (...))
-
-  (let* ((subscription-ticket (ledna/search "TYPE=\"Subscription\"" 'file))
+  (when (y-or-n-p "Consider passed lessons count?")
+    (let* ((subscription-ticket (ledna/search "TYPE=\"Subscription\"" 'file))
          (lessons-passed-count (string-to-number (car (ledna/inc-property "_PASSED" 1 "" subscription-ticket))))
          (lessons-in-subscription 12))
     (when (= (% lessons-passed-count lessons-in-subscription) 0)
-      (ledna/advanced-schedule subscription-ticket))))
+      (ledna/advanced-schedule subscription-ticket)))))
 #+END_SRC
 *** org-compl-char
 #+BEGIN_SRC emacs-lisp
