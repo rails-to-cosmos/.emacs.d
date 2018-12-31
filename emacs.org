@@ -1495,8 +1495,8 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (search-forward "#+BEGIN_SRC")
     (org-babel-execute-maybe)))
 #+END_SRC
-**** COMMENT SOMEDAY [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
-**** COMMENT SOMEDAY [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
+**** COMMENT [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
+**** COMMENT [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
 **** ob-http
 #+BEGIN_SRC emacs-lisp :results silent
 (use-package ob-http
@@ -1509,7 +1509,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+END_SRC
 **** ob-ipython
 #+BEGIN_SRC emacs-lisp
-(when (not (string-empty-p (shell-command-to-string "which jupyter")))
+(when (file-exists-p (shell-command-to-string "which jupyter"))
   (use-package ob-ipython
     :config (progn
               (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -1554,6 +1554,14 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 ;;                 (file (error "%s is currently an unsupported file extension." (f-ext file)))
 ;;                 (t (->> result (assoc 'text/plain) cdr))))))))
 #+END_SRC
+**** ob-restclient
+#+BEGIN_SRC emacs-lisp
+(use-package restclient
+  :ensure t)
+
+(use-package ob-restclient
+  :ensure t)
+#+END_SRC
 **** ob-languages
 #+BEGIN_SRC emacs-lisp
 (setq ob-languages '((python . t)
@@ -1567,14 +1575,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
                      (lilypond . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
-#+END_SRC
-**** ob-restclient
-#+BEGIN_SRC emacs-lisp
-(use-package restclient
-  :ensure t)
-
-(use-package ob-restclient
-  :ensure t)
 #+END_SRC
 *** org-habit
 #+BEGIN_SRC emacs-lisp :results silent
