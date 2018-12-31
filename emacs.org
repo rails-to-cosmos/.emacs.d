@@ -1869,11 +1869,6 @@ If KWD is a number, get the corresponding match group."
 
 (add-hook 'org-mode-hook (lambda () (scimax-autoformat-mode)))
 #+END_SRC
-*** Select (dropdown)
-#+BEGIN_SRC emacs-lisp :results silent
-(use-package org-select
-  :load-path "packages")
-#+END_SRC
 *** Show next entry, keeping other entries closed
 #+BEGIN_SRC emacs-lisp
 (defun ded/org-show-next-heading-tidily ()
