@@ -427,6 +427,11 @@ enjoy using a lot.
   (dired/sort))
 #+END_SRC
 ** EShell
+
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-x y e") 'eshell)
+#+END_SRC
+
 *** env
 #+BEGIN_SRC emacs-lisp
 (setenv "LANG" "C")
