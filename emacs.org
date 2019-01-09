@@ -3466,23 +3466,6 @@ BEG and END (region to sort)."
 (delete-selection-mode 1)
 (blink-cursor-mode 0)
 
-(lexical-let ((font-size 10)
-              (font-name "Inconsolata LGC"))
-  (custom-set-faces
-   (list 'default (list (list t (list :inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil
-                                      :underline nil :slant 'normal :weight 'normal :height (* font-size 10) :width 'normal :foundry nil
-                                      :family font-name)))))
-
-  (defun set-proper-cyrillic-font ()
-    (when (fboundp 'set-fontset-font)
-      (set-fontset-font "fontset-default"
-                        (cons (decode-char 'ucs #x0400)
-                              (decode-char 'ucs #x052F))
-                        (font-spec :size font-size :name font-name))))
-
-  (add-hook 'org-mode-hook #'set-proper-cyrillic-font))
-
-
 (setq-default
  case-fold-search t
  compilation-scroll-output t
