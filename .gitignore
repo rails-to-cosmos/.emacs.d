@@ -54,3 +54,5 @@ packages/yandex
 .cask
 /bookmarks.org
 /abbrev_defs
+server/
+emms/
