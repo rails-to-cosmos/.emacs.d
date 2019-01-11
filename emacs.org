@@ -1095,8 +1095,10 @@ When COND is nil, insert CHAR."
   (org-compl-char "<" org-structure-template-alist
                   (lambda () (and (looking-at "^[[:space:]]*$")
                              (not (org-in-src-block-p))))
-                  (lambda (item) (org-insert-structure-template
-                                  (cdr (assoc item org-structure-template-alist))))))
+                  (lambda (item)
+                    (org-insert-structure-template (cdr (assoc item org-structure-template-alist)))
+                    (insert "\n")
+                    (previous-line))))
 
 (define-key org-mode-map (kbd "<") 'org-compl-structure)
 #+END_SRC
