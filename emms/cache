@@ -1,2 +1,0 @@
-;;; .emms-cache -*- mode: emacs-lisp; coding: utf-8; -*-
-(puthash "/Users/akatovda/Music/iTunes/iTunes Media/Music/Aerosmith/Just Push Play/01 Beyond Beautiful.m4a" '(*track* (type . file) (name . "/Users/akatovda/Music/iTunes/iTunes Media/Music/Aerosmith/Just Push Play/01 Beyond Beautiful.m4a") (metadata) (info-mtime 22739 39585 0 0)) emms-cache-db)
