@@ -432,6 +432,22 @@ enjoy using a lot.
 (global-set-key (kbd "C-x y e") 'eshell)
 #+END_SRC
 
+*** completions
+**** cd
+#+begin_src emacs-lisp
+(defun eshell/change-directory-compl ()
+  (interactive)
+  (cond
+   ((looking-back "cd" 1)
+    (insert (concat " " (read-directory-name "Choose directory: ")))
+    (eshell-send-input))
+   (t (insert " "))))
+
+(defun eshell-set-keys ()
+  (define-key eshell-mode-map (kbd "<SPC>") 'eshell/change-directory-compl))
+
+(add-hook 'eshell-first-time-mode-hook 'eshell-set-keys)
+#+end_src
 *** env
 #+BEGIN_SRC emacs-lisp
 (setenv "LANG" "C")
