@@ -438,9 +438,11 @@ enjoy using a lot.
 (defun eshell/change-directory-compl ()
   (interactive)
   (cond
+
    ((looking-back "cd" 1)
     (insert (concat " " (read-directory-name "Choose directory: ")))
     (eshell-send-input))
+
    (t (insert " "))))
 
 (defun eshell-set-keys ()
@@ -782,15 +784,13 @@ used to limit the exported source code blocks by language."
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/compile-tangled-file()
   (interactive)
-  (save-window-excursion
-    (org-literate-devtools/tangle-relatives)
-    (org-literate-devtools/goto-tangle-file)
-    (org-literate-devtools/ensure-local-var 'compile-command)
-
-    (compile compile-command))
+  (let ((cmd (org-literate-devtools/ensure-local-var 'compile-command)))
+    (save-window-excursion
+      (org-literate-devtools/goto-tangle-file)
+      (compile cmd)))
   (switch-to-buffer-other-window "*compilation*"))
 
-(org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
+(org-defkey org-mode-map (kbd "C-x l c") 'org-literate-devtools/compile-tangled-file)
 #+END_SRC
 **** get tangle files from subtree
 #+BEGIN_SRC emacs-lisp
@@ -837,14 +837,16 @@ used to limit the exported source code blocks by language."
   (interactive)
   (org-literate-devtools/tangle-relatives)
   (if-let (tangle-files (org-literate-devtools/get-tangle-files-from-subtree))
-      (find-file
-       (if (> (length tangle-files) 1)
-           (org-completing-read "Choose file to visit: " tangle-files)
-         (car tangle-files)))
+      (switch-to-buffer
+       (find-file-noselect
+        (if (> (length tangle-files) 1)
+            (org-completing-read "Choose file to visit: " tangle-files)
+          (car tangle-files))
+        t))
     (unless tangle-files
       (error "No tangle files all the way down"))))
 
-(org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/goto-tangle-file)
+(org-defkey org-mode-map (kbd "C-x l t") 'org-literate-devtools/goto-tangle-file)
 #+END_SRC
 **** locate el files
 #+BEGIN_SRC emacs-lisp
@@ -890,9 +892,10 @@ used to limit the exported source code blocks by language."
 **** ensure local vars
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/ensure-local-var(symbol)
-  (unless (boundp symbol)
+  (unless (and (boundp symbol) (local-variable-p symbol))
     (let ((value (read-string (format "%s: " (symbol-name symbol)))))
-      (add-file-local-variable symbol value))))
+      (add-file-local-variable symbol value)))
+  (eval symbol))
 #+END_SRC
 **** build
 #+BEGIN_SRC emacs-lisp
