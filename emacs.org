@@ -435,23 +435,35 @@ enjoy using a lot.
 *** completion
 **** cd
 #+begin_src emacs-lisp
-(defun eshell/change-directory-compl ()
+(defun eshell-compl-space ()
   (interactive)
   (cond
-
    ((looking-back "cd" 1)
     (condition-case exc
-        (insert (concat " " (shell-quote-argument (read-directory-name "Choose directory: "))))
-      ('quit
-       (eshell-kill-input)))
-    (eshell-send-input)
-    (insert "ls -la")
-    (eshell-send-input))
+        (progn
+          (insert " ")
+          (insert (shell-quote-argument (read-directory-name "Choose directory: ")))
+          (eshell-send-input)
+          (insert "ls -la")
+          (eshell-send-input))
 
+      ('quit
+       (eshell-kill-input))))
    (t (insert " "))))
 
+(defun eshell-compl-back ()
+  (interactive)
+  (prin1 (point-marker))
+  (prin1 eshell-last-input-start)
+  (cond
+   ((equal (point-marker) eshell-last-input-start) (eshell/cd "..") (eshell-send-input)
+    (insert "ls") (eshell-send-input)
+    (setq eshell-last-input-start (point-marker)))
+   (t (delete-backward-char 1))))
+
 (defun eshell-set-keys ()
-  (define-key eshell-mode-map (kbd "<SPC>") 'eshell/change-directory-compl))
+  (define-key eshell-mode-map (kbd "<SPC>") 'eshell-compl-space)
+  (define-key eshell-mode-map (kbd "<backspace>") 'eshell-compl-back))
 
 (add-hook 'eshell-first-time-mode-hook 'eshell-set-keys)
 #+end_src
