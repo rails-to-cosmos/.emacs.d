@@ -432,7 +432,7 @@ enjoy using a lot.
 (global-set-key (kbd "C-x y e") 'eshell)
 #+END_SRC
 
-*** completions
+*** completion
 **** cd
 #+begin_src emacs-lisp
 (defun eshell/change-directory-compl ()
@@ -1954,6 +1954,15 @@ If KWD is a number, get the corresponding match group."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+
+*** completion
+
+**** company
+#+begin_src emacs-lisp
+(use-package company
+  :config (global-company-mode)
+  :ensure t)
+#+end_src
 
 *** vlf
 #+BEGIN_SRC emacs-lisp
