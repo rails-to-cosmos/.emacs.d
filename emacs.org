@@ -442,6 +442,7 @@ enjoy using a lot.
     (condition-case exc
         (progn
           (insert " ")
+          (sit-for 0.05)
           (insert (shell-quote-argument (read-directory-name "Choose directory: ")))
           (eshell-send-input)
           (insert "ls -la")
@@ -453,10 +454,10 @@ enjoy using a lot.
 
 (defun eshell-compl-back ()
   (interactive)
-  (prin1 (point-marker))
-  (prin1 eshell-last-input-start)
   (cond
-   ((equal (point-marker) eshell-last-input-start) (eshell/cd "..") (eshell-send-input)
+   ((or (equal (point-marker) eshell-last-input-start)
+        (looking-back "λ " 1))
+    (eshell/cd "..") (eshell-send-input)
     (insert "ls") (eshell-send-input)
     (setq eshell-last-input-start (point-marker)))
    (t (delete-backward-char 1))))
