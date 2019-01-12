@@ -440,7 +440,12 @@ enjoy using a lot.
   (cond
 
    ((looking-back "cd" 1)
-    (insert (concat " " (shell-quote-argument (read-directory-name "Choose directory: "))))
+    (condition-case exc
+        (insert (concat " " (shell-quote-argument (read-directory-name "Choose directory: "))))
+      ('quit
+       (eshell-kill-input)))
+    (eshell-send-input)
+    (insert "ls -la")
     (eshell-send-input))
 
    (t (insert " "))))
