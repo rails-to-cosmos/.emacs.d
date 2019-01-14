@@ -857,10 +857,10 @@ used to limit the exported source code blocks by language."
   (if-let (tangle-files (org-literate-devtools/get-tangle-files-from-subtree))
       (switch-to-buffer
        (find-file-noselect
-        (org-completing-read "Choose file to visit: " tangle-files))
+        (org-completing-read "Choose file to visit: " tangle-files)
         t))
     (unless tangle-files
-      (error "No tangle files all the way down")))
+      (error "No tangle files all the way down"))))
 
 (org-defkey org-mode-map (kbd "C-x l t") 'org-literate-devtools/goto-tangle-file)
 #+END_SRC
