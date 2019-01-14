@@ -1093,8 +1093,10 @@ When COND is nil, insert CHAR."
 (defun org-compl-structure ()
   (interactive)
   (org-compl-char "<" org-structure-template-alist
+
                   (lambda () (and (looking-at "^[[:space:]]*$")
                              (not (org-in-src-block-p))))
+
                   (lambda (item)
                     (org-insert-structure-template (cdr (assoc item org-structure-template-alist)))
                     (insert "\n")
@@ -1250,7 +1252,7 @@ It is for commands that depend on the major mode. One example is
 *** structure-templates
 #+BEGIN_SRC emacs-lisp
 (loop for tpl in '(;; ("ls" "# Local Variables:\n?\n# End:")
-                   ("py" . "src python")
+                   ("py" . "src ipython")
                    ("el" . "src emacs-lisp")
                    ("sql" . "src sql")
                    ("bash" . "src bash")
@@ -1514,7 +1516,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+END_SRC
 **** ob-ipython
 #+BEGIN_SRC emacs-lisp
-(when (file-exists-p (shell-command-to-string "which jupyter"))
+(when (file-exists-p (s-chomp (shell-command-to-string "which jupyter")))
   (use-package ob-ipython
     :config (progn
               (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
