@@ -432,6 +432,42 @@ enjoy using a lot.
 (global-set-key (kbd "C-x y e") 'eshell)
 #+END_SRC
 
+*** completion
+**** cd
+#+begin_src emacs-lisp
+(defun eshell-compl-space ()
+  (interactive)
+  (cond
+   ((looking-back "cd" 1)
+    (condition-case exc
+        (progn
+          (insert " ")
+          (sit-for 0.05)
+          (insert (shell-quote-argument (read-directory-name "Choose directory: ")))
+          (eshell-send-input)
+          (insert "ls -la")
+          (eshell-send-input))
+
+      ('quit
+       (eshell-kill-input))))
+   (t (insert " "))))
+
+(defun eshell-compl-back ()
+  (interactive)
+  (cond
+   ((or (equal (point-marker) eshell-last-input-start)
+        (looking-back "λ " 1))
+    (eshell/cd "..") (eshell-send-input)
+    (insert "ls") (eshell-send-input)
+    (setq eshell-last-input-start (point-marker)))
+   (t (delete-backward-char 1))))
+
+(defun eshell-set-keys ()
+  (define-key eshell-mode-map (kbd "<SPC>") 'eshell-compl-space)
+  (define-key eshell-mode-map (kbd "<backspace>") 'eshell-compl-back))
+
+(add-hook 'eshell-first-time-mode-hook 'eshell-set-keys)
+#+end_src
 *** env
 #+BEGIN_SRC emacs-lisp
 (setenv "LANG" "C")
@@ -766,15 +802,13 @@ used to limit the exported source code blocks by language."
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/compile-tangled-file()
   (interactive)
-  (save-window-excursion
-    (org-literate-devtools/tangle-relatives)
-    (org-literate-devtools/goto-tangle-file)
-    (org-literate-devtools/ensure-local-var 'compile-command)
-
-    (compile compile-command))
+  (let ((cmd (org-literate-devtools/ensure-local-var 'compile-command)))
+    (save-window-excursion
+      (org-literate-devtools/goto-tangle-file)
+      (compile cmd)))
   (switch-to-buffer-other-window "*compilation*"))
 
-(org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
+(org-defkey org-mode-map (kbd "C-x l c") 'org-literate-devtools/compile-tangled-file)
 #+END_SRC
 **** get tangle files from subtree
 #+BEGIN_SRC emacs-lisp
@@ -821,14 +855,14 @@ used to limit the exported source code blocks by language."
   (interactive)
   (org-literate-devtools/tangle-relatives)
   (if-let (tangle-files (org-literate-devtools/get-tangle-files-from-subtree))
-      (find-file
-       (if (> (length tangle-files) 1)
-           (org-completing-read "Choose file to visit: " tangle-files)
-         (car tangle-files)))
+      (switch-to-buffer
+       (find-file-noselect
+        (org-completing-read "Choose file to visit: " tangle-files)
+        t))
     (unless tangle-files
       (error "No tangle files all the way down"))))
 
-(org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/goto-tangle-file)
+(org-defkey org-mode-map (kbd "C-x l t") 'org-literate-devtools/goto-tangle-file)
 #+END_SRC
 **** locate el files
 #+BEGIN_SRC emacs-lisp
@@ -874,9 +908,10 @@ used to limit the exported source code blocks by language."
 **** ensure local vars
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/ensure-local-var(symbol)
-  (unless (boundp symbol)
+  (unless (and (boundp symbol) (local-variable-p symbol))
     (let ((value (read-string (format "%s: " (symbol-name symbol)))))
-      (add-file-local-variable symbol value))))
+      (add-file-local-variable symbol value)))
+  (eval symbol))
 #+END_SRC
 **** build
 #+BEGIN_SRC emacs-lisp
@@ -1940,6 +1975,15 @@ If KWD is a number, get the corresponding match group."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+
+*** completion
+
+**** company
+#+begin_src emacs-lisp
+(use-package company
+  :config (global-company-mode)
+  :ensure t)
+#+end_src
 
 *** vlf
 #+BEGIN_SRC emacs-lisp
