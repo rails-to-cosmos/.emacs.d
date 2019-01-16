@@ -2357,7 +2357,15 @@ If KWD is a number, get the corresponding match group."
   (newline)                    ; insert a newline
   (switch-to-buffer nil))
 #+END_SRC
-*** yasnippet
+*** yankpad
+#+begin_src emacs-lisp
+(use-package yankpad
+  :bind ("C-x y i" . yankpad-insert)
+  :config (progn
+            (setq yankpad-file "~/sync/emacs/snippets.org"))
+  :ensure t)
+#+end_src
+*** COMMENT yasnippet
 **** __init__
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
