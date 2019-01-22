@@ -2042,19 +2042,6 @@ If KWD is a number, get the corresponding match group."
             (global-set-key (kbd "M-p") 'string-inflection-cycle))
   :ensure t)
 #+END_SRC
-*** abbrev
-#+TBLNAME: abbrev
-| Baseline | Expansion           |
-|----------+---------------------|
-| bc       | because             |
-| wo       | without             |
-| wi       | with                |
-| ex       | For example,        |
-| qm       | sacha@sachachua.com |
-
-#+begin_src emacs-lisp :exports code :var data=abbrev :results silent
-(mapc (lambda (x) (define-global-abbrev (car x) (cadr x))) data)
-#+end_src
 *** origami
 #+BEGIN_SRC emacs-lisp
 (use-package origami
