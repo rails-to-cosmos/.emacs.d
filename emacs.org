@@ -939,6 +939,8 @@ used to limit the exported source code blocks by language."
 (global-set-key (kbd "C-x y m") 'org-literate-devtools/build)
 #+END_SRC
 *** experiments
+**** TODO [[https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/org-git-link.el][org-git-link]]
+**** TODO [[https://github.com/Fuco1/org-radiobutton][radio]]
 **** org-movies
 Playing around with youtube-dl in org-mode.
 
@@ -978,7 +980,6 @@ Playing around with youtube-dl in org-mode.
       (async-shell-command cmd buffer)
       (run-at-time "3 sec" nil 'async-shell-observer id (get-buffer-create buffer)))))
 #+END_SRC
-**** TODO [[https://github.com/Fuco1/org-radiobutton][radio]]
 **** org-auto-property
 #+BEGIN_SRC emacs-lisp
 (defun org-auto-properties ()
@@ -1012,7 +1013,9 @@ directory."
 **** password-manager
 #+BEGIN_SRC emacs-lisp
 (use-package org-glance-password-manager
-  :bind ("C-x y p" . org-launch-password-manager)
+  :bind (("C-x y p p" . org-glance-password-manager/launch)
+         ("C-x y p e" . org-glance-password-manager/encrypt-entry)
+         ("C-x y p d" . org-glance-password-manager/decrypt-entry))
   :load-path "~/sync/stuff/org-glance-password-manager")
 #+END_SRC
 *** org-plus-contrib
