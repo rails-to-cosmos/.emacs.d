@@ -1018,6 +1018,25 @@ Playing around with youtube-dl in org-mode.
 (use-package org-glance
   :load-path "~/sync/stuff/org-glance")
 #+END_SRC
+
+***** og-password-manager
+#+BEGIN_SRC emacs-lisp
+(use-package org-glance-password-manager
+  :bind (("C-x y p p" . org-glance-password-manager/launch)
+         ("C-x y p e" . org-glance-password-manager/encrypt-entry)
+         ("C-x y p d" . org-glance-password-manager/decrypt-entry))
+  :load-path "~/sync/stuff/org-glance-password-manager")
+#+END_SRC
+***** og-bookmark
+#+BEGIN_SRC emacs-lisp
+(use-package org-bookmark
+  :bind (("C-x j j" . org-bookmark-jump)
+         ("C-x j l" . org-bookmark-jump-local)
+         ("C-x p m" . org-bookmark-set))
+  :config (progn
+            (setq org-bookmark-file "~/sync/glance/bookmarks.org"))
+  :load-path "~/sync/stuff/org-bookmark")
+#+END_SRC
 **** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
 #+BEGIN_SRC emacs-lisp
 (defun org-insert-file (filename)
@@ -1035,14 +1054,6 @@ directory."
 	(forward-line)
 	(copy-file filename basename 1)
 	(org-display-inline-images)))
-#+END_SRC
-**** password-manager
-#+BEGIN_SRC emacs-lisp
-(use-package org-glance-password-manager
-  :bind (("C-x y p p" . org-glance-password-manager/launch)
-         ("C-x y p e" . org-glance-password-manager/encrypt-entry)
-         ("C-x y p d" . org-glance-password-manager/decrypt-entry))
-  :load-path "~/sync/stuff/org-glance-password-manager")
 #+END_SRC
 *** org-plus-contrib
 #+BEGIN_SRC emacs-lisp
@@ -1358,16 +1369,6 @@ bidirectional reordering.")
 With prefix argument, also display headlines without a TODO keyword."
   (org-tags-view nil ;; (null current-prefix-arg)
                  tag))
-#+END_SRC
-*** org-bookmark
-#+BEGIN_SRC emacs-lisp
-(use-package org-bookmark
-  :bind (("C-x j j" . org-bookmark-jump)
-         ("C-x j l" . org-bookmark-jump-local)
-         ("C-x p m" . org-bookmark-set))
-  :config (progn
-            (setq org-bookmark-file "~/sync/glance/bookmarks.org"))
-  :load-path "~/sync/stuff/org-bookmark")
 #+END_SRC
 *** org-feed
 #+BEGIN_SRC emacs-lisp
