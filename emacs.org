@@ -2072,24 +2072,6 @@ If KWD is a number, get the corresponding match group."
             (global-set-key (kbd "M-p") 'string-inflection-cycle))
   :ensure t)
 #+END_SRC
-*** abbrev
-#+TBLNAME: abbrev
-| Baseline | Expansion           |
-|----------+---------------------|
-| bc       | because             |
-| wo       | without             |
-| wi       | with                |
-| ex       | For example,        |
-| qm       | sacha@sachachua.com |
-
-#+begin_src emacs-lisp :exports code :var data=abbrev :results silent
-(mapc (lambda (x) (define-global-abbrev (car x) (cadr x))) data)
-#+end_src
-
-#+BEGIN_SRC emacs-lisp
-(add-hook 'prog-mode-hook 'abbrev-mode)
-(add-hook 'org-mode-hook 'abbrev-mode)
-#+END_SRC
 *** origami
 #+BEGIN_SRC emacs-lisp
 (use-package origami
@@ -2398,46 +2380,6 @@ If KWD is a number, get the corresponding match group."
             (setq yankpad-file "~/sync/emacs/snippets.org"))
   :ensure t)
 #+end_src
-*** COMMENT yasnippet
-**** __init__
-#+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-  :config (progn
-            (add-to-list 'yas-snippet-dirs (sync/ "snippets"))
-            (yas-reload-all)
-            (yas-global-mode t))
-  :diminish t
-  :ensure t)
-#+END_SRC
-**** ivy-expand
-| cmd            | map        | binding |
-|----------------+------------+---------|
-| yas-ivy-expand | global-map | C-x y i |
-
-#+BEGIN_SRC emacs-lisp
-(defun yas-ivy-expand ()
-  "Lets you select (and expand) a yasnippet key"
-  (interactive)
-  (let ((original-point (point)))
-    (while (and
-            (not (= (point) (point-min)))
-            (not (string-match "[[:space:]\n]" (char-to-string (char-before)))))
-      (backward-word 1))
-    (let* ((init-word (point))
-           (word (buffer-substring init-word original-point))
-           (akeys (yas-active-keys)))
-      (goto-char original-point)
-      (let ((key (remove-if-not
-                  (lambda (s) (string-match (concat "^" word) s)) akeys)))
-        (if (= (length key) 1)
-            (setq key (pop key))
-          (setq key (ivy-completing-read "key: " akeys)))
-        (delete-char (- init-word original-point))
-        (insert key)
-        (yas-expand)))))
-
-(define-key global-map (kbd "C-x y i") 'yas-ivy-expand)
-#+END_SRC
 ** Utils
 *** find file in project
 #+BEGIN_SRC emacs-lisp
