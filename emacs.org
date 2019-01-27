@@ -661,6 +661,20 @@ enjoy using a lot.
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
 *** literate-devtools
+**** search-project
+#+begin_src emacs-lisp
+(defun org-literate-devtools/search-project ()
+  (catch 'found
+    (save-excursion
+      (org-with-wide-buffer
+       (while (org-up-heading-safe)
+         (when-let* ((entry-tags (org-get-tags-at)))
+           (when (seq-intersection '("Project") entry-tags)
+             (throw 'found (point-marker)))))))))
+
+;; (ledna/get-property "ITEM" (org-literate-devtools/search-project))
+
+#+end_src
 **** consider tangle-dir
 #+BEGIN_SRC emacs-lisp
 (defun consider-tangle-dir (file-name)
