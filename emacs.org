@@ -664,6 +664,20 @@ enjoy using a lot.
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
 *** literate-devtools
+**** search-project
+#+begin_src emacs-lisp
+(defun org-literate-devtools/search-project ()
+  (catch 'found
+    (save-excursion
+      (org-with-wide-buffer
+       (while (org-up-heading-safe)
+         (when-let* ((entry-tags (org-get-tags-at)))
+           (when (seq-intersection '("Project") entry-tags)
+             (throw 'found (point-marker)))))))))
+
+;; (ledna/get-property "ITEM" (org-literate-devtools/search-project))
+
+#+end_src
 **** consider tangle-dir
 #+BEGIN_SRC emacs-lisp
 (defun consider-tangle-dir (file-name)
@@ -836,9 +850,28 @@ used to limit the exported source code blocks by language."
       (org-literate-devtools/goto-tangle-file)
       (compile cmd)))
   (switch-to-buffer-other-window "*compilation*"))
-
-(org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
 #+END_SRC
+**** tangle subtree
+
+#+begin_src emacs-lisp
+(defun org-literate-devtools/tangle-buffer ()
+  (org-element-map (org-element-parse-buffer 'element) 'src-block
+    (lambda (datum)
+      (let* ((lang (org-element-property :language datum))
+             (ext (or (cdr (assoc lang org-babel-tangle-lang-exts)) lang))
+             (point (org-element-property :begin datum)))
+        (org-with-point-at point
+          (org-literate-devtools/tangle-relatives))))))
+
+(defun org-literate-devtools/tangle-subtree ()
+  (interactive)
+  (save-restriction
+    (condition-case nil
+        (org-narrow-to-subtree)
+      (error nil))
+    (org-literate-devtools/tangle-buffer)))
+#+end_src
+
 **** get tangle files from subtree
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/get-tangle-files-from-buffer ()
@@ -851,24 +884,23 @@ used to limit the exported source code blocks by language."
                (point (org-element-property :begin datum)))
 
           (org-with-point-at point
-            (loop for (key . value) in
-                  (-flatten
-                   (append
-                    (org-babel-params-from-properties lang)
-                    (mapcar #'org-babel-parse-header-arguments
-	                    (cons (org-element-property :parameters datum)
-	                          (org-element-property :header datum)))))
-                  when (eq key :tangle)
-                  if (string= value "yes")
-                  collect (expand-file-name
-                           (consider-tangle-dir
-                            (concat
-                             (file-name-sans-extension
-                              (buffer-file-name)) "." ext)))
-                  else
-                  unless (string= value "no")
-                  collect (expand-file-name
-                           (consider-tangle-dir value))))))))))
+            (let* ((props (org-babel-params-from-properties lang))
+                   (args (mapcar #'org-babel-parse-header-arguments
+	                         (cons (org-element-property :parameters datum)
+	                               (org-element-property :header datum))))
+                   (blocks (-flatten (append props args))))
+              (loop for (key . value) in blocks
+                    when (eq key :tangle)
+
+                    if (string= value "yes")
+                    collect (expand-file-name
+                             (consider-tangle-dir (concat
+                                                   (file-name-sans-extension
+                                                    (buffer-file-name)) "." ext)))
+
+                    else unless (string= value "no")
+                    collect (expand-file-name
+                             (consider-tangle-dir value)))))))))))
 
 (defun org-literate-devtools/get-tangle-files-from-subtree ()
   (interactive)
@@ -892,9 +924,6 @@ used to limit the exported source code blocks by language."
         t))
     (unless tangle-files
       (error "No tangle files all the way down"))))
-
-
-(org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/goto-tangle-file)
 #+END_SRC
 **** locate el files
 #+BEGIN_SRC emacs-lisp
@@ -967,6 +996,12 @@ used to limit the exported source code blocks by language."
 
 (global-set-key (kbd "C-x y m") 'org-literate-devtools/build)
 #+END_SRC
+**** keys
+#+begin_src emacs-lisp
+(org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/tangle-subtree)
+(org-defkey org-mode-map (kbd "C-x t g") 'org-literate-devtools/goto-tangle-file)
+(org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
+#+end_src
 *** experiments
 **** TODO [[https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/org-git-link.el][org-git-link]]
 **** TODO [[https://github.com/Fuco1/org-radiobutton][radio]]
@@ -1076,7 +1111,69 @@ directory."
 *** org-super-agenda
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
-  :config (org-super-agenda-mode)
+  :config (progn
+            (org-super-agenda-mode)
+
+            (defun my-agenda ()
+              (interactive)
+              (let ((org-super-agenda-groups
+                     '((:name "Daily" :time-grid t)
+
+                       (:name "Birthdays"
+                              :regexp "^.*Birthday.*$")
+
+                       (:name "By Heart"
+                              :tag "drill")
+
+                       (:name "Understanding"
+                              :regexp "^.*tutorial.*$"
+                              :category "C++")
+
+                       (:name "Bookshelf"
+                              :and (:tag "Book"
+                                         :todo "STARTED"))
+
+                       (:name "Undesirable Events"
+                              :tag "event"
+                              :tag "duty"
+                              :tag "daily"
+                              :tag "nerdy"
+                              :category "Events")
+
+                       (:name "Stuff I'm Going to Do"
+                              :regexp "^TODO Запилить.*$"
+                              :regexp "^TODO Сделать.*$"
+                              :regexp "^TODO Установить.*$"
+                              :regexp "^TODO Настроить.*$"
+                              :tag "stuff")
+
+                       (:name "Squander"
+                              :regexp "^TODO Купить.*$"
+                              :regexp "^TODO Принять заказ.*$"
+                              :regexp "^TODO Починить.*$"
+                              :regexp "^TODO Отдать в ремонт.*$"
+                              :tag "purchase"
+                              :tag "order"
+                              :category "Inventory")
+
+                       (:name "Finances"
+                              :category "Debt")
+
+                       (:name "Music"
+                              :category "Band"
+                              :category "Music"
+                              :category "Vocals")
+
+                       (:name "Office" :tag "@office")
+
+                       (:name "Health"
+                              :category "Gym"
+                              :category "Health")
+
+                       )))
+                (org-agenda nil "a")))
+
+            (global-set-key (kbd "C-x y a") 'my-agenda))
   :ensure t)
 #+END_SRC
 *** modules
