@@ -653,6 +653,9 @@ enjoy using a lot.
 (defun my-appt-send-notification (title msg)
   (shell-command (concat "terminal-notifier" " -message " msg " -title " title)))
 
+;; (defun my-appt-send-notification (title msg)
+;;   (shell-command (format "tg '%s: %s'" msg title)))
+
 ;; designate the window function for my-appt-send-notification
 (defun my-appt-display (min-to-app new-time msg)
   (my-appt-send-notification
