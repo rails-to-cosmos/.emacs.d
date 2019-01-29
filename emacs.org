@@ -1119,22 +1119,16 @@ directory."
                        (:name "Birthdays"
                               :regexp "^.*Birthday.*$")
 
-                       (:name "By Heart"
-                              :tag "drill")
-
                        (:name "Understanding"
+                              :tag "drill"
                               :regexp "^.*tutorial.*$"
-                              :category "C++")
-
-                       (:name "Bookshelf"
+                              :category "C++"
                               :and (:tag "Book"
                                          :todo "STARTED"))
 
                        (:name "Undesirable Events"
                               :tag "event"
                               :tag "duty"
-                              :tag "daily"
-                              :tag "nerdy"
                               :category "Events")
 
                        (:name "Stuff I'm Going to Do"
