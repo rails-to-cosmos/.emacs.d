@@ -670,13 +670,13 @@ enjoy using a lot.
   (catch 'found
     (save-excursion
       (org-with-wide-buffer
-       (while (org-up-heading-safe)
-         (when-let* ((entry-tags (org-get-tags-at)))
-           (when (seq-intersection '("Project") entry-tags)
-             (throw 'found (point-marker)))))))))
-
-;; (ledna/get-property "ITEM" (org-literate-devtools/search-project))
-
+       (org-back-to-heading)
+       (unless
+           (let* ((entry-tags (org-get-tags-at))
+                  (project-p (seq-intersection '("Project") entry-tags)))
+             (when project-p
+               (throw 'found (point-marker))))
+         (org-up-heading-safe))))))
 #+end_src
 **** consider tangle-dir
 #+BEGIN_SRC emacs-lisp
@@ -1261,8 +1261,8 @@ When COND is nil, insert CHAR."
                                   (end-of-buffer)
                                   (insert (format "* %s\n" item))))
                               (insert (format "[[staff:%s][%s@]]" item item))
-                              (org-toggle-tag (replace-regexp-in-string "-" "_" (format "@%s" item)) 'on)
-                              (org-align-all-tags)))))
+
+                              (ledna/set-property "STARRING" (s-join " " (-distinct (append (split-string (ledna/get-property "STARRING" nil "")) (list item)))))))))
 
 (define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+END_SRC
