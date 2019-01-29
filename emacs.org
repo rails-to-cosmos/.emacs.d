@@ -3527,6 +3527,14 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.ui
 :END:
+
+*** modeline
+#+begin_src emacs-lisp
+(use-package doom-modeline
+      :ensure t
+      :config (setq doom-modeline-icon nil)
+      :hook (after-init . doom-modeline-mode))
+#+end_src
 *** default font
 #+begin_src emacs-lisp
 (let* ((face (list :family "Inconsolata LGC")))
