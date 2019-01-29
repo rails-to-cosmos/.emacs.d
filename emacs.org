@@ -634,6 +634,10 @@ enjoy using a lot.
   :ensure t)
 #+END_SRC
 ** Org
+*** refile-update-cookies
+#+begin_src emacs-lisp
+(add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
+#+end_src
 *** notifications
 #+begin_src emacs-lisp
 (require 'appt)
