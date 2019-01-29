@@ -3514,11 +3514,27 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.ui
 :END:
-
+*** default font
+#+begin_src emacs-lisp
+(let* ((face (list :family "Inconsolata LGC")))
+  (custom-set-faces (list 'default (list (list t face)))))
+#+end_src
 *** text scale
 #+begin_src emacs-lisp
 (use-package default-text-scale
-  :config (default-text-scale-mode 1)
+  :config (progn
+            (default-text-scale-mode 1)
+
+            (defun adapt-cyrillic-font ()
+              (when (fboundp 'set-fontset-font)
+                (let* ((family (face-attribute 'default :family))
+                       (size (face-attribute 'default :height))
+                       (chars (cons (decode-char 'ucs #x0400)
+                                    (decode-char 'ucs #x052F)))
+                       (spec (font-spec :size (/ size 10) :name family)))
+                  (set-fontset-font "fontset-default" chars spec))))
+
+            (add-hook 'after-setting-font-hook #'adapt-cyrillic-font))
   :ensure t)
 #+end_src
 *** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
