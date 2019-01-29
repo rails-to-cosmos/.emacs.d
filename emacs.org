@@ -3535,19 +3535,7 @@ BEG and END (region to sort)."
 *** text scale
 #+begin_src emacs-lisp
 (use-package default-text-scale
-  :config (progn
-            (default-text-scale-mode 1)
-
-            (defun adapt-cyrillic-font ()
-              (when (fboundp 'set-fontset-font)
-                (let* ((family (face-attribute 'default :family))
-                       (size (face-attribute 'default :height))
-                       (chars (cons (decode-char 'ucs #x0400)
-                                    (decode-char 'ucs #x052F)))
-                       (spec (font-spec :size (/ size 10) :name family)))
-                  (set-fontset-font "fontset-default" chars spec))))
-
-            (add-hook 'after-setting-font-hook #'adapt-cyrillic-font))
+  :config (default-text-scale-mode 1)
   :ensure t)
 #+end_src
 *** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
