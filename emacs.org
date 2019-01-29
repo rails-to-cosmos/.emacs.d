@@ -667,16 +667,29 @@ enjoy using a lot.
 **** search-project
 #+begin_src emacs-lisp
 (defun org-literate-devtools/search-project ()
-  (catch 'found
-    (save-excursion
-      (org-with-wide-buffer
-       (org-back-to-heading)
-       (unless
-           (let* ((entry-tags (org-get-tags-at))
-                  (project-p (seq-intersection '("Project") entry-tags)))
-             (when project-p
-               (throw 'found (point-marker))))
-         (org-up-heading-safe))))))
+  (let ((marker (catch 'found
+                  (save-excursion
+                    (org-with-wide-buffer
+                     (org-back-to-heading)
+                     (unless
+                         (let* ((entry-tags (org-get-tags-at))
+                                (project-p (seq-intersection '("Project") entry-tags)))
+                           (when project-p
+                             (throw 'found (point-marker))))
+                       (org-up-heading-safe)))))))
+    (if (markerp marker)
+        marker
+      (error "Project not found."))))
+#+end_src
+**** COMMENT insert-heading
+#+begin_src emacs-lisp
+(defun org-literate-devtools/insert-heading ()
+  (let* ((pom (org-literate-devtools/search-project))
+         (project (ledna/get-property "PROJECT" pom)))
+    (when project
+      (insert (format "[%s]" project)))))
+
+(add-hook 'org-insert-heading-hook #'org-literate-devtools/insert-heading)
 #+end_src
 **** consider tangle-dir
 #+BEGIN_SRC emacs-lisp
