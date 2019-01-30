@@ -667,8 +667,10 @@ enjoy using a lot.
     (format "'%s'" msg)))                                ;; passed to -message in terminal-notifier call
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
-*** literate-devtools
-**** search-project
+*** experiments
+**** literate-devtools
+***** projects
+****** search-project
 #+begin_src emacs-lisp
 (defun org-literate-devtools/search-project ()
   (let ((marker (catch 'found
@@ -685,7 +687,7 @@ enjoy using a lot.
         marker
       (error "Project not found."))))
 #+end_src
-**** COMMENT insert-heading
+****** COMMENT insert-heading
 #+begin_src emacs-lisp
 (defun org-literate-devtools/insert-heading ()
   (let* ((pom (org-literate-devtools/search-project))
@@ -695,51 +697,8 @@ enjoy using a lot.
 
 (add-hook 'org-insert-heading-hook #'org-literate-devtools/insert-heading)
 #+end_src
-**** consider tangle-dir
-#+BEGIN_SRC emacs-lisp
-(defun consider-tangle-dir (file-name)
-  (if-let (tangle-dir (get-tangle-dir-at-point))
-      (if (and file-name (f-relative-p file-name))
-          (f-join tangle-dir file-name))
-    file-name))
-#+END_SRC
-**** tangle-dir
-#+BEGIN_SRC emacs-lisp
-(defun get-tangle-dir-at-point ()
-  (save-excursion
-    (cl-loop initially (org-back-to-heading)
-             with tangle-dir-at-point = (lambda () (plist-get (org-element--get-node-properties) :TANGLE_DIR))
-             with tangle-dir = (when-let (tangle-dir (funcall tangle-dir-at-point))
-                                 (list tangle-dir))
-             for level = (org-up-heading-safe)
-             for dir = (funcall tangle-dir-at-point)
-             when (and level dir) collect dir into tangle-dir
-             unless level return (when tangle-dir (apply 'f-join (reverse tangle-dir))))))
-#+END_SRC
-**** collect-relatives
-#+BEGIN_SRC emacs-lisp
-(defun org-literate-devtools/collect-relative-blocks ()
-  (let* ((counter 0) last-heading-pos blocks
-         (info (org-babel-get-src-block-info 'light))
-         (babel-params (nth 2 info))
-         (src-tfile (consider-tangle-dir (alist-get :tangle babel-params)))
-         (src-lang (car info)))
-
-    (org-babel-map-src-blocks (buffer-file-name)
-      (unless (org-in-commented-heading-p)
-	(let* ((info (org-babel-get-src-block-info 'light))
-               (params (nth 2 info))
-               (tangle-file (consider-tangle-dir (alist-get :tangle params)))
-               (block (unless (or (string= src-tfile "no")
-		                  (and tangle-file (not (equal tangle-file src-tfile))))
-                        (cl-incf counter)
-                        (org-babel-tangle-single-block counter))))
-          (push (cons src-lang (list block)) blocks))))
-
-    ;; Ensure blocks are in the correct order.
-    (nreverse blocks)))
-#+END_SRC
-**** tangle-relatives
+***** tangle
+****** tangle-relatives
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/tangle-relatives (&optional arg target-file lang)
   "Write code blocks to source-specific files.
@@ -858,7 +817,53 @@ used to limit the exported source code blocks by language."
                  (caar path-collector))
         path-collector))))
 #+END_SRC
-**** compile tangled file
+****** consider tangle-dir
+#+BEGIN_SRC emacs-lisp
+(defun consider-tangle-dir (file-name)
+  (if-let (tangle-dir (get-tangle-dir-at-point))
+      (when (and file-name (f-relative-p file-name))
+        (f-join tangle-dir file-name))
+    file-name))
+#+END_SRC
+****** tangle-dir
+#+BEGIN_SRC emacs-lisp
+(defun get-tangle-dir-at-point ()
+  (if (org-before-first-heading-p)
+      ""
+    (save-excursion
+      (cl-loop initially (org-back-to-heading)
+               with tangle-dir-at-point = (lambda () (plist-get (org-element--get-node-properties) :TANGLE_DIR))
+               with tangle-dir = (when-let (tangle-dir (funcall tangle-dir-at-point))
+                                   (list tangle-dir))
+               for level = (org-up-heading-safe)
+               for dir = (funcall tangle-dir-at-point)
+               when (and level dir) collect dir into tangle-dir
+               unless level return (when tangle-dir (apply 'f-join (reverse tangle-dir)))))))
+#+END_SRC
+****** collect-relatives
+#+BEGIN_SRC emacs-lisp
+(defun org-literate-devtools/collect-relative-blocks ()
+  (let* ((counter 0) last-heading-pos blocks
+         (info (org-babel-get-src-block-info 'light))
+         (babel-params (nth 2 info))
+         (src-tfile (consider-tangle-dir (alist-get :tangle babel-params)))
+         (src-lang (car info)))
+
+    (org-babel-map-src-blocks (buffer-file-name)
+      (unless (org-in-commented-heading-p)
+        (let* ((info (org-babel-get-src-block-info 'light))
+               (params (nth 2 info))
+               (tangle-file (consider-tangle-dir (alist-get :tangle params)))
+               (block (unless (or (string= src-tfile "no")
+		                  (and tangle-file (not (equal tangle-file src-tfile))))
+                        (cl-incf counter)
+                        (org-babel-tangle-single-block counter))))
+          (push (cons src-lang (list block)) blocks))))
+
+    ;; Ensure blocks are in the correct order.
+    (nreverse blocks)))
+#+END_SRC
+****** compile tangled file
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/compile-tangled-file()
   (interactive)
@@ -868,7 +873,7 @@ used to limit the exported source code blocks by language."
       (compile cmd)))
   (switch-to-buffer-other-window "*compilation*"))
 #+END_SRC
-**** tangle subtree
+****** tangle subtree
 
 #+begin_src emacs-lisp
 (defun org-literate-devtools/tangle-buffer ()
@@ -889,7 +894,7 @@ used to limit the exported source code blocks by language."
     (org-literate-devtools/tangle-buffer)))
 #+end_src
 
-**** get tangle files from subtree
+****** get tangle files from subtree
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/get-tangle-files-from-buffer ()
   (-distinct
@@ -927,7 +932,7 @@ used to limit the exported source code blocks by language."
       (error nil))
     (org-literate-devtools/get-tangle-files-from-buffer)))
 #+END_SRC
-**** goto tangle file
+****** goto tangle file
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/goto-tangle-file()
   (interactive)
@@ -942,7 +947,7 @@ used to limit the exported source code blocks by language."
     (unless tangle-files
       (error "No tangle files all the way down"))))
 #+END_SRC
-**** locate el files
+****** locate el files
 #+BEGIN_SRC emacs-lisp
 (defun files-in-below-directory (directory)
   "List the .el files in DIRECTORY and in its sub-directories."
@@ -983,7 +988,7 @@ used to limit the exported source code blocks by language."
     ;; return the filenames
     el-files-list))
 #+END_SRC
-**** ensure local vars
+****** ensure local vars
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/ensure-local-var(symbol)
   (unless (and (boundp symbol) (local-variable-p symbol))
@@ -991,7 +996,7 @@ used to limit the exported source code blocks by language."
       (add-file-local-variable symbol value)))
   (eval symbol))
 #+END_SRC
-**** build
+****** build
 #+BEGIN_SRC emacs-lisp
 (defun org-literate-devtools/build ()
   (interactive)
@@ -1013,13 +1018,12 @@ used to limit the exported source code blocks by language."
 
 (global-set-key (kbd "C-x y m") 'org-literate-devtools/build)
 #+END_SRC
-**** keys
+****** keys
 #+begin_src emacs-lisp
 (org-defkey org-mode-map (kbd "C-x t t") 'org-literate-devtools/tangle-subtree)
 (org-defkey org-mode-map (kbd "C-x t g") 'org-literate-devtools/goto-tangle-file)
 (org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
 #+end_src
-*** experiments
 **** TODO [[https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/org-git-link.el][org-git-link]]
 **** TODO [[https://github.com/Fuco1/org-radiobutton][radio]]
 **** org-movies
@@ -1159,10 +1163,10 @@ directory."
                               :tag "stuff")
 
                        (:name "Squander"
-                              :regexp "^TODO Купить.*$"
-                              :regexp "^TODO Принять заказ.*$"
-                              :regexp "^TODO Починить.*$"
-                              :regexp "^TODO Отдать в ремонт.*$"
+                              :regexp "^.*TODO Купить.*$"
+                              :regexp "^.*TODO Принять заказ.*$"
+                              :regexp "^.*TODO Починить.*$"
+                              :regexp "^.*TODO Отдать в ремонт.*$"
                               :tag "purchase"
                               :tag "order"
                               :category "Inventory")
