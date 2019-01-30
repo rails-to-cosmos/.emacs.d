@@ -673,19 +673,14 @@ enjoy using a lot.
 ****** search-project
 #+begin_src emacs-lisp
 (defun org-literate-devtools/search-project ()
-  (let ((marker (catch 'found
-                  (save-excursion
-                    (org-with-wide-buffer
-                     (org-back-to-heading)
-                     (unless
-                         (let* ((entry-tags (org-get-tags-at))
-                                (project-p (seq-intersection '("Project") entry-tags)))
-                           (when project-p
-                             (throw 'found (point-marker))))
-                       (org-up-heading-safe)))))))
-    (if (markerp marker)
-        marker
-      (error "Project not found."))))
+  (save-excursion
+    (org-with-wide-buffer
+     (unless (org-at-heading-p)
+       (org-back-to-heading))
+     (unless
+         (seq-intersection '("Project") (org-get-tags-at))
+       (org-up-heading-safe)
+       (point-marker)))))
 #+end_src
 ****** COMMENT insert-heading
 #+begin_src emacs-lisp
@@ -3534,7 +3529,8 @@ BEG and END (region to sort)."
 #+begin_src emacs-lisp
 (use-package doom-modeline
       :ensure t
-      :config (setq doom-modeline-icon nil)
+      :config (setq doom-modeline-icon nil
+                    doom-modeline-height 35)
       :hook (after-init . doom-modeline-mode))
 #+end_src
 *** default font
