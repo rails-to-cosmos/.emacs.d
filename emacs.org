@@ -1083,13 +1083,13 @@ Playing around with youtube-dl in org-mode.
 #+END_SRC
 ***** og-bookmark
 #+BEGIN_SRC emacs-lisp
-(use-package org-bookmark
-  :bind (("C-x j j" . org-bookmark-jump)
-         ("C-x j l" . org-bookmark-jump-local)
-         ("C-x p m" . org-bookmark-set))
+(use-package org-glance-bookmark
+  :bind (("C-x j j" . org-glance-bookmark-jump)
+         ("C-x j l" . org-glance-bookmark-jump-local)
+         ("C-x p m" . org-glance-bookmark-set))
   :config (progn
-            (setq org-bookmark-file "~/sync/glance/bookmarks.org"))
-  :load-path "~/sync/stuff/org-bookmark")
+            (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
+  :load-path "~/sync/stuff/org-glance-bookmark")
 #+END_SRC
 **** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
 #+BEGIN_SRC emacs-lisp
@@ -3530,7 +3530,7 @@ BEG and END (region to sort)."
 (use-package doom-modeline
       :ensure t
       :config (setq doom-modeline-icon nil
-                    doom-modeline-height 35)
+                    doom-modeline-height 50)
       :hook (after-init . doom-modeline-mode))
 #+end_src
 *** default font
