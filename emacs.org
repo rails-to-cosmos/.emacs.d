@@ -3532,7 +3532,7 @@ BEG and END (region to sort)."
 (use-package doom-modeline
       :ensure t
       :config (setq doom-modeline-icon nil
-                    doom-modeline-height 50)
+                    doom-modeline-height 35)
       :hook (after-init . doom-modeline-mode))
 #+end_src
 *** default font
