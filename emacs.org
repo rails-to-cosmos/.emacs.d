@@ -668,67 +668,32 @@ enjoy using a lot.
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
 *** experiments
-**** char-completion
-***** org-compl-char
+**** [#A] org-glance
+
 #+BEGIN_SRC emacs-lisp
-(defmacro org-compl-char (char completions cond handler)
-  "Complete CHAR if COND is non-nil:
-Read from COMPLETIONS and run HANDLER on item.
-When COND is nil, insert CHAR."
-
-  `(if (,cond)
-       (let ((item (org-completing-read "Choose item: " ,completions)))
-         (,handler item))
-     (insert ,char)))
+(use-package org-glance
+  :load-path "~/sync/stuff/org-glance")
 #+END_SRC
-***** compl-staff
+
+***** og-password-manager
 #+BEGIN_SRC emacs-lisp
-(defun org-babel-at-src-block-p ()
-  (memq (org-element-type (org-element-context)) '(inline-src-block src-block)))
-
-(defun org-compl-staff ()
-  (interactive)
-
-  (setq staff-persons (with-temp-file org-contacts-file
-                          (when (file-exists-p org-contacts-file)
-                            (insert-file-contents-literally org-contacts-file))
-
-                          (org-element-map (org-element-parse-buffer 'headline t)
-                              'plain-text 'append)))
-
-  (org-compl-char "@" staff-persons
-                  (lambda () (and (not (org-babel-at-src-block-p))
-                             (looking-back "\\W")))
-                  (lambda (item) (progn
-                              (when (not (member item staff-persons))
-                                (with-temp-file org-contacts-file
-                                  (insert-file-contents-literally org-contacts-file)
-                                  (end-of-buffer)
-                                  (insert (format "* %s\n" item))))
-                              (insert (format "[[staff:%s][%s@]]" item item))
-
-                              (ledna/set-property "STARRING" (s-join " " (-distinct (append (split-string (ledna/get-property "STARRING" nil "")) (list item)))))))))
-
-(define-key org-mode-map (kbd "@") 'org-compl-staff)
+(use-package org-glance-password-manager
+  :bind (("C-x y p p" . org-glance-password-manager/launch)
+         ("C-x y p e" . org-glance-password-manager/encrypt-entry)
+         ("C-x y p d" . org-glance-password-manager/decrypt-entry))
+  :load-path "~/sync/stuff/org-glance-password-manager")
 #+END_SRC
-***** compl-templates
+***** og-bookmark
 #+BEGIN_SRC emacs-lisp
-(defun org-compl-structure ()
-  (interactive)
-  (org-compl-char "<" org-structure-template-alist
-
-                  (lambda () (and (looking-at "^[[:space:]]*$")
-                             (not (org-in-src-block-p))))
-
-                  (lambda (item)
-                    (when-let (item (cdr (assoc item org-structure-template-alist)))
-                      (org-insert-structure-template item)
-                      (insert "\n")
-                      (previous-line)))))
-
-(define-key org-mode-map (kbd "<") 'org-compl-structure)
+(use-package org-glance-bookmark
+  :bind (("C-x j j" . org-glance-bookmark-jump)
+         ("C-x j l" . org-glance-bookmark-jump-local)
+         ("C-x p m" . org-glance-bookmark-set))
+  :config (progn
+            (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
+  :load-path "~/sync/stuff/org-glance-bookmark")
 #+END_SRC
-**** literate-devtools
+**** [#A] literate-devtools
 ***** projects
 ****** search-project
 #+begin_src emacs-lisp
@@ -1079,46 +1044,65 @@ used to limit the exported source code blocks by language."
 (org-defkey org-mode-map (kbd "C-x t g") 'org-literate-devtools/goto-tangle-file)
 (org-defkey org-mode-map (kbd "C-x t c") 'org-literate-devtools/compile-tangled-file)
 #+end_src
-**** TODO [[https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/org-git-link.el][org-git-link]]
-**** TODO [[https://github.com/Fuco1/org-radiobutton][radio]]
-**** org-movies
-Playing around with youtube-dl in org-mode.
-
+**** char-completion
+***** org-compl-char
 #+BEGIN_SRC emacs-lisp
-(require 'org-attach)
+(defmacro org-compl-char (char completions cond handler)
+  "Complete CHAR if COND is non-nil:
+Read from COMPLETIONS and run HANDLER on item.
+When COND is nil, insert CHAR."
 
-(defun seek-in-buffer (regexp)
-  (let ((report (substring-no-properties (buffer-string))))
-    (substring report (string-match regexp report) (match-end 0))))
+  `(if (,cond)
+       (let ((item (org-completing-read "Choose item: " ,completions)))
+         (,handler item))
+     (insert ,char)))
+#+END_SRC
+***** compl-staff
+#+BEGIN_SRC emacs-lisp
+(defun org-babel-at-src-block-p ()
+  (memq (org-element-type (org-element-context)) '(inline-src-block src-block)))
 
-(defun async-shell-observer (id buffer)
-  (with-current-buffer buffer
-    (let ((progress-prop "Progress")
-          (progress (seek-in-buffer "\\([0-9.]+%\\)")))
-
-      (save-window-excursion
-        (org-id-goto id)
-        (org-set-property progress-prop progress))
-
-      (if (string-equal progress "100%")
-          (let ((fn (seek-in-buffer "[0-9]+\\.mp4")))
-            (kill-this-buffer)
-            (save-window-excursion
-              (org-id-goto id)
-              (org-attach-attach fn nil 'mv)
-              (org-delete-property progress-prop)))
-        (run-at-time "1 sec" nil 'async-shell-observer id buffer)))))
-
-(defun attach-this (&optional link)
+(defun org-compl-staff ()
   (interactive)
-  (if (member "ATTACH" (org-get-tags-at))
-      (call-interactively 'org-attach-reveal)
-    (let ((buffer (make-temp-name "*Async Shell Command*"))
-          (id (org-id-get-create))
-          (cmd (format "youtube-dl --id %s" link)))
-      (org-set-property "ID" id)
-      (async-shell-command cmd buffer)
-      (run-at-time "3 sec" nil 'async-shell-observer id (get-buffer-create buffer)))))
+
+  (setq staff-persons (with-temp-file org-contacts-file
+                          (when (file-exists-p org-contacts-file)
+                            (insert-file-contents-literally org-contacts-file))
+
+                          (org-element-map (org-element-parse-buffer 'headline t)
+                              'plain-text 'append)))
+
+  (org-compl-char "@" staff-persons
+                  (lambda () (and (not (org-babel-at-src-block-p))
+                             (looking-back "\\W")))
+                  (lambda (item) (progn
+                              (when (not (member item staff-persons))
+                                (with-temp-file org-contacts-file
+                                  (insert-file-contents-literally org-contacts-file)
+                                  (end-of-buffer)
+                                  (insert (format "* %s\n" item))))
+                              (insert (format "[[staff:%s][%s@]]" item item))
+
+                              (ledna/set-property "STARRING" (s-join " " (-distinct (append (split-string (ledna/get-property "STARRING" nil "")) (list item)))))))))
+
+(define-key org-mode-map (kbd "@") 'org-compl-staff)
+#+END_SRC
+***** compl-templates
+#+BEGIN_SRC emacs-lisp
+(defun org-compl-structure ()
+  (interactive)
+  (org-compl-char "<" org-structure-template-alist
+
+                  (lambda () (and (looking-at "^[[:space:]]*$")
+                             (not (org-in-src-block-p))))
+
+                  (lambda (item)
+                    (when-let (item (cdr (assoc item org-structure-template-alist)))
+                      (org-insert-structure-template item)
+                      (insert "\n")
+                      (previous-line)))))
+
+(define-key org-mode-map (kbd "<") 'org-compl-structure)
 #+END_SRC
 **** org-auto-property
 #+BEGIN_SRC emacs-lisp
@@ -1126,48 +1110,6 @@ Playing around with youtube-dl in org-mode.
   (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
-#+END_SRC
-**** org-glance
-#+BEGIN_SRC emacs-lisp
-(use-package org-glance
-  :load-path "~/sync/stuff/org-glance")
-#+END_SRC
-
-***** og-password-manager
-#+BEGIN_SRC emacs-lisp
-(use-package org-glance-password-manager
-  :bind (("C-x y p p" . org-glance-password-manager/launch)
-         ("C-x y p e" . org-glance-password-manager/encrypt-entry)
-         ("C-x y p d" . org-glance-password-manager/decrypt-entry))
-  :load-path "~/sync/stuff/org-glance-password-manager")
-#+END_SRC
-***** og-bookmark
-#+BEGIN_SRC emacs-lisp
-(use-package org-glance-bookmark
-  :bind (("C-x j j" . org-glance-bookmark-jump)
-         ("C-x j l" . org-glance-bookmark-jump-local)
-         ("C-x p m" . org-glance-bookmark-set))
-  :config (progn
-            (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
-  :load-path "~/sync/stuff/org-glance-bookmark")
-#+END_SRC
-**** [[http://mbork.pl/2018-08-18_Embedding_files_in_Org-mode_revisited][org-insert-file]]
-#+BEGIN_SRC emacs-lisp
-(defun org-insert-file (filename)
-      "Insert Elisp code block recreating FILE in the current
-directory."
-      (interactive "f")
-      (let ((basename (file-name-nondirectory filename))
-	    (base64-string
-	     (with-temp-buffer
-	       (insert-file-contents-literally filename)
-	       (base64-encode-region (point-min) (point-max))
-	       (buffer-string))))
-	(save-excursion
-	  (insert (format "[[./%s]]\n#+BEGIN_SRC emacs-lisp :results output silent\n  (with-temp-file %S\n    (insert (base64-decode-string\n      %S)))\n#+END_SRC" basename basename base64-string)))
-	(forward-line)
-	(copy-file filename basename 1)
-	(org-display-inline-images)))
 #+END_SRC
 *** org-plus-contrib
 #+BEGIN_SRC emacs-lisp
