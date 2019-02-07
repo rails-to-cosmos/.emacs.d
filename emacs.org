@@ -457,8 +457,6 @@ enjoy using a lot.
   (cond
    ((or (equal (point-marker) eshell-last-input-start)
         (looking-back "λ " 1))
-    (eshell/cd "..") (eshell-send-input)
-    (insert "ls") (eshell-send-input)
     (setq eshell-last-input-start (point-marker)))
    (t (delete-backward-char 1))))
 
@@ -3318,9 +3316,6 @@ BEG and END (region to sort)."
 **** emmet-mode
 #+BEGIN_SRC emacs-lisp
 (use-package emmet-mode
-  :mode ("\\.html\\'" "\\.htm\\'")
-  :config (progn
-            (add-hook 'web-mode-hook 'emmet-mode))
   :ensure t)
 #+END_SRC
 **** js
@@ -3347,7 +3342,6 @@ BEG and END (region to sort)."
 **** web-mode
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
-  :mode ("\\.html\\'" "\\.ejs\\'" "\\.htm\\'" "\\.jsx\\'")
   :config (progn
             (setq web-mode-markup-indent-offset 4
                   web-mode-css-indent-offset 4
@@ -3479,7 +3473,7 @@ BEG and END (region to sort)."
 #+end_src
 *** default font
 #+begin_src emacs-lisp
-(let* ((face (list (list t (list :family "Inconsolata LGC")))))
+(let ((face (list (list t (list :family "Inconsolata LGC")))))
   (custom-set-faces (list 'default face)))
 
 (defun adapt-cyrillic-font ()
