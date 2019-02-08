@@ -694,8 +694,19 @@ enjoy using a lot.
   :load-path "~/sync/stuff/org-glance-bookmark")
 #+END_SRC
 **** [#A] literate-devtools
-***** projects
-****** search-project
+***** org-element helpers
+****** get-node-property
+#+begin_src emacs-lisp
+(defun org-literate-devtools/get-node-property (property &optional pom)
+  (save-excursion
+    (when pom
+      (org-goto-marker-or-bmk pom))
+    (unless (org-at-heading-p)
+      (org-back-to-heading))
+    (plist-get (org-element--get-node-properties) property)))
+#+end_src
+
+****** search-ancestor
 #+begin_src emacs-lisp
 (defun org-literate-devtools/search-ancestor (predicate)
   (save-excursion
@@ -706,18 +717,22 @@ enjoy using a lot.
                      (null (org-up-heading-safe))))
      (when (funcall predicate)
        (point-marker)))))
-
-(defun org-literate-devtools/search-project ()
-  (org-literate-devtools/search-ancestor #'(lambda () (seq-intersection '("Project") (org-get-tags)))))
 #+end_src
-
-****** COMMENT insert-heading
+***** projects
+****** search-project
+#+begin_src emacs-lisp
+(defun org-literate-devtools/search-project ()
+  (org-literate-devtools/search-ancestor
+   ;; #'(lambda () (seq-intersection '("Project") (org-get-tags)))
+   #'(lambda () (org-literate-devtools/get-node-property :PROJECT))))
+#+end_src
+****** insert-heading
 #+begin_src emacs-lisp
 (defun org-literate-devtools/insert-heading ()
-  (let* ((pom (org-literate-devtools/search-project))
-         (project (ledna/get-property "PROJECT" pom)))
-    (when project
-      (insert (format "[%s]" project)))))
+  (when-let (pom (org-literate-devtools/search-project))
+    (let ((project (org-literate-devtools/get-node-property :PROJECT pom)))
+      (insert (format "[%s]" project))
+      (end-of-line))))
 
 (add-hook 'org-insert-heading-hook #'org-literate-devtools/insert-heading)
 #+end_src
