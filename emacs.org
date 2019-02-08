@@ -697,16 +697,20 @@ enjoy using a lot.
 ***** projects
 ****** search-project
 #+begin_src emacs-lisp
-(defun org-literate-devtools/search-project ()
+(defun org-literate-devtools/search-ancestor (predicate)
   (save-excursion
     (org-with-wide-buffer
      (unless (org-at-heading-p)
        (org-back-to-heading))
-     (unless
-         (seq-intersection '("Project") (org-get-tags-at))
-       (org-up-heading-safe)
+     (loop-until (or (funcall predicate)
+                     (null (org-up-heading-safe))))
+     (when (funcall predicate)
        (point-marker)))))
+
+(defun org-literate-devtools/search-project ()
+  (org-literate-devtools/search-ancestor #'(lambda () (seq-intersection '("Project") (org-get-tags)))))
 #+end_src
+
 ****** COMMENT insert-heading
 #+begin_src emacs-lisp
 (defun org-literate-devtools/insert-heading ()
@@ -2611,6 +2615,34 @@ If KWD is a number, get the corresponding match group."
   :ensure t
   :ensure smex)
 #+END_SRC
+*** COMMENT Mirror minibuffer
+#+begin_src emacs-lisp
+(setq mb-catch-buf nil)
+(setq mb-catch-overlay nil)
+
+(defun mb-catch-change-hook (change-beg change-end prev-len)
+  (let ((string (concat (minibuffer-prompt)
+                        (minibuffer-contents))))
+    (overlay-put mb-catch-overlay 'after-string string)
+    ))
+
+
+(defun mb-catch-setup ()
+  (let ((buf (other-buffer (current-buffer) 1)))
+    (setq mb-catch-buf buf)
+    (save-current-buffer
+      (set-buffer buf)
+      (setq mb-catch-overlay
+            (make-overlay (point) (+ 1 (point)))))
+    (add-hook 'after-change-functions 'mb-catch-change-hook)))
+
+(defun mb-catch-exit ()
+  (delete-overlay mb-catch-overlay)
+  (remove-hook 'after-change-functions 'mb-catch-hook))
+
+(add-hook 'minibuffer-setup-hook 'mb-catch-setup)
+(add-hook 'minibuffer-exit-hook 'mb-catch-exit)
+#+end_src
 *** delete-trailing-whitespace
 #+BEGIN_SRC emacs-lisp
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -2818,6 +2850,7 @@ This is like `define-key', except the definition
                                               (?i "Custom ID" air-org-insert-custom-id-link))))
                             ("yandex-tasks"   ("Tasks"
                                                ((?a "Add subtask"     yandex-add-subtask)
+                                                (?c "Changeset header" yandex-insert-changeset-header)
                                                 (?m "Commit message"  yandex-insert-commit-message)
                                                 (?i "Insert branch"   yandex-insert-branch)
                                                 (?t "Insert ticket"   yandex-insert-ticket)
@@ -3314,6 +3347,35 @@ BEG and END (region to sort)."
 
 ;;   (add-hook 'emacs-lisp-mode-hook 'sanityinc/enable-rainbow-mode-if-theme))
 #+END_SRC
+**** cider overlays
+#+begin_src emacs-lisp
+(autoload 'cider--make-result-overlay "cider-overlays")
+
+(defun endless/eval-overlay (value point)
+  (cider--make-result-overlay (format "%S" value)
+    :where point
+    :duration 'command)
+  ;; Preserve the return value.
+  value)
+
+(advice-add 'eval-region :around
+            (lambda (f beg end &rest r)
+              (endless/eval-overlay
+               (apply f beg end r)
+               end)))
+
+(advice-add 'eval-last-sexp :filter-return
+            (lambda (r)
+              (endless/eval-overlay r (point))))
+
+(advice-add 'eval-defun :filter-return
+            (lambda (r)
+              (endless/eval-overlay
+               r
+               (save-excursion
+                 (end-of-defun)
+                 (point)))))
+#+end_src
 *** web
 **** emmet-mode
 #+BEGIN_SRC emacs-lisp
