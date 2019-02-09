@@ -694,6 +694,7 @@ enjoy using a lot.
 **** [#A] literate-devtools
 ***** org-element helpers
 ****** get-node-property
+
 #+begin_src emacs-lisp
 (defun org-literate-devtools/get-node-property (property &optional pom)
   (save-excursion
@@ -705,6 +706,7 @@ enjoy using a lot.
 #+end_src
 
 ****** search-ancestor
+
 #+begin_src emacs-lisp
 (defun org-literate-devtools/search-ancestor (predicate)
   (save-excursion
@@ -716,6 +718,7 @@ enjoy using a lot.
      (when (funcall predicate)
        (point-marker)))))
 #+end_src
+
 ***** projects
 ****** search-project
 #+begin_src emacs-lisp
