@@ -428,12 +428,15 @@ enjoy using a lot.
 #+end_src
 ** EShell
 *** with-eshell
+
 #+begin_src emacs-lisp
 (defmacro with-eshell (&rest forms)
   `(save-window-excursion
      (spawn-custom-shell (format "*%s-eshell*" (file-name-sans-extension (buffer-name))))
-     ,@forms))
+     ,@forms
+     (eshell-reset)))
 #+end_src
+
 *** keybindings
 #+begin_src emacs-lisp
 (global-set-key (kbd "C-x y e") 'eshell)
