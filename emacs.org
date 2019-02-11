@@ -711,7 +711,10 @@ enjoy using a lot.
       (org-goto-marker-or-bmk pom))
     (unless (org-at-heading-p)
       (org-back-to-heading))
-    (plist-get (org-element--get-node-properties) property)))
+    (plist-get (org-element--get-node-properties)
+               (cond ((symbolp property) property)
+                     ((stringp property) (intern (format ":%s" property)))
+                     (t (error "Unable to retrieve project property"))))))
 #+end_src
 
 ****** search-ancestor
@@ -729,13 +732,17 @@ enjoy using a lot.
 #+end_src
 
 ***** projects
+
+#+begin_quote
+Headlines with explicit categories meant as a projects.
+#+end_quote
+
 ****** search-project
 
 #+begin_src emacs-lisp
 (defun org-literate-devtools-search-project ()
   (org-literate-devtools-search-ancestor
-   ;; #'(lambda () (seq-intersection '("Project") (org-get-tags)))
-   #'(lambda () (org-literate-devtools-get-node-property :PROJECT))))
+   #'(lambda () (org-literate-devtools-get-node-property "CATEGORY"))))
 #+end_src
 
 ****** project-get-property
@@ -743,18 +750,15 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (defun org-literate-devtools-project-get-property (property)
   (org-literate-devtools-get-node-property
-   (cond ((symbolp property) property)
-         ((stringp property) (intern (format ":%s" property)))
-         (t (error "Unable to retrieve project property")))
-   (org-literate-devtools-search-project)))
+   property (org-literate-devtools-search-project)))
 #+end_src
 
-****** insert-heading
+****** COMMENT insert-heading
 
 #+begin_src emacs-lisp
 (defun org-literate-devtools-insert-heading ()
   (when-let (pom (org-literate-devtools-search-project))
-    (let ((project (org-literate-devtools-get-node-property :PROJECT pom)))
+    (let ((project (org-literate-devtools-get-node-property "CATEGORY" pom)))
       (insert (format "[%s]" project))
       (end-of-line))))
 
