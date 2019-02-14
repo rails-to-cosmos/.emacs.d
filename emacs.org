@@ -756,11 +756,16 @@ Headlines with explicit categories meant as a projects.
 ****** COMMENT insert-heading
 
 #+begin_src emacs-lisp
-(defun org-literate-devtools-insert-heading ()
-  (when-let (pom (org-literate-devtools-search-project))
-    (let ((project (org-literate-devtools-get-node-property "CATEGORY" pom)))
-      (insert (format "[%s]" project))
-      (end-of-line))))
+(defun org-literate-devtools-toggle-verbatim-category ()
+  (save-excursion
+    (when (not (org-at-heading-p))
+      (org-back-to-heading t))
+    (org-beginning-of-line)
+    (when (or (looking-at org-todo-regexp)
+              (looking-at org-comment-string))
+      (forward-word)
+      (insert " "))
+    (insert (format "[%s]" (org-get-category)))))
 
 (add-hook 'org-insert-heading-hook #'org-literate-devtools-insert-heading)
 #+end_src
