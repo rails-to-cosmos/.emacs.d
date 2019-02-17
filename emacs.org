@@ -9,7 +9,7 @@
 * Links
 - https://github.com/alphapapa/emacs-package-dev-handbook
 * Ideas [0/7]
-** TODO org-staff                                                              :emacs_stuff:
+** TODO [Emacs] org-staff                                                              :emacs_stuff:
 :PROPERTIES:
 :LAST_REPEAT: [2018-02-25 Sun 23:53]
 :END:
@@ -753,21 +753,38 @@ Headlines with explicit categories meant as a projects.
    property (org-literate-devtools-search-project)))
 #+end_src
 
-****** COMMENT insert-heading
+****** COMMENT toggle-explicit-category
 
 #+begin_src emacs-lisp
-(defun org-literate-devtools-toggle-verbatim-category ()
+(defun org-literate-devtools-toggle-explicit-category ()
+  (interactive)
   (save-excursion
-    (when (not (org-at-heading-p))
-      (org-back-to-heading t))
-    (org-beginning-of-line)
-    (when (or (looking-at org-todo-regexp)
-              (looking-at org-comment-string))
-      (forward-word)
-      (insert " "))
-    (insert (format "[%s]" (org-get-category)))))
+    (org-back-to-heading t)
+    (let ((case-fold-search nil)
+          (explicit-category (format "[%s]" (org-get-category))))
 
-(add-hook 'org-insert-heading-hook #'org-literate-devtools-insert-heading)
+      (when (looking-at org-todo-line-regexp)
+        (beginning-of-line)
+        (let*
+            ((eol (save-excursion
+                    (end-of-line)
+                    (mark)))
+             (category-specified-p (save-excursion
+                                     (condition-case nil
+                                         (progn
+                                           (search-forward explicit-category eol) t)
+                                       ('error nil)))))
+          (when (not category-specified-p)
+            (condition-case nil
+                (progn (re-search-forward org-todo-regexp)
+                       (insert " "))
+              ('error (progn (search-forward "* ")
+                             (insert " ")
+                             (backward-char))))
+            (insert explicit-category)))))))
+
+;; (add-hook 'org-insert-heading-hook #'org-literate-devtools-insert-heading)
+
 #+end_src
 
 ****** task-hooks
@@ -1175,7 +1192,7 @@ When COND is nil, insert CHAR."
 **** org-auto-property
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
+  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs](@/!)"))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+end_src
@@ -3472,19 +3489,12 @@ BEG and END (region to sort)."
 (use-package emmet-mode
   :ensure t)
 #+end_src
-**** js
+**** jsx
 #+begin_src emacs-lisp
-(use-package js2-mode
+(use-package rjsx-mode
   :mode ("\\.js\\'" . js2-mode)
-  :commands js2-mode
-  :ensure t)
-
-(use-package ac-js2
-  :commands ac-js2
-  :ensure t)
-
-(use-package js-comint
-  :commands js-comint
+  :config (progn
+            (setq js-indent-level 2))
   :ensure t)
 #+end_src
 **** json
