@@ -27,8 +27,8 @@
 (use-package org
   :ensure t)
 
-(add-to-list 'safe-local-variable-values '(eval ov-highlight-load))
-(org-babel-load-file (expand-file-name "~/.emacs.d/emacs.org"))
+(org-babel-load-file
+ (expand-file-name "emacs.org" user-emacs-directory))
 
 (provide 'init)
 ;;; init.el ends here

@@ -47,6 +47,8 @@
    :fetcher git
    :url "https://framagit.org/steckerhalter/quelpa-use-package.git"))
 (require 'quelpa-use-package)
+
+(setq quelpa-upgrade-p t)
 #+end_src
 
 ** better-defaults
