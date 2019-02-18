@@ -654,7 +654,7 @@ enjoy using a lot.
 #+end_src
 *** experiments
 **** [#A] org-glance
-
+     
 #+begin_src emacs-lisp
 (use-package org-glance
   :quelpa (org-glance :fetcher github :repo "rails-to-cosmos/org-glance"))
