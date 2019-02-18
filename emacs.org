@@ -8,19 +8,6 @@
 #+end_src
 * Links
 - https://github.com/alphapapa/emacs-package-dev-handbook
-* Books and Articles
-** [[http://joaotavora.github.io/sly/#A-SLY-tour-for-SLIME-users][SLY User Manual, version 1.0.0-beta-2]]                                       :Emacs:
-:PROPERTIES:
-:CATEGORY: Articles
-:END:
-** [[https://vxlabs.com/2017/06/03/querying-restful-webservices-into-emacs-orgmode-tables/][Querying RESTful webservices into Emacs orgmode tables – vxlabs]]             :Emacs:Org:
-:PROPERTIES:
-:CATEGORY: Articles
-:END:
-** [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][Use Org-Mode Links for Absolutely Anything · Endless Parentheses]]            :Emacs:Org:
-:PROPERTIES:
-:CATEGORY: Articles
-:END:
 * Useful Configs
 - [[https://github.com/howardabrams/dot-files][GitHub - howardabrams/dot-files: My Emacs initialization code and standard scripts I use for client and servers alike.]]
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
@@ -36,28 +23,11 @@
 :header-args: :results silent :mkdirp yes
 :END:
 
-** quelpa
-
-#+begin_src emacs-lisp
-(use-package quelpa
-  :ensure t)
-
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://framagit.org/steckerhalter/quelpa-use-package.git"))
-(require 'quelpa-use-package)
-
-(setq quelpa-upgrade-p t)
-#+end_src
-
 ** better-defaults
-
 #+begin_src emacs-lisp
 (use-package better-defaults
   :ensure t)
 #+end_src
-
 ** Lisp
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
 #+begin_src emacs-lisp
@@ -654,35 +624,31 @@ enjoy using a lot.
 #+end_src
 *** experiments
 **** [#A] org-glance
-     
+
 #+begin_src emacs-lisp
 (use-package org-glance
-  :quelpa (org-glance :fetcher github :repo "rails-to-cosmos/org-glance"))
+  :load-path "~/sync/stuff/org-glance")
 #+end_src
 
-***** password-manager
-
+***** og-password-manager
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
   :bind (("C-x y p p" . org-glance-password-manager/launch)
          ("C-x y p e" . org-glance-password-manager/encrypt-entry)
          ("C-x y p d" . org-glance-password-manager/decrypt-entry))
-  :config (setq org-glance-password-file "~/sync/glance/passwords.org")
-  :quelpa (org-glance-password-manager :fetcher github :repo "rails-to-cosmos/org-glance-password-manager"))
+  :load-path "~/sync/stuff/org-glance-password-manager")
 #+end_src
-
-***** bookmark
-
+***** og-bookmark
 #+begin_src emacs-lisp
 (use-package org-glance-bookmark
   :bind (("C-x j j" . org-glance-bookmark-jump)
          ("C-x j l" . org-glance-bookmark-jump-local)
          ("C-x p m" . org-glance-bookmark-set))
-  :config (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org")
-  :quelpa (org-glance-bookmark :fetcher github :repo "rails-to-cosmos/org-glance-bookmark"))
+  :config (progn
+            (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
+  :load-path "~/sync/stuff/org-glance-bookmark")
 #+end_src
-
-**** [#A] org-literate-devtools
+**** Literate Devtools
 
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
@@ -690,7 +656,7 @@ enjoy using a lot.
          ("C-x t g" . org-literate-devtools-goto-tangle-file)
          ("C-x t m" . org-literate-devtools-build)
          ("C-x t c" . org-literate-devtools-compile-project))
-  :quelpa (org-literate-devtools :fetcher github :repo "rails-to-cosmos/org-literate-devtools"))
+  :load-path "~/sync/stuff/org-literate-devtools")
 #+end_src
 
 **** char-completion
@@ -756,7 +722,7 @@ When COND is nil, insert CHAR."
 **** org-auto-property
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs] [Emacs](@/!)"))))
+  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+end_src
@@ -1052,7 +1018,7 @@ bidirectional reordering.")
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
 #+begin_src emacs-lisp
 (use-package ledna
-  :quelpa (ledna :fetcher github :repo "rails-to-cosmos/ledna"))
+  :load-path "~/sync/stuff/ledna")
 
 (use-package org-edna
   :config (progn
@@ -3053,12 +3019,19 @@ BEG and END (region to sort)."
 (use-package emmet-mode
   :ensure t)
 #+end_src
-**** jsx
+**** js
 #+begin_src emacs-lisp
-(use-package rjsx-mode
+(use-package js2-mode
   :mode ("\\.js\\'" . js2-mode)
-  :config (progn
-            (setq js-indent-level 2))
+  :commands js2-mode
+  :ensure t)
+
+(use-package ac-js2
+  :commands ac-js2
+  :ensure t)
+
+(use-package js-comint
+  :commands js-comint
   :ensure t)
 #+end_src
 **** json
