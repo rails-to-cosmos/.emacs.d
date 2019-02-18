@@ -3019,10 +3019,15 @@ BEG and END (region to sort)."
 (use-package emmet-mode
   :ensure t)
 #+end_src
-**** js
+**** jsx
 #+begin_src emacs-lisp
-(use-package js2-mode
+(use-package rjsx-mode
   :mode ("\\.js\\'" . js2-mode)
+  :config (progn
+            (setq js-indent-level 2))
+  :ensure t)
+
+(use-package js2-mode
   :commands js2-mode
   :ensure t)
 
