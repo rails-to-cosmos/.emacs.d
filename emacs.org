@@ -1164,23 +1164,6 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
         (orgtbl-write-results (format "#+begin_src org\n%s\n#+end_src\n" (string-join columns "\n"))))
     (error "Table not found")))
 
-;; (defun orgtbl-to-python-tuples ()
-;;   (interactive)
-;;   (if (org-at-table-p)
-;;       (let ((name (orgtbl-get-name-at-point))
-;;             (cols (mapconcat 'identity (org-table-to-lisp) ", ")))
-;;         (orgtbl-end-of-table)
-;;         (save-excursion
-;;           (org-babel-goto-named-result name)
-;;           (org-babel-remove-result-at-point))
-;;         (insert "\n")
-;;         (org-babel--insert-results-keyword name nil)
-;;         (forward-line)
-;;         (insert (format "#+begin_src python\n%s\n#+end_src\n" (format "%s = [\n%s\n]" name cols)))
-;;         (previous-line)
-;;         (org-babel-goto-src-block-head))
-;;     (error "Table not found")))
-
 (defun orgtbl-get-name-at-point ()
   (save-excursion
     (while (org-at-table-p)
@@ -1681,7 +1664,61 @@ If KWD is a number, get the corresponding match group."
 
 *** completion
 
-**** company
+**** popup-imenu
+
+#+begin_src emacs-lisp
+(use-package popup-imenu
+  :ensure t)
+#+end_src
+
+**** hippie-expand
+
+#+begin_src emacs-lisp
+(setq hippie-expand-try-functions-list '(try-expand-dabbrev try-expand-dabbrev-all-buffers try-expand-dabbrev-from-kill try-complete-file-name-partially try-complete-file-name try-expand-all-abbrevs try-expand-list try-expand-line try-complete-lisp-symbol-partially try-complete-lisp-symbol))
+#+end_src
+
+**** pabbrev
+
+#+begin_src emacs-lisp
+(use-package pabbrev
+  :config (progn
+            (global-pabbrev-mode)
+            (define-key pabbrev-mode-map [tab] 'pabbrev-expand-maybe))
+  :ensure t)
+#+end_src
+
+***** popup-suggestions
+
+#+begin_src emacs-lisp
+(require 'popup)
+
+(defun pabbrevx-suggestions-goto-buffer (suggestions)
+  (let* ((candidates (mapcar 'car suggestions))
+         (bounds (pabbrev-bounds-of-thing-at-point))
+         (selection (popup-menu* candidates
+                                 :point (car bounds)
+                                 :scroll-bar nil
+                                 :isearch t
+                                 :isearch-filter (popup-imenu--filter))))
+    (when selection
+      ;; modified version of pabbrev-suggestions-insert
+      (let ((point))
+        (save-excursion
+          (progn
+            (delete-region (car bounds) (cdr bounds))
+            (insert selection)
+            (setq point (point))))
+        (if point
+            (goto-char point))
+        ;; need to nil this so pabbrev-expand-maybe-full won't try
+        ;; pabbrev expansion if user hits another TAB after ac aborts
+        (setq pabbrev-last-expansion-suggestions nil)))))
+
+(fset 'pabbrev-suggestions-goto-buffer 'pabbrevx-suggestions-goto-buffer)
+#+end_src
+
+**** COMMENT company
+
 #+begin_src emacs-lisp
 (use-package company
   :config (global-company-mode)
@@ -2769,222 +2806,13 @@ BEG and END (region to sort)."
 (setq comint-prompt-read-only t)
 #+end_src
 *** lisp
+
 #+begin_src emacs-lisp
 (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
 (setq byte-compile-warnings '(not cl-functions))
-
-;; (use-package elisp-slime-nav
-;;   :ensure t)
-
-;; (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
-;;   (add-hook hook 'elisp-slime-nav-mode))
-
-;; (use-package lively
-;;   :ensure t)
-
-;; Make C-x C-e run 'eval-region if the region is active
-
-;; (defun sanityinc/eval-last-sexp-or-region (prefix)
-;;   "Eval region from BEG to END if active, otherwise the last sexp."
-;;   (interactive "P")
-;;   (if (and (mark) (use-region-p))
-;;       (eval-region (min (point) (mark)) (max (point) (mark)))
-;;     (pp-eval-last-sexp prefix)))
-
-;; (global-set-key (kbd "M-:") 'pp-eval-expression)
-
-;; (after-load 'lisp-mode
-;;   (define-key emacs-lisp-mode-map (kbd "C-x C-e") 'sanityinc/eval-last-sexp-or-region))
-
-;; (use-package ipretty
-;;   :ensure t)
-
-;; (ipretty-mode 1)
-
-;; (defadvice pp-display-expression (after make-read-only (expression out-buffer-name) activate)
-;;   "Enable `view-mode' in the output buffer - if any - so it can be closed with `\"q\"."
-;;   (when (get-buffer out-buffer-name)
-;;     (with-current-buffer out-buffer-name
-;;       (view-mode 1))))
-
-
-;; ;; ----------------------------------------------------------------------------
-;; ;; Hippie-expand
-;; ;; ----------------------------------------------------------------------------
-
-;; (defun my/emacs-lisp-module-name ()
-;;   "Search the buffer for `provide' declaration."
-;;   (save-excursion
-;;     (goto-char (point-min))
-;;     (when (search-forward-regexp "^(provide '" nil t)
-;;       (symbol-name (symbol-at-point)))))
-
-;; ;; Credit to Chris Done for this one.
-;; (defun my/try-complete-lisp-symbol-without-namespace (old)
-;;   "Hippie expand \"try\" function which expands \"-foo\" to \"modname-foo\" in elisp."
-;;   (unless old
-;;     (he-init-string (he-lisp-symbol-beg) (point))
-;;     (when (string-prefix-p "-" he-search-string)
-;;       (let ((mod-name (my/emacs-lisp-module-name)))
-;;         (when mod-name
-;;           (setq he-expand-list (list (concat mod-name he-search-string)))))))
-;;   (when he-expand-list
-;;     (he-substitute-string (car he-expand-list))
-;;     (setq he-expand-list nil)
-;;     t))
-
-;; (defun set-up-hippie-expand-for-elisp ()
-;;   "Locally set `hippie-expand' completion functions for use with Emacs Lisp."
-;;   (make-local-variable 'hippie-expand-try-functions-list)
-;;   (add-to-list 'hippie-expand-try-functions-list 'try-complete-lisp-symbol t)
-;;   (add-to-list 'hippie-expand-try-functions-list 'try-complete-lisp-symbol-partially t)
-;;   (add-to-list 'hippie-expand-try-functions-list 'my/try-complete-lisp-symbol-without-namespace t))
-
-
-;; ----------------------------------------------------------------------------
-;; Automatic byte compilation
-;; ----------------------------------------------------------------------------
-
-;; (use-package auto-compile
-;;   :ensure t)
-
-;; (auto-compile-on-save-mode 1)
-;; (auto-compile-on-load-mode 1)
-
-;; ----------------------------------------------------------------------------
-;; Highlight current sexp
-;; ----------------------------------------------------------------------------
-
-;; (use-package hl-sexp
-;;   :ensure t)
-
-
-;; ;; Prevent flickery behaviour due to hl-sexp-mode unhighlighting before each command
-;; (after-load 'hl-sexp
-;;   (defadvice hl-sexp-mode (after unflicker (&optional turn-on) activate)
-;;     (when turn-on
-;;       (remove-hook 'pre-command-hook #'hl-sexp-unhighlight))))
-
-
-
-;;; Support byte-compilation in a sub-process, as
-;;; required by highlight-cl
-
-;; (defun sanityinc/byte-compile-file-batch (filename)
-;;   "Byte-compile FILENAME in batch mode, ie. a clean sub-process."
-;;   (interactive "fFile to byte-compile in batch mode: ")
-;;   (let ((emacs (car command-line-args)))
-;;     (compile
-;;      (concat
-;;       emacs " "
-;;       (mapconcat
-;;        'shell-quote-argument
-;;        (list "-Q" "-batch" "-f" "batch-byte-compile" filename)
-;;        " ")))))
-
-
-;; (defun sanityinc/lisp-setup ()
-;;   "Enable features useful in any Lisp mode."
-;;   (rainbow-delimiters-mode t)
-;;   (enable-paredit-mode)
-;;   (eldoc-mode t))
-
-;; ;; (defun sanityinc/emacs-lisp-setup ()
-;; ;;   "Enable features useful when working with elisp."
-;; ;;   (elisp-slime-nav-mode t)
-;; ;;   (set-up-hippie-expand-for-elisp))
-
-;; (defconst sanityinc/elispy-modes
-;;   '(emacs-lisp-mode ielm-mode)
-;;   "Major modes relating to elisp.")
-
-;; (defconst sanityinc/lispy-modes
-;;   (append sanityinc/elispy-modes
-;;           '(lisp-mode inferior-lisp-mode lisp-interaction-mode))
-;;   "All lispy major modes.")
-
-;; (require 'derived)
-
-;; (dolist (hook (mapcar #'derived-mode-hook-name sanityinc/lispy-modes))
-;;   (add-hook hook 'sanityinc/lisp-setup))
-
-;; ;; (dolist (hook (mapcar #'derived-mode-hook-name sanityinc/elispy-modes))
-;; ;;   (add-hook hook 'sanityinc/emacs-lisp-setup))
-
-;; (defun sanityinc/maybe-check-parens ()
-;;   "Run `check-parens' if this is a lispy mode."
-;;   (when (memq major-mode sanityinc/lispy-modes)
-;;     (check-parens)))
-
-;; (add-hook 'after-save-hook #'sanityinc/maybe-check-parens)
-
-;; (use-package eldoc-eval
-;;   :ensure t)
-
-;; (require 'eldoc-eval)
-
-;; (add-to-list 'auto-mode-alist '("\\.emacs-project\\'" . emacs-lisp-mode))
-;; (add-to-list 'auto-mode-alist '("archive-contents\\'" . emacs-lisp-mode))
-
-;; (use-package cl-lib-highlight
-;;   :ensure t)
-
-;; (after-load 'lisp-mode
-;;   (cl-lib-highlight-initialize))
-
-;; ----------------------------------------------------------------------------
-;; Delete .elc files when reverting the .el from VC or magit
-;; ----------------------------------------------------------------------------
-
-;; When .el files are open, we can intercept when they are modified
-;; by VC or magit in order to remove .elc files that are likely to
-;; be out of sync.
-
-;; This is handy while actively working on elisp files, though
-;; obviously it doesn't ensure that unopened files will also have
-;; their .elc counterparts removed - VC hooks would be necessary for
-;; that.
-
-;; (defvar sanityinc/vc-reverting nil
-;;   "Whether or not VC or Magit is currently reverting buffers.")
-
-;; (defadvice revert-buffer (after sanityinc/maybe-remove-elc activate)
-;;   "If reverting from VC, delete any .elc file that will now be out of sync."
-;;   (when sanityinc/vc-reverting
-;;     (when (and (eq 'emacs-lisp-mode major-mode)
-;;                buffer-file-name
-;;                (string= "el" (file-name-extension buffer-file-name)))
-;;       (let ((elc (concat buffer-file-name "c")))
-;;         (when (file-exists-p elc)
-;;           (message "Removing out-of-sync elc file %s" (file-name-nondirectory elc))
-;;           (delete-file elc))))))
-
-;; (defadvice magit-revert-buffers (around sanityinc/reverting activate)
-;;   (let ((sanityinc/vc-reverting t))
-;;     ad-do-it))
-;; (defadvice vc-revert-buffer-internal (around sanityinc/reverting activate)
-;;   (let ((sanityinc/vc-reverting t))
-;;     ad-do-it))
-
-;; (when (eval-when-compile (> emacs-major-version 24.3))
-;;   (use-package macrostep
-;;     :ensure t))
-
-;; (after-load 'lisp-mode
-;;   (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))
-
-;; (when (eval-when-compile (>= emacs-major-version 24))
-;;   ;; rainbow-mode needs color.el, bundled with Emacs >= 24.
-;;   (use-package rainbow-mode
-;;     :ensure t)
-
-;;   (defun sanityinc/enable-rainbow-mode-if-theme ()
-;;     (when (string-match "\\(color-theme-\\|-theme\\.el\\)" (buffer-name))
-;;       (rainbow-mode 1)))
-
-;;   (add-hook 'emacs-lisp-mode-hook 'sanityinc/enable-rainbow-mode-if-theme))
 #+end_src
+
 **** cider overlays
 #+begin_src emacs-lisp
 (autoload 'cider--make-result-overlay "cider-overlays")
