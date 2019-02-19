@@ -624,13 +624,16 @@ enjoy using a lot.
 #+end_src
 *** experiments
 **** [#A] org-glance
+***** og-core
 
 #+begin_src emacs-lisp
 (use-package org-glance
+  :demand t
   :load-path "~/sync/stuff/org-glance")
 #+end_src
 
 ***** og-password-manager
+
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
   :bind (("C-x y p p" . org-glance-password-manager/launch)
@@ -638,8 +641,10 @@ enjoy using a lot.
          ("C-x y p d" . org-glance-password-manager/decrypt-entry))
   :config (setq org-glance-password-file "~/sync/glance/passwords.org")
   :load-path "~/sync/stuff/org-glance-password-manager")
+
 #+end_src
 ***** og-bookmark
+
 #+begin_src emacs-lisp
 (use-package org-glance-bookmark
   :bind (("C-x j j" . org-glance-bookmark-jump)
@@ -648,12 +653,13 @@ enjoy using a lot.
   :config (progn
             (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
   :load-path "~/sync/stuff/org-glance-bookmark")
+
 #+end_src
-**** Literate Devtools
+**** org-literate-devtools
 
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
-  :commands (org-literate-devtools-search-project)
+  :demand t
   :bind (("C-x t t" . org-literate-devtools-tangle-project)
          ("C-x t g" . org-literate-devtools-goto-tangle-file)
          ("C-x t m" . org-literate-devtools-build)
