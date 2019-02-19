@@ -653,6 +653,7 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
+  :commands (org-literate-devtools-search-project)
   :bind (("C-x t t" . org-literate-devtools-tangle-project)
          ("C-x t g" . org-literate-devtools-goto-tangle-file)
          ("C-x t m" . org-literate-devtools-build)
