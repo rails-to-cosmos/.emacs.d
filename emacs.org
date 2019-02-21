@@ -1705,6 +1705,7 @@ If KWD is a number, get the corresponding match group."
          (selection (popup-menu* candidates
                                  :point (car bounds)
                                  :scroll-bar nil
+                                 :margin-left 1
                                  :isearch t
                                  :isearch-filter (popup-imenu--filter))))
     (when selection
@@ -2095,6 +2096,13 @@ If KWD is a number, get the corresponding match group."
   :ensure t)
 #+end_src
 ** Utils
+*** docker
+
+#+begin_src emacs-lisp
+(use-package docker
+  :ensure t)
+#+end_src
+
 *** [[https://www.reddit.com/r/emacs/comments/9auzla/example_showing_how_useful_the_ampleregexps/][ample-regexps]]
 #+begin_src emacs-lisp
 (use-package ample-regexps
@@ -2858,7 +2866,7 @@ BEG and END (region to sort)."
 **** jsx
 #+begin_src emacs-lisp
 (use-package rjsx-mode
-  :mode ("\\.js\\'" . js2-mode)
+  :mode ("\\.js\\'" . rjsx-mode)
   :config (progn
             (setq js-indent-level 2))
   :ensure t)
@@ -2952,7 +2960,6 @@ BEG and END (region to sort)."
 (use-package jedi-direx
   :ensure t)
 #+end_src
-
 
 **** realgud
 #+begin_src emacs-lisp
