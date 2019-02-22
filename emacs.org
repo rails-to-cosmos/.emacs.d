@@ -653,7 +653,8 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
-  :commands (org-literate-devtools-search-project)
+  :commands (org-literate-devtools-search-project
+             org-literate-devtools-project-get-property)
   :bind (("C-x t t" . org-literate-devtools-tangle-project)
          ("C-x t g" . org-literate-devtools-goto-tangle-file)
          ("C-x t m" . org-literate-devtools-build)
@@ -1480,8 +1481,7 @@ If KWD is a number, get the corresponding match group."
           (lambda ()
             (setq-default
              org-todo-keyword-faces
-             '(;; ("DOCUMENTED" . "#53D253")
-               ("TEST" . "#F00")
+             '(("BLOCKED" . "#E74C3C")
                ("DEPLOY" . "#292")
                ("CANCELLED" . "#7B9ED2")
                ("STARTED" . "#749AF7")
@@ -1631,6 +1631,21 @@ If KWD is a number, get the corresponding match group."
     (org-show-entry)
     (show-children)))
 #+end_src
+*** Don't show tasks as scheduled if they are already shown as a deadline
+
+#+begin_src emacs-lisp
+(setq org-agenda-skip-scheduled-if-deadline-is-shown t)
+#+end_src
+
+*** Ignore scheduled and deadlines in todo-list
+
+#+begin_src emacs-lisp
+;;don't show tasks that are scheduled or have deadlines in the
+;;normal todo list
+(setq org-agenda-todo-ignore-deadlines (quote all))
+(setq org-agenda-todo-ignore-scheduled (quote all))
+#+end_src
+
 *** Unsorted Settings
 #+begin_src emacs-lisp
 (setq-default
@@ -2939,14 +2954,13 @@ BEG and END (region to sort)."
 (use-package jedi
   :config (progn
             (jedi:install-server)
-            (add-hook 'python-mode-hook 'jedi:setup)
+            (jedi:setup)
             (setq jedi:complete-on-dot t))
   :ensure t)
 
 (use-package jedi-direx
   :ensure t)
 #+end_src
-
 
 **** realgud
 #+begin_src emacs-lisp
