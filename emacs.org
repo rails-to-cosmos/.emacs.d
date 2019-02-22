@@ -584,6 +584,12 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 ** Org
+*** archive location
+
+#+begin_src emacs-lisp
+(setq org-archive-location "archives/%s_archive::")
+#+end_src
+
 *** refile-update-cookies
 #+begin_src emacs-lisp
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
