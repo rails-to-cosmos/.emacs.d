@@ -228,7 +228,14 @@ enjoy using a lot.
   :load-path "~/sync/stuff")
 
 (define-key dired-mode-map "/" 'dired-narrow-fuzzy)
-(define-key dired-mode-map (kbd "<DEL>") 'dired-up-directory)
+
+(defun dired-up-please ()
+  (interactive)
+  (condition-case nil
+      (dired-kill-subdir)
+    ('error nil))
+  (dired-up-directory))
+(define-key dired-mode-map (kbd "<DEL>") 'dired-up-please)
 #+end_src
 
 *** dired buffer names
@@ -259,8 +266,6 @@ enjoy using a lot.
 (defun rot-left(n l)
   (append (nthcdr n l) (butlast l (- (length l) n))))
 
-(defun rot-right(n l)
-  (append (nthcdr n l) (butlast l (+ (length l) n))))
 
 (defun dired-switch-buffers (&optional continue-switch)
   "Quickly switch between dired buffers."
