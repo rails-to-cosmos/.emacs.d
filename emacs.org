@@ -624,13 +624,16 @@ enjoy using a lot.
 #+end_src
 *** experiments
 **** [#A] org-glance
+***** og-core
 
 #+begin_src emacs-lisp
 (use-package org-glance
+  :demand t
   :load-path "~/sync/stuff/org-glance")
 #+end_src
 
 ***** og-password-manager
+
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
   :bind (("C-x y p p" . org-glance-password-manager/launch)
@@ -638,8 +641,10 @@ enjoy using a lot.
          ("C-x y p d" . org-glance-password-manager/decrypt-entry))
   :config (setq org-glance-password-file "~/sync/glance/passwords.org")
   :load-path "~/sync/stuff/org-glance-password-manager")
+
 #+end_src
 ***** og-bookmark
+
 #+begin_src emacs-lisp
 (use-package org-glance-bookmark
   :bind (("C-x j j" . org-glance-bookmark-jump)
@@ -648,13 +653,13 @@ enjoy using a lot.
   :config (progn
             (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
   :load-path "~/sync/stuff/org-glance-bookmark")
+
 #+end_src
-**** Literate Devtools
+**** org-literate-devtools
 
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
-  :commands (org-literate-devtools-search-project
-             org-literate-devtools-project-get-property)
+  :demand t
   :bind (("C-x t t" . org-literate-devtools-tangle-project)
          ("C-x t g" . org-literate-devtools-goto-tangle-file)
          ("C-x t m" . org-literate-devtools-build)
@@ -1714,6 +1719,7 @@ If KWD is a number, get the corresponding match group."
          (selection (popup-menu* candidates
                                  :point (car bounds)
                                  :scroll-bar nil
+                                 :margin-left 1
                                  :isearch t
                                  :isearch-filter (popup-imenu--filter))))
     (when selection
@@ -2104,6 +2110,13 @@ If KWD is a number, get the corresponding match group."
   :ensure t)
 #+end_src
 ** Utils
+*** docker
+
+#+begin_src emacs-lisp
+(use-package docker
+  :ensure t)
+#+end_src
+
 *** [[https://www.reddit.com/r/emacs/comments/9auzla/example_showing_how_useful_the_ampleregexps/][ample-regexps]]
 #+begin_src emacs-lisp
 (use-package ample-regexps
@@ -2867,7 +2880,7 @@ BEG and END (region to sort)."
 **** jsx
 #+begin_src emacs-lisp
 (use-package rjsx-mode
-  :mode ("\\.js\\'" . js2-mode)
+  :mode ("\\.js\\'" . rjsx-mode)
   :config (progn
             (setq js-indent-level 2))
   :ensure t)
