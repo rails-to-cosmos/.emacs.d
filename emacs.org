@@ -3107,18 +3107,6 @@ BEG and END (region to sort)."
 #+begin_src emacs-lisp
 (let ((face (list (list t (list :family "Inconsolata LGC")))))
   (custom-set-faces (list 'default face)))
-
-(defun adapt-cyrillic-font ()
-  (when (fboundp 'set-fontset-font)
-    (let* ((family (face-attribute 'default :family))
-           (size (face-attribute 'default :height))
-           (chars (cons (decode-char 'ucs #x0400)
-                        (decode-char 'ucs #x052F)))
-           (spec (font-spec :size (/ size 10) :name family)))
-      (set-fontset-font "fontset-default" chars spec))))
-
-(add-hook 'org-mode-hook #'adapt-cyrillic-font)
-(add-hook 'after-setting-font-hook #'adapt-cyrillic-font)
 #+end_src
 *** text scale
 #+begin_src emacs-lisp
