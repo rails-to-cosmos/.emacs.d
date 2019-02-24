@@ -23,17 +23,6 @@
 :header-args: :results silent :mkdirp yes
 :END:
 
-** quelpa
-#+begin_src emacs-lisp
-(use-package quelpa
-  :ensure t)
-
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://framagit.org/steckerhalter/quelpa-use-package.git"))
-(require 'quelpa-use-package)
-#+end_src
 ** Lisp
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
 #+begin_src emacs-lisp
@@ -235,6 +224,8 @@ enjoy using a lot.
 *** dired+
 
 #+begin_src emacs-lisp
+(require 'dired)
+
 (use-package dired+
   :load-path "~/sync/stuff")
 
