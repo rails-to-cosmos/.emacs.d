@@ -554,6 +554,15 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 ** Org
+*** locale
+
+#+begin_src emacs-lisp
+;; System locale to use for formatting time values.
+(setq system-time-locale "C")         ; Make sure that the weekdays in the
+                                      ; time stamps of your Org mode files and
+                                      ; in the agenda appear in English.
+#+end_src
+
 *** archive location
 
 #+begin_src emacs-lisp
@@ -3107,10 +3116,12 @@ BEG and END (region to sort)."
       :hook (after-init . doom-modeline-mode))
 #+end_src
 *** default font
+
 #+begin_src emacs-lisp
 (let ((face (list (list t (list :family "Inconsolata LGC")))))
   (custom-set-faces (list 'default face)))
 #+end_src
+
 *** text scale
 #+begin_src emacs-lisp
 (use-package default-text-scale
