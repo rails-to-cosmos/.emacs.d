@@ -519,6 +519,7 @@ enjoy using a lot.
 ** Keyboard
 *** default bindings
 #+begin_src emacs-lisp
+(define-key global-map (kbd "C-x y d c") 'desktop-clear)
 (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
 (define-key global-map (kbd "C-x k") 'kill-this-buffer)
 #+end_src
@@ -652,15 +653,17 @@ When COND is nil, insert CHAR."
 #+end_src
 ***** compl-staff
 #+begin_src emacs-lisp
+(defvar org-glance-contacts-file "~/sync/glance/contacts.org")
+
 (defun org-babel-at-src-block-p ()
   (memq (org-element-type (org-element-context)) '(inline-src-block src-block)))
 
 (defun org-compl-staff ()
   (interactive)
 
-  (setq staff-persons (with-temp-file org-contacts-file
-                          (when (file-exists-p org-contacts-file)
-                            (insert-file-contents-literally org-contacts-file))
+  (setq staff-persons (with-temp-file org-glance-contacts-file
+                          (when (file-exists-p org-glance-contacts-file)
+                            (insert-file-contents-literally org-glance-contacts-file))
 
                           (org-element-map (org-element-parse-buffer 'headline t)
                               'plain-text 'append)))
@@ -670,8 +673,8 @@ When COND is nil, insert CHAR."
                              (looking-back "\\W")))
                   (lambda (item) (progn
                               (when (not (member item staff-persons))
-                                (with-temp-file org-contacts-file
-                                  (insert-file-contents-literally org-contacts-file)
+                                (with-temp-file org-glance-contacts-file
+                                  (insert-file-contents-literally org-glance-contacts-file)
                                   (end-of-buffer)
                                   (insert (format "* %s\n" item))))
                               (insert (format "[[staff:%s][%s@]]" item item))
