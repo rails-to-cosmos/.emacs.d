@@ -1793,6 +1793,17 @@ If KWD is a number, get the corresponding match group."
 (fset 'pabbrev-suggestions-goto-buffer 'pabbrevx-suggestions-goto-buffer)
 #+end_src
 
+
+**** abbrev
+
+#+begin_src emacs-lisp
+(define-abbrev-table 'python-mode-abbrev-table
+  '(("pdb" "import pdb; pdb.set_trace()" nil 0)
+    ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
+
+(add-hook 'prog-mode-hook (lambda () (abbrev-mode)))
+#+end_src
+
 **** COMMENT company
 
 #+begin_src emacs-lisp
@@ -2840,6 +2851,12 @@ BEG and END (region to sort)."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+*** rmsbolt
+
+#+begin_src emacs-lisp
+(use-package rmsbolt
+  :ensure t)
+#+end_src
 
 *** ggtags
 
