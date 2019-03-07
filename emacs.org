@@ -226,6 +226,9 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (require 'dired)
 
+(use-package dired-narrow
+  :ensure t)
+
 (use-package dired+
   :load-path "~/sync/stuff")
 
