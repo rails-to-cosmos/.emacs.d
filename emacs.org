@@ -569,7 +569,13 @@ enjoy using a lot.
 *** archive location
 
 #+begin_src emacs-lisp
-(setq org-archive-location "archives/%s_archive::")
+(setq org-archive-location
+      (concat
+       (format "archives/%d/%02d/%%s_archive::"
+               ;; year
+               (caddr (calendar-current-date))
+               ;; month
+               (cadr (calendar-current-date)))))
 #+end_src
 
 *** refile-update-cookies
