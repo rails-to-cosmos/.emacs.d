@@ -571,11 +571,8 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (setq org-archive-location
       (concat
-       (format "archives/%d/%02d/%%s_archive::"
-               ;; year
-               (caddr (calendar-current-date))
-               ;; month
-               (cadr (calendar-current-date)))))
+       (format "archives/%s/%%s_archive::"
+               (format-time-string "%Y/%m" (current-time)))))
 #+end_src
 
 *** refile-update-cookies
