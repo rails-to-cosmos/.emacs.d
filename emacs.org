@@ -398,7 +398,7 @@ enjoy using a lot.
 
 (use-package exec-path-from-shell
   :config (progn
-            (when (memq window-system '(mac ns))
+            (when (memq window-system '(mac ns gnulinux x))
               (exec-path-from-shell-initialize)
               (exec-path-from-shell-copy-env "SSH_AGENT_PID")
               (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
@@ -1232,13 +1232,14 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 #+end_src
 **** ob-ipython
 #+begin_src emacs-lisp
-(when (file-exists-p (s-chomp (eshell-command-result "which jupyter")))
+(if (file-exists-p (s-chomp (eshell-command-result "which jupyter")))
   (use-package ob-ipython
     :config (progn
               (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
               (setq-default python-shell-prompt-detect-failure-warning nil)
               (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
-    :ensure t))
+    :ensure t)
+  (message "Unable to load ob-ipython: jupyter not found."))
 
 ;; (defun ob-ipython-inline-image (b64-string)
 ;;   "Write the b64-string to a temporary file. Returns an org-link to the file."
