@@ -1680,7 +1680,7 @@ If KWD is a number, get the corresponding match group."
 (use-package pabbrev
   :config (progn
             (global-pabbrev-mode)
-            (define-key pabbrev-mode-map "\M-/" 'pabbrev-expand-maybe))
+            (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
   :ensure t)
 #+end_src
 
