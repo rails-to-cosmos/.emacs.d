@@ -1479,7 +1479,10 @@ If KWD is a number, get the corresponding match group."
                ("CANCELLED" . "#7B9ED2")
                ("STARTED" . "#749AF7")
                ("PENDING" . "#D0E1F9")
-               ("DELEGATED" . "#8B7FD7")))))
+               ("DELEGATED" . "#8B7FD7")
+
+               ("F" . "#E74C3C")
+               ("TEST" . "#749AF7")))))
 #+end_src
 **** Emphasis
 #+begin_src emacs-lisp
@@ -1644,7 +1647,7 @@ If KWD is a number, get the corresponding match group."
 (setq-default
  org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
- org-log-done t
+ org-log-done nil
  org-special-ctrl-a/e t
  org-special-ctrl-k t
  org-edit-timestamp-down-means-later t
@@ -1664,7 +1667,7 @@ If KWD is a number, get the corresponding match group."
  org-hide-leading-stars t
  org-startup-indented t
  org-id-locations-file (tmp/ "org-id-locations.txt")
- org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c@/!)"))))
+ org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c!)"))))
 #+end_src
 ** Editor
 :PROPERTIES:
