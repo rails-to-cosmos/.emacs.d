@@ -1236,7 +1236,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 (if (file-exists-p (s-chomp (eshell-command-result "which jupyter")))
   (use-package ob-ipython
     :config (progn
-              (add-to-list 'org-latex-minted-langs '(ipython "python"))
+              ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
               (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
               (setq-default python-shell-prompt-detect-failure-warning nil)
               (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
