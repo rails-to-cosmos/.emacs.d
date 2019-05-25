@@ -1,3 +1,4 @@
+archives
 .DS_Store
 tramp
 auto-save-list/
@@ -60,3 +61,4 @@ emms
 history
 quelpa
 /transient
+image-dired
