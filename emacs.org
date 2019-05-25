@@ -555,6 +555,638 @@ enjoy using a lot.
             (emms-default-players))
   :ensure t)
 #+end_src
+** Utils
+*** docker
+
+#+begin_src emacs-lisp
+(use-package docker
+  :ensure t)
+#+end_src
+
+*** [[https://www.reddit.com/r/emacs/comments/9auzla/example_showing_how_useful_the_ampleregexps/][ample-regexps]]
+#+begin_src emacs-lisp
+(use-package ample-regexps
+  :ensure t)
+
+;; Example:
+;; (define-arx url-rx
+;;   '((http (seq bos (group "http") "://") )
+;;     (https (seq bos (group "https") "://") )
+;;     (https? (seq bos (group "http" (optional "s")) "://") )
+;;     (protocol (seq bos (group (1+ (not (any ":")))) "://"))
+;;     (host (group (1+ (not (any "/")))))
+;;     (path (group "/" (1+ (not (any "?")))))
+;;     (query (seq "?" (group (1+ (not (any "#"))))))
+;;     (fragment (seq "#" (group (1+ anything))))))
+
+;; ;; Accept HTTP or HTTPS
+;; (let ((url "http://server/path?query#fragment"))
+;;   (when (string-match (url-rx https? host path (optional query) (optional fragment)) url)
+;;     (list (match-string 0 url)
+;;           (match-string 1 url)
+;;           (match-string 2 url)
+;;           (match-string 3 url)
+;;           (match-string 4 url)
+;;           (match-string 5 url))))
+#+end_src
+*** find file in project
+#+begin_src emacs-lisp
+(use-package find-file-in-project
+  :bind ("C-x f" . find-file-in-current-directory)
+  :ensure t)
+#+end_src
+*** syncthing-conflict-manager
+#+begin_src emacs-lisp
+(defun syncthing-get-conflicted-files ()
+  (let* ((bfn (buffer-file-name))
+         (sefn (file-name-base bfn))
+         (dir (file-name-directory bfn))
+         (files (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" sefn))))
+    files))
+
+(defun syncthing-diff-conflict ()
+  (interactive)
+  (if-let ((files (syncthing-get-conflicted-files)))
+      (progn
+        (diff (car files) (buffer-file-name))
+        (car files))
+    (progn
+      (message "No conflicts found.")
+      nil)))
+
+(defun syncthing-trash-conflicted ()
+  (interactive)
+  (when-let ((file (syncthing-diff-conflict)))
+    (when (y-or-n-p "Do you really want to move conflicted file to trash?")
+      (move-file-to-trash file))))
+#+end_src
+*** num-with-ordinal-indicator
+#+begin_src emacs-lisp
+(defun get-ordinal-indicator (num)
+  (let* ((two-digs (mod num 100))
+         (one-dig (mod num 10)))
+    (cond ((and (> two-digs 3) (< two-digs 21)) 'th)
+          ((= one-dig 1) 'st)
+          ((= one-dig 2) 'nd)
+          ((= one-dig 3) 'rd)
+          (t 'th))))
+
+(defun num-with-ordinal-indicator (num)
+  (format "%d%s" num (get-ordinal-indicator num)))
+#+end_src
+*** volatile-highlights
+#+begin_src emacs-lisp
+(use-package volatile-highlights
+  :config (progn
+            (volatile-highlights-mode t)
+            (vhl/define-extension 'abbrev 'expand-abbrev)
+            (vhl/install-extension 'abbrev))
+  :ensure t)
+#+end_src
+*** [[https://github.com/bbatsov/super-save][super-save]]
+
+#+begin_src emacs-lisp
+(use-package super-save
+  :config (progn
+            (super-save-initialize)
+            (setq auto-save-default nil)
+            (setq super-save-auto-save-when-idle t))
+  :ensure t)
+#+end_src
+
+*** hydra
+
+#+begin_src emacs-lisp
+(use-package hydra
+  :ensure t)
+#+end_src
+
+*** move-text
+
+#+begin_src emacs-lisp
+(use-package move-text
+  :bind (("C-S-p" . hydra-move-text/body)
+         ("C-S-n" . hydra-move-text/body))
+  :config (progn
+            (defhydra hydra-move-text ()
+              "Move line up/down"
+              ("C-S-p" move-text-up "up")
+              ("C-S-n" move-text-down "down")
+              ("<RET>" nil "quit")))
+  :ensure t)
+#+end_src
+
+*** restart-emacs
+
+#+begin_src emacs-lisp
+(use-package restart-emacs
+  :bind ("C-x y d r" . restart-emacs)
+  :ensure t)
+#+end_src
+
+*** Ivy
+
+#+begin_src emacs-lisp
+(use-package ivy
+  :bind (:map ivy-minibuffer-map
+              ("RET" . ivy-alt-done)
+              ("C-j" . ivy-immediate-done))
+  :init (progn
+          (setq ivy-re-builders-alist
+                '((nil . ivy--regex-fuzzy)
+                  (t . ivy--regex-plus))
+                ivy-initial-inputs-alist nil
+                ivy-use-virtual-buffers t
+                enable-recursive-minibuffers t)
+          (ivy-mode))
+  :config (progn
+            (defun ivy--add-face (str face)
+              "Propertize STR with FACE.
+`font-lock-append-text-property' is used, since it's better than
+`propertize' or `add-face-text-property' in this case."
+              (condition-case nil
+                  (progn
+                    (let ((foreground (face-foreground face)))
+                      (when foreground
+                        (add-face-text-property
+                         0 (length str)
+                         `(:foreground ,foreground)
+                         nil
+                         str))))
+                (error
+                 (ignore-errors
+                   (font-lock-append-text-property 0 (length str) 'face face str))))
+              str))
+  :ensure t)
+#+end_src
+
+*** Counsel
+
+#+begin_src emacs-lisp
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+         ("C-x C-f" . counsel-find-file)
+         ("C-x b" . ivy-switch-buffer)
+         ("C-h f" . counsel-describe-function)
+         ("C-h v" . counsel-describe-variable)
+         ("C-h l" . counsel-find-library)
+         ("C-h i" . counsel-info-lookup-symbol)
+         ("C-h u" . counsel-unicode-char)
+         ("C-c g" . counsel-git)
+         ("C-c j" . counsel-git-grep)
+         ("C-c k" . counsel-ag)
+         ("C-x l" . counsel-locate)
+         :map read-expression-map
+         ("C-r" . counsel-minibuffer-history))
+  :init (counsel-mode)
+  :config (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin|$")
+  :ensure t
+  :ensure smex)
+#+end_src
+
+*** COMMENT Mirror minibuffer
+#+begin_src emacs-lisp
+(setq mb-catch-buf nil)
+(setq mb-catch-overlay nil)
+
+(defun mb-catch-change-hook (change-beg change-end prev-len)
+  (let ((string (concat (minibuffer-prompt)
+                        (minibuffer-contents))))
+    (overlay-put mb-catch-overlay 'after-string string)
+    ))
+
+
+(defun mb-catch-setup ()
+  (let ((buf (other-buffer (current-buffer) 1)))
+    (setq mb-catch-buf buf)
+    (save-current-buffer
+      (set-buffer buf)
+      (setq mb-catch-overlay
+            (make-overlay (point) (+ 1 (point)))))
+    (add-hook 'after-change-functions 'mb-catch-change-hook)))
+
+(defun mb-catch-exit ()
+  (delete-overlay mb-catch-overlay)
+  (remove-hook 'after-change-functions 'mb-catch-hook))
+
+(add-hook 'minibuffer-setup-hook 'mb-catch-setup)
+(add-hook 'minibuffer-exit-hook 'mb-catch-exit)
+#+end_src
+*** delete-trailing-whitespace
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+end_src
+*** delete-other-windows
+#+begin_src emacs-lisp
+(use-package delete-other-windows
+  :no-require t
+  :bind (("C-x 1" . delete-other-windows)))
+#+end_src
+*** delete-this-file
+#+begin_src emacs-lisp
+(defun delete-this-file ()
+  "Delete the current file, and kill the buffer."
+  (interactive)
+  (or (buffer-file-name) (error "No file is currently being edited"))
+  (when (yes-or-no-p (format "Really delete '%s'?"
+                             (file-name-nondirectory buffer-file-name)))
+    (delete-file (buffer-file-name))
+    (kill-this-buffer)))
+#+end_src
+*** immortal-scratch
+#+begin_src emacs-lisp
+(setq-default initial-major-mode 'org-mode)
+
+(defun immortal-scratch ()
+  (if (eq (current-buffer) (get-buffer "*scratch*"))
+      (progn (bury-buffer) nil) t))
+(add-hook 'kill-buffer-query-functions 'immortal-scratch)
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function
+            kill-buffer-query-functions))
+#+end_src
+*** prevent-active-processes-exist
+#+begin_src emacs-lisp
+(defun prevent-active-processes-exist ()
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+    (cl-letf (((symbol-function #'process-list) (lambda ())))
+      ad-do-it)))
+(add-hook 'after-init-hook 'prevent-active-processes-exist)
+#+end_src
+*** benchmark-init
+#+begin_src emacs-lisp
+(use-package benchmark-init
+  :config (progn
+            (benchmark-init/activate))
+  :ensure t)
+#+end_src
+*** alert
+#+begin_src emacs-lisp
+(use-package alert
+  :ensure t)
+#+end_src
+*** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
+#+begin_src emacs-lisp
+(use-package tiny
+  :ensure t)
+#+end_src
+*** prodigy
+#+begin_src emacs-lisp
+(use-package prodigy
+  :bind ("C-x y r" . prodigy)
+  :ensure t)
+#+end_src
+*** what-face
+#+begin_src emacs-lisp
+(defun what-face (pos)
+  "Tell me what face used in POS."
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
+    (if face (message "Face: %s" face) (message "No face at %d" pos))))
+#+end_src
+*** rename-this-file-and-buffer
+#+begin_src emacs-lisp
+(defun rename-this-file-and-buffer (new-name)
+  "Renames both current buffer and file it's visiting to NEW-NAME."
+  (interactive "sNew name: ")
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (unless filename
+      (error "Buffer '%s' is not visiting a file!" name))
+    (if (get-buffer new-name)
+        (message "A buffer named '%s' already exists!" new-name)
+      (progn
+        (when (file-exists-p filename)
+          (rename-file filename new-name 1))
+        (rename-buffer new-name)
+        (set-visited-file-name new-name)))))
+#+end_src
+*** pdf
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :commands (pdf-view-mode)
+  :diminish t
+  :ensure t)
+#+end_src
+*** undo-tree
+#+begin_src emacs-lisp
+(use-package undo-tree
+  :config (progn
+            (global-undo-tree-mode)
+            (setq undo-tree-visualizer-timestamps t)
+            (setq undo-tree-visualizer-diff t))
+  :ensure t)
+#+end_src
+*** [[http://endlessparentheses.com/improving-emacs-file-name-completion.html][Improving Emacs file-name completion · Endless Parentheses]]
+#+begin_src emacs-lisp
+(setq read-file-name-completion-ignore-case t)
+(setq read-buffer-completion-ignore-case t)
+(mapc (lambda (x)
+        (add-to-list 'completion-ignored-extensions x))
+      '(".aux" ".bbl" ".blg" ".exe"
+        ".log" ".meta" ".out" ;; ".pdf"
+        ".synctex.gz" ".tdo" ".toc"
+        "-pkg.el" "-autoloads.el"
+        "Notes.bib" "auto/"))
+#+end_src
+*** conditional keys
+#+begin_src emacs-lisp
+(defmacro endless/define-conditional-key (keymap key def
+                                                 &rest body)
+  "In KEYMAP, define key sequence KEY as DEF conditionally.
+This is like `define-key', except the definition
+\"disappears\" whenever BODY evaluates to nil."
+  (declare (indent 3)
+           (debug (form form form &rest sexp)))
+  `(define-key ,keymap ,key
+     '(menu-item
+       ,(format "maybe-%s" (or (car (cdr-safe def)) def))
+       nil
+       :filter (lambda (&optional _)
+                 (when ,(macroexp-progn body)
+                   ,def)))))
+
+;; (endless/define-conditional-key org-mode-map "\""
+;;                                 #'endless/round-quotes
+;;   (not (org-in-src-block-p)))
+#+end_src
+*** air-going
+#+begin_src emacs-lisp
+(defun air--org-global-custom-ids ()
+  "Find custom ID fields in all org agenda files."
+  (let ((files (org-agenda-files))
+        file
+        air-all-org-custom-ids)
+    (while (setq file (pop files))
+      (with-current-buffer (org-get-agenda-file-buffer file)
+        (save-excursion
+          (save-restriction
+            (widen)
+            (goto-char (point-min))
+            (while (re-search-forward "^[ \t]*:CUSTOM_ID:[ \t]+\\(\\S-+\\)[ \t]*$"
+                                      nil t)
+              (add-to-list 'air-all-org-custom-ids
+                           `(,(match-string-no-properties 1)
+                             ,(concat file ":" (number-to-string (line-number-at-pos))))))))))
+    air-all-org-custom-ids))
+
+(defun air-org-goto-custom-id ()
+  "Go to the location of a custom ID, selected interactively."
+  (interactive)
+  (let* ((all-custom-ids (air--org-global-custom-ids))
+         (custom-id (completing-read
+                     "Custom ID: "
+                     all-custom-ids)))
+    (when custom-id
+      (let* ((val (cadr (assoc custom-id all-custom-ids)))
+             (id-parts (split-string val ":"))
+             (file (car id-parts))
+             (line (string-to-int (cadr id-parts))))
+        (pop-to-buffer (org-get-agenda-file-buffer file))
+        (goto-char (point-min))
+        (forward-line line)
+        (org-reveal)
+        (org-up-element)))))
+
+(defun air-org-insert-custom-id-link ()
+  "Insert an Org link to a custom ID selected interactively."
+  (interactive)
+  (let* ((all-custom-ids (air--org-global-custom-ids))
+         (custom-id (completing-read
+                     "Custom ID: "
+                     all-custom-ids)))
+    (when custom-id
+      (let* ((val (cadr (assoc custom-id all-custom-ids)))
+             (id-parts (split-string val ":"))
+             (file (car id-parts))
+             (line (string-to-int (cadr id-parts))))
+        (org-insert-link nil (concat file "::#" custom-id) custom-id)))))
+#+end_src
+*** tiny-menu
+#+begin_src emacs-lisp
+(use-package tiny-menu
+  :config (progn
+            (setq-default tiny-menu-items
+                          '(("org-things"   ("Things"
+                                             ((?t "Tag"     org-tags-view)
+                                              (?i "ID"      air-org-goto-custom-id)
+                                              (?k "Keyword" org-search-view))))
+                            ("org-links"    ("Links"
+                                             ((?c "Capture"   org-store-link)
+                                              (?l "Insert"    org-insert-link)
+                                              (?i "Custom ID" air-org-insert-custom-id-link))))
+                            ("yandex-tasks"   ("Tasks"
+                                               ((?a "Add subtask"     yandex-add-subtask)
+                                                (?c "Changeset header" yandex-insert-changeset-header)
+                                                (?m "Commit message"  yandex-insert-commit-message)
+                                                (?i "Insert branch"   yandex-insert-branch)
+                                                (?t "Insert ticket"   yandex-insert-ticket)
+                                                (?g "Go to org"       yandex-goto-org-task)
+                                                (?s "Startrek ticket" yandex-browse-task)
+                                                (?r "Release ticket"  yandex-browse-release))))))
+            (define-key global-map (kbd "C-x y b") (tiny-menu-run-item "yandex-tasks"))
+            (define-key global-map (kbd "C-x y o") (tiny-menu-run-item "org-links"))
+            ;; (define-key global-map (kbd "C-x y g") (tiny-menu-run-item "org-things"))
+            )
+  :ensure t)
+#+end_src
+*** uniq-lines
+#+begin_src emacs-lisp
+(defun uniq-lines (beg end)
+  "Unique lines in region.
+Called from a program, there are two arguments:
+BEG and END (region to sort)."
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (while (not (eobp))
+        (kill-line 1)
+        (yank)
+        (let ((next-line (point)))
+          (while
+              (re-search-forward
+               (format "^%s" (regexp-quote (car kill-ring))) nil t)
+            (replace-match "" nil nil))
+          (goto-char next-line))))))
+#+end_src
+*** hierarchy
+#+begin_src emacs-lisp
+(use-package hierarchy
+  :ensure t)
+#+end_src
+*** suggest
+#+begin_src emacs-lisp
+;; https://github.com/webyrd/Barliman/
+(use-package suggest
+  :ensure t)
+#+end_src
+*** read-lines
+#+begin_src emacs-lisp
+(defun read-lines (filePath)
+  "Return a list of lines of a file at filePath."
+  (with-temp-buffer
+    (insert-file-contents filePath)
+    (split-string (buffer-string) "\n" t)))
+#+end_src
+*** firestarter
+#+begin_src emacs-lisp :results silent
+(use-package firestarter
+  :config (progn
+            (firestarter-mode)
+            (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
+  :ensure t)
+#+end_src
+*** google-translate
+#+begin_src emacs-lisp
+(use-package google-translate
+  :config (progn
+            (defun translate-text (sentence)
+              "Google translate without specifying language."
+              (interactive "sTranslate sentence: ")
+              (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
+                                           ("[а-яА-Я]" . ("ru" "en"))))
+              (dolist (lang-regex lang-regexes)
+                (if (string-match (car lang-regex) sentence)
+                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))
+              (after-translation-hydra/body)))
+  :bind ("C-x y t t" . translate-text)
+  :ensure t)
+#+end_src
+
+**** after translation hydra
+#+begin_src emacs-lisp
+(defun insert-translation-at-point ()
+  (interactive)
+  (save-window-excursion
+    (switch-to-buffer "*Google Translate*")
+    (beginning-of-buffer)
+
+    (dotimes (i 3)
+      (forward-sentence))
+
+    (let ((beg (point)))
+      (backward-sentence)
+      (copy-region-as-kill beg (point))))
+  (yank))
+
+(defun after-translation-hydra-pre ()
+  (let ((timer (timer-create)))
+    (timer-set-time timer (timer-relative-time (current-time) 5))
+    (timer-set-function timer 'hydra-keyboard-quit)
+    (timer-activate timer)))
+
+(defhydra after-translation-hydra (:body-pre after-translation-hydra-pre
+                                   :color blue
+                                   :hint "Translation manipulations")
+  ("i" insert-translation-at-point "Insert translation at point")
+  ("ш" insert-translation-at-point "Insert translation at point")
+  ("<RET>" nil "Quit"))
+#+end_src
+*** imenu
+**** imenu-anywhere
+#+begin_src emacs-lisp
+  (use-package imenu-anywhere
+    :init (progn
+            (global-unset-key "\C-xi"))
+    :bind (("C-x i m" . imenu-anywhere))
+    :ensure t)
+#+end_src
+*** rsync
+#+begin_src emacs-lisp
+(defun rsync-enable ()
+  "Enable rsync support."
+  (interactive)
+  (auto-rsync-mode t))
+
+(defun rsync-disable ()
+  "Disable rsync support."
+  (interactive)
+  (auto-rsync-mode -1))
+
+(defgroup auto-rsync nil "Auto rsync")
+
+(defcustom auto-rsync-command "rsync"
+  "Rsync command path."
+  :group 'auto-rsync)
+
+(defcustom auto-rsync-command-option "-anv"
+  "Options."
+  :group 'auto-rsync)
+
+(defvar auto-rsync-dir-alist nil "Pair of rsync source and destination dir.")
+(defvar auto-rsync-normalized-alist nil)
+
+(defun auto-rsync-exec-rsync ()
+  "Execute rsync if editing file path match src dir."
+  (interactive)
+  (let* ((normalized-alist (mapcar #'(lambda (x) (cons (file-name-as-directory (expand-file-name (car x)))
+                                                  (file-name-as-directory (cdr x))))
+                                   auto-rsync-dir-alist))
+         (sync-pair (assoc-if (lambda (key) (string-match key buffer-file-name)) normalized-alist)))
+    (when sync-pair
+      (save-window-excursion
+        ;; avoid annoying shell command window
+        (message (format "%s %s %s %s&" auto-rsync-command auto-rsync-command-option (car sync-pair) (cdr sync-pair)))
+        (shell-command (format "%s %s %s %s&" auto-rsync-command auto-rsync-command-option (car sync-pair) (cdr sync-pair)) nil)))))
+
+(define-minor-mode auto-rsync-mode
+  "automatically execute rsync when editing file's path matches `auto-rsync-dir-alist`"
+  :lighter " rsync"
+  :global t
+  (cond (auto-rsync-mode
+         (add-hook 'after-save-hook 'auto-rsync-exec-rsync))
+        (t
+         (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
+#+end_src
+*** wgrep
+#+begin_src emacs-lisp
+  (use-package wgrep
+    :ensure t)
+#+end_src
+*** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
+#+begin_src emacs-lisp :results silent
+(defun set-region-read-only (begin end)
+  (interactive "r")
+  (add-text-properties begin end '(read-only t)))
+#+end_src
+*** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
+#+begin_src emacs-lisp :results silent
+(defcustom default-messages-to-show 10
+  "Default number of messages for `show-some-last-messages'.")
+
+(defun show-some-last-messages (count)
+  "Show COUNT last lines of the `*Messages*' buffer."
+  (interactive "P")
+  (setq count (if count (prefix-numeric-value count)
+		default-messages-to-show))
+  (save-excursion
+	(set-buffer "*Messages*")
+	(let ((prev-point-max (point-max-marker))
+	  (inhibit-read-only t))
+	  (message "%s"
+		   (progn
+		 (set-buffer "*Messages*")
+		 (buffer-substring-no-properties
+		  (progn
+			(goto-char (point-max))
+			(unless (bolp)
+			  (insert "\n"))
+			(forward-line (- count))
+			(point))
+		  (point-max))))
+	  (delete-region (point-max) prev-point-max))))
+#+end_src
+*** COMMENT symon
+#+begin_src emacs-lisp
+(use-package symon
+  :config (progn
+            (symon-mode))
+  :ensure t)
+#+end_src
 ** Org
 *** org-plus-contrib
 
@@ -1890,659 +2522,6 @@ If KWD is a number, get the corresponding match group."
   :bind ("C-x y i" . yankpad-insert)
   :config (progn
             (setq yankpad-file "~/sync/emacs/snippets.org"))
-  :ensure t)
-#+end_src
-** Utils
-*** docker
-
-#+begin_src emacs-lisp
-(use-package docker
-  :ensure t)
-#+end_src
-
-*** [[https://www.reddit.com/r/emacs/comments/9auzla/example_showing_how_useful_the_ampleregexps/][ample-regexps]]
-#+begin_src emacs-lisp
-(use-package ample-regexps
-  :ensure t)
-
-;; Example:
-;; (define-arx url-rx
-;;   '((http (seq bos (group "http") "://") )
-;;     (https (seq bos (group "https") "://") )
-;;     (https? (seq bos (group "http" (optional "s")) "://") )
-;;     (protocol (seq bos (group (1+ (not (any ":")))) "://"))
-;;     (host (group (1+ (not (any "/")))))
-;;     (path (group "/" (1+ (not (any "?")))))
-;;     (query (seq "?" (group (1+ (not (any "#"))))))
-;;     (fragment (seq "#" (group (1+ anything))))))
-
-;; ;; Accept HTTP or HTTPS
-;; (let ((url "http://server/path?query#fragment"))
-;;   (when (string-match (url-rx https? host path (optional query) (optional fragment)) url)
-;;     (list (match-string 0 url)
-;;           (match-string 1 url)
-;;           (match-string 2 url)
-;;           (match-string 3 url)
-;;           (match-string 4 url)
-;;           (match-string 5 url))))
-#+end_src
-*** find file in project
-#+begin_src emacs-lisp
-(use-package find-file-in-project
-  :bind ("C-x f" . find-file-in-current-directory)
-  :ensure t)
-#+end_src
-*** syncthing-conflict-manager
-#+begin_src emacs-lisp
-(defun syncthing-get-conflicted-files ()
-  (let* ((bfn (buffer-file-name))
-         (sefn (file-name-base bfn))
-         (dir (file-name-directory bfn))
-         (files (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" sefn))))
-    files))
-
-(defun syncthing-diff-conflict ()
-  (interactive)
-  (if-let ((files (syncthing-get-conflicted-files)))
-      (progn
-        (diff (car files) (buffer-file-name))
-        (car files))
-    (progn
-      (message "No conflicts found.")
-      nil)))
-
-(defun syncthing-trash-conflicted ()
-  (interactive)
-  (when-let ((file (syncthing-diff-conflict)))
-    (when (y-or-n-p "Do you really want to move conflicted file to trash?")
-      (move-file-to-trash file))))
-#+end_src
-*** num-with-ordinal-indicator
-#+begin_src emacs-lisp
-(defun get-ordinal-indicator (num)
-  (let* ((two-digs (mod num 100))
-         (one-dig (mod num 10)))
-    (cond ((and (> two-digs 3) (< two-digs 21)) 'th)
-          ((= one-dig 1) 'st)
-          ((= one-dig 2) 'nd)
-          ((= one-dig 3) 'rd)
-          (t 'th))))
-
-(defun num-with-ordinal-indicator (num)
-  (format "%d%s" num (get-ordinal-indicator num)))
-#+end_src
-*** volatile-highlights
-#+begin_src emacs-lisp
-(use-package volatile-highlights
-  :config (progn
-            (volatile-highlights-mode t)
-            (vhl/define-extension 'abbrev 'expand-abbrev)
-            (vhl/install-extension 'abbrev))
-  :ensure t)
-#+end_src
-*** [[https://github.com/bbatsov/super-save][super-save]]
-#+begin_src emacs-lisp
-(use-package super-save
-  :config (progn
-            (super-save-initialize)
-            (setq auto-save-default nil)
-            (setq super-save-auto-save-when-idle t))
-  :ensure t)
-#+end_src
-*** hydra
-#+begin_src emacs-lisp
-(use-package hydra
-  :ensure t)
-#+end_src
-
-**** COMMENT xhydra
-#+begin_src emacs-lisp
-(defun x-hydra-pre ()
-  (insert "x")
-  (let ((timer (timer-create)))
-    (timer-set-time timer (timer-relative-time (current-time) 0.5))
-    (timer-set-function timer 'hydra-keyboard-quit)
-    (timer-activate timer)))
-
-(defhydra x-hydra (:body-pre x-hydra-pre
-                   :color blue
-                   :hint nil)
-  ("f" (progn (zap-to-char -1 ?x) (counsel-find-file))))
-
-(global-set-key "x" #'x-hydra/body)
-#+end_src
-*** move-text
-#+begin_src emacs-lisp
-(use-package move-text
-  :bind (("C-S-p" . hydra-move-text/body)
-         ("C-S-n" . hydra-move-text/body))
-  :config (progn
-            (defhydra hydra-move-text ()
-              "Move line up/down"
-              ("C-S-p" move-text-up "up")
-              ("C-S-n" move-text-down "down")
-              ("<RET>" nil "quit")))
-  :ensure t)
-#+end_src
-*** restart-emacs
-#+begin_src emacs-lisp
-(use-package restart-emacs
-  :bind ("C-x y d r" . restart-emacs)
-  :ensure t)
-#+end_src
-*** =Ivy=
-#+begin_src emacs-lisp
-(use-package ivy
-  :bind (:map ivy-minibuffer-map
-              ("RET" . ivy-alt-done)
-              ("C-j" . ivy-immediate-done))
-  :init (progn
-          (setq-default ivy-re-builders-alist
-                        '((nil . ivy--regex-fuzzy)
-                          (t . ivy--regex-plus))
-                        ivy-initial-inputs-alist nil
-                        ivy-use-virtual-buffers t
-                        enable-recursive-minibuffers t)
-          (ivy-mode 1))
-  :config (progn
-            (defun ivy--add-face (str face)
-              "Propertize STR with FACE.
-`font-lock-append-text-property' is used, since it's better than
-`propertize' or `add-face-text-property' in this case."
-              (condition-case nil
-                  (progn
-                    (let ((foreground (face-foreground face)))
-                      (when foreground
-                        (add-face-text-property
-                         0 (length str)
-                         `(:foreground ,foreground)
-                         nil
-                         str))))
-                (error
-                 (ignore-errors
-                   (font-lock-append-text-property 0 (length str) 'face face str))))
-              str))
-  :ensure t)
-
-(use-package counsel
-  :bind (("M-x" . counsel-M-x)
-         ("C-x C-f" . counsel-find-file)
-         ("C-x b" . ivy-switch-buffer)
-         ("C-h f" . counsel-describe-function)
-         ("C-h v" . counsel-describe-variable)
-         ("C-h l" . counsel-find-library)
-         ("C-h i" . counsel-info-lookup-symbol)
-         ("C-h u" . counsel-unicode-char)
-         ("C-c g" . counsel-git)
-         ("C-c j" . counsel-git-grep)
-         ("C-c k" . counsel-ag)
-         ("C-x l" . counsel-locate)
-         ("C-S-o" . counsel-rhythmbox)
-         :map read-expression-map
-         ("C-r" . counsel-minibuffer-history))
-  :config (progn
-            (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
-
-            (defun counsel-bookmark (&optional bookmarks)
-              "Forward to `bookmark-jump'. I can create bookmarks by myself, guys."
-              (interactive)
-              (require 'bookmark)
-
-              (let ((available-bookmarks (or bookmarks (bookmark-all-names))))
-                (ivy-read "Jump to bookmark: " available-bookmarks
-                          :action (lambda (bookmark)
-                                    (cond ((member bookmark available-bookmarks)
-                                           (cond ((bmkp-sequence-bookmark-p bookmark)
-                                                  (counsel-bookmark (bookmark-prop-get bookmark 'sequence)))
-                                                 (t (bookmark-jump bookmark))))
-                                          (t
-                                           (error "Bookmark not found"))))
-                          :caller 'counsel-bookmark))))
-
-  :ensure t
-  :ensure smex)
-#+end_src
-*** COMMENT Mirror minibuffer
-#+begin_src emacs-lisp
-(setq mb-catch-buf nil)
-(setq mb-catch-overlay nil)
-
-(defun mb-catch-change-hook (change-beg change-end prev-len)
-  (let ((string (concat (minibuffer-prompt)
-                        (minibuffer-contents))))
-    (overlay-put mb-catch-overlay 'after-string string)
-    ))
-
-
-(defun mb-catch-setup ()
-  (let ((buf (other-buffer (current-buffer) 1)))
-    (setq mb-catch-buf buf)
-    (save-current-buffer
-      (set-buffer buf)
-      (setq mb-catch-overlay
-            (make-overlay (point) (+ 1 (point)))))
-    (add-hook 'after-change-functions 'mb-catch-change-hook)))
-
-(defun mb-catch-exit ()
-  (delete-overlay mb-catch-overlay)
-  (remove-hook 'after-change-functions 'mb-catch-hook))
-
-(add-hook 'minibuffer-setup-hook 'mb-catch-setup)
-(add-hook 'minibuffer-exit-hook 'mb-catch-exit)
-#+end_src
-*** delete-trailing-whitespace
-#+begin_src emacs-lisp
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-#+end_src
-*** delete-other-windows
-#+begin_src emacs-lisp
-(use-package delete-other-windows
-  :no-require t
-  :bind (("C-x 1" . delete-other-windows)))
-#+end_src
-*** delete-this-file
-#+begin_src emacs-lisp
-(defun delete-this-file ()
-  "Delete the current file, and kill the buffer."
-  (interactive)
-  (or (buffer-file-name) (error "No file is currently being edited"))
-  (when (yes-or-no-p (format "Really delete '%s'?"
-                             (file-name-nondirectory buffer-file-name)))
-    (delete-file (buffer-file-name))
-    (kill-this-buffer)))
-#+end_src
-*** immortal-scratch
-#+begin_src emacs-lisp
-(setq-default initial-major-mode 'org-mode)
-
-(defun immortal-scratch ()
-  (if (eq (current-buffer) (get-buffer "*scratch*"))
-      (progn (bury-buffer) nil) t))
-(add-hook 'kill-buffer-query-functions 'immortal-scratch)
-(setq kill-buffer-query-functions
-      (remq 'process-kill-buffer-query-function
-            kill-buffer-query-functions))
-#+end_src
-*** prevent-active-processes-exist
-#+begin_src emacs-lisp
-(defun prevent-active-processes-exist ()
-  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-    (cl-letf (((symbol-function #'process-list) (lambda ())))
-      ad-do-it)))
-(add-hook 'after-init-hook 'prevent-active-processes-exist)
-#+end_src
-*** benchmark-init
-#+begin_src emacs-lisp
-(use-package benchmark-init
-  :config (progn
-            (benchmark-init/activate))
-  :ensure t)
-#+end_src
-*** alert
-#+begin_src emacs-lisp
-(use-package alert
-  :ensure t)
-#+end_src
-*** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
-#+begin_src emacs-lisp
-(use-package tiny
-  :ensure t)
-#+end_src
-*** prodigy
-#+begin_src emacs-lisp
-(use-package prodigy
-  :bind ("C-x y r" . prodigy)
-  :ensure t)
-#+end_src
-*** what-face
-#+begin_src emacs-lisp
-(defun what-face (pos)
-  "Tell me what face used in POS."
-  (interactive "d")
-  (let ((face (or (get-char-property (point) 'read-face-name)
-                  (get-char-property (point) 'face))))
-    (if face (message "Face: %s" face) (message "No face at %d" pos))))
-#+end_src
-*** rename-this-file-and-buffer
-#+begin_src emacs-lisp
-(defun rename-this-file-and-buffer (new-name)
-  "Renames both current buffer and file it's visiting to NEW-NAME."
-  (interactive "sNew name: ")
-  (let ((name (buffer-name))
-        (filename (buffer-file-name)))
-    (unless filename
-      (error "Buffer '%s' is not visiting a file!" name))
-    (if (get-buffer new-name)
-        (message "A buffer named '%s' already exists!" new-name)
-      (progn
-        (when (file-exists-p filename)
-          (rename-file filename new-name 1))
-        (rename-buffer new-name)
-        (set-visited-file-name new-name)))))
-#+end_src
-*** pdf
-#+begin_src emacs-lisp
-(use-package pdf-tools
-  :commands (pdf-view-mode)
-  :diminish t
-  :ensure t)
-#+end_src
-*** undo-tree
-#+begin_src emacs-lisp
-(use-package undo-tree
-  :config (progn
-            (global-undo-tree-mode)
-            (setq undo-tree-visualizer-timestamps t)
-            (setq undo-tree-visualizer-diff t))
-  :ensure t)
-#+end_src
-*** [[http://endlessparentheses.com/improving-emacs-file-name-completion.html][Improving Emacs file-name completion · Endless Parentheses]]
-#+begin_src emacs-lisp
-(setq read-file-name-completion-ignore-case t)
-(setq read-buffer-completion-ignore-case t)
-(mapc (lambda (x)
-        (add-to-list 'completion-ignored-extensions x))
-      '(".aux" ".bbl" ".blg" ".exe"
-        ".log" ".meta" ".out" ;; ".pdf"
-        ".synctex.gz" ".tdo" ".toc"
-        "-pkg.el" "-autoloads.el"
-        "Notes.bib" "auto/"))
-#+end_src
-*** conditional keys
-#+begin_src emacs-lisp
-(defmacro endless/define-conditional-key (keymap key def
-                                                 &rest body)
-  "In KEYMAP, define key sequence KEY as DEF conditionally.
-This is like `define-key', except the definition
-\"disappears\" whenever BODY evaluates to nil."
-  (declare (indent 3)
-           (debug (form form form &rest sexp)))
-  `(define-key ,keymap ,key
-     '(menu-item
-       ,(format "maybe-%s" (or (car (cdr-safe def)) def))
-       nil
-       :filter (lambda (&optional _)
-                 (when ,(macroexp-progn body)
-                   ,def)))))
-
-;; (endless/define-conditional-key org-mode-map "\""
-;;                                 #'endless/round-quotes
-;;   (not (org-in-src-block-p)))
-#+end_src
-*** air-going
-#+begin_src emacs-lisp
-(defun air--org-global-custom-ids ()
-  "Find custom ID fields in all org agenda files."
-  (let ((files (org-agenda-files))
-        file
-        air-all-org-custom-ids)
-    (while (setq file (pop files))
-      (with-current-buffer (org-get-agenda-file-buffer file)
-        (save-excursion
-          (save-restriction
-            (widen)
-            (goto-char (point-min))
-            (while (re-search-forward "^[ \t]*:CUSTOM_ID:[ \t]+\\(\\S-+\\)[ \t]*$"
-                                      nil t)
-              (add-to-list 'air-all-org-custom-ids
-                           `(,(match-string-no-properties 1)
-                             ,(concat file ":" (number-to-string (line-number-at-pos))))))))))
-    air-all-org-custom-ids))
-
-(defun air-org-goto-custom-id ()
-  "Go to the location of a custom ID, selected interactively."
-  (interactive)
-  (let* ((all-custom-ids (air--org-global-custom-ids))
-         (custom-id (completing-read
-                     "Custom ID: "
-                     all-custom-ids)))
-    (when custom-id
-      (let* ((val (cadr (assoc custom-id all-custom-ids)))
-             (id-parts (split-string val ":"))
-             (file (car id-parts))
-             (line (string-to-int (cadr id-parts))))
-        (pop-to-buffer (org-get-agenda-file-buffer file))
-        (goto-char (point-min))
-        (forward-line line)
-        (org-reveal)
-        (org-up-element)))))
-
-(defun air-org-insert-custom-id-link ()
-  "Insert an Org link to a custom ID selected interactively."
-  (interactive)
-  (let* ((all-custom-ids (air--org-global-custom-ids))
-         (custom-id (completing-read
-                     "Custom ID: "
-                     all-custom-ids)))
-    (when custom-id
-      (let* ((val (cadr (assoc custom-id all-custom-ids)))
-             (id-parts (split-string val ":"))
-             (file (car id-parts))
-             (line (string-to-int (cadr id-parts))))
-        (org-insert-link nil (concat file "::#" custom-id) custom-id)))))
-#+end_src
-*** tiny-menu
-#+begin_src emacs-lisp
-(use-package tiny-menu
-  :config (progn
-            (setq-default tiny-menu-items
-                          '(("org-things"   ("Things"
-                                             ((?t "Tag"     org-tags-view)
-                                              (?i "ID"      air-org-goto-custom-id)
-                                              (?k "Keyword" org-search-view))))
-                            ("org-links"    ("Links"
-                                             ((?c "Capture"   org-store-link)
-                                              (?l "Insert"    org-insert-link)
-                                              (?i "Custom ID" air-org-insert-custom-id-link))))
-                            ("yandex-tasks"   ("Tasks"
-                                               ((?a "Add subtask"     yandex-add-subtask)
-                                                (?c "Changeset header" yandex-insert-changeset-header)
-                                                (?m "Commit message"  yandex-insert-commit-message)
-                                                (?i "Insert branch"   yandex-insert-branch)
-                                                (?t "Insert ticket"   yandex-insert-ticket)
-                                                (?g "Go to org"       yandex-goto-org-task)
-                                                (?s "Startrek ticket" yandex-browse-task)
-                                                (?r "Release ticket"  yandex-browse-release))))))
-            (define-key global-map (kbd "C-x y b") (tiny-menu-run-item "yandex-tasks"))
-            (define-key global-map (kbd "C-x y o") (tiny-menu-run-item "org-links"))
-            ;; (define-key global-map (kbd "C-x y g") (tiny-menu-run-item "org-things"))
-            )
-  :ensure t)
-#+end_src
-*** uniq-lines
-#+begin_src emacs-lisp
-(defun uniq-lines (beg end)
-  "Unique lines in region.
-Called from a program, there are two arguments:
-BEG and END (region to sort)."
-  (interactive "r")
-  (save-excursion
-    (save-restriction
-      (narrow-to-region beg end)
-      (goto-char (point-min))
-      (while (not (eobp))
-        (kill-line 1)
-        (yank)
-        (let ((next-line (point)))
-          (while
-              (re-search-forward
-               (format "^%s" (regexp-quote (car kill-ring))) nil t)
-            (replace-match "" nil nil))
-          (goto-char next-line))))))
-#+end_src
-*** hierarchy
-#+begin_src emacs-lisp
-(use-package hierarchy
-  :ensure t)
-#+end_src
-*** suggest
-#+begin_src emacs-lisp
-;; https://github.com/webyrd/Barliman/
-(use-package suggest
-  :ensure t)
-#+end_src
-*** read-lines
-#+begin_src emacs-lisp
-(defun read-lines (filePath)
-  "Return a list of lines of a file at filePath."
-  (with-temp-buffer
-    (insert-file-contents filePath)
-    (split-string (buffer-string) "\n" t)))
-#+end_src
-*** firestarter
-#+begin_src emacs-lisp :results silent
-(use-package firestarter
-  :config (progn
-            (firestarter-mode)
-            (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
-  :ensure t)
-#+end_src
-*** google-translate
-#+begin_src emacs-lisp
-(use-package google-translate
-  :config (progn
-            (defun translate-text (sentence)
-              "Google translate without specifying language."
-              (interactive "sTranslate sentence: ")
-              (setq-default lang-regexes '(("[a-zA-Z]" . ("en" "ru"))
-                                           ("[а-яА-Я]" . ("ru" "en"))))
-              (dolist (lang-regex lang-regexes)
-                (if (string-match (car lang-regex) sentence)
-                    (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))
-              (after-translation-hydra/body)))
-  :bind ("C-x y t t" . translate-text)
-  :ensure t)
-#+end_src
-
-**** after translation hydra
-#+begin_src emacs-lisp
-(defun insert-translation-at-point ()
-  (interactive)
-  (save-window-excursion
-    (switch-to-buffer "*Google Translate*")
-    (beginning-of-buffer)
-
-    (dotimes (i 3)
-      (forward-sentence))
-
-    (let ((beg (point)))
-      (backward-sentence)
-      (copy-region-as-kill beg (point))))
-  (yank))
-
-(defun after-translation-hydra-pre ()
-  (let ((timer (timer-create)))
-    (timer-set-time timer (timer-relative-time (current-time) 5))
-    (timer-set-function timer 'hydra-keyboard-quit)
-    (timer-activate timer)))
-
-(defhydra after-translation-hydra (:body-pre after-translation-hydra-pre
-                                   :color blue
-                                   :hint "Translation manipulations")
-  ("i" insert-translation-at-point "Insert translation at point")
-  ("ш" insert-translation-at-point "Insert translation at point")
-  ("<RET>" nil "Quit"))
-#+end_src
-*** imenu
-**** imenu-anywhere
-#+begin_src emacs-lisp
-  (use-package imenu-anywhere
-    :init (progn
-            (global-unset-key "\C-xi"))
-    :bind (("C-x i m" . imenu-anywhere))
-    :ensure t)
-#+end_src
-*** rsync
-#+begin_src emacs-lisp
-(defun rsync-enable ()
-  "Enable rsync support."
-  (interactive)
-  (auto-rsync-mode t))
-
-(defun rsync-disable ()
-  "Disable rsync support."
-  (interactive)
-  (auto-rsync-mode -1))
-
-(defgroup auto-rsync nil "Auto rsync")
-
-(defcustom auto-rsync-command "rsync"
-  "Rsync command path."
-  :group 'auto-rsync)
-
-(defcustom auto-rsync-command-option "-anv"
-  "Options."
-  :group 'auto-rsync)
-
-(defvar auto-rsync-dir-alist nil "Pair of rsync source and destination dir.")
-(defvar auto-rsync-normalized-alist nil)
-
-(defun auto-rsync-exec-rsync ()
-  "Execute rsync if editing file path match src dir."
-  (interactive)
-  (let* ((normalized-alist (mapcar #'(lambda (x) (cons (file-name-as-directory (expand-file-name (car x)))
-                                                  (file-name-as-directory (cdr x))))
-                                   auto-rsync-dir-alist))
-         (sync-pair (assoc-if (lambda (key) (string-match key buffer-file-name)) normalized-alist)))
-    (when sync-pair
-      (save-window-excursion
-        ;; avoid annoying shell command window
-        (message (format "%s %s %s %s&" auto-rsync-command auto-rsync-command-option (car sync-pair) (cdr sync-pair)))
-        (shell-command (format "%s %s %s %s&" auto-rsync-command auto-rsync-command-option (car sync-pair) (cdr sync-pair)) nil)))))
-
-(define-minor-mode auto-rsync-mode
-  "automatically execute rsync when editing file's path matches `auto-rsync-dir-alist`"
-  :lighter " rsync"
-  :global t
-  (cond (auto-rsync-mode
-         (add-hook 'after-save-hook 'auto-rsync-exec-rsync))
-        (t
-         (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
-#+end_src
-*** wgrep
-#+begin_src emacs-lisp
-  (use-package wgrep
-    :ensure t)
-#+end_src
-*** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
-#+begin_src emacs-lisp :results silent
-(defun set-region-read-only (begin end)
-  (interactive "r")
-  (add-text-properties begin end '(read-only t)))
-#+end_src
-*** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
-#+begin_src emacs-lisp :results silent
-(defcustom default-messages-to-show 10
-  "Default number of messages for `show-some-last-messages'.")
-
-(defun show-some-last-messages (count)
-  "Show COUNT last lines of the `*Messages*' buffer."
-  (interactive "P")
-  (setq count (if count (prefix-numeric-value count)
-		default-messages-to-show))
-  (save-excursion
-	(set-buffer "*Messages*")
-	(let ((prev-point-max (point-max-marker))
-	  (inhibit-read-only t))
-	  (message "%s"
-		   (progn
-		 (set-buffer "*Messages*")
-		 (buffer-substring-no-properties
-		  (progn
-			(goto-char (point-max))
-			(unless (bolp)
-			  (insert "\n"))
-			(forward-line (- count))
-			(point))
-		  (point-max))))
-	  (delete-region (point-max) prev-point-max))))
-#+end_src
-*** COMMENT symon
-#+begin_src emacs-lisp
-(use-package symon
-  :config (progn
-            (symon-mode))
   :ensure t)
 #+end_src
 ** Version Control
