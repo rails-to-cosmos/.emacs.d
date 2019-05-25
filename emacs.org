@@ -556,6 +556,45 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 ** Org
+*** org-plus-contrib
+
+#+begin_src emacs-lisp
+(use-package org-plus-contrib
+  :bind (("C-c l" . org-store-link)
+         ("C-c a" . org-agenda)
+         ("C-c c" . org-capture)
+         :map org-mode-map
+         ("C-M-n" . ded/org-show-next-heading-tidily)
+         ("C-M-p" . ded/org-show-previous-heading-tidily)
+         ("C-c f" . org-sparse-tree)
+         ([(shift tab)] . org-overview))
+  :config (progn
+            (require 'org-agenda))
+  :ensure t)
+#+end_src
+
+*** modules
+
+#+begin_src emacs-lisp
+(setq org-modules
+      '(org-bbdb
+        org-bibtex
+        org-gnus
+        org-id
+        org-info
+        org-jsinfo
+        org-habit
+        org-inlinetask
+        org-irc
+        org-mew
+        org-mhe
+        org-protocol
+        org-rmail
+        org-vm
+        org-wl
+        org-w3m))
+#+end_src
+
 *** locale
 
 #+begin_src emacs-lisp
@@ -575,10 +614,13 @@ enjoy using a lot.
 #+end_src
 
 *** refile-update-cookies
+
 #+begin_src emacs-lisp
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
 #+end_src
-*** notifications
+
+*** COMMENT notifications
+
 #+begin_src emacs-lisp
 (require 'appt)
 (setq appt-time-msg-list nil)    ;; clear existing appt list
@@ -607,7 +649,26 @@ enjoy using a lot.
     (format "'%s'" msg)))                                ;; passed to -message in terminal-notifier call
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
+
+*** [[http://www.nongnu.org/org-edna-el/][org-edna]]
+
+#+begin_src emacs-lisp
+(use-package org-edna
+  :config (progn
+            (org-edna-load))
+  :ensure t)
+#+end_src
+
 *** experiments
+**** ledna
+
+#+begin_src emacs-lisp
+(use-package ledna
+  :config (progn
+            (ledna-dsl-init 'emacs-lisp))
+  :load-path "~/sync/stuff/ledna")
+#+end_src
+
 **** [#A] org-glance
 ***** og-core
 
@@ -645,10 +706,10 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
   :demand t
-  :bind (("C-x t t" . org-literate-devtools-tangle-project)
-         ("C-x t g" . org-literate-devtools-goto-tangle-file)
-         ("C-x t m" . org-literate-devtools-build)
-         ("C-x t c" . org-literate-devtools-compile-project))
+  :bind (("C-x t t" . oldt-tangle-project)
+         ("C-x t g" . oldt-goto-tangle-file)
+         ("C-x t m" . oldt-build)
+         ("C-x t c" . oldt-compile-project))
   :load-path "~/sync/stuff/org-literate-devtools")
 #+end_src
 
@@ -721,20 +782,48 @@ When COND is nil, insert CHAR."
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+end_src
-*** org-plus-contrib
+**** COMMENT autotagging
 #+begin_src emacs-lisp
-(use-package org-plus-contrib
-  :bind (("C-c l" . org-store-link)
-         ("C-c a" . org-agenda)
-         ("C-c c" . org-capture)
-         :map org-mode-map
-         ("C-M-n" . ded/org-show-next-heading-tidily)
-         ("C-M-p" . ded/org-show-previous-heading-tidily)
-         ("C-c f" . org-sparse-tree)
-         ([(shift tab)] . org-overview))
-  :config (progn
-            (require 'org-agenda))
-  :ensure t)
+(defun org-auto-tag ()
+  (interactive)
+  (let ((autotags org-autotags)
+        (headline-words (split-string (org-get-heading t t))))
+    (mapcar (lambda (word) (if-let (tag (alist-get (intern (downcase word)) autotags nil))
+                          (org-toggle-tag tag 'on)))
+            headline-words)))
+
+(add-hook 'org-capture-before-finalize-hook 'org-auto-tag)
+
+(setq-default org-autotags
+              '((купить . "Wish")
+                (buy . "Wish")
+
+                (ммб . "Orienteering")
+                (сплав . "Water_Trek")
+                (велопокатушки . "Bicycle_Trek")
+
+                (приём . "Medicine")
+                (терапевт . "Medicine")
+
+                (запилить . "Stuff")
+                (implement . "Stuff")
+                (emacs . "emacs_stuff")
+                (autocomplete . "emacs_stuff")
+                (org . "emacs_stuff")
+                (org-mode . "emacs_stuff")
+                (yasnippet . "emacs_stuff")
+
+                (подумать . "Understanding")
+                (придумать . "Idea")
+
+                (Cloud . "Cloud")
+                (Облако . "Cloud")
+                (Stager . "Stager")
+                (stager . "Stager")
+
+                (пёсик . "@eric")
+                (Эрик . "@eric")
+                (Эрика . "@eric")))
 #+end_src
 *** org-super-agenda
 #+begin_src emacs-lisp
@@ -798,202 +887,15 @@ When COND is nil, insert CHAR."
             (global-set-key (kbd "C-x y a") 'my-agenda))
   :ensure t)
 #+end_src
-*** modules
+*** org-eshell
+
 #+begin_src emacs-lisp
 (require 'org-eshell)
-
-(setq org-modules
-      '(org-bbdb
-        org-bibtex
-        org-crypt
-        org-eshell
-        org-gnus
-        org-id
-        org-info
-        org-jsinfo
-        org-habit
-        org-inlinetask
-        org-irc
-        org-mew
-        org-mhe
-        org-protocol
-        org-rmail
-        org-vm
-        org-wl
-        org-w3m
-        org-drill))
-#+end_src
-*** [[https://bitbucket.org/eeeickythump/org-drill][org-drill]]
-#+begin_src emacs-lisp
-(use-package org-drill
-  :config (setq org-drill-save-buffers-after-drill-sessions-p t
-                org-drill-maximum-duration 90
-                org-drill-scope 'agenda))
-#+end_src
-*** poporg
-#+begin_src emacs-lisp
-(use-package poporg
-      :bind (("C-c /" . poporg-dwim))
-      :ensure t)
-#+end_src
-*** reports
-#+begin_src emacs-lisp
-(defun gym-purchase-subscription-maybe ()
-  (when (y-or-n-p "Consider passed lessons count?")
-    (let* ((subscription-ticket (ledna/search "TYPE=\"Subscription\"" 'file))
-         (lessons-passed-count (string-to-number (car (ledna/inc-property "_PASSED" 1 "" subscription-ticket))))
-         (lessons-in-subscription 12))
-    (when (= (% lessons-passed-count lessons-in-subscription) 0)
-      (ledna/advanced-schedule subscription-ticket)))))
-#+end_src
-*** COMMENT screen
-
-#+begin_src emacs-lisp
-(require 'term)
-
-(defun ash-org-goto-screen (name)
-  "Open the screen with the specified name in the window"
-  (interactive "MScreen name: ")
-  (let ((screen-buffer-name (ash-org-screen-buffer-name name)))
-    (if (member screen-buffer-name
-                (mapcar 'buffer-name (buffer-list)))
-        (switch-to-buffer screen-buffer-name)
-      (switch-to-buffer (ash-org-screen-helper name "-dr")))))
-
-(defun ash-org-screen-buffer-name (name)
-  "Returns the buffer name corresponding to the screen name given."
-  (concat "*screen " name "*"))
-
-(defun ash-org-screen-helper (name arg)
-  ;; Pick the name of the new buffer.
-  (let ((term-ansi-buffer-name
-         (generate-new-buffer-name
-          (ash-org-screen-buffer-name name))))
-    (setq term-ansi-buffer-name
-          (term-ansi-make-term
-           term-ansi-buffer-name "/usr/bin/screen" nil arg name))
-    (set-buffer term-ansi-buffer-name)
-    (term-mode)
-    (term-char-mode)
-    (term-set-escape-char ?\C-x)
-    term-ansi-buffer-name))
-
-(defun ash-org-screen (name)
-  "Start a screen session with name"
-  (interactive "MScreen name: ")
-  (save-excursion
-    (ash-org-screen-helper name "-S"))
-  (insert (concat "[[screen:" name "]]")))
-
-(add-to-list 'org-link-abbrev-alist '("screen" . "elisp:(ash-org-goto-screen \"%s\")"))
+(add-to-list 'org-modules 'org-eshell)
 #+end_src
 
-*** autotagging
-#+begin_src emacs-lisp
-(defun org-auto-tag ()
-  (interactive)
-  (let ((autotags org-autotags)
-        (headline-words (split-string (org-get-heading t t))))
-    (mapcar (lambda (word) (if-let (tag (alist-get (intern (downcase word)) autotags nil))
-                          (org-toggle-tag tag 'on)))
-            headline-words)))
-
-(add-hook 'org-capture-before-finalize-hook 'org-auto-tag)
-
-(setq-default org-autotags
-              '((купить . "Wish")
-                (buy . "Wish")
-
-                (ммб . "Orienteering")
-                (сплав . "Water_Trek")
-                (велопокатушки . "Bicycle_Trek")
-
-                (приём . "Medicine")
-                (терапевт . "Medicine")
-
-                (запилить . "Stuff")
-                (implement . "Stuff")
-                (emacs . "emacs_stuff")
-                (autocomplete . "emacs_stuff")
-                (org . "emacs_stuff")
-                (org-mode . "emacs_stuff")
-                (yasnippet . "emacs_stuff")
-
-                (подумать . "Understanding")
-                (придумать . "Idea")
-
-                (Cloud . "Cloud")
-                (Облако . "Cloud")
-                (Stager . "Stager")
-                (stager . "Stager")
-
-                (пёсик . "@eric")
-                (Эрик . "@eric")
-                (Эрика . "@eric")))
-#+end_src
-*** [[http://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/][Adding keymaps to src blocks via org-font-lock-hook]]
-#+begin_src emacs-lisp
-(require 'org-mouse)
-
-(use-package clojure-mode
-  :ensure t)
-
-(setq scimax-src-block-keymaps
-      `(("clojure" . ,(let ((map (make-composed-keymap
-                                  `(,clojure-mode-map)
-                                  org-mode-map)))
-                        ;; In org-mode I define RET so we f
-                        (define-key map (kbd "C-q") 'cider-eval-defun-at-point)
-                        map))))
-
-(defun scimax-spoof-mode (orig-func &rest args)
-  "Advice function to spoof commands in org-mode src blocks.
-It is for commands that depend on the major mode. One example is
-`lispy--eval'."
-  (if (org-in-src-block-p)
-      (let ((major-mode (intern (format "%s-mode" (first (org-babel-get-src-block-info))))))
-        (apply orig-func args))
-    (apply orig-func args)))
-
-(defun scimax-add-keymap-to-src-blocks (limit)
-  "Add keymaps to src-blocks defined in `scimax-src-block-keymaps'."
-  (let ((case-fold-search t)
-        lang)
-    (while (re-search-forward org-babel-src-block-regexp limit t)
-      (let ((lang (match-string 2))
-            (beg (match-beginning 0))
-            (end (match-end 0)))
-        (if (assoc (org-no-properties lang) scimax-src-block-keymaps)
-            (progn
-              (add-text-properties
-               beg end `(local-map ,(cdr (assoc
-                                          (org-no-properties lang)
-                                          scimax-src-block-keymaps))))
-              (add-text-properties
-               beg end `(cursor-sensor-functions
-                         ((lambda (win prev-pos sym)
-                            ;; This simulates a mouse click and makes a menu change
-                            (org-mouse-down-mouse nil)))))))))))
-
-(define-minor-mode scimax-src-keymap-mode
-  "Minor mode to add mode keymaps to src-blocks."
-  :init-value nil
-  (if scimax-src-keymap-mode
-      (progn
-        (add-hook 'org-font-lock-hook #'scimax-add-keymap-to-src-blocks t)
-        (add-to-list 'font-lock-extra-managed-props 'local-map)
-        (add-to-list 'font-lock-extra-managed-props 'cursor-sensor-functions)
-        (advice-add 'lispy--eval :around 'scimax-spoof-mode)
-        (cursor-sensor-mode +1))
-    (remove-hook 'org-font-lock-hook #'scimax-add-keymap-to-src-blocks)
-    (advice-remove 'lispy--eval 'scimax-spoof-mode)
-    (cursor-sensor-mode -1))
-  (font-lock-fontify-buffer))
-
-(add-hook 'org-mode-hook (lambda ()
-                           (scimax-src-keymap-mode +1)))
-#+end_src
 *** structure-templates
+
 #+begin_src emacs-lisp
 (loop for tpl in '(;; ("ls" "# Local Variables:\n?\n# End:")
                    ("py" . "src ipython")
@@ -1003,7 +905,9 @@ It is for commands that depend on the major mode. One example is
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
+
 *** org-table-fixed
+
 #+begin_src emacs-lisp
 (defconst org-table-separator-space
   " "
@@ -1012,69 +916,8 @@ It is for commands that depend on the major mode. One example is
 This space serves as a segment separator for the purposes of the
 bidirectional reordering.")
 #+end_src
-*** [[http://www.nongnu.org/org-edna-el/][org-edna]]
-#+begin_src emacs-lisp
-(use-package ledna
-  :load-path "~/sync/stuff/ledna")
 
-(use-package org-edna
-  :config (progn
-            (org-edna-load)
-
-            (require 'ledna)
-            (ledna-dsl-init 'emacs-lisp))
-  :ensure t)
-#+end_src
-*** [[http://endlessparentheses.com/use-org-mode-links-for-absolutely-anything.html][org-tag-search]]
-#+begin_src emacs-lisp
-(org-add-link-type
- "tag" 'endless/follow-tag-link)
-
-(defun endless/follow-tag-link (tag)
-  "Display a list of TODO headlines with tag TAG.
-With prefix argument, also display headlines without a TODO keyword."
-  (org-tags-view nil ;; (null current-prefix-arg)
-                 tag))
-#+end_src
-*** org-feed
-#+begin_src emacs-lisp
-(require 'org-table)
-(require 'org-feed)
-
-(defun trim-string (string)
-  "Remove white spaces in beginning and ending of STRING.
-White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
-  (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
-
-(defun org-feed-reread ()
-  (interactive)
-  (message "Updating org feed...")
-  (setq org-feed-alist '())
-  (let ((header (mapcar 'substring-no-properties
-                        (org-table-get-remote-range "org-feed-settings" "@1$<..@1$>")))
-        (rows (mapcar 'substring-no-properties
-                      (org-table-get-remote-range "org-feed-settings" "@I$<..@II$>")))
-        (excludes '("name" "URL" "file" "headline")))
-    (let ((row-len (length header))
-          (cell-count (length rows)))
-      (dotimes (i (/ cell-count row-len))
-        (let ((row (subseq rows (* i row-len) (+ (* i row-len) row-len)))
-              (line-result nil)
-              (start-row-index (* i row-len)))
-          (mapcar* (lambda (h r)
-                     (when (not (member h excludes))
-                       (push (intern (concat ":" h)) line-result))
-                     (push r line-result))
-                   header row)
-          (push :template line-result)
-          (push "* TODO [[%(trim-string \"%link\")][%h]]\nSCHEDULED: %T" line-result)
-          (add-to-list 'org-feed-alist (reverse line-result))))))
-  (org-feed-update-all)
-  (message "Org feed is up-to-date"))
-
-;; (run-with-idle-timer 300 t 'org-feed-reread)
-#+end_src
-*** Babel
+*** babel
 **** settings
 #+begin_src emacs-lisp
 (setq org-src-fontify-natively t
@@ -1265,41 +1108,31 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
-*** org-habit
-#+begin_src emacs-lisp :results silent
-; position the habit graph on the agenda to the right of the default
-(setq org-habit-graph-column 75)
-#+end_src
-*** org-view
-#+begin_src emacs-lisp
-(defun org-view/evaluate-at-point (state)
-  (let ((src-block-name (org-entry-get (point) "SRC"))
-        (tags-list (org-get-tags)))
-    (when (and (not (eq state 'folded))
-               (member "View" tags-list)
-               (not (eq src-block-name nil)))
-      (save-excursion
-        (org-babel-goto-named-src-block src-block-name)
-        (org-ctrl-c-ctrl-c)))))
-(add-hook 'org-pre-cycle-hook 'org-view/evaluate-at-point)
-#+end_src
 *** crypt
+
 #+begin_src emacs-lisp
 (require 'epa-file)
 (setq epa-file-select-keys nil)
+
+(add-to-list 'org-modules 'org-crypt)
 (require 'org-crypt)
+
 ; Encrypt all entries before saving
 ;; (org-crypt-use-before-save-magic)
 (setq org-tags-exclude-from-inheritance (quote ("crypt")))
 ; GPG key to use for encryption
 ;; (setq org-crypt-key "")
 #+end_src
-*** Export
+
+*** export
+
 #+begin_src emacs-lisp
 (setq org-highlight-latex-and-related '(latex))
 (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
 #+end_src
-*** Log
+
+*** log
+
 #+begin_src emacs-lisp
 (setq-default org-log-into-drawer t
               org-log-done 'time
@@ -1370,7 +1203,9 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
          ((org-agenda-overriding-header "Recent Activity")
           (org-agenda-skip-function '(+org/has-child-and-last-update-before 7))))))
 #+end_src
-*** Clock
+
+*** clock
+
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
@@ -1395,6 +1230,7 @@ White space here is any of: space, tab, Emacs newline (line feed, ASCII 10)."
     (org-add-note)))
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 #+end_src
+
 *** UI
 **** Org todo keyword faces
 ***** Initialization
@@ -1496,14 +1332,15 @@ If KWD is a number, get the corresponding match group."
       (search-forward "</title>")
       (setq x2 (search-backward "<"))
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
-
-(define-key org-mode-map (kbd "C-c l") 'my/org-insert-link)
 #+end_src
 *** Narrowing
+
 #+begin_src emacs-lisp :results silent
 (setq org-indirect-buffer-display 'current-window)
 #+end_src
-*** Scimax autoformat mode
+
+*** COMMENT Scimax autoformat mode
+
 #+begin_src emacs-lisp
 (defcustom scimax-autoformat-ordinals t
   "Determines if scimax autoformats ordinal numbers."
@@ -1560,7 +1397,9 @@ If KWD is a number, get the corresponding match group."
 
 (add-hook 'org-mode-hook (lambda () (scimax-autoformat-mode)))
 #+end_src
+
 *** Show next entry, keeping other entries closed
+
 #+begin_src emacs-lisp
 (defun ded/org-show-next-heading-tidily ()
   "Show next entry, keeping other entries closed."
@@ -1577,6 +1416,7 @@ If KWD is a number, get the corresponding match group."
     (org-show-entry)
     (show-children)))
 #+end_src
+
 *** Show previous entry, keeping other entries closed
 #+begin_src emacs-lisp
 (defun ded/org-show-previous-heading-tidily ()
@@ -1654,30 +1494,22 @@ If KWD is a number, get the corresponding match group."
 ***** compl-read-suggestions
 
 #+begin_src emacs-lisp
-;; (require 'popup)
-
 (defun pabbrevx-suggestions-goto-buffer (suggestions)
   (let* ((candidates (mapcar 'car suggestions))
          (bounds (pabbrev-bounds-of-thing-at-point))
+         (user-input (buffer-substring-no-properties (car bounds) (cdr bounds)))
          (prompt "Complete: ")
-         (selection (org-completing-read prompt candidates))
-         ;; (selection (popup-menu* candidates
-         ;;                         :point (car bounds)
-         ;;                         :scroll-bar nil
-         ;;                         :margin-left 1
-         ;;                         :isearch t
-         ;;                         :isearch-filter (popup-imenu--filter)))
-         )
+         (selection (org-completing-read prompt candidates)))
     (when selection
+      (prin1 user-input)
       ;; modified version of pabbrev-suggestions-insert
-      (let ((point))
+      (let (point)
         (save-excursion
-          (progn
-            (delete-region (car bounds) (cdr bounds))
-            (insert selection)
-            (setq point (point))))
-        (if point
-            (goto-char point))
+          (delete-region (car bounds) (cdr bounds))
+          (insert selection)
+          (setq point (point)))
+        (when point
+          (goto-char point))
         ;; need to nil this so pabbrev-expand-maybe-full won't try
         ;; pabbrev expansion if user hits another TAB after ac aborts
         (setq pabbrev-last-expansion-suggestions nil)))))
