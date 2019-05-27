@@ -1,11 +1,13 @@
 #+CATEGORY: Emacs
 
 * Whoami
+
 #+begin_src emacs-lisp
 (setq-default
  user-mail-address "akatovda@yandex.com"
  user-full-name "Dmitry Akatov")
 #+end_src
+
 * Links
 - https://github.com/alphapapa/emacs-package-dev-handbook
 * Useful Configs
