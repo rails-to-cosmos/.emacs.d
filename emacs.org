@@ -1863,6 +1863,8 @@ bidirectional reordering.")
     (org-clock-goto)
     (org-add-note)))
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
+
+(run-with-idle-timer 1200 nil #'(lambda () (when (org-clock-is-active) (org-clock-goto) (org-clock-out) (save-buffer))))
 #+end_src
 
 *** UI
@@ -2964,3 +2966,4 @@ If KWD is a number, get the corresponding match group."
 (let ((system-type (string-join (s-split-words (symbol-name system-type)))))
   (load-local-init-file system-type))
 #+end_src
+* Workshop
