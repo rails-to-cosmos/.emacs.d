@@ -1299,7 +1299,7 @@ BEG and END (region to sort)."
 #+begin_src emacs-lisp
 (use-package ledna
   :config (progn
-            (ledna-dsl-init 'emacs-lisp))
+            (ledna-dsl-init))
   :load-path "~/sync/stuff/ledna")
 #+end_src
 
