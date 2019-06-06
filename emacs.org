@@ -1864,7 +1864,7 @@ bidirectional reordering.")
     (org-add-note)))
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 
-(run-with-idle-timer 1200 nil #'(lambda () (when (org-clock-is-active) (org-clock-goto) (org-clock-out) (save-buffer))))
+(run-with-idle-timer 300 'repeat #'(lambda () (when (org-clock-is-active) (org-clock-goto) (org-clock-out) (save-buffer))))
 #+end_src
 
 *** UI
