@@ -27,6 +27,7 @@
 
 ** Lisp
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
+
 #+begin_src emacs-lisp
 (defmacro f-string (fmt)
   "Like `s-format' but with format fields in it.
@@ -49,6 +50,7 @@ enjoy using a lot.
 
     `(s-format ,fmt 'aget (list ,@agetter))))
 #+end_src
+
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2014/01/20/Alternatives-to-long-complex-format-statements-in-emacs-lisp/][python-like-template-expanding]]
 #+begin_src emacs-lisp
   (defun expand-template (s plist)
@@ -2094,6 +2096,7 @@ If KWD is a number, get the corresponding match group."
 
 #+begin_src emacs-lisp
 (setq-default
+ org-cycle-separator-lines 0
  org-catch-invisible-edits 'error
  org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
