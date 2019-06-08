@@ -2091,8 +2091,10 @@ If KWD is a number, get the corresponding match group."
 #+end_src
 
 *** Unsorted Settings
+
 #+begin_src emacs-lisp
 (setq-default
+ org-catch-invisible-edits 'error
  org-read-date-prefer-future 'time
  org-startup-align-all-tables "align"
  org-log-done nil
