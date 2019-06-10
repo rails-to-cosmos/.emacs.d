@@ -343,6 +343,16 @@ enjoy using a lot.
 #+end_src
 
 ** EShell
+
+*** bookmark
+
+#+begin_src emacs-lisp
+(use-package eshell-bookmark
+  :config (progn
+            (add-hook 'eshell-mode-hook 'eshell-bookmark-setup))
+  :ensure t)
+#+end_src
+
 *** with-eshell
 
 #+begin_src emacs-lisp
@@ -471,17 +481,12 @@ enjoy using a lot.
                   eshell-prompt-function 'epe-theme-lambda))
   :ensure t)
 #+end_src
-*** tramp
-#+begin_src emacs-lisp
-(use-package eshell-bookmark
-  :config (progn
-            (add-hook 'eshell-mode-hook 'eshell-bookmark-setup))
-  :ensure t)
-#+end_src
 *** exclude
+
 #+begin_src emacs-lisp
 (setq-default eshell-ls-exclude-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
 #+end_src
+
 ** Window Managment
 *** shackle
 #+begin_src emacs-lisp
