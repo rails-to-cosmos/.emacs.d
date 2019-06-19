@@ -18,7 +18,6 @@
 - [[https://github.com/marktran/emacs.d][GitHub - marktran/emacs.d: Emacs configuration files]]
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
-- [[https://www.youtube.com/watch?v=dljNabciEGg][Literate Devops with Emacs - YouTube]]
 - [[https://github.com/jkitchin/jmax][jmax]]
 * Config
 :PROPERTIES:
