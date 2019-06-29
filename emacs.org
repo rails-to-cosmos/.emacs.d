@@ -1667,7 +1667,7 @@ bidirectional reordering.")
               org-log-states-order-reversed nil
               org-log-reschedule 'time
               org-log-redeadline 'time
-              org-deadline-warning-days 360)
+              org-deadline-warning-days 30)
 
 (setq org-log-note-headings '((done . "CLOSING NOTE T:%t")
                               (state . "State %-12s from %-12S T:%t")
