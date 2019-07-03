@@ -188,6 +188,7 @@ enjoy using a lot.
 (setq-default custom-file (tmp/ "custom.el"))
 #+end_src
 *** osx
+
 #+begin_src emacs-lisp
   (cond ((eq system-type 'darwin)
 	 (setq mac-command-modifier 'meta
@@ -223,6 +224,7 @@ enjoy using a lot.
 		(when (require 'osx-clipboard nil t)
 		  (osx-clipboard-mode +1))))))
 #+end_src
+
 ** Dired
 *** dired+
 
@@ -2395,6 +2397,7 @@ If KWD is a number, get the corresponding match group."
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+
 *** rmsbolt
 
 #+begin_src emacs-lisp
