@@ -1361,7 +1361,7 @@ When COND is nil, insert CHAR."
 **** org-auto-property
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "QA") (org-set-property "LOGGING" "DONE(@/!)"))))
+  (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+end_src
@@ -1770,6 +1770,7 @@ bidirectional reordering.")
 *** UI
 **** Org todo keyword faces
 ***** Initialization
+
 #+begin_src emacs-lisp
 (eval-after-load 'org-faces
  '(progn
@@ -1806,22 +1807,7 @@ If KWD is a number, get the corresponding match group."
           (and (member kwd org-done-keywords) 'org-done)
           'org-todo))))
 #+end_src
-***** Colors
-#+begin_src emacs-lisp
-(add-hook 'org-mode-hook
-          (lambda ()
-            (setq-default
-             org-todo-keyword-faces
-             '(("BLOCKED" . "#E74C3C")
-               ("DEPLOY" . "#292")
-               ("CANCELLED" . "#7B9ED2")
-               ("STARTED" . "#749AF7")
-               ("PENDING" . "#D0E1F9")
-               ("DELEGATED" . "#8B7FD7")
 
-               ("F" . "#E74C3C")
-               ("TEST" . "#749AF7")))))
-#+end_src
 **** Emphasis
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers nil)
