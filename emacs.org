@@ -1454,8 +1454,8 @@ bidirectional reordering.")
       org-src-preserve-indentation t
       org-confirm-babel-evaluate nil
       org-confirm-shell-link-function nil
-      org-confirm-elisp-link-function nil)
-(add-hook 'org-mode-hook 'org-hide-block-all)
+      org-confirm-elisp-link-function nil
+      org-hide-block-startup t)
 #+end_src
 **** source editing
 #+begin_src emacs-lisp
