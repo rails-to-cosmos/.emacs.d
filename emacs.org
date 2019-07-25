@@ -925,29 +925,6 @@ This is like `define-key', except the definition
 *** tiny-menu
 #+begin_src emacs-lisp
 (use-package tiny-menu
-  :config (progn
-            (setq-default tiny-menu-items
-                          '(("org-things"   ("Things"
-                                             ((?t "Tag"     org-tags-view)
-                                              (?i "ID"      air-org-goto-custom-id)
-                                              (?k "Keyword" org-search-view))))
-                            ("org-links"    ("Links"
-                                             ((?c "Capture"   org-store-link)
-                                              (?l "Insert"    org-insert-link)
-                                              (?i "Custom ID" air-org-insert-custom-id-link))))
-                            ("yandex-tasks"   ("Tasks"
-                                               ((?a "Add subtask"     yandex-add-subtask)
-                                                (?c "Changeset header" yandex-insert-changeset-header)
-                                                (?m "Commit message"  yandex-insert-commit-message)
-                                                (?i "Insert branch"   yandex-insert-branch)
-                                                (?t "Insert ticket"   yandex-insert-ticket)
-                                                (?g "Go to org"       yandex-goto-org-task)
-                                                (?s "Startrek ticket" yandex-browse-task)
-                                                (?r "Release ticket"  yandex-browse-release))))))
-            (define-key global-map (kbd "C-x y b") (tiny-menu-run-item "yandex-tasks"))
-            (define-key global-map (kbd "C-x y o") (tiny-menu-run-item "org-links"))
-            ;; (define-key global-map (kbd "C-x y g") (tiny-menu-run-item "org-things"))
-            )
   :ensure t)
 #+end_src
 *** uniq-lines
