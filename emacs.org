@@ -1234,15 +1234,43 @@ BEG and END (region to sort)."
 #+end_src
 
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
-
 #+begin_src emacs-lisp
 (use-package org-edna
   :config (progn
             (org-edna-load))
   :ensure t)
 #+end_src
-
 *** experiments
+**** org-clock-formatters
+***** events
+#+begin_src emacs-lisp
+(defun travel-clocktable-formatter (ipos tables params)
+  (let ((tables (loop for (file-name file-time entries) in tables
+                      collect (list file-name file-time
+                                    (loop for (level headline tgs ts time props) in entries
+                                          with prev-timestamp
+                                          when props do
+
+                                          ;; view only dates in scheduled timestamps
+                                          (when-let (scheduled (alist-get "SCHEDULED" props nil nil #'string=))
+                                            (let* ((timestamp (org-timestamp-from-string scheduled))
+                                                   (formatted (org-timestamp-format timestamp (car org-time-stamp-formats))))
+                                              (setf (alist-get "SCHEDULED" props nil nil #'string=)
+                                                    ;; do not repeat previous timestamp
+                                                    (unless (string= prev-timestamp formatted)
+                                                      formatted)
+                                                    prev-timestamp formatted)
+
+                                              (setf (alist-get "TIME" props nil nil #'string=)
+                                                    (org-timestamp-format timestamp "%R"))))
+
+                                          (setq tgs (-difference tgs (plist-get params :hide-tags)))
+
+                                          collect (list level headline tgs ts time props) into result
+                                          finally (return result))))))
+
+    (funcall org-clock-clocktable-formatter ipos tables params)))
+#+end_src
 **** ledna
 
 #+begin_src emacs-lisp
@@ -1262,15 +1290,15 @@ BEG and END (region to sort)."
 #+end_src
 
 ***** og-password-manager
-
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
   :bind (("C-x y p p" . org-glance-password-manager/launch)
          ("C-x y p e" . org-glance-password-manager/encrypt-entry)
          ("C-x y p d" . org-glance-password-manager/decrypt-entry))
-  :config (setq org-glance-password-file "~/sync/glance/passwords.org")
+  :config (progn
+            (setq org-glance-password-file "~/sync/glance/passwords.org"
+                  ogpm-idle-time 60))
   :load-path "~/sync/stuff/org-glance-password-manager")
-
 #+end_src
 ***** og-bookmark
 
@@ -1305,6 +1333,8 @@ Read from COMPLETIONS and run HANDLER on item.
 When COND is nil, insert CHAR."
 
   `(if (,cond)
+       ;; (insert ,char)
+       ;; (sit-for 5)
        (let ((item (org-completing-read "Choose item: " ,completions)))
          (,handler item))
      (insert ,char)))
@@ -1361,7 +1391,12 @@ When COND is nil, insert CHAR."
 **** org-auto-property
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))))
+  (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
+        ((org-edna-entry-has-tags-p "Event")
+         (let ((default-directory (concat default-directory "events/")))
+           (org-set-property "ATTACH_DIR" (concat "events/" (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
+           (org-set-property "ATTACH_DIR_INHERIT" "t")
+           (org-set-property "COOKIE_DATA" "todo recursive")))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+end_src
@@ -1949,7 +1984,6 @@ If KWD is a number, get the corresponding match group."
 
 *** completion
 **** pabbrev
-
 #+begin_src emacs-lisp
 (use-package pabbrev
   :config (progn
@@ -1957,7 +1991,6 @@ If KWD is a number, get the corresponding match group."
             (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
   :ensure t)
 #+end_src
-
 ***** compl-read-suggestions
 
 #+begin_src emacs-lisp
@@ -2566,13 +2599,14 @@ If KWD is a number, get the corresponding match group."
 :END:
 
 **** jedi
-
 #+begin_src emacs-lisp
 (use-package jedi
   :config (progn
-            (jedi:install-server)
-            (jedi:setup)
-            (setq jedi:complete-on-dot t))
+            (when (condition-case nil
+                      (and (jedi:install-server) t)
+                    (error nil))
+              (jedi:setup)
+              (setq jedi:complete-on-dot t)))
   :ensure t)
 
 (use-package jedi-direx
