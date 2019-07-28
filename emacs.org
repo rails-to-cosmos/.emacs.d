@@ -2656,6 +2656,14 @@ If KWD is a number, get the corresponding match group."
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** grab-and-drag
+#+begin_src emacs-lisp
+(use-package grab-and-drag
+  :config (progn
+            (grab-and-drag-mode 1)
+            (setq grab-and-drag-pointer-shape nil))
+  :load-path ("~/.emacs.d/packages"))
+#+end_src
 *** minimize
 
 #+begin_src emacs-lisp
