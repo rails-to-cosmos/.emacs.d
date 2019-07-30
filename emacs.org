@@ -1243,6 +1243,7 @@ BEG and END (region to sort)."
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
   :bind (("C-x y p p" . org-glance-password-manager/launch)
+         ("C-x y p l" . org-glance-password-manager/launch-local)
          ("C-x y p e" . org-glance-password-manager/encrypt-entry)
          ("C-x y p d" . org-glance-password-manager/decrypt-entry))
   :config (setq org-glance-password-file "~/sync/glance/passwords.org")
