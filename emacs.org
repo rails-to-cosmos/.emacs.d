@@ -1961,7 +1961,7 @@ If KWD is a number, get the corresponding match group."
 :END:
 
 *** completion
-**** pabbrev
+**** COMMENT pabbrev
 #+begin_src emacs-lisp
 (use-package pabbrev
   :config (progn
@@ -2426,15 +2426,15 @@ If KWD is a number, get the corresponding match group."
 (require 'ob-clojure)
 
 (use-package cider
-  :hook ((clojure-mode . paredit-mode))
+  :hook ((clojure-mode . paredit-mode)
+         (clojure-mode . cider-mode))
   :config (progn
-            (setq-default
-             nrepl-hide-special-buffers t
-             cider-repl-pop-to-buffer-on-connect nil
-             cider-popup-stacktraces nil
-             cider-repl-popup-stacktraces t
-             org-babel-clojure-backend 'cider
-             inferior-lisp-program (executable-find "sbcl")))
+            (setq nrepl-hide-special-buffers t
+                  cider-repl-pop-to-buffer-on-connect nil
+                  cider-popup-stacktraces nil
+                  cider-repl-popup-stacktraces t
+                  org-babel-clojure-backend 'cider
+                  inferior-lisp-program (executable-find "sbcl")))
   :ensure t)
 
 ;; Useful keybindings when using Clojure from Org
@@ -2576,7 +2576,13 @@ If KWD is a number, get the corresponding match group."
 :CUSTOM_ID: emacs.config.programming.python
 :END:
 
-**** jedi
+**** elpy
+#+begin_src emacs-lisp
+(use-package elpy
+  :init (elpy-enable)
+  :ensure t)
+#+end_src
+**** COMMENT jedi
 #+begin_src emacs-lisp
 (use-package jedi
   :config (progn
@@ -2590,7 +2596,6 @@ If KWD is a number, get the corresponding match group."
 (use-package jedi-direx
   :ensure t)
 #+end_src
-
 **** realgud
 #+begin_src emacs-lisp
 (use-package realgud
