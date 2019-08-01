@@ -1632,7 +1632,6 @@ bidirectional reordering.")
 **** ob-restclient
 #+begin_src emacs-lisp
 (use-package restclient
-  :mode ("\\.rest\'" . restclient-mode)
   :ensure t)
 
 (use-package ob-restclient
@@ -1964,6 +1963,12 @@ If KWD is a number, get the corresponding match group."
 :END:
 
 *** completion
+**** company
+#+begin_src emacs-lisp
+(use-package company
+  :config (global-company-mode)
+  :ensure t)
+#+end_src
 **** COMMENT pabbrev
 #+begin_src emacs-lisp
 (use-package pabbrev
