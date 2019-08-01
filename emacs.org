@@ -1180,7 +1180,6 @@ BEG and END (region to sort)."
 #+end_src
 
 *** COMMENT notifications
-
 #+begin_src emacs-lisp
 (require 'appt)
 (setq appt-time-msg-list nil)    ;; clear existing appt list
@@ -1209,13 +1208,16 @@ BEG and END (region to sort)."
     (format "'%s'" msg)))                                ;; passed to -message in terminal-notifier call
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
-
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
 #+begin_src emacs-lisp
 (use-package org-edna
   :config (progn
             (org-edna-load))
   :ensure t)
+#+end_src
+*** org-git-link
+#+begin_src emacs-lisp
+(require 'org-git-link)
 #+end_src
 *** experiments
 **** org-clock-formatters
@@ -1630,6 +1632,7 @@ bidirectional reordering.")
 **** ob-restclient
 #+begin_src emacs-lisp
 (use-package restclient
+  :mode ("\\.rest\'" . restclient-mode)
   :ensure t)
 
 (use-package ob-restclient
