@@ -2406,14 +2406,11 @@ If KWD is a number, get the corresponding match group."
 :END:
 
 *** rmsbolt
-
 #+begin_src emacs-lisp
 (use-package rmsbolt
   :ensure t)
 #+end_src
-
 *** ggtags
-
 #+begin_src emacs-lisp
 (use-package ggtags
   :hook ((c-mode . ggtags-mode)
@@ -2430,11 +2427,13 @@ If KWD is a number, get the corresponding match group."
               ("C-c y g s" . ggtags-find-other-symbol))
   :ensure t)
 #+end_src
-
 *** clojure
+**** ob-clojure
 #+begin_src emacs-lisp
 (require 'ob-clojure)
-
+#+end_src
+**** cider
+#+begin_src emacs-lisp
 (use-package cider
   :hook ((clojure-mode . paredit-mode)
          (clojure-mode . cider-mode))
@@ -2448,27 +2447,7 @@ If KWD is a number, get the corresponding match group."
             (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
             (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
   :ensure t)
-
-;; Useful keybindings when using Clojure from Org
-;; (org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
-;; (org-defkey org-mode-map "\C-c\C-d" 'cider-doc)
 #+end_src
-*** compilation
-#+begin_src emacs-lisp
-(define-key global-map (kbd "C-x C-m") #'compile)
-#+end_src
-*** comint
-#+begin_src emacs-lisp
-(setq comint-prompt-read-only t)
-#+end_src
-*** lisp
-
-#+begin_src emacs-lisp
-(add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
-(add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
-(setq byte-compile-warnings '(not cl-functions))
-#+end_src
-
 **** cider overlays
 #+begin_src emacs-lisp
 (autoload 'cider--make-result-overlay "cider-overlays")
@@ -2497,6 +2476,20 @@ If KWD is a number, get the corresponding match group."
                (save-excursion
                  (end-of-defun)
                  (point)))))
+#+end_src
+*** compilation
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-x C-m") #'compile)
+#+end_src
+*** comint
+#+begin_src emacs-lisp
+(setq comint-prompt-read-only t)
+#+end_src
+*** another lisps
+#+begin_src emacs-lisp
+(add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
+(setq byte-compile-warnings '(not cl-functions))
 #+end_src
 *** web
 **** emmet-mode
