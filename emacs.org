@@ -1966,7 +1966,9 @@ If KWD is a number, get the corresponding match group."
 **** company
 #+begin_src emacs-lisp
 (use-package company
-  :config (global-company-mode)
+  :config (progn
+            (global-company-mode)
+            (global-set-key (kbd "TAB") #'company-indent-or-complete-common))
   :ensure t)
 #+end_src
 **** COMMENT pabbrev
@@ -2442,7 +2444,9 @@ If KWD is a number, get the corresponding match group."
                   cider-popup-stacktraces nil
                   cider-repl-popup-stacktraces t
                   org-babel-clojure-backend 'cider
-                  inferior-lisp-program (executable-find "sbcl")))
+                  inferior-lisp-program (executable-find "sbcl"))
+            (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
+            (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
   :ensure t)
 
 ;; Useful keybindings when using Clojure from Org
