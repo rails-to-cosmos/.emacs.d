@@ -1440,13 +1440,13 @@ When COND is nil, insert CHAR."
                    ("py" . "src ipython")
                    ("el" . "src emacs-lisp")
                    ("sql" . "src sql")
+                   ("rest" . "src restclient :async")
                    ("bash" . "src bash")
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
 
 *** org-table-fixed
-
 #+begin_src emacs-lisp
 (defconst org-table-separator-space
   " "
@@ -1455,7 +1455,6 @@ When COND is nil, insert CHAR."
 This space serves as a segment separator for the purposes of the
 bidirectional reordering.")
 #+end_src
-
 *** babel
 **** settings
 #+begin_src emacs-lisp
