@@ -1291,7 +1291,10 @@ BEG and END (region to sort)."
          ("C-x t g" . oldt-goto-tangle-file)
          ("C-x t m" . oldt-build)
          ("C-x t c" . oldt-compile-project))
-  :load-path "~/sync/stuff/org-literate-devtools")
+  :load-path "~/sync/stuff/org-literate-devtools"
+  :ensure request
+  :ensure aio
+  :ensure cider)
 #+end_src
 
 **** char-completion
