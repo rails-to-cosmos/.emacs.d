@@ -1452,7 +1452,10 @@ SET COLSEP '|'
          ("C-x t g" . oldt-goto-tangle-file)
          ("C-x t m" . oldt-build)
          ("C-x t c" . oldt-compile-project))
-  :load-path "~/sync/stuff/org-literate-devtools")
+  :load-path "~/sync/stuff/org-literate-devtools"
+  :ensure request
+  :ensure aio
+  :ensure cider)
 #+end_src
 
 **** char-completion
@@ -1474,18 +1477,24 @@ When COND is nil, insert CHAR."
 #+begin_src emacs-lisp
 (defvar org-glance-contacts-file "~/sync/glance/contacts.org")
 
-(defun org-babel-at-src-block-p ()
-  (memq (org-element-type (org-element-context)) '(inline-src-block src-block)))
+(defun org-glance-tag-search (tag)
+  (org-element-map (org-element-parse-buffer 'headline) 'headline
+    (lambda (hl)
+      (when (member tag (org-get-tags (org-element-property :begin hl)))
+        hl))))
+
+(defun org-glance-contacts--extract-from-current-buffer ()
+  (mapcar (lambda (x) (org-element-property :raw-value x))
+          (org-glance-tag-search "Contact")))
 
 (defun org-compl-staff ()
   (interactive)
 
-  (setq staff-persons (with-temp-file org-glance-contacts-file
-                          (when (file-exists-p org-glance-contacts-file)
-                            (insert-file-contents-literally org-glance-contacts-file))
-
-                          (org-element-map (org-element-parse-buffer 'headline t)
-                              'plain-text 'append)))
+  (setq staff-persons
+        (with-temp-file org-glance-contacts-file
+          (when (file-exists-p org-glance-contacts-file)
+            (insert-file-contents-literally org-glance-contacts-file))
+          (org-glance-contacts--extract-from-current-buffer)))
 
   (org-compl-char "@" staff-persons
                   (lambda () (and (not (org-babel-at-src-block-p))
@@ -2135,7 +2144,6 @@ If KWD is a number, get the corresponding match group."
   :ensure t)
 #+end_src
 ***** compl-read-suggestions
-
 #+begin_src emacs-lisp
 (defun pabbrevx-suggestions-goto-buffer (suggestions)
   (let* ((candidates (mapcar 'car suggestions))
@@ -2159,9 +2167,7 @@ If KWD is a number, get the corresponding match group."
 
 (fset 'pabbrev-suggestions-goto-buffer 'pabbrevx-suggestions-goto-buffer)
 #+end_src
-
 **** abbrev
-
 #+begin_src emacs-lisp
 (setq abbrev-file-name (tmp/ "abbrev_defs")
       save-abbrevs 'silent)
@@ -2179,7 +2185,6 @@ If KWD is a number, get the corresponding match group."
 
 (add-hook 'prog-mode-hook 'abbrev-mode)
 #+end_src
-
 *** vlf -- view large files
 #+begin_src emacs-lisp
 (use-package vlf
