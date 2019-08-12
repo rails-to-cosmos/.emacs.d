@@ -437,6 +437,8 @@ enjoy using a lot.
       (call-interactively 'eshell))
     (when initial-path
       (insert (format "cd %s" initial-path))
+      (eshell-send-input)
+      (insert "ls")
       (eshell-send-input))))
 #+end_src
 *** defaults
@@ -485,11 +487,9 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 *** exclude
-
 #+begin_src emacs-lisp
 (setq-default eshell-ls-exclude-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
 #+end_src
-
 ** Window Managment
 *** shackle
 #+begin_src emacs-lisp
@@ -1117,7 +1117,6 @@ BEG and END (region to sort)."
 #+end_src
 ** Org
 *** org-plus-contrib
-
 #+begin_src emacs-lisp
 (use-package org-plus-contrib
   :bind (("C-c l" . org-store-link)
@@ -1132,9 +1131,7 @@ BEG and END (region to sort)."
             (require 'org-agenda))
   :ensure t)
 #+end_src
-
 *** modules
-
 #+begin_src emacs-lisp
 (setq org-modules
       '(org-bbdb
@@ -1154,31 +1151,24 @@ BEG and END (region to sort)."
         org-wl
         org-w3m))
 #+end_src
-
 *** locale
-
 #+begin_src emacs-lisp
 ;; System locale to use for formatting time values.
 (setq system-time-locale "C")         ; Make sure that the weekdays in the
                                       ; time stamps of your Org mode files and
                                       ; in the agenda appear in English.
 #+end_src
-
 *** archive location
-
 #+begin_src emacs-lisp
 (setq org-archive-location
       (concat
        (format "archives/%s/%%s_archive::"
                (format-time-string "%Y/%m" (current-time)))))
 #+end_src
-
 *** refile-update-cookies
-
 #+begin_src emacs-lisp
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
 #+end_src
-
 *** COMMENT notifications
 #+begin_src emacs-lisp
 (require 'appt)
@@ -1220,6 +1210,169 @@ BEG and END (region to sort)."
 (require 'org-git-link)
 #+end_src
 *** experiments
+**** ob-sql
+#+begin_src emacs-lisp
+(defun org-babel-execute:sql (body params)
+  "Execute a block of Sql code with Babel.
+This function is called by `org-babel-execute-src-block'."
+  (let* ((connection (or (cdr (assq :conn params)) "default"))
+         (result-params (or (cdr (assq :result-params params))
+                            (getenv (concat (upcase connection) "_RESULT_PARAMS"))
+                            (error "Unable to find env %s" (concat (upcase connection) "_RESULT_PARAMS"))))
+         (cmdline (or (cdr (assq :cmdline params))
+                      (getenv (concat (upcase connection) "_CMDLINE"))
+                      ;; (error "Unable to find env %s" (concat (upcase connection) "_CMDLINE"))
+                      ))
+         (dbhost (or (cdr (assq :dbhost params))
+                     (getenv (concat (upcase connection) "_DB_HOST"))
+                     (error "Unable to find env %s" (concat (upcase connection) "_DB_HOST"))))
+         (dbport (or (cdr (assq :dbport params))
+                     (string-to-number (getenv (concat (upcase connection) "_DB_PORT")))
+                     (error "Unable to find env %s" (concat (upcase connection) "_DB_PORT"))))
+         (dbuser (or (cdr (assq :dbuser params))
+                     (getenv (concat (upcase connection) "_DB_USER"))
+                     (error "Unable to find env %s" (concat (upcase connection) "_DB_USER"))))
+         (dbpassword (or (cdr (assq :dbpassword params))
+                         (getenv (concat (upcase connection) "_DB_PASSWORD"))
+                         (error "Unable to find env %s" (concat (upcase connection) "_DB_PASSWORD"))))
+         (database (or (cdr (assq :database params))
+                       (getenv (concat (upcase connection) "_DB_NAME"))
+                       (error "Unable to find env %s" (concat (upcase connection) "_DB_NAME"))))
+         (engine (or (cdr (assq :engine params))
+                     (getenv (concat (upcase connection) "_ENGINE"))
+                     (error "Unable to find env %s" (concat (upcase connection) "_ENGINE"))))
+         (colnames-p (not (equal "no" (cdr (assq :colnames params)))))
+         (in-file (org-babel-temp-file "sql-in-"))
+         (out-file (or (cdr (assq :out-file params))
+                       (org-babel-temp-file "sql-out-")))
+	 (header-delim "")
+         (command (pcase (intern engine)
+                    (`dbi (format "dbish --batch %s < %s | sed '%s' > %s"
+				  (or cmdline "")
+				  (org-babel-process-file-name in-file)
+				  "/^+/d;s/^|//;s/(NULL)/ /g;$d"
+				  (org-babel-process-file-name out-file)))
+                    (`monetdb (format "mclient -f tab %s < %s > %s"
+				      (or cmdline "")
+				      (org-babel-process-file-name in-file)
+				      (org-babel-process-file-name out-file)))
+		    (`mssql (format "sqlcmd %s -s \"\t\" %s -i %s -o %s"
+				    (or cmdline "")
+				    (org-babel-sql-dbstring-mssql
+				     dbhost dbuser dbpassword database)
+				    (org-babel-sql-convert-standard-filename
+				     (org-babel-process-file-name in-file))
+				    (org-babel-sql-convert-standard-filename
+				     (org-babel-process-file-name out-file))))
+                    (`mysql (format "mysql %s %s %s < %s > %s"
+				    (org-babel-sql-dbstring-mysql
+				     dbhost dbport dbuser dbpassword database)
+				    (if colnames-p "" "-N")
+				    (or cmdline "")
+				    (org-babel-process-file-name in-file)
+				    (org-babel-process-file-name out-file)))
+		    (`postgresql (format
+				  "%spsql --set=\"ON_ERROR_STOP=1\" %s -A -P \
+footer=off -F \"\t\"  %s -f %s -o %s %s"
+				  (if dbpassword
+				      (format "PGPASSWORD=%s " dbpassword)
+				    "")
+				  (if colnames-p "" "-t")
+				  (org-babel-sql-dbstring-postgresql
+				   dbhost dbport dbuser database)
+				  (org-babel-process-file-name in-file)
+				  (org-babel-process-file-name out-file)
+				  (or cmdline "")))
+		    (`sqsh (format "sqsh %s %s -i %s -o %s -m csv"
+				   (or cmdline "")
+				   (org-babel-sql-dbstring-sqsh
+				    dbhost dbuser dbpassword database)
+				   (org-babel-sql-convert-standard-filename
+				    (org-babel-process-file-name in-file))
+				   (org-babel-sql-convert-standard-filename
+				    (org-babel-process-file-name out-file))))
+		    (`vertica (format "vsql %s -f %s -o %s %s"
+				    (org-babel-sql-dbstring-vertica
+				     dbhost dbport dbuser dbpassword database)
+				    (org-babel-process-file-name in-file)
+				    (org-babel-process-file-name out-file)
+				    (or cmdline "")))
+                    (`oracle (format
+			      "sqlplus -s %s < %s > %s"
+			      (org-babel-sql-dbstring-oracle
+			       dbhost dbport dbuser dbpassword database)
+			      (org-babel-process-file-name in-file)
+			      (org-babel-process-file-name out-file)))
+                    (_ (error "No support for the %s SQL engine" engine)))))
+    (with-temp-file in-file
+      (insert
+       (pcase (intern engine)
+	 (`dbi "/format partbox\n")
+         (`oracle "SET PAGESIZE 50000
+SET NEWPAGE 0
+SET TAB OFF
+SET SPACE 0
+SET LINESIZE 9999
+SET TRIMOUT ON TRIMSPOOL ON
+SET ECHO OFF
+SET FEEDBACK OFF
+SET VERIFY OFF
+SET HEADING ON
+SET MARKUP HTML OFF SPOOL OFF
+SET COLSEP '|'
+
+")
+	 ((or `mssql `sqsh) "SET NOCOUNT ON
+
+")
+	 (`vertica "\\a\n")
+	 (_ ""))
+       (org-babel-expand-body:sql body params)
+       ;; "sqsh" requires "go" inserted at EOF.
+       (if (string= engine "sqsh") "\ngo" "")))
+    (org-babel-eval command "")
+    (org-babel-result-cond result-params
+      (with-temp-buffer
+	(progn (insert-file-contents-literally out-file) (buffer-string)))
+      (with-temp-buffer
+	(cond
+	 ((memq (intern engine) '(dbi mysql postgresql sqsh vertica))
+	  ;; Add header row delimiter after column-names header in first line
+	  (cond
+	   (colnames-p
+	    (with-temp-buffer
+	      (insert-file-contents out-file)
+	      (goto-char (point-min))
+	      (forward-line 1)
+	      (insert "-\n")
+	      (setq header-delim "-")
+	      (write-file out-file)))))
+	 (t
+	  ;; Need to figure out the delimiter for the header row
+	  (with-temp-buffer
+	    (insert-file-contents out-file)
+	    (goto-char (point-min))
+	    (when (re-search-forward "^\\(-+\\)[^-]" nil t)
+	      (setq header-delim (match-string-no-properties 1)))
+	    (goto-char (point-max))
+	    (forward-char -1)
+	    (while (looking-at "\n")
+	      (delete-char 1)
+	      (goto-char (point-max))
+	      (forward-char -1))
+	    (write-file out-file))))
+	(org-table-import out-file (if (string= engine "sqsh") '(4) '(16)))
+	(org-babel-reassemble-table
+	 (mapcar (lambda (x)
+		   (if (string= (car x) header-delim)
+		       'hline
+		     x))
+		 (org-table-to-lisp))
+	 (org-babel-pick-name (cdr (assq :colname-names params))
+			      (cdr (assq :colnames params)))
+	 (org-babel-pick-name (cdr (assq :rowname-names params))
+			      (cdr (assq :rownames params))))))))
+#+end_src
 **** org-clock-formatters
 ***** events
 #+begin_src emacs-lisp
@@ -1251,14 +1404,12 @@ BEG and END (region to sort)."
     (funcall org-clock-clocktable-formatter ipos tables params)))
 #+end_src
 **** ledna
-
 #+begin_src emacs-lisp
 (use-package ledna
   :config (progn
             (ledna-dsl-init))
   :load-path "~/sync/stuff/ledna")
 #+end_src
-
 **** [#A] org-glance
 ***** og-core
 
@@ -1373,8 +1524,10 @@ When COND is nil, insert CHAR."
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Event")
-         (let ((default-directory (concat default-directory "events/")))
-           (org-set-property "ATTACH_DIR" (concat "events/" (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
+         (let* ((default-directory (concat default-directory "events/"))
+                (event-directory (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
+           (mkdir event-directory)
+           (org-set-property "ATTACH_DIR" (concat default-directory event-directory))
            (org-set-property "ATTACH_DIR_INHERIT" "t")
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
@@ -1444,6 +1597,8 @@ When COND is nil, insert CHAR."
                    ("py" . "src ipython")
                    ("el" . "src emacs-lisp")
                    ("sql" . "src sql")
+                   ("sql-vertica" . "src sql :conn vertica")
+                   ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
                    ("bash" . "src bash")
                    ("cpp" . "src C++"))
@@ -1640,13 +1795,14 @@ bidirectional reordering.")
 #+begin_src emacs-lisp
 (setq ob-languages '((python . t)
                      (sql . t)
+                     ;; (sql-mode . t)
+                     ;; (lilypond . t)
                      (emacs-lisp . t)
                      (clojure . t)
                      (http . t)
                      (shell . t)
                      (restclient . t)
-                     (C . t)
-                     (lilypond . t)))
+                     (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
@@ -2013,6 +2169,13 @@ If KWD is a number, get the corresponding match group."
 (define-abbrev-table 'python-mode-abbrev-table
   '(("pdb" "import pdb; pdb.set_trace()" nil 0)
     ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
+
+(define-abbrev-table 'sql-mode-abbrev-table
+  '(("select" "SELECT" nil 0)
+    ("from" "FROM" nil 0)
+    ("where" "WHERE" nil 0)
+    ("order" "ORDER" nil 0)
+    ("by" "BY" nil 0)))
 
 (add-hook 'prog-mode-hook 'abbrev-mode)
 #+end_src
