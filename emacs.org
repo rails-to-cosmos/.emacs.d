@@ -1249,20 +1249,19 @@ BEG and END (region to sort)."
 #+end_src
 
 *** structure-templates
-
 #+begin_src emacs-lisp
 (loop for tpl in '(;; ("ls" "# Local Variables:\n?\n# End:")
                    ("py" . "src ipython")
                    ("el" . "src emacs-lisp")
                    ("sql" . "src sql")
                    ("sql-vertica" . "src sql :conn vertica")
+                   ("sql-mssql" . "src sql :conn mssql")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
                    ("bash" . "src bash")
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
-
 *** org-table-fixed
 #+begin_src emacs-lisp
 (defconst org-table-separator-space
