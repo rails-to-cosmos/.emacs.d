@@ -2033,10 +2033,6 @@ When COND is nil, insert CHAR."
 #+end_src
 ***** compl-staff
 #+begin_src emacs-lisp
-(defun org-babel-at-src-block-p ()
-  (org-babel-when-in-src-block
-   t))
-
 (defvar org-glance-contacts-file "~/sync/glance/contacts.org")
 
 (defun org-glance-tag-search (tag)
@@ -2059,7 +2055,7 @@ When COND is nil, insert CHAR."
           (org-glance-contacts--extract-from-current-buffer)))
 
   (org-compl-char "@" staff-persons
-                  (lambda () (and (not (org-babel-at-src-block-p))
+                  (lambda () (and (not (org-in-src-block-p))
                              (looking-back "\\W")))
                   (lambda (item) (progn
                               (when (not (member item staff-persons))
@@ -2074,13 +2070,14 @@ When COND is nil, insert CHAR."
 (define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+end_src
 ***** compl-templates
+
 #+begin_src emacs-lisp
 (defun org-compl-structure ()
   (interactive)
   (org-compl-char "<" org-structure-template-alist
 
-                  (lambda () (and (looking-at "^[[:space:]]*$")
-                                  (not (org-babel-at-src-block-p))))
+                  (lambda () (and (looking-back "^[[:space:]]*$")
+                             (not (org-in-src-block-p))))
 
                   (lambda (item)
                     (when-let (item (cdr (assoc item org-structure-template-alist)))
@@ -2090,6 +2087,7 @@ When COND is nil, insert CHAR."
 
 (define-key org-mode-map (kbd "<") 'org-compl-structure)
 #+end_src
+
 **** org-auto-property
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
