@@ -346,7 +346,25 @@ enjoy using a lot.
 #+end_src
 
 ** EShell
+*** [[https://blog.hoetzel.info/post/eshell-notifications/][notifications]]
+#+begin_src emacs-lisp
+(require 'alert)
 
+(defun eshell-command-alert (process status)
+  "Send `alert' with severity based on STATUS when PROCESS finished."
+  (let* ((cmd (process-command process))
+	   (buffer (process-buffer process))
+	   (msg (format "%s: %s" (mapconcat 'identity cmd " ")  status)))
+    (if (string-prefix-p "finished" status)
+	  (alert msg :buffer buffer :severity  'normal)
+	(alert msg :buffer buffer :severity 'urgent))))
+
+(add-hook 'eshell-kill-hook #'eshell-command-alert)
+
+(alert-add-rule :status   '(buried)     ;only send alert when buffer not visible
+                :mode     'eshell-mode
+                :style 'notifications)
+#+end_src
 *** bookmark
 
 #+begin_src emacs-lisp
