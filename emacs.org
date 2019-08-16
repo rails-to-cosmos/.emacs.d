@@ -1493,7 +1493,6 @@ bidirectional reordering.")
               org-log-done 'time
               org-log-state-notes-insert-after-drawers nil
               org-log-note-clock-out nil
-              org-log-states-order-reversed nil
               org-log-reschedule 'time
               org-log-redeadline 'time
               org-deadline-warning-days 30)
