@@ -2109,6 +2109,7 @@ When COND is nil, insert CHAR."
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
+        ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
         ((org-edna-entry-has-tags-p "Event")
          (let* ((default-directory (concat default-directory "events/"))
                 (event-directory (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
