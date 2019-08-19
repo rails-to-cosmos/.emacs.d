@@ -1601,7 +1601,7 @@ bidirectional reordering.")
     (org-add-note)))
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 
-(lexical-let ((custom-org-clock-idle-time 600)) ;; seconds
+(lexical-let ((custom-org-clock-idle-time 3600)) ;; seconds
   (run-with-idle-timer
    custom-org-clock-idle-time 'repeat
    #'(lambda () (when (org-clock-is-active)
