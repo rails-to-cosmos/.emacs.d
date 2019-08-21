@@ -1577,7 +1577,6 @@ bidirectional reordering.")
 #+end_src
 
 *** clock
-
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
@@ -1610,7 +1609,6 @@ bidirectional reordering.")
                                                       custom-org-clock-idle-time)))
              (when buffer-file-name (save-buffer))))))
 #+end_src
-
 *** UI
 **** Org todo keyword faces
 ***** Initialization
@@ -2114,7 +2112,7 @@ When COND is nil, insert CHAR."
          (let* ((default-directory (concat default-directory "events/"))
                 (event-directory (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
            (mkdir event-directory)
-           (org-set-property "ATTACH_DIR" (concat default-directory event-directory))
+           (org-set-property "ATTACH_DIR" event-directory)
            (org-set-property "ATTACH_DIR_INHERIT" "t")
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
