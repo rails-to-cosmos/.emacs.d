@@ -594,7 +594,7 @@ enjoy using a lot.
       (beginning-of-buffer)
       (while (not (eobp))
           (let ((row (thing-at-point 'line)))
-            (when (string-match "export \\([A-Z_]+\\)" row)
+            (when (string-match "export \\([A-Z0-9_]+\\)" row)
               (exec-path-from-shell-copy-env (match-string 1 row))))
           (forward-line 1)
           (beginning-of-line)))))
