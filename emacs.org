@@ -573,7 +573,7 @@ enjoy using a lot.
             (reverse-im-activate "russian-computer"))
   :ensure t)
 #+end_src
-** EMMS
+** COMMENT EMMS
 #+begin_src emacs-lisp
 (use-package emms
   :config (progn
@@ -2108,6 +2108,7 @@ When COND is nil, insert CHAR."
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
+        ((org-edna-entry-has-tags-p "Password") (org-set-property "PASSWORD" (s-trim (generate-password))))
         ((org-edna-entry-has-tags-p "Event")
          (let* ((default-directory (concat default-directory "events/"))
                 (event-directory (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
