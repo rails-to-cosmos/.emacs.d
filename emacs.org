@@ -573,16 +573,6 @@ enjoy using a lot.
             (reverse-im-activate "russian-computer"))
   :ensure t)
 #+end_src
-** EMMS
-#+begin_src emacs-lisp
-(use-package emms
-  :config (progn
-            (add-to-list 'load-path "~/sync/stuff/emms/lisp")
-            (require 'emms-setup)
-            (emms-standard)
-            (emms-default-players))
-  :ensure t)
-#+end_src
 ** Utils
 *** read-exports-from-file
 #+begin_src emacs-lisp
@@ -594,7 +584,7 @@ enjoy using a lot.
       (beginning-of-buffer)
       (while (not (eobp))
           (let ((row (thing-at-point 'line)))
-            (when (string-match "export \\([A-Z_]+\\)" row)
+            (when (string-match "export \\([A-Z0-9_]+\\)" row)
               (exec-path-from-shell-copy-env (match-string 1 row))))
           (forward-line 1)
           (beginning-of-line)))))
@@ -1577,7 +1567,6 @@ bidirectional reordering.")
 #+end_src
 
 *** clock
-
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
@@ -1601,7 +1590,7 @@ bidirectional reordering.")
     (org-add-note)))
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 
-(lexical-let ((custom-org-clock-idle-time 600)) ;; seconds
+(lexical-let ((custom-org-clock-idle-time 3600)) ;; seconds
   (run-with-idle-timer
    custom-org-clock-idle-time 'repeat
    #'(lambda () (when (org-clock-is-active)
@@ -1610,7 +1599,6 @@ bidirectional reordering.")
                                                       custom-org-clock-idle-time)))
              (when buffer-file-name (save-buffer))))))
 #+end_src
-
 *** UI
 **** Org todo keyword faces
 ***** Initialization
@@ -2110,6 +2098,7 @@ When COND is nil, insert CHAR."
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
+        ((org-edna-entry-has-tags-p "Password") (org-set-property "PASSWORD" (s-trim (generate-password))))
         ((org-edna-entry-has-tags-p "Event")
          (let* ((default-directory (concat default-directory "events/"))
                 (event-directory (->> (read-directory-name "Specify event directory: ")
