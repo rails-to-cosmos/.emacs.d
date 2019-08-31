@@ -2112,9 +2112,11 @@ When COND is nil, insert CHAR."
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
         ((org-edna-entry-has-tags-p "Event")
          (let* ((default-directory (concat default-directory "events/"))
-                (event-directory (directory-file-name (file-relative-name (read-directory-name "Specify event directory: ")))))
+                (event-directory (->> (read-directory-name "Specify event directory: ")
+                                      (file-relative-name)
+                                      (directory-file-name))))
            (mkdir event-directory)
-           (org-set-property "ATTACH_DIR" (concat default-directory event-directory))
+           (org-set-property "ATTACH_DIR" (concat default-directory "events/" event-directory))
            (org-set-property "ATTACH_DIR_INHERIT" "t")
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
