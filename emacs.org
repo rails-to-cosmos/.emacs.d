@@ -1258,12 +1258,14 @@ BEG and END (region to sort)."
 
 *** structure-templates
 #+begin_src emacs-lisp
-(loop for tpl in '(;; ("ls" "# Local Variables:\n?\n# End:")
-                   ("py" . "src ipython")
+(loop for tpl in '(("py" . "src ipython")
                    ("el" . "src emacs-lisp")
+                   ("json" . "src json")
                    ("sql" . "src sql")
-                   ("sql-vertica" . "src sql :conn vertica")
-                   ("sql-mssql" . "src sql :conn mssql")
+                   ("vertica" . "src sql :conn vertica :file /tmp/vertica.txt")
+                   ("widgets" . "src sql :conn widgets :file /tmp/widgets.txt")
+                   ("mssql" . "src sql :conn mssql :file /tmp/mssql.txt")
+                   ("abby" . "src sql :conn abby :file /tmp/abby.txt")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
                    ("bash" . "src bash")
