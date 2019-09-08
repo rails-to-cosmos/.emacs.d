@@ -1250,12 +1250,10 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 *** org-eshell
-
 #+begin_src emacs-lisp
 (require 'org-eshell)
 (add-to-list 'org-modules 'org-eshell)
 #+end_src
-
 *** structure-templates
 #+begin_src emacs-lisp
 (loop for tpl in '(("py" . "src ipython")
@@ -1979,13 +1977,11 @@ SET COLSEP '|'
 #+end_src
 **** [#A] org-glance
 ***** og-core
-
 #+begin_src emacs-lisp
 (use-package org-glance
   :demand t
   :load-path "~/sync/stuff/org-glance")
 #+end_src
-
 ***** og-password-manager
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
@@ -2028,30 +2024,13 @@ SET COLSEP '|'
 **** char-completion
 ***** org-compl-char
 #+begin_src emacs-lisp
-(defmacro org-compl-char (char completions cond handler)
-  "Complete CHAR if COND is non-nil:
-Read from COMPLETIONS and run HANDLER on item.
-When COND is nil, insert CHAR."
-
+(defmacro org-compl-char (char cond handler)
   `(if (,cond)
-       (let ((item (org-completing-read "Choose item: " ,completions)))
-         (,handler item))
+       (,handler)
      (insert ,char)))
 #+end_src
 ***** compl-staff
 #+begin_src emacs-lisp
-(defvar org-glance-contacts-file "~/sync/glance/contacts.org")
-
-(defun org-glance-tag-search (tag)
-  (org-element-map (org-element-parse-buffer 'headline) 'headline
-    (lambda (hl)
-      (when (member tag (org-get-tags (org-element-property :begin hl)))
-        hl))))
-
-(defun org-glance-contacts--extract-from-current-buffer ()
-  (mapcar (lambda (x) (org-element-property :raw-value x))
-          (org-glance-tag-search "Contact")))
-
 (defun org-compl-staff ()
   (interactive)
 
@@ -2061,18 +2040,9 @@ When COND is nil, insert CHAR."
             (insert-file-contents-literally org-glance-contacts-file))
           (org-glance-contacts--extract-from-current-buffer)))
 
-  (org-compl-char "@" staff-persons
-                  (lambda () (and (not (org-in-src-block-p))
-                             (looking-back "\\W")))
-                  (lambda (item) (progn
-                              (when (not (member item staff-persons))
-                                (with-temp-file org-glance-contacts-file
-                                  (insert-file-contents-literally org-glance-contacts-file)
-                                  (end-of-buffer)
-                                  (insert (format "* %s\n" item))))
-                              (insert (format "[[staff:%s][%s@]]" item item))
-
-                              (ledna/set-property "STARRING" (s-join " " (-distinct (append (split-string (ledna/get-property "STARRING" nil "")) (list item)))))))))
+  (org-compl-char "@" (lambda () (and (not (org-in-src-block-p))
+                                      (looking-back "\\W")))
+                  (lambda () (org-glance-contacts-insert))))
 
 (define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+end_src
@@ -2081,13 +2051,12 @@ When COND is nil, insert CHAR."
 #+begin_src emacs-lisp
 (defun org-compl-structure ()
   (interactive)
-  (org-compl-char "<" org-structure-template-alist
+  (org-compl-char "<" (lambda () (and (looking-back "^[[:space:]]*$")
+                                      (not (org-in-src-block-p))))
 
-                  (lambda () (and (looking-back "^[[:space:]]*$")
-                             (not (org-in-src-block-p))))
-
-                  (lambda (item)
-                    (when-let (item (cdr (assoc item org-structure-template-alist)))
+                  (lambda ()
+                    (let* ((choice (org-completing-read "Glance: " org-structure-template-alist))
+                           (item (cdr (assoc choice org-structure-template-alist))))
                       (org-insert-structure-template item)
                       (insert "\n")
                       (previous-line)))))
