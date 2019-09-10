@@ -1995,7 +1995,6 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/org-glance-password-manager")
 #+end_src
 ***** og-bookmark
-
 #+begin_src emacs-lisp
 (use-package org-glance-bookmark
   :bind (("C-x j j" . org-glance-bookmark-jump)
