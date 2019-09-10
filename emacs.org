@@ -1995,7 +1995,6 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/org-glance-password-manager")
 #+end_src
 ***** og-bookmark
-
 #+begin_src emacs-lisp
 (use-package org-glance-bookmark
   :bind (("C-x j j" . org-glance-bookmark-jump)
@@ -2004,7 +2003,22 @@ SET COLSEP '|'
   :config (progn
             (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
   :load-path "~/sync/stuff/org-glance-bookmark")
+#+end_src
+***** og-contacts
+#+begin_src emacs-lisp
+(use-package org-glance-contacts
+  :bind (("C-x j c" . org-glance-contacts-jump))
+  :load-path "~/sync/stuff/org-glance-contacts")
+#+end_src
+****** COMMENT compl-staff
+#+begin_src emacs-lisp
+(defun org-compl-staff ()
+  (interactive)
+  (org-compl-char "@" (lambda () (and (not (org-in-src-block-p))
+                                      (looking-back "\\W")))
+                  (lambda () (org-glance-contacts-insert))))
 
+(define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+end_src
 **** org-literate-devtools
 
@@ -2029,25 +2043,7 @@ SET COLSEP '|'
        (,handler)
      (insert ,char)))
 #+end_src
-***** compl-staff
-#+begin_src emacs-lisp
-(defun org-compl-staff ()
-  (interactive)
-
-  (setq staff-persons
-        (with-temp-file org-glance-contacts-file
-          (when (file-exists-p org-glance-contacts-file)
-            (insert-file-contents-literally org-glance-contacts-file))
-          (org-glance-contacts--extract-from-current-buffer)))
-
-  (org-compl-char "@" (lambda () (and (not (org-in-src-block-p))
-                                      (looking-back "\\W")))
-                  (lambda () (org-glance-contacts-insert))))
-
-(define-key org-mode-map (kbd "@") 'org-compl-staff)
-#+end_src
 ***** compl-templates
-
 #+begin_src emacs-lisp
 (defun org-compl-structure ()
   (interactive)
@@ -2063,7 +2059,6 @@ SET COLSEP '|'
 
 (define-key org-mode-map (kbd "<") 'org-compl-structure)
 #+end_src
-
 **** org-auto-property
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
