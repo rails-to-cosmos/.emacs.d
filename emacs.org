@@ -2684,7 +2684,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
-
+*** scala
+#+begin_src emacs-lisp
+(use-package scala-mode
+  :ensure t)
+#+end_src
 *** rmsbolt
 #+begin_src emacs-lisp
 (use-package rmsbolt
