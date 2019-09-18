@@ -406,6 +406,12 @@ enjoy using a lot.
 
       ('quit
        (eshell-kill-input))))
+   ((looking-back "./" 1)
+    (condition-case exc
+        (progn
+          (sit-for 0.05)
+          (insert (shell-quote-argument (read-file-name "Choose file or directory: "))))
+      ('quit )))
    (t (insert " "))))
 
 (defun eshell-compl-back ()
