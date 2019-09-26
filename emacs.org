@@ -410,7 +410,7 @@ enjoy using a lot.
     (condition-case exc
         (progn
           (sit-for 0.05)
-          (insert (shell-quote-argument (read-file-name "Choose file or directory: "))))
+          (insert (shell-quote-argument (file-relative-name (read-file-name "Choose file or directory: ")))))
       ('quit )))
    (t (insert " "))))
 
@@ -2690,6 +2690,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+*** docker
+#+begin_src emacs-lisp
+(use-package dockerfile-mode
+  :ensure t)
+#+end_src
 *** scala
 #+begin_src emacs-lisp
 (use-package scala-mode
