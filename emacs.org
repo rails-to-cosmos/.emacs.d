@@ -1,13 +1,11 @@
 #+CATEGORY: Emacs
 
 * Whoami
-
 #+begin_src emacs-lisp
 (setq-default
  user-mail-address "akatovda@yandex.com"
  user-full-name "Dmitry Akatov")
 #+end_src
-
 * Links
 - https://github.com/alphapapa/emacs-package-dev-handbook
 * Useful Configs
@@ -366,14 +364,12 @@ enjoy using a lot.
                 :style 'notifications)
 #+end_src
 *** bookmark
-
 #+begin_src emacs-lisp
 (use-package eshell-bookmark
   :config (progn
             (add-hook 'eshell-mode-hook 'eshell-bookmark-setup))
   :ensure t)
 #+end_src
-
 *** with-eshell
 
 #+begin_src emacs-lisp
@@ -1982,12 +1978,14 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/ledna")
 #+end_src
 **** [#A] org-glance
-***** og-core
+
 #+begin_src emacs-lisp
 (use-package org-glance
-  :demand t
+  :bind (("C-x j j" . org-glance-bookmark-jump)
+         ("C-x j v" . org-glance-bookmark-visit))
   :load-path "~/sync/stuff/org-glance")
 #+end_src
+
 ***** og-password-manager
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
@@ -1999,16 +1997,6 @@ SET COLSEP '|'
             (setq org-glance-password-file "~/sync/glance/passwords.org"
                   ogpm-idle-time 60))
   :load-path "~/sync/stuff/org-glance-password-manager")
-#+end_src
-***** og-bookmark
-#+begin_src emacs-lisp
-(use-package org-glance-bookmark
-  :bind (("C-x j j" . org-glance-bookmark-jump)
-         ("C-x j l" . org-glance-bookmark-jump-local)
-         ("C-x p m" . org-glance-bookmark-set))
-  :config (progn
-            (setq org-glance-bookmark-file "~/sync/glance/bookmarks.org"))
-  :load-path "~/sync/stuff/org-glance-bookmark")
 #+end_src
 ***** og-contacts
 #+begin_src emacs-lisp
