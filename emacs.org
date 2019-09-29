@@ -2679,6 +2679,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+*** lilypond
+#+begin_src emacs-lisp
+(let ((load-path '("~/lilypond/usr/share/emacs/site-lisp")))
+  (require 'lilypond-mode))
+#+end_src
 *** docker
 #+begin_src emacs-lisp
 (use-package dockerfile-mode
