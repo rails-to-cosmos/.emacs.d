@@ -1981,8 +1981,9 @@ SET COLSEP '|'
 
 #+begin_src emacs-lisp
 (use-package org-glance
-  :bind (("C-x j j" . org-glance-bookmark-jump)
-         ("C-x j v" . org-glance-bookmark-visit))
+  :bind (("C-x j j" . org-glance-bookmarks-jump)
+         ("C-x j v" . org-glance-bookmarks-visit)
+         ("C-x c v" . org-glance-contacts-visit))
   :load-path "~/sync/stuff/org-glance")
 #+end_src
 
@@ -3110,4 +3111,5 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (load-local-init-file "local")
 (let ((system-type (string-join (s-split-words (symbol-name system-type)))))
   (load-local-init-file system-type))
+(load-local-init-file (system-name))
 #+end_src
