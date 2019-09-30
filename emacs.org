@@ -1987,7 +1987,7 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/org-glance")
 #+end_src
 
-***** og-password-manager
+***** COMMENT og-password-manager
 #+begin_src emacs-lisp
 (use-package org-glance-password-manager
   :bind (("C-x y p p" . org-glance-password-manager/launch)
