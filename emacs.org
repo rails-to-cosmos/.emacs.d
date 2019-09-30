@@ -2682,7 +2682,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** lilypond
 #+begin_src emacs-lisp
 (let ((load-path '("~/lilypond/usr/share/emacs/site-lisp")))
-  (require 'lilypond-mode))
+  (require 'lilypond-mode nil t))
 #+end_src
 *** docker
 #+begin_src emacs-lisp
