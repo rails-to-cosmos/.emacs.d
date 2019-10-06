@@ -1983,23 +1983,16 @@ SET COLSEP '|'
 (use-package org-glance
   :bind (("C-x j j" . org-glance-bookmarks-jump)
          ("C-x j v" . org-glance-bookmarks-visit)
-         ("C-x c v" . org-glance-contacts-visit))
-  :load-path "~/sync/stuff/org-glance")
+         ("C-x c v" . org-glance-contacts-visit)
+         ("C-x p p" . org-glance-password-manager-secure-data-to-kill-ring)
+         ("C-x p v" . org-glance-password-manager-visit)
+         ("C-x p e" . org-glance-password-manager-encrypt-current)
+         ("C-x p d" . org-glance-password-manager-decrypt-current))
+  :load-path "~/sync/stuff/org-glance"
+  :ensure aes)
 #+end_src
 
-***** og-password-manager
-#+begin_src emacs-lisp
-(use-package org-glance-password-manager
-  :bind (("C-x y p p" . org-glance-password-manager/launch)
-         ("C-x y p l" . org-glance-password-manager/launch-local)
-         ("C-x y p e" . org-glance-password-manager/encrypt-entry)
-         ("C-x y p d" . org-glance-password-manager/decrypt-entry))
-  :config (progn
-            (setq org-glance-password-file "~/sync/glance/passwords.org"
-                  ogpm-idle-time 60))
-  :load-path "~/sync/stuff/org-glance-password-manager")
-#+end_src
-***** og-contacts
+***** COMMENT og-contacts
 #+begin_src emacs-lisp
 (use-package org-glance-contacts
   :bind (("C-x j c" . org-glance-contacts-jump))
