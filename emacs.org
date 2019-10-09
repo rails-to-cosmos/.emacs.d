@@ -2052,8 +2052,6 @@ SET COLSEP '|'
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
-        ((org-edna-entry-has-tags-p "Password") (unless (org-element-property :PASSWORD (org-element-at-point))
-                                                  (org-set-property "PASSWORD" (s-trim (generate-password)))))
         ((org-edna-entry-has-tags-p "Event")
          (let* ((default-directory (concat default-directory "events/"))
                 (event-directory (->> (read-directory-name "Specify event directory: ")
