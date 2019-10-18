@@ -2055,15 +2055,16 @@ SET COLSEP '|'
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
-        ((org-edna-entry-has-tags-p "Password") (unless (org-element-property :PASSWORD (org-element-at-point))
-                                                  (org-set-property "PASSWORD" (s-trim (generate-password)))))
         ((org-edna-entry-has-tags-p "Event")
          (let* ((default-directory (concat default-directory "events/"))
                 (event-directory (->> (read-directory-name "Specify event directory: ")
                                       (file-relative-name)
                                       (directory-file-name))))
-           (mkdir event-directory)
-           (org-set-property "ATTACH_DIR" (concat default-directory "events/" event-directory))
+           (condition-case nil
+               (make-directory event-directory)
+             (error nil))
+
+           (org-set-property "ATTACH_DIR" (file-relative-name (concat default-directory "events/" event-directory)))
            (org-set-property "ATTACH_DIR_INHERIT" "t")
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
