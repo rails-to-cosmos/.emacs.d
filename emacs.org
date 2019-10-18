@@ -627,7 +627,7 @@ enjoy using a lot.
 *** find file in project
 #+begin_src emacs-lisp
 (use-package find-file-in-project
-  :bind ("C-x f" . find-file-in-current-directory)
+  :bind ("C-x f" . find-file-in-project)
   :ensure t)
 #+end_src
 *** syncthing-conflict-manager
@@ -1980,6 +1980,9 @@ SET COLSEP '|'
 **** [#A] org-glance
 
 #+begin_src emacs-lisp
+(use-package aes
+  :ensure t)
+
 (use-package org-glance
   :bind (("C-x j j" . org-glance-bookmarks-jump)
          ("C-x j v" . org-glance-bookmarks-visit)
