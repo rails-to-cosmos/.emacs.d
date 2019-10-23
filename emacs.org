@@ -273,28 +273,22 @@ enjoy using a lot.
 (defun rot-left(n l)
   (append (nthcdr n l) (butlast l (- (length l) n))))
 
-(defun dired-switch-buffers (&optional continue-switch)
+(defun dired-switch-buffers (&optional completing-read)
   "Quickly switch between dired buffers."
   (interactive)
-
-  (when (not continue-switch)
-    (setq dired-buffer-list
-          (mapcar 'buffer-name
-                  (cl-remove-if-not
-                   (lambda (bf) (with-current-buffer bf (derived-mode-p 'dired-mode)))
-                   (buffer-list nil)))))
-
-  (if dired-buffer-list
-      (progn
-        (when (eq (buffer-name (current-buffer)) (car dired-buffer-list))
-          (setq dired-buffer-list (rot-left 1 dired-buffer-list)))
-
-        (switch-to-buffer (car dired-buffer-list))
-        (setq dired-buffer-list (rot-left 1 dired-buffer-list)))
-    (dired default-directory))
+  (let ((dired-buffer-list
+         (mapcar 'buffer-name
+                 (cl-remove-if-not
+                  (lambda (bf) (with-current-buffer bf (derived-mode-p 'dired-mode)))
+                  (buffer-list nil)))))
+    (if (or (not completing-read)
+            (< (length dired-buffer-list) 2))
+        (dired default-directory)
+      (switch-to-buffer
+       (org-completing-read "Dired buffer: " dired-buffer-list))))
 
   (set-transient-map
-   (let ((map (make-sparse-keymap)))
+   (lexical-let ((map (make-sparse-keymap)))
      (define-key map (kbd "C-d") (lambda () (interactive) (dired-switch-buffers t))) map)))
 
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
