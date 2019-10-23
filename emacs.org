@@ -225,7 +225,6 @@ enjoy using a lot.
 
 ** Dired
 *** dired+
-
 #+begin_src emacs-lisp
 (require 'dired)
 
@@ -233,6 +232,7 @@ enjoy using a lot.
   :ensure t)
 
 (use-package dired+
+  :config (toggle-diredp-find-file-reuse-dir t)
   :load-path "~/sync/stuff")
 
 (define-key dired-mode-map "/" 'dired-narrow-fuzzy)
@@ -242,10 +242,9 @@ enjoy using a lot.
   (condition-case nil
       (dired-kill-subdir)
     ('error nil))
-  (dired-up-directory))
+  (diredp-up-directory-reuse-dir-buffer))
 (define-key dired-mode-map (kbd "<DEL>") 'dired-up-please)
 #+end_src
-
 *** dired buffer names
 
 #+begin_src emacs-lisp
