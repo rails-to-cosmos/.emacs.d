@@ -513,9 +513,8 @@ enjoy using a lot.
 *** ace-window
 #+begin_src emacs-lisp :results silent
 (use-package ace-window
-  :config (progn
-            (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
-                  aw-scope 'frame))
+  :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
+                aw-scope 'frame)
   :bind (("C-x o" . ace-window)
          ("C-x C-o" . other-frame)
          ("M-o" . ace-window))
