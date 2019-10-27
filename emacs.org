@@ -2047,8 +2047,7 @@ SET COLSEP '|'
         ((org-edna-entry-has-tags-p "Event")
          (let* ((event-dir-abs (let ((default-directory (f-join default-directory "events")))
                                  (read-directory-name "Specify event directory: ")))
-                (event-dir-rel (file-relative-name event-dir-abs))
-                (event-name (directory-file-name event-dir-abs)))
+                (event-dir-rel (file-relative-name event-dir-abs)))
            (condition-case nil
                (make-directory event-dir-abs)
              (error nil))
