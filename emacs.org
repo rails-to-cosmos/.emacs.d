@@ -1188,9 +1188,8 @@ BEG and END (region to sort)."
 *** archive location
 #+begin_src emacs-lisp
 (setq org-archive-location
-      (concat
-       (format "archives/%s/%%s_archive::"
-               (format-time-string "%Y/%m" (current-time)))))
+      (format "archives/%s/%%s_archive::"
+              (format-time-string "%Y/%m" (current-time))))
 #+end_src
 *** refile-update-cookies
 #+begin_src emacs-lisp
@@ -2004,7 +2003,6 @@ SET COLSEP '|'
 (define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+end_src
 **** org-literate-devtools
-
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
   :demand t
@@ -2017,7 +2015,6 @@ SET COLSEP '|'
   :ensure aio
   :ensure cider)
 #+end_src
-
 **** char-completion
 ***** org-compl-char
 #+begin_src emacs-lisp
@@ -2048,16 +2045,15 @@ SET COLSEP '|'
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
         ((org-edna-entry-has-tags-p "Event")
-         (let* ((default-directory (concat default-directory "events/"))
-                (event-directory (->> (read-directory-name "Specify event directory: ")
-                                      (file-relative-name)
-                                      (directory-file-name))))
+         (let* ((event-dir-abs (let ((default-directory (f-join default-directory "events")))
+                                 (read-directory-name "Specify event directory: ")))
+                (event-dir-rel (file-relative-name event-dir-abs)))
            (condition-case nil
-               (make-directory event-directory)
+               (make-directory event-dir-abs)
              (error nil))
-
-           (org-set-property "ATTACH_DIR" (file-relative-name (concat default-directory "events/" event-directory)))
+           (org-set-property "ATTACH_DIR" event-dir-rel)
            (org-set-property "ATTACH_DIR_INHERIT" "t")
+           (org-set-property "ARCHIVE" (f-join event-dir-rel "event.org::"))
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
