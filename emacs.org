@@ -2940,6 +2940,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package sql-indent
   :ensure t)
 #+end_src
+** Clouds
+*** s3
+#+begin_src emacs-lisp
+(use-package s3ed
+  :config (progn
+            (require 's3ed)
+            (global-set-key (kbd "C-c s f") 's3ed-find-file)
+            (global-set-key (kbd "C-c s s") 's3ed-save-file))
+  :ensure t)
+#+end_src
 ** UI
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.ui
