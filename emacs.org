@@ -1252,6 +1252,7 @@ BEG and END (region to sort)."
 (loop for tpl in '(("py" . "src ipython")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
+                   ("scala" . "src scala")
                    ("sql" . "src sql")
                    ("vertica" . "src sql :conn vertica :file /tmp/vertica.txt")
                    ("widgets" . "src sql :conn widgets :file /tmp/widgets.txt")
