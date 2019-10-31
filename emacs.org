@@ -1252,6 +1252,7 @@ BEG and END (region to sort)."
 (loop for tpl in '(("py" . "src ipython")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
+                   ("scala" . "src scala")
                    ("sql" . "src sql")
                    ("vertica" . "src sql :conn vertica :file /tmp/vertica.txt")
                    ("widgets" . "src sql :conn widgets :file /tmp/widgets.txt")
@@ -2941,6 +2942,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** sql
 #+begin_src emacs-lisp
 (use-package sql-indent
+  :ensure t)
+#+end_src
+** Clouds
+*** s3
+#+begin_src emacs-lisp
+(use-package s3ed
+  :config (progn
+            (require 's3ed)
+            (global-set-key (kbd "C-c s f") 's3ed-find-file)
+            (global-set-key (kbd "C-c s s") 's3ed-save-file))
   :ensure t)
 #+end_src
 ** UI
