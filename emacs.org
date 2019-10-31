@@ -1282,13 +1282,10 @@ bidirectional reordering.")
       org-confirm-babel-evaluate nil
       org-confirm-shell-link-function nil
       org-confirm-elisp-link-function nil
-      org-hide-block-startup t)
+      org-hide-block-startup t
+      org-src-window-setup 'current-window)
 #+end_src
-**** source editing
-#+begin_src emacs-lisp
-(setq org-src-window-setup 'current-window)
-#+end_src
-**** tangle-block
+**** COMMENT tangle-block
 #+begin_src emacs-lisp
 (defun org-babel-tangle-block ()
   (interactive)
@@ -1394,7 +1391,7 @@ bidirectional reordering.")
           (org-babel-when-in-src-block
            (org-ctrl-c-ctrl-c))))))
 #+end_src
-**** exec from results
+**** COMMENT exec from results
 #+begin_src emacs-lisp
 (defun ob-execute-block-from-results ()
   (save-excursion
@@ -1409,7 +1406,7 @@ bidirectional reordering.")
           nil)))))
 (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
 #+end_src
-**** run src block
+**** COMMENT run src block
 #+begin_src emacs-lisp
 (defun org-babel-execute-block-by-id (name)
   (save-excursion
@@ -1431,15 +1428,16 @@ bidirectional reordering.")
 #+end_src
 **** ob-ipython
 #+begin_src emacs-lisp
-(if (file-exists-p (s-chomp (eshell-command-result "which jupyter")))
-  (use-package ob-ipython
-    :config (progn
-              ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
-              (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-              (setq-default python-shell-prompt-detect-failure-warning nil)
-              (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
-    :ensure t)
-  (message "Unable to load ob-ipython: jupyter not found."))
+;; (if (file-exists-p (s-chomp (shell-command-to-string "which jupyter")))
+;;     (use-package ob-ipython
+;;       :config (progn
+;;                 ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
+;;                 ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+;;                 ;; (setq-default python-shell-prompt-detect-failure-warning nil)
+;;                 ;; (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
+;;                 )
+;;       :ensure t)
+;; (warn "Unable to load ob-ipython: jupyter not found."))
 #+end_src
 **** ob-restclient
 #+begin_src emacs-lisp
@@ -2015,29 +2013,38 @@ SET COLSEP '|'
   :ensure aio
   :ensure cider)
 #+end_src
-**** char-completion
-***** org-compl-char
+**** completion
+***** define-completion
 #+begin_src emacs-lisp
-(defmacro org-compl-char (char cond handler)
-  `(if (,cond)
-       (,handler)
-     (insert ,char)))
+(defmacro define-completion (name string &rest body)
+  (declare (doc-string 3) (indent 2))
+  `(prog1
+       (defun ,name nil
+         ,(when (stringp (car body)) (car body))
+         (interactive)
+         (let ((point (point)))
+           (when (condition-case nil
+                     (when (save-excursion
+                             (search-backward
+                              ,string (- (point) (length ,string)) t))
+                       ,@body)
+                   (quit nil))
+             (save-excursion
+               (goto-char (- point (length ,string)))
+               (delete-char (length ,string))))))
+     (add-hook 'post-self-insert-hook ',name)))
 #+end_src
-***** compl-templates
+***** complete-structure
 #+begin_src emacs-lisp
-(defun org-compl-structure ()
-  (interactive)
-  (org-compl-char "<" (lambda () (and (looking-back "^[[:space:]]*$")
-                                      (not (org-in-src-block-p))))
-
-                  (lambda ()
-                    (let* ((choice (org-completing-read "Glance: " org-structure-template-alist))
-                           (item (cdr (assoc choice org-structure-template-alist))))
-                      (org-insert-structure-template item)
-                      (insert "\n")
-                      (previous-line)))))
-
-(define-key org-mode-map (kbd "<") 'org-compl-structure)
+(define-completion org-complete-structure "<"
+  "Complete org-structure template alist."
+  (when (and (string= major-mode "org-mode")
+             (not (org-in-src-block-p)))
+    (let* ((choice (org-completing-read "Template: " org-structure-template-alist))
+           (item (cdr (assoc choice org-structure-template-alist))))
+      (org-insert-structure-template item)
+      (insert "\n")
+      (previous-line))))
 #+end_src
 **** org-auto-property
 #+begin_src emacs-lisp
