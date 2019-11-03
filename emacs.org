@@ -2032,7 +2032,7 @@ SET COLSEP '|'
                    (quit nil))
              (save-excursion
                (goto-char (- point (length ,string)))
-               (delete-char (length ,string))))))
+               (delete-char (+ 0 (length ,string)))))))
      (add-hook 'post-self-insert-hook ',name)))
 #+end_src
 ***** complete-structure
@@ -2045,7 +2045,14 @@ SET COLSEP '|'
            (item (cdr (assoc choice org-structure-template-alist))))
       (org-insert-structure-template item)
       (insert "\n")
-      (previous-line))))
+      (previous-line)
+      t)))
+
+(define-completion org-complete-rarrow "->"
+  (when (and (string= major-mode "org-mode")
+             (not (org-in-src-block-p)))
+    (insert "→")
+    t))
 #+end_src
 **** org-auto-property
 #+begin_src emacs-lisp
