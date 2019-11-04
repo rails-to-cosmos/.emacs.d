@@ -233,7 +233,7 @@ enjoy using a lot.
 
 (use-package dired+
   :config (toggle-diredp-find-file-reuse-dir t)
-  :load-path "~/sync/stuff")
+  :load-path "~/.emacs.d/packages")
 
 (define-key dired-mode-map "/" 'dired-narrow-fuzzy)
 
@@ -245,8 +245,7 @@ enjoy using a lot.
   (diredp-up-directory-reuse-dir-buffer))
 (define-key dired-mode-map (kbd "<DEL>") 'dired-up-please)
 #+end_src
-*** dired buffer names
-
+*** buffer naming
 #+begin_src emacs-lisp
 (add-hook 'dired-after-readin-hook
           (lambda ()
@@ -256,37 +255,27 @@ enjoy using a lot.
             (dired-hide-details-mode -1)
             (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 #+end_src
-
 *** omit
-
 #+begin_src emacs-lisp
 (setq-default dired-omit-files-p t
               dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin|\\.$"
               dired-omit-verbose nil)
 #+end_src
-
 *** dired-switch-buffers
-
 #+begin_src emacs-lisp
-(setq-default dired-buffer-list nil)
-
-(defun rot-left(n l)
-  (append (nthcdr n l) (butlast l (- (length l) n))))
-
 (defun dired-switch-buffers (&optional completing-read)
   "Quickly switch between dired buffers."
   (interactive)
   (let ((dired-buffer-list
-         (mapcar 'buffer-name
-                 (cl-remove-if-not
-                  (lambda (bf) (with-current-buffer bf (derived-mode-p 'dired-mode)))
-                  (buffer-list nil)))))
-    (if (or (not completing-read)
-            (< (length dired-buffer-list) 2))
-        (dired default-directory)
+         (--map (buffer-name it)
+                (--filter
+                 (with-current-buffer it (derived-mode-p 'dired-mode))
+                 (buffer-list)))))
+    (when (and completing-read (< (length dired-buffer-list) 2))
+      (user-error "No more dired buffers found."))
+    (if (not completing-read) (dired default-directory)
       (switch-to-buffer
        (org-completing-read "Dired buffer: " dired-buffer-list))))
-
   (set-transient-map
    (lexical-let ((map (make-sparse-keymap)))
      (define-key map (kbd "C-d") (lambda () (interactive) (dired-switch-buffers t))) map)))
@@ -294,7 +283,6 @@ enjoy using a lot.
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
 (define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
 #+end_src
-
 *** dired-rainbow
 
 #+begin_src emacs-lisp
