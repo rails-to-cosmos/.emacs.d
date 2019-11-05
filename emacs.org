@@ -263,7 +263,7 @@ enjoy using a lot.
 #+end_src
 *** dired-switch-buffers
 #+begin_src emacs-lisp
-(defun dired-switch-buffers (&optional completing-read)
+(defun dired-switch-buffers ()
   "Quickly switch between dired buffers."
   (interactive)
   (let ((dired-buffer-list
@@ -271,14 +271,13 @@ enjoy using a lot.
                 (--filter
                  (with-current-buffer it (derived-mode-p 'dired-mode))
                  (buffer-list)))))
-    (when (and completing-read (< (length dired-buffer-list) 2))
+    (when (< (length dired-buffer-list) 2)
       (user-error "No more dired buffers found."))
-    (if (not completing-read) (dired default-directory)
-      (switch-to-buffer
-       (org-completing-read "Dired buffer: " dired-buffer-list))))
+    (switch-to-buffer
+     (org-completing-read "Dired buffer: " dired-buffer-list)))
   (set-transient-map
    (lexical-let ((map (make-sparse-keymap)))
-     (define-key map (kbd "C-d") (lambda () (interactive) (dired-switch-buffers t))) map)))
+     (define-key map (kbd "C-d") 'dired-switch-buffers) map)))
 
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
 (define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
@@ -383,7 +382,7 @@ enjoy using a lot.
 
       ('quit
        (eshell-kill-input))))
-   ((looking-back "./" 1)
+   ((looking-back "\\./" 1)
     (condition-case exc
         (progn
           (sit-for 0.05)
