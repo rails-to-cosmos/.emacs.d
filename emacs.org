@@ -233,7 +233,7 @@ enjoy using a lot.
 
 (use-package dired+
   :config (toggle-diredp-find-file-reuse-dir t)
-  :load-path "~/sync/stuff")
+  :load-path "~/.emacs.d/packages")
 
 (define-key dired-mode-map "/" 'dired-narrow-fuzzy)
 
@@ -245,8 +245,7 @@ enjoy using a lot.
   (diredp-up-directory-reuse-dir-buffer))
 (define-key dired-mode-map (kbd "<DEL>") 'dired-up-please)
 #+end_src
-*** dired buffer names
-
+*** buffer naming
 #+begin_src emacs-lisp
 (add-hook 'dired-after-readin-hook
           (lambda ()
@@ -256,37 +255,27 @@ enjoy using a lot.
             (dired-hide-details-mode -1)
             (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 #+end_src
-
 *** omit
-
 #+begin_src emacs-lisp
 (setq-default dired-omit-files-p t
               dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin|\\.$"
               dired-omit-verbose nil)
 #+end_src
-
 *** dired-switch-buffers
-
 #+begin_src emacs-lisp
-(setq-default dired-buffer-list nil)
-
-(defun rot-left(n l)
-  (append (nthcdr n l) (butlast l (- (length l) n))))
-
 (defun dired-switch-buffers (&optional completing-read)
   "Quickly switch between dired buffers."
   (interactive)
   (let ((dired-buffer-list
-         (mapcar 'buffer-name
-                 (cl-remove-if-not
-                  (lambda (bf) (with-current-buffer bf (derived-mode-p 'dired-mode)))
-                  (buffer-list nil)))))
-    (if (or (not completing-read)
-            (< (length dired-buffer-list) 2))
-        (dired default-directory)
+         (--map (buffer-name it)
+                (--filter
+                 (with-current-buffer it (derived-mode-p 'dired-mode))
+                 (buffer-list)))))
+    (when (and completing-read (< (length dired-buffer-list) 2))
+      (user-error "No more dired buffers found."))
+    (if (not completing-read) (dired default-directory)
       (switch-to-buffer
        (org-completing-read "Dired buffer: " dired-buffer-list))))
-
   (set-transient-map
    (lexical-let ((map (make-sparse-keymap)))
      (define-key map (kbd "C-d") (lambda () (interactive) (dired-switch-buffers t))) map)))
@@ -294,7 +283,6 @@ enjoy using a lot.
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
 (define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
 #+end_src
-
 *** dired-rainbow
 
 #+begin_src emacs-lisp
@@ -1283,13 +1271,10 @@ bidirectional reordering.")
       org-confirm-babel-evaluate nil
       org-confirm-shell-link-function nil
       org-confirm-elisp-link-function nil
-      org-hide-block-startup t)
+      org-hide-block-startup t
+      org-src-window-setup 'current-window)
 #+end_src
-**** source editing
-#+begin_src emacs-lisp
-(setq org-src-window-setup 'current-window)
-#+end_src
-**** tangle-block
+**** COMMENT tangle-block
 #+begin_src emacs-lisp
 (defun org-babel-tangle-block ()
   (interactive)
@@ -1395,7 +1380,7 @@ bidirectional reordering.")
           (org-babel-when-in-src-block
            (org-ctrl-c-ctrl-c))))))
 #+end_src
-**** exec from results
+**** COMMENT exec from results
 #+begin_src emacs-lisp
 (defun ob-execute-block-from-results ()
   (save-excursion
@@ -1410,7 +1395,7 @@ bidirectional reordering.")
           nil)))))
 (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
 #+end_src
-**** run src block
+**** COMMENT run src block
 #+begin_src emacs-lisp
 (defun org-babel-execute-block-by-id (name)
   (save-excursion
@@ -1432,15 +1417,16 @@ bidirectional reordering.")
 #+end_src
 **** ob-ipython
 #+begin_src emacs-lisp
-(if (file-exists-p (s-chomp (eshell-command-result "which jupyter")))
-  (use-package ob-ipython
-    :config (progn
-              ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
-              (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-              (setq-default python-shell-prompt-detect-failure-warning nil)
-              (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
-    :ensure t)
-  (message "Unable to load ob-ipython: jupyter not found."))
+;; (if (file-exists-p (s-chomp (shell-command-to-string "which jupyter")))
+;;     (use-package ob-ipython
+;;       :config (progn
+;;                 ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
+;;                 ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+;;                 ;; (setq-default python-shell-prompt-detect-failure-warning nil)
+;;                 ;; (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
+;;                 )
+;;       :ensure t)
+;; (warn "Unable to load ob-ipython: jupyter not found."))
 #+end_src
 **** ob-restclient
 #+begin_src emacs-lisp
@@ -2016,29 +2002,45 @@ SET COLSEP '|'
   :ensure aio
   :ensure cider)
 #+end_src
-**** char-completion
-***** org-compl-char
+**** completion
+***** define-completion
 #+begin_src emacs-lisp
-(defmacro org-compl-char (char cond handler)
-  `(if (,cond)
-       (,handler)
-     (insert ,char)))
+(defmacro define-completion (name string &rest body)
+  (declare (doc-string 3) (indent 2))
+  `(prog1
+       (defun ,name nil
+         ,(when (stringp (car body)) (car body))
+         (interactive)
+         (let ((point (point)))
+           (when (condition-case nil
+                     (when (save-excursion
+                             (search-backward
+                              ,string (- (point) (length ,string)) t))
+                       ,@body)
+                   (quit nil))
+             (save-excursion
+               (goto-char (- point (length ,string)))
+               (delete-char (+ 0 (length ,string)))))))
+     (add-hook 'post-self-insert-hook ',name)))
 #+end_src
-***** compl-templates
+***** complete-structure
 #+begin_src emacs-lisp
-(defun org-compl-structure ()
-  (interactive)
-  (org-compl-char "<" (lambda () (and (looking-back "^[[:space:]]*$")
-                                      (not (org-in-src-block-p))))
+(define-completion org-complete-structure "<"
+  "Complete org-structure template alist."
+  (when (and (string= major-mode "org-mode")
+             (not (org-in-src-block-p)))
+    (let* ((choice (org-completing-read "Template: " org-structure-template-alist))
+           (item (cdr (assoc choice org-structure-template-alist))))
+      (org-insert-structure-template item)
+      (insert "\n")
+      (previous-line)
+      t)))
 
-                  (lambda ()
-                    (let* ((choice (org-completing-read "Glance: " org-structure-template-alist))
-                           (item (cdr (assoc choice org-structure-template-alist))))
-                      (org-insert-structure-template item)
-                      (insert "\n")
-                      (previous-line)))))
-
-(define-key org-mode-map (kbd "<") 'org-compl-structure)
+(define-completion org-complete-rarrow "->"
+  (when (and (string= major-mode "org-mode")
+             (not (org-in-src-block-p)))
+    (insert "→")
+    t))
 #+end_src
 **** org-auto-property
 #+begin_src emacs-lisp
