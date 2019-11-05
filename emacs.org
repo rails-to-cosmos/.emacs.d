@@ -2678,6 +2678,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** scala
 #+begin_src emacs-lisp
 (use-package scala-mode
+  :config (setq scala-indent:step 4)
   :ensure t)
 #+end_src
 *** rmsbolt
