@@ -271,10 +271,10 @@ enjoy using a lot.
                 (--filter
                  (with-current-buffer it (derived-mode-p 'dired-mode))
                  (buffer-list)))))
-    (when (< (length dired-buffer-list) 2)
-      (user-error "No more dired buffers found."))
-    (switch-to-buffer
-     (org-completing-read "Dired buffer: " dired-buffer-list)))
+    (cond ((= (length dired-buffer-list) 0) (user-error "No dired buffers found."))
+          ((= (length dired-buffer-list) 1) (switch-to-buffer (car dired-buffer-list)))
+          (t (switch-to-buffer
+              (org-completing-read "Dired buffer: " dired-buffer-list)))))
   (set-transient-map
    (lexical-let ((map (make-sparse-keymap)))
      (define-key map (kbd "C-d") 'dired-switch-buffers) map)))
@@ -1273,7 +1273,7 @@ bidirectional reordering.")
       org-hide-block-startup t
       org-src-window-setup 'current-window)
 #+end_src
-**** COMMENT tangle-block
+**** tangle-block
 #+begin_src emacs-lisp
 (defun org-babel-tangle-block ()
   (interactive)
@@ -2679,7 +2679,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** scala
 #+begin_src emacs-lisp
 (use-package scala-mode
-  :config (setq scala-indent:step 4)
+  :config (setq scala-indent:step 2)
   :ensure t)
 #+end_src
 *** rmsbolt
@@ -2974,7 +2974,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (horizontal-scroll-bar-mode -1))
 #+end_src
 
-*** modeline
+*** COMMENT modeline
 #+begin_src emacs-lisp
 (use-package doom-modeline
       :ensure t
