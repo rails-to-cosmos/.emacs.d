@@ -257,9 +257,14 @@ enjoy using a lot.
 #+end_src
 *** omit
 #+begin_src emacs-lisp
-(setq-default dired-omit-files-p t
-              dired-omit-files "^\\.[^.]\\|\\.pyc$\\|\\.bin|\\.$"
-              dired-omit-verbose nil)
+(setq dired-omit-files-p t
+      dired-omit-verbose t)
+
+(setq dired-omit-files
+      (rx (or (seq bol (? ".") "#")
+              (seq bol "." (0+ anything) eol)
+              (seq bol "." eol)
+              (seq bol ".." eol))))
 #+end_src
 *** dired-switch-buffers
 #+begin_src emacs-lisp
