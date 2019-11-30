@@ -242,8 +242,18 @@ enjoy using a lot.
   (condition-case nil
       (dired-kill-subdir)
     ('error nil))
-  (diredp-up-directory-reuse-dir-buffer))
+  (diredp-up-directory-reuse-dir-buffer)
+  (revert-buffer))
 (define-key dired-mode-map (kbd "<DEL>") 'dired-up-please)
+
+(defun dired-down-please ()
+  (interactive)
+  (condition-case nil
+      (dired-kill-subdir)
+    ('error nil))
+  (diredp-find-file-reuse-dir-buffer)
+  (revert-buffer))
+(define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
 #+end_src
 *** buffer naming
 #+begin_src emacs-lisp
@@ -257,14 +267,13 @@ enjoy using a lot.
 #+end_src
 *** omit
 #+begin_src emacs-lisp
-(setq dired-omit-files-p t
-      dired-omit-verbose t)
-
-(setq dired-omit-files
-      (rx (or (seq bol (? ".") "#")
-              (seq bol "." (0+ anything) eol)
-              (seq bol "." eol)
-              (seq bol ".." eol))))
+(setq-default dired-omit-files-p t
+              dired-omit-verbose t
+              dired-omit-files
+              (rx (or (seq bol (? ".") "#")
+                      (seq bol "." (0+ anything) eol)
+                      (seq bol "." eol)
+                      (seq bol ".." eol))))
 #+end_src
 *** dired-switch-buffers
 #+begin_src emacs-lisp
@@ -276,13 +285,10 @@ enjoy using a lot.
                 (--filter
                  (with-current-buffer it (derived-mode-p 'dired-mode))
                  (buffer-list)))))
-    (cond ((= (length dired-buffer-list) 0) (user-error "No dired buffers found."))
+    (cond ((= (length dired-buffer-list) 0) (dired default-directory))
           ((= (length dired-buffer-list) 1) (switch-to-buffer (car dired-buffer-list)))
           (t (switch-to-buffer
-              (org-completing-read "Dired buffer: " dired-buffer-list)))))
-  (set-transient-map
-   (lexical-let ((map (make-sparse-keymap)))
-     (define-key map (kbd "C-d") 'dired-switch-buffers) map)))
+              (org-completing-read "Dired buffer: " dired-buffer-list))))))
 
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
 (define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
