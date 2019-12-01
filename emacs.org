@@ -3093,16 +3093,37 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 *** mode-line
 #+begin_src emacs-lisp
-(line-number-mode -1)
-(display-time-mode -1)
+;; (line-number-mode -1)
+;; (display-time-mode -1)
 ;; (display-battery-mode -1)
+
 (setq-default mode-line-format
-              '("%e "
-                "%m "
-                mode-line-buffer-identification
+              '(
+                " %*%Z%@ "
+                (:eval
+                 (cond (buffer-read-only
+                        (propertize (format "| %s |" (buffer-name)) 'face 'font-lock-function-name-face))
+                       ((buffer-modified-p)
+                        (propertize (format "| %s (*) |" (buffer-name)) 'face 'font-lock-string-face))
+                       (t (format "| %s |" (buffer-name)))))
+                " "
+                "%m"
                 (vc-mode vc-mode)
-                mode-line-misc-info
-                mode-line-end-spaces))
+                (:eval
+                 (when (eq ml-selected-window (selected-window))
+                   (concat " | Spark: " (s-trim (shell-command-to-string "spark 1 2 3 4 5")))))
+                " %-"))
+
+(defvar ml-selected-window nil)
+
+(defun ml-record-selected-window ()
+  (setq ml-selected-window (selected-window)))
+
+(defun ml-update-all ()
+  (force-mode-line-update t))
+
+(add-hook 'post-command-hook 'ml-record-selected-window)
+(add-hook 'buffer-list-update-hook 'ml-update-all)
 #+end_src
 *** fringes
 #+begin_src emacs-lisp
