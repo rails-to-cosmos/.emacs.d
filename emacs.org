@@ -243,7 +243,8 @@ enjoy using a lot.
       (dired-kill-subdir)
     ('error nil))
   (diredp-up-directory-reuse-dir-buffer)
-  (revert-buffer))
+  (revert-buffer)
+  (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory))))
 (define-key dired-mode-map (kbd "<DEL>") 'dired-up-please)
 
 (defun dired-down-please ()
@@ -253,18 +254,18 @@ enjoy using a lot.
     ('error nil))
   (diredp-find-file-reuse-dir-buffer)
   (when (eq major-mode 'dired-mode)
-    (revert-buffer)))
+    (revert-buffer)
+    (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
 #+end_src
-*** buffer naming
+*** naming
 #+begin_src emacs-lisp
 (add-hook 'dired-after-readin-hook
           (lambda ()
             ;; Set name of dired buffers to absolute directory name.
             ;; Use `generate-new-buffer-name' for vc-directory
             ;; which creates duplicate buffers.
-            (dired-hide-details-mode -1)
-            (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
+            (dired-hide-details-mode -1)))
 #+end_src
 *** omit
 #+begin_src emacs-lisp
@@ -291,8 +292,13 @@ enjoy using a lot.
           (t (switch-to-buffer
               (org-completing-read "Dired buffer: " dired-buffer-list))))))
 
+(defun dired-default-directory ()
+  (interactive)
+  (dired default-directory)
+  (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory))))
+
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
-(define-key global-map (kbd "C-x d") (lambda () (interactive) (dired default-directory)))
+(define-key global-map (kbd "C-x d") 'dired-default-directory)
 #+end_src
 *** dired-rainbow
 
