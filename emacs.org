@@ -252,7 +252,8 @@ enjoy using a lot.
       (dired-kill-subdir)
     ('error nil))
   (diredp-find-file-reuse-dir-buffer)
-  (revert-buffer))
+  (when (eq major-mode 'dired-mode)
+    (revert-buffer)))
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
 #+end_src
 *** buffer naming
@@ -1232,7 +1233,7 @@ BEG and END (region to sort)."
                                       ; time stamps of your Org mode files and
                                       ; in the agenda appear in English.
 #+end_src
-*** archive location
+*** archive partition
 #+begin_src emacs-lisp
 (setq org-archive-location
       (format "archives/%s/%%s_archive::"
@@ -1301,9 +1302,9 @@ BEG and END (region to sort)."
                    ("json" . "src json")
                    ("scala" . "src scala")
                    ("sql" . "src sql")
-                   ("vertica" . "src sql :conn vertica :file /tmp/vertica.txt")
-                   ("widgets" . "src sql :conn widgets :file /tmp/widgets.txt")
-                   ("mssql" . "src sql :conn mssql :file /tmp/mssql.txt")
+                   ("sql:vertica" . "src sql :conn vertica :file /tmp/vertica.txt")
+                   ("sql:widgets" . "src sql :conn widgets :file /tmp/widgets.txt")
+                   ("sql:mssql" . "src sql :conn mssql :file /tmp/mssql.txt")
                    ("abby" . "src sql :conn abby :file /tmp/abby.txt")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
@@ -1727,13 +1728,10 @@ If KWD is a number, get the corresponding match group."
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
 *** Narrowing
-
 #+begin_src emacs-lisp :results silent
 (setq org-indirect-buffer-display 'current-window)
 #+end_src
-
 *** Show next entry, keeping other entries closed
-
 #+begin_src emacs-lisp
 (defun ded/org-show-next-heading-tidily ()
   "Show next entry, keeping other entries closed."
@@ -1750,7 +1748,6 @@ If KWD is a number, get the corresponding match group."
     (org-show-entry)
     (show-children)))
 #+end_src
-
 *** Show previous entry, keeping other entries closed
 #+begin_src emacs-lisp
 (defun ded/org-show-previous-heading-tidily ()
@@ -1768,22 +1765,17 @@ If KWD is a number, get the corresponding match group."
     (show-children)))
 #+end_src
 *** Don't show tasks as scheduled if they are already shown as a deadline
-
 #+begin_src emacs-lisp
 (setq org-agenda-skip-scheduled-if-deadline-is-shown t)
 #+end_src
-
 *** Ignore scheduled and deadlines in todo-list
-
 #+begin_src emacs-lisp
 ;;don't show tasks that are scheduled or have deadlines in the
 ;;normal todo list
 (setq org-agenda-todo-ignore-deadlines (quote all))
 (setq org-agenda-todo-ignore-scheduled (quote all))
 #+end_src
-
 *** Unsorted Settings
-
 #+begin_src emacs-lisp
 (setq-default
  org-cycle-separator-lines 0
@@ -1812,7 +1804,6 @@ If KWD is a number, get the corresponding match group."
  org-id-locations-file (tmp/ "org-id-locations.txt")
  org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c!)"))))
 #+end_src
-
 *** experiments
 **** ob-sql
 #+begin_src emacs-lisp
@@ -1977,36 +1968,6 @@ SET COLSEP '|'
 	 (org-babel-pick-name (cdr (assq :rowname-names params))
 			      (cdr (assq :rownames params))))))))
 #+end_src
-**** org-clock-formatters
-***** events
-#+begin_src emacs-lisp
-(defun travel-clocktable-formatter (ipos tables params)
-  (let ((tables (loop for (file-name file-time entries) in tables
-                      collect (list file-name file-time
-                                    (loop for (level headline tgs ts time props) in entries
-                                          with prev-timestamp
-                                          when props do
-
-                                          ;; view only dates in scheduled timestamps
-                                          (when-let (scheduled (alist-get "SCHEDULED" props nil nil #'string=))
-                                            (let* ((timestamp (org-timestamp-from-string scheduled))
-                                                   (formatted (org-timestamp-format timestamp (car org-time-stamp-formats))))
-                                              (setf (alist-get "SCHEDULED" props nil nil #'string=)
-                                                    ;; do not repeat previous timestamp
-                                                    (unless (string= prev-timestamp formatted)
-                                                      formatted)
-                                                    prev-timestamp formatted)
-
-                                              (setf (alist-get "TIME" props nil nil #'string=)
-                                                    (org-timestamp-format timestamp "%R"))))
-
-                                          (setq tgs (-difference tgs (plist-get params :hide-tags)))
-
-                                          collect (list level headline tgs ts time props) into result
-                                          finally (return result))))))
-
-    (funcall org-clock-clocktable-formatter ipos tables params)))
-#+end_src
 **** ledna
 #+begin_src emacs-lisp
 (use-package ledna
@@ -2015,7 +1976,6 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/ledna")
 #+end_src
 **** [#A] org-glance
-
 #+begin_src emacs-lisp
 (use-package aes
   :ensure t)
@@ -2030,23 +1990,6 @@ SET COLSEP '|'
          ("C-x p d" . org-glance-password-manager-decrypt-current))
   :load-path "~/sync/stuff/org-glance"
   :ensure aes)
-#+end_src
-
-***** COMMENT og-contacts
-#+begin_src emacs-lisp
-(use-package org-glance-contacts
-  :bind (("C-x j c" . org-glance-contacts-jump))
-  :load-path "~/sync/stuff/org-glance-contacts")
-#+end_src
-****** COMMENT compl-staff
-#+begin_src emacs-lisp
-(defun org-compl-staff ()
-  (interactive)
-  (org-compl-char "@" (lambda () (and (not (org-in-src-block-p))
-                                      (looking-back "\\W")))
-                  (lambda () (org-glance-contacts-insert))))
-
-(define-key org-mode-map (kbd "@") 'org-compl-staff)
 #+end_src
 **** org-literate-devtools
 #+begin_src emacs-lisp
@@ -2087,12 +2030,16 @@ SET COLSEP '|'
 (define-completion org-complete-structure "<"
   "Complete org-structure template alist."
   (when (and (string= major-mode "org-mode")
-             (not (org-in-src-block-p)))
+             (not (org-in-src-block-p))
+             (looking-back "^<" 1))
     (let* ((choice (org-completing-read "Template: " org-structure-template-alist))
            (item (cdr (assoc choice org-structure-template-alist))))
       (org-insert-structure-template item)
       (insert "\n")
       (previous-line)
+      (previous-line)
+      (delete-backward-char 1)
+      (forward-line)
       t)))
 
 (define-completion org-complete-rarrow "->"
@@ -2233,49 +2180,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 		  (push (list level hdl tgs tsp time props) tbl)))))))
       (list file org-clock-file-total-minutes (nreverse tbl)))))
 #+end_src
-**** COMMENT autotagging
-#+begin_src emacs-lisp
-(defun org-auto-tag ()
-  (interactive)
-  (let ((autotags org-autotags)
-        (headline-words (split-string (org-get-heading t t))))
-    (mapcar (lambda (word) (if-let (tag (alist-get (intern (downcase word)) autotags nil))
-                          (org-toggle-tag tag 'on)))
-            headline-words)))
-
-(add-hook 'org-capture-before-finalize-hook 'org-auto-tag)
-
-(setq-default org-autotags
-              '((купить . "Wish")
-                (buy . "Wish")
-
-                (ммб . "Orienteering")
-                (сплав . "Water_Trek")
-                (велопокатушки . "Bicycle_Trek")
-
-                (приём . "Medicine")
-                (терапевт . "Medicine")
-
-                (запилить . "Stuff")
-                (implement . "Stuff")
-                (emacs . "emacs_stuff")
-                (autocomplete . "emacs_stuff")
-                (org . "emacs_stuff")
-                (org-mode . "emacs_stuff")
-                (yasnippet . "emacs_stuff")
-
-                (подумать . "Understanding")
-                (придумать . "Idea")
-
-                (Cloud . "Cloud")
-                (Облако . "Cloud")
-                (Stager . "Stager")
-                (stager . "Stager")
-
-                (пёсик . "@eric")
-                (Эрик . "@eric")
-                (Эрика . "@eric")))
-#+end_src
 ** Editor
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
@@ -2333,10 +2237,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (define-abbrev-table 'sql-mode-abbrev-table
   '(("select" "SELECT" nil 0)
-    ("from" "FROM" nil 0)
+    ("fr" "FROM" nil 0)
     ("where" "WHERE" nil 0)
-    ("order" "ORDER" nil 0)
-    ("by" "BY" nil 0)))
+    ("ord" "ORDER BY" nil 0)))
 
 (add-hook 'prog-mode-hook 'abbrev-mode)
 #+end_src
@@ -3093,20 +2996,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 *** mode-line
 #+begin_src emacs-lisp
-;; (line-number-mode -1)
-;; (display-time-mode -1)
-;; (display-battery-mode -1)
-
 (setq-default mode-line-format
               '(
-                " %*%Z%@ "
+                " %*%Z | "
                 (:eval
                  (cond (buffer-read-only
-                        (propertize (format "| %s |" (buffer-name)) 'face 'font-lock-function-name-face))
+                        (propertize (format "%s" (buffer-name)) 'face 'font-lock-function-name-face))
                        ((buffer-modified-p)
-                        (propertize (format "| %s (*) |" (buffer-name)) 'face 'font-lock-string-face))
-                       (t (format "| %s |" (buffer-name)))))
-                " "
+                        (propertize (format "*%s" (buffer-name)) 'face 'font-lock-string-face))
+                       (t (format "%s" (buffer-name)))))
+                " | "
                 "%m"
                 (vc-mode vc-mode)
                 (:eval
