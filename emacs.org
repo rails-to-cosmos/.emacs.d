@@ -258,7 +258,7 @@ enjoy using a lot.
     (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
 #+end_src
-*** naming
+*** hide-details
 #+begin_src emacs-lisp
 (add-hook 'dired-after-readin-hook
           (lambda ()
