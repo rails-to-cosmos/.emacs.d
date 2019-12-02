@@ -253,7 +253,8 @@ enjoy using a lot.
             ;; Use `generate-new-buffer-name' for vc-directory
             ;; which creates duplicate buffers.
             (dired-hide-details-mode -1)
-            (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
+            (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory))))
+          'append)
 #+end_src
 *** omit
 #+begin_src emacs-lisp
