@@ -1633,8 +1633,9 @@ bidirectional reordering.")
 (defun org-clock-add-note ()
   (interactive)
   (save-window-excursion
-    (org-clock-goto)
-    (org-add-note)))
+    (save-excursion
+      (org-clock-goto)
+      (org-add-note))))
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 
 (lexical-let ((custom-org-clock-idle-time 3600)) ;; seconds
@@ -2200,6 +2201,22 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (global-company-mode)
             (global-set-key (kbd "TAB") #'company-indent-or-complete-common))
   :ensure t)
+#+end_src
+**** lsp
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :hook (python-mode . lsp)
+  :commands lsp
+  :ensure t)
+
+;; optionally
+(use-package lsp-ui :commands lsp-ui-mode)
+(use-package company-lsp :commands company-lsp)
+(use-package helm-lsp :commands helm-lsp-workspace-symbol)
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+;; optionally if you want to use debugger
+(use-package dap-mode)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 #+end_src
 **** COMMENT pabbrev
 #+begin_src emacs-lisp
