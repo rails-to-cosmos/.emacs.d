@@ -15,7 +15,7 @@
 - [[https://github.com/hlissner/.emacs.d/][GitHub - hlissner/.emacs.d: Emacs for the stubborn martian vimmer]]
 - [[https://github.com/marktran/emacs.d][GitHub - marktran/emacs.d: Emacs configuration files]]
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
-- [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua :: living an awesome life : emacs]]
+- [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua living an awesome life : emacs]]
 - [[https://github.com/jkitchin/jmax][jmax]]
 * Config
 :PROPERTIES:
@@ -24,7 +24,6 @@
 
 ** Lisp
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
-
 #+begin_src emacs-lisp
 (defmacro f-string (fmt)
   "Like `s-format' but with format fields in it.
@@ -47,7 +46,6 @@ enjoy using a lot.
 
     `(s-format ,fmt 'aget (list ,@agetter))))
 #+end_src
-
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2014/01/20/Alternatives-to-long-complex-format-statements-in-emacs-lisp/][python-like-template-expanding]]
 #+begin_src emacs-lisp
   (defun expand-template (s plist)
@@ -302,7 +300,6 @@ enjoy using a lot.
 (define-key global-map (kbd "C-x d") 'dired-default-directory)
 #+end_src
 *** dired-rainbow
-
 #+begin_src emacs-lisp
 (use-package dired-rainbow
   :after (:all dired dired+)
@@ -312,10 +309,8 @@ enjoy using a lot.
             (dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
             (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
   :ensure t)
-
 #+end_src
 *** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
-
 #+begin_src emacs-lisp
 ;; using ls-lisp with these settings gives case-insensitve
 ;; sorting on OS X
@@ -341,7 +336,6 @@ enjoy using a lot.
   "Sort dired listings with directories first before mark adding."
   (dired/sort))
 #+end_src
-
 *** collapsed dirs
 #+begin_src emacs-lisp
 (defface dired-collapsed-dirs
@@ -1286,7 +1280,7 @@ BEG and END (region to sort)."
             (org-edna-load))
   :ensure t)
 #+end_src
-*** org-git-link
+*** COMMENT org-git-link
 #+begin_src emacs-lisp
 (require 'org-git-link)
 #+end_src
@@ -2626,6 +2620,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :bind ("C-x y i" . yankpad-insert)
   :config (progn
             (setq yankpad-file "~/sync/emacs/snippets.org"))
+  :ensure t)
+#+end_src
+*** yaml
+#+begin_src emacs-lisp
+(use-package yaml-mode
   :ensure t)
 #+end_src
 ** Version Control
