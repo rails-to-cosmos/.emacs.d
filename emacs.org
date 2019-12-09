@@ -2959,14 +2959,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (horizontal-scroll-bar-mode -1))
 #+end_src
 
-*** COMMENT modeline
-#+begin_src emacs-lisp
-(use-package doom-modeline
-      :ensure t
-      :config (setq doom-modeline-icon nil
-                    doom-modeline-height 35)
-      :hook (after-init . doom-modeline-mode))
-#+end_src
 *** default font
 
 #+begin_src emacs-lisp
@@ -3030,9 +3022,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                 " | "
                 "%m"
                 (vc-mode vc-mode)
-                (:eval
-                 (when (eq ml-selected-window (selected-window))
-                   (concat " | Spark: " (s-trim (shell-command-to-string "spark 1 2 3 4 5")))))
                 " %-"))
 
 (defvar ml-selected-window nil)
