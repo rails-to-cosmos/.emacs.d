@@ -3011,8 +3011,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** mode-line
 #+begin_src emacs-lisp
 (setq-default mode-line-format
-              '(
-                " %*%Z | "
+              '(" %*%Z | "
                 (:eval
                  (cond (buffer-read-only
                         (propertize (format "%s" (buffer-name)) 'face 'font-lock-function-name-face))
