@@ -3010,14 +3010,29 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 *** mode-line
 #+begin_src emacs-lisp
+(defface mode-line-buffer-read-only-face
+  '((((class color) (min-colors 88) (background light))
+     :foreground "orange")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "yellow")
+    (((class color) (min-colors 16) (background light))
+     :foreground "orange")
+    (((class color) (min-colors 16) (background dark))
+     :foreground "yellow")
+    (((class color) (min-colors 8))
+     :foreground "yellow")
+    (t :inverse-video t))
+  "Mode-line face for read-only buffers.")
+
 (setq-default mode-line-format
               '(" %*%Z | "
                 (:eval
-                 (cond (buffer-read-only
-                        (propertize (format "%s" (buffer-name)) 'face 'font-lock-function-name-face))
-                       ((buffer-modified-p)
-                        (propertize (format "*%s" (buffer-name)) 'face 'font-lock-string-face))
-                       (t (format "%s" (buffer-name)))))
+                 (if ml-selected-window
+                     (cond (buffer-read-only
+                            (propertize (format "%s" (buffer-name)) 'face 'mode-line-buffer-read-only-face))
+                           ((buffer-modified-p)
+                            (propertize (format "*%s" (buffer-name)) 'face 'font-lock-string-face))
+                           (t (format "%s" (buffer-name))))))
                 " | "
                 "%m"
                 (vc-mode vc-mode)
