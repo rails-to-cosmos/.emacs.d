@@ -2186,7 +2186,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
-
+*** electric-operator
+#+begin_src emacs-lisp
+(use-package electric-operator
+  :hook (python-mode . electric-operator-mode)
+  :ensure t)
+#+end_src
 *** completion
 **** company
 #+begin_src emacs-lisp
