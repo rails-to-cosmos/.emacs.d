@@ -617,6 +617,15 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 ** Utils
+*** sqlparse
+#+begin_src emacs-lisp
+(defun sqlparse-region (beg end)
+  (interactive "r")
+  (shell-command-on-region
+   beg end
+   "python -c 'import sys, sqlparse; print(sqlparse.format(sys.stdin.read(), reindent=True))'"
+   t t))
+#+end_src
 *** read-exports-from-file
 #+begin_src emacs-lisp
 (defun read-exports-from-file (fn)
@@ -1193,8 +1202,7 @@ BEG and END (region to sort)."
          ("C-M-p" . ded/org-show-previous-heading-tidily)
          ("C-c f" . org-sparse-tree)
          ([(shift tab)] . org-overview))
-  :config (progn
-            (require 'org-agenda))
+  :config (require 'org-agenda)
   :ensure t)
 #+end_src
 *** auto-done
@@ -2204,7 +2212,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 **** lsp
 #+begin_src emacs-lisp
 (use-package lsp-mode
-  :hook (python-mode . lsp)
+  ;; :hook (python-mode . lsp)
   :commands lsp
   :ensure t)
 
@@ -3017,27 +3025,57 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+begin_src emacs-lisp
 (defface mode-line-buffer-read-only-face
   '((((class color) (min-colors 88) (background light))
-     :foreground "orange")
+     :foreground "#749AF7")
     (((class color) (min-colors 88) (background dark))
-     :foreground "yellow")
+     :foreground "#749AF7")
     (((class color) (min-colors 16) (background light))
-     :foreground "orange")
+     :foreground "#749AF7")
     (((class color) (min-colors 16) (background dark))
-     :foreground "yellow")
+     :foreground "#749AF7")
     (((class color) (min-colors 8))
-     :foreground "yellow")
+     :foreground "#749AF7")
     (t :inverse-video t))
   "Mode-line face for read-only buffers.")
+
+(defface mode-line-buffer-non-modified-face
+  '((((class color) (min-colors 88) (background light))
+     :foreground "#D0E1F9")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#D0E1F9")
+    (((class color) (min-colors 16) (background light))
+     :foreground "#D0E1F9")
+    (((class color) (min-colors 16) (background dark))
+     :foreground "#D0E1F9")
+    (((class color) (min-colors 8))
+     :foreground "#D0E1F9")
+    (t :inverse-video t))
+  "Mode-line face for non-modified buffers.")
+
+(defface mode-line-buffer-modified-face
+  '((((class color) (min-colors 88) (background light))
+     :foreground "#000000")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#ffcc00")
+    (((class color) (min-colors 16) (background light))
+     :foreground "#000000")
+    (((class color) (min-colors 16) (background dark))
+     :foreground "#ffcc00")
+    (((class color) (min-colors 8))
+     :foreground "#ffcc00")
+    (t :inverse-video t))
+  "Mode-line face for modified buffers.")
 
 (setq-default mode-line-format
               '(" %*%Z | "
                 (:eval
-                 (if ml-selected-window
+                 (if (eq ml-selected-window (selected-window))
                      (cond (buffer-read-only
-                            (propertize (format "%s" (buffer-name)) 'face 'mode-line-buffer-read-only-face))
+                            (propertize (buffer-name) 'face 'mode-line-buffer-read-only-face))
                            ((buffer-modified-p)
-                            (propertize (format "*%s" (buffer-name)) 'face 'font-lock-string-face))
-                           (t (format "%s" (buffer-name))))))
+                            (propertize (buffer-name) 'face 'mode-line-buffer-modified-face))
+                           (t
+                            (propertize (buffer-name) 'face 'mode-line-buffer-non-modified-face)))
+                   (format "%s" (buffer-name))))
                 " | "
                 "%m"
                 (vc-mode vc-mode)
