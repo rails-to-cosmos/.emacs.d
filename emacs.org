@@ -729,7 +729,6 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 *** [[https://github.com/bbatsov/super-save][super-save]]
-
 #+begin_src emacs-lisp
 (use-package super-save
   :config (progn
@@ -738,7 +737,6 @@ enjoy using a lot.
             (setq super-save-auto-save-when-idle t))
   :ensure t)
 #+end_src
-
 *** hydra
 
 #+begin_src emacs-lisp
@@ -1291,13 +1289,6 @@ BEG and END (region to sort)."
 *** COMMENT org-git-link
 #+begin_src emacs-lisp
 (require 'org-git-link)
-#+end_src
-*** org-super-agenda
-#+begin_src emacs-lisp
-(use-package org-super-agenda
-  :config (progn
-            (org-super-agenda-mode))
-  :ensure t)
 #+end_src
 *** org-eshell
 #+begin_src emacs-lisp
