@@ -315,7 +315,7 @@ enjoy using a lot.
 ;; using ls-lisp with these settings gives case-insensitve
 ;; sorting on OS X
 (require 'ls-lisp)
-(setq dired-listing-switches "-alhG")
+(setq dired-listing-switches "-alh")
 (setq ls-lisp-use-insert-directory-program nil)
 (setq ls-lisp-ignore-case t)
 (setq ls-lisp-use-string-collate nil)
@@ -388,7 +388,8 @@ enjoy using a lot.
 ** EShell
 *** [[https://blog.hoetzel.info/post/eshell-notifications/][notifications]]
 #+begin_src emacs-lisp
-(require 'alert)
+(use-package alert
+  :ensure t)
 
 (defun eshell-command-alert (process status)
   "Send `alert' with severity based on STATUS when PROCESS finished."
@@ -468,10 +469,6 @@ enjoy using a lot.
 #+end_src
 *** env
 #+begin_src emacs-lisp
-(setenv "LANG" "C")
-(setenv "LC_ALL" "C")
-(setenv "LC_CTYPE" "C")
-
 (use-package exec-path-from-shell
   :config (progn
             (when (memq window-system '(mac ns gnulinux x))
@@ -1297,7 +1294,7 @@ BEG and END (region to sort)."
 #+end_src
 *** structure-templates
 #+begin_src emacs-lisp
-(loop for tpl in '(("py" . "src ipython")
+(loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
                    ("scala" . "src scala")
@@ -1308,7 +1305,7 @@ BEG and END (region to sort)."
                    ("abby" . "src sql :conn abby :file /tmp/abby.txt")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
-                   ("bash" . "src bash")
+                   ("bash" . "src bash :results org")
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
@@ -2884,13 +2881,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (defun python2-remove-pyc-files ()
   (shell-command (concat "rm *.pyc")))
 #+end_src
-**** ensure init python
-#+begin_src emacs-lisp
-(defun python2-ensure-init-file ()
-  (when (not (file-exists-p "./__init__.py"))
-    (shell-command (concat "touch __init__.py"))))
-;; (add-hook 'org-babel-post-tangle-hook #'python2-ensure-init-file)
-#+end_src
 **** highlights
 #+begin_src emacs-lisp
 (defun python-highlight-breakpoints()
@@ -2964,12 +2954,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** default font
-
 #+begin_src emacs-lisp
 (let ((face (list (list t (list :family "Inconsolata LGC")))))
   (custom-set-faces (list 'default face)))
 #+end_src
-
 *** text scale
 #+begin_src emacs-lisp
 (use-package default-text-scale
