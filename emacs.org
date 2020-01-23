@@ -2063,7 +2063,7 @@ SET COLSEP '|'
              (error nil))
            (org-set-property "ATTACH_DIR" event-dir-rel)
            (org-set-property "ATTACH_DIR_INHERIT" "t")
-           (org-set-property "ARCHIVE" (f-join event-dir-rel "event.org::"))
+           (org-set-property "ARCHIVE" (f-join event-dir-rel "events.org::"))
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
