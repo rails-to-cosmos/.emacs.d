@@ -1305,7 +1305,7 @@ BEG and END (region to sort)."
                    ("abby" . "src sql :conn abby :file /tmp/abby.txt")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
-                   ("bash" . "src bash")
+                   ("bash" . "src bash :results org")
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
