@@ -623,20 +623,18 @@ enjoy using a lot.
    "python -c 'import sys, sqlparse; print(sqlparse.format(sys.stdin.read(), reindent=True))'"
    t t))
 #+end_src
-*** read-exports-from-file
+*** read-envs-from-shell
 #+begin_src emacs-lisp
-(defun read-exports-from-file (fn)
-  (interactive)
-  (when (file-exists-p fn)
-    (with-temp-buffer
-      (insert-file-contents-literally fn)
-      (beginning-of-buffer)
-      (while (not (eobp))
-          (let ((row (thing-at-point 'line)))
-            (when (string-match "export \\([A-Z0-9_]+\\)" row)
-              (exec-path-from-shell-copy-env (match-string 1 row))))
-          (forward-line 1)
-          (beginning-of-line)))))
+(defun read-envs-from-shell ()
+  (with-temp-buffer
+    (insert (shell-command-to-string "$SHELL --login -i -c 'printenv'"))
+    (goto-char (point-min))
+    (while (not (eobp))
+      (let* ((export-string (s-trim (substring-no-properties (thing-at-point 'line))))
+             (export-sep "=")
+             (env-params (s-split export-sep export-string)))
+        (setenv (car env-params) (cadr env-params)))
+      (forward-line))))
 #+end_src
 *** docker
 
