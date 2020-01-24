@@ -2922,6 +2922,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** kubel
 #+begin_src emacs-lisp
 (use-package kubel
+  :bind (("C-x y k" . kubel))
   :ensure t)
 #+end_src
 *** s3
