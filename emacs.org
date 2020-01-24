@@ -2181,6 +2181,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
+
 *** electric-operator
 #+begin_src emacs-lisp
 (use-package electric-operator
@@ -2918,6 +2919,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 ** Clouds
+*** kubel
+#+begin_src emacs-lisp
+(use-package kubel
+  :ensure t)
+#+end_src
 *** s3
 #+begin_src emacs-lisp
 (use-package s3ed
