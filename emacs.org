@@ -1,14 +1,19 @@
 #+CATEGORY: Emacs
 
 * Whoami
+
 #+begin_src emacs-lisp
 (setq-default
  user-mail-address "akatovda@yandex.com"
  user-full-name "Dmitry Akatov")
 #+end_src
+
 * Links
+
 - https://github.com/alphapapa/emacs-package-dev-handbook
+
 * Useful Configs
+
 - [[https://github.com/howardabrams/dot-files][GitHub - howardabrams/dot-files: My Emacs initialization code and standard scripts I use for client and servers alike.]]
 - [[https://github.com/caisah/emacs.dz][GitHub - caisah/emacs.dz: Awesome emacs config files]]
 - [[https://github.com/jkitchin/scimax/tree/org-9][GitHub - jkitchin/scimax at org-9]]
@@ -17,13 +22,16 @@
 - [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs configuration]]
 - [[http://www.reddit.com/r/emacs/comments/3dt1ao/july_2015_emacs_hangout_sacha_chua_living_an/?utm_source=dlvr.it&utm_medium=twitter][July 2015 Emacs Hangout - sacha chua living an awesome life : emacs]]
 - [[https://github.com/jkitchin/jmax][jmax]]
+
 * Config
 :PROPERTIES:
 :header-args: :results silent :mkdirp yes
 :END:
 
 ** Lisp
+
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
+
 #+begin_src emacs-lisp
 (defmacro f-string (fmt)
   "Like `s-format' but with format fields in it.
@@ -46,7 +54,9 @@ enjoy using a lot.
 
     `(s-format ,fmt 'aget (list ,@agetter))))
 #+end_src
+
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2014/01/20/Alternatives-to-long-complex-format-statements-in-emacs-lisp/][python-like-template-expanding]]
+
 #+begin_src emacs-lisp
   (defun expand-template (s plist)
     "expand a template containing {:keyword} with the definitions in plist"
@@ -79,7 +89,9 @@ enjoy using a lot.
   ;;                         :url "http://hacs.org/10.1.1.109/hacs.1.10"
   ;;                         :pdf-dir "/home/jkitchin/pdfs")))
 #+end_src
+
 *** after-load
+
 #+begin_src emacs-lisp
 (defmacro after-load (feature &rest body)
   "After FEATURE is loaded, evaluate BODY."
@@ -87,7 +99,9 @@ enjoy using a lot.
   `(eval-after-load ,feature
      '(progn ,@body)))
 #+end_src
+
 *** safe-wrap
+
 #+begin_src emacs-lisp
 (defmacro safe-wrap (fn &rest clean-up)
   `(unwind-protect
@@ -100,7 +114,9 @@ enjoy using a lot.
          retval)
      ,@clean-up))
 #+end_src
+
 *** human-readable-size
+
 #+begin_src emacs-lisp
 (defconst iec-prefixes ["" "Ki" "Mi" "Gi"])
 
@@ -116,13 +132,18 @@ enjoy using a lot.
 		  size-in-unit prefix)))
     size-str))
 #+end_src
+
 ** Core
+
 *** welcome
+
 #+begin_src emacs-lisp
 (setq-default initial-scratch-message
               (concat "# I've always thought they were lighthouses\n\n"))
 #+end_src
+
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
+
 #+begin_src emacs-lisp
 ;; UTF-8 as the default coding system
 (set-charset-priority 'unicode)
@@ -165,7 +186,9 @@ enjoy using a lot.
 (use-package font-utils
   :ensure t)
 #+end_src
+
 *** paths
+
 #+begin_src emacs-lisp
 (defun tmp/ (filename)
   "Get path to FILENAME in temp directory."
@@ -183,7 +206,9 @@ enjoy using a lot.
 
 (setq-default custom-file (tmp/ "custom.el"))
 #+end_src
+
 *** osx
+
 #+begin_src emacs-lisp
   (cond ((eq system-type 'darwin)
 	 (setq mac-command-modifier 'meta
@@ -200,8 +225,11 @@ enjoy using a lot.
 	       ns-pop-up-frames nil
 	       alert-default-style 'osx-notifier)))
 #+end_src
+
 ** Dired
+
 *** dired+
+
 #+begin_src emacs-lisp
 (require 'dired)
 
@@ -235,7 +263,9 @@ enjoy using a lot.
     (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
 #+end_src
+
 *** hide-details
+
 #+begin_src emacs-lisp
 (add-hook 'dired-after-readin-hook
           (lambda ()
@@ -245,7 +275,9 @@ enjoy using a lot.
             (dired-hide-details-mode -1))
           'append)
 #+end_src
+
 *** omit
+
 #+begin_src emacs-lisp
 (setq-default dired-omit-files-p t
               dired-omit-verbose t
@@ -255,7 +287,9 @@ enjoy using a lot.
                       (seq bol "." eol)
                       (seq bol ".." eol))))
 #+end_src
+
 *** dired-switch-buffers
+
 #+begin_src emacs-lisp
 (defun dired-switch-buffers ()
   "Quickly switch between dired buffers."
@@ -278,7 +312,9 @@ enjoy using a lot.
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
 (define-key global-map (kbd "C-x d") 'dired-default-directory)
 #+end_src
+
 *** dired-rainbow
+
 #+begin_src emacs-lisp
 (use-package dired-rainbow
   :after (:all dired dired+)
@@ -289,7 +325,9 @@ enjoy using a lot.
             (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
   :ensure t)
 #+end_src
+
 *** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
+
 #+begin_src emacs-lisp
 ;; using ls-lisp with these settings gives case-insensitve
 ;; sorting on OS X
@@ -315,7 +353,9 @@ enjoy using a lot.
   "Sort dired listings with directories first before mark adding."
   (dired/sort))
 #+end_src
+
 *** collapsed dirs
+
 #+begin_src emacs-lisp
 (defface dired-collapsed-dirs
   '((((class color) (min-colors 88) (background light))
@@ -364,8 +404,11 @@ enjoy using a lot.
 
 (add-hook 'dired-after-readin-hook 'my-dired-collapse-directories 'append) ; must come after other dired-hacks hooks
 #+end_src
+
 ** EShell
+
 *** [[https://blog.hoetzel.info/post/eshell-notifications/][notifications]]
+
 #+begin_src emacs-lisp
 (use-package alert
   :ensure t)
@@ -385,13 +428,16 @@ enjoy using a lot.
                 :mode     'eshell-mode
                 :style 'notifications)
 #+end_src
+
 *** bookmark
+
 #+begin_src emacs-lisp
 (use-package eshell-bookmark
   :config (progn
             (add-hook 'eshell-mode-hook 'eshell-bookmark-setup))
   :ensure t)
 #+end_src
+
 *** with-eshell
 
 #+begin_src emacs-lisp
@@ -403,11 +449,15 @@ enjoy using a lot.
 #+end_src
 
 *** keybindings
+
 #+begin_src emacs-lisp
 (global-set-key (kbd "C-x y e") 'eshell)
 #+end_src
+
 *** completion
+
 **** cd
+
 #+begin_src emacs-lisp
 (defun eshell-compl-space ()
   (interactive)
@@ -446,7 +496,9 @@ enjoy using a lot.
 
 (add-hook 'eshell-first-time-mode-hook 'eshell-set-keys)
 #+end_src
+
 *** env
+
 #+begin_src emacs-lisp
 (use-package exec-path-from-shell
   :config (progn
@@ -463,7 +515,9 @@ enjoy using a lot.
 ;;   (setenv "LC_CTYPE" "en_US.UTF-8")
 ;;   (setq tramp-remote-process-environment process-environment)))
 #+end_src
+
 *** spawn-custom
+
 #+begin_src emacs-lisp
 (defun spawn-custom-shell (name &optional initial-path)
   (if-let (exbuf (get-buffer name))
@@ -479,7 +533,9 @@ enjoy using a lot.
       (insert "ls")
       (eshell-send-input))))
 #+end_src
+
 *** defaults
+
 #+begin_src emacs-lisp
 (setq-default eshell-buffer-maximum-lines 500
               eshell-output-filter-functions
@@ -491,7 +547,9 @@ enjoy using a lot.
               password-cache t
               password-cache-expiry 3600)
 #+end_src
+
 *** alias
+
 #+begin_src emacs-lisp
 (with-eval-after-load 'em-alias
     ;;; TODO: This conflicts with `evil-define-key' during the initialization of
@@ -510,7 +568,9 @@ enjoy using a lot.
     (add-to-list 'eshell-command-aliases-list alias))
   (eshell-write-aliases-list))
 #+end_src
+
 *** beautify
+
 #+begin_src emacs-lisp
 ;; (use-package eshell-fixed-prompt
 ;;   :config (progn
@@ -524,18 +584,25 @@ enjoy using a lot.
                   eshell-prompt-function 'epe-theme-lambda))
   :ensure t)
 #+end_src
+
 *** exclude
+
 #+begin_src emacs-lisp
 (setq-default eshell-ls-exclude-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
 #+end_src
+
 ** Window Managment
+
 *** shackle
+
 #+begin_src emacs-lisp
 (use-package shackle
   :config (setq shackle-default-rule '(:same t))
   :ensure t)
 #+end_src
+
 *** ace-window
+
 #+begin_src emacs-lisp :results silent
 (use-package ace-window
   :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
@@ -545,7 +612,9 @@ enjoy using a lot.
          ("M-o" . ace-window))
   :ensure t)
 #+end_src
+
 *** split-window
+
 #+begin_src emacs-lisp
 (defun split-window-func-with-other-buffer (split-function)
   (lexical-let ((s-f split-function))
@@ -565,14 +634,19 @@ enjoy using a lot.
 (define-key global-map (kbd "C-x 2") 'split-window-vertically-swap)
 (define-key global-map (kbd "C-x 3") 'split-window-horizontally-swap)
 #+end_src
+
 ** Keyboard
+
 *** default bindings
+
 #+begin_src emacs-lisp
 (define-key global-map (kbd "C-x y d c") 'desktop-clear)
 (define-key global-map (kbd "C-x y f f") 'toggle-frame-fullscreen)
 (define-key global-map (kbd "C-x k") 'kill-this-buffer)
 #+end_src
+
 *** key-freq
+
 #+begin_src emacs-lisp :results silent
 (use-package keyfreq
   :config (progn
@@ -580,20 +654,27 @@ enjoy using a lot.
             (keyfreq-autosave-mode 1))
   :ensure t)
 #+end_src
+
 *** mwe-log-commands
+
 #+begin_src emacs-lisp
 (use-package mwe-log-commands
   :ensure t)
 #+end_src
+
 *** reverse-im
+
 #+begin_src emacs-lisp
 (use-package reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
   :ensure t)
 #+end_src
+
 ** Utils
+
 *** sqlparse
+
 #+begin_src emacs-lisp
 (defun sqlparse-region (beg end)
   (interactive "r")
@@ -602,7 +683,9 @@ enjoy using a lot.
    "python -c 'import sys, sqlparse; print(sqlparse.format(sys.stdin.read(), reindent=True))'"
    t t))
 #+end_src
+
 *** read-envs-from-shell
+
 #+begin_src emacs-lisp
 (defun read-envs-from-shell ()
   (interactive)
@@ -616,6 +699,7 @@ enjoy using a lot.
         (setenv (car env-params) (cadr env-params)))
       (forward-line))))
 #+end_src
+
 *** docker
 
 #+begin_src emacs-lisp
@@ -624,6 +708,7 @@ enjoy using a lot.
 #+end_src
 
 *** [[https://www.reddit.com/r/emacs/comments/9auzla/example_showing_how_useful_the_ampleregexps/][ample-regexps]]
+
 #+begin_src emacs-lisp
 (use-package ample-regexps
   :ensure t)
@@ -649,13 +734,17 @@ enjoy using a lot.
 ;;           (match-string 4 url)
 ;;           (match-string 5 url))))
 #+end_src
+
 *** find file in project
+
 #+begin_src emacs-lisp
 (use-package find-file-in-project
   :bind ("C-x f" . find-file-in-project)
   :ensure t)
 #+end_src
+
 *** syncthing-conflict-manager
+
 #+begin_src emacs-lisp
 (defun syncthing-get-conflicted-files ()
   (let* ((bfn (buffer-file-name))
@@ -680,7 +769,9 @@ enjoy using a lot.
     (when (y-or-n-p "Do you really want to move conflicted file to trash?")
       (move-file-to-trash file))))
 #+end_src
+
 *** num-with-ordinal-indicator
+
 #+begin_src emacs-lisp
 (defun get-ordinal-indicator (num)
   (let* ((two-digs (mod num 100))
@@ -694,7 +785,9 @@ enjoy using a lot.
 (defun num-with-ordinal-indicator (num)
   (format "%d%s" num (get-ordinal-indicator num)))
 #+end_src
+
 *** volatile-highlights
+
 #+begin_src emacs-lisp
 (use-package volatile-highlights
   :config (progn
@@ -703,7 +796,9 @@ enjoy using a lot.
             (vhl/install-extension 'abbrev))
   :ensure t)
 #+end_src
+
 *** [[https://github.com/bbatsov/super-save][super-save]]
+
 #+begin_src emacs-lisp
 (use-package super-save
   :config (progn
@@ -712,6 +807,7 @@ enjoy using a lot.
             (setq super-save-auto-save-when-idle t))
   :ensure t)
 #+end_src
+
 *** hydra
 
 #+begin_src emacs-lisp
@@ -803,6 +899,7 @@ enjoy using a lot.
 #+end_src
 
 *** COMMENT Mirror minibuffer
+
 #+begin_src emacs-lisp
 (setq mb-catch-buf nil)
 (setq mb-catch-overlay nil)
@@ -830,17 +927,23 @@ enjoy using a lot.
 (add-hook 'minibuffer-setup-hook 'mb-catch-setup)
 (add-hook 'minibuffer-exit-hook 'mb-catch-exit)
 #+end_src
+
 *** delete-trailing-whitespace
+
 #+begin_src emacs-lisp
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 #+end_src
+
 *** delete-other-windows
+
 #+begin_src emacs-lisp
 (use-package delete-other-windows
   :no-require t
   :bind (("C-x 1" . delete-other-windows)))
 #+end_src
+
 *** delete-this-file
+
 #+begin_src emacs-lisp
 (defun delete-this-file ()
   "Delete the current file, and kill the buffer."
@@ -851,7 +954,9 @@ enjoy using a lot.
     (delete-file (buffer-file-name))
     (kill-this-buffer)))
 #+end_src
+
 *** immortal-scratch
+
 #+begin_src emacs-lisp
 (setq-default initial-major-mode 'org-mode)
 
@@ -863,7 +968,9 @@ enjoy using a lot.
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
 #+end_src
+
 *** prevent-active-processes-exist
+
 #+begin_src emacs-lisp
 (defun prevent-active-processes-exist ()
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
@@ -872,30 +979,40 @@ enjoy using a lot.
       ad-do-it)))
 (add-hook 'after-init-hook 'prevent-active-processes-exist)
 #+end_src
+
 *** benchmark-init
+
 #+begin_src emacs-lisp
 (use-package benchmark-init
   :config (progn
             (benchmark-init/activate))
   :ensure t)
 #+end_src
+
 *** alert
+
 #+begin_src emacs-lisp
 (use-package alert
   :ensure t)
 #+end_src
+
 *** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
+
 #+begin_src emacs-lisp
 (use-package tiny
   :ensure t)
 #+end_src
+
 *** prodigy
+
 #+begin_src emacs-lisp
 (use-package prodigy
   :bind ("C-x y r" . prodigy)
   :ensure t)
 #+end_src
+
 *** what-face
+
 #+begin_src emacs-lisp
 (defun what-face (pos)
   "Tell me what face used in POS."
@@ -904,7 +1021,9 @@ enjoy using a lot.
                   (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 #+end_src
+
 *** rename-this-file-and-buffer
+
 #+begin_src emacs-lisp
 (defun rename-this-file-and-buffer (new-name)
   "Renames both current buffer and file it's visiting to NEW-NAME."
@@ -921,14 +1040,18 @@ enjoy using a lot.
         (rename-buffer new-name)
         (set-visited-file-name new-name)))))
 #+end_src
+
 *** pdf
+
 #+begin_src emacs-lisp
 (use-package pdf-tools
   :commands (pdf-view-mode)
   :diminish t
   :ensure t)
 #+end_src
+
 *** undo-tree
+
 #+begin_src emacs-lisp
 (use-package undo-tree
   :config (progn
@@ -937,7 +1060,9 @@ enjoy using a lot.
             (setq undo-tree-visualizer-diff t))
   :ensure t)
 #+end_src
+
 *** [[http://endlessparentheses.com/improving-emacs-file-name-completion.html][Improving Emacs file-name completion · Endless Parentheses]]
+
 #+begin_src emacs-lisp
 (setq read-file-name-completion-ignore-case t)
 (setq read-buffer-completion-ignore-case t)
@@ -949,7 +1074,9 @@ enjoy using a lot.
         "-pkg.el" "-autoloads.el"
         "Notes.bib" "auto/"))
 #+end_src
+
 *** conditional keys
+
 #+begin_src emacs-lisp
 (defmacro endless/define-conditional-key (keymap key def
                                                  &rest body)
@@ -970,12 +1097,16 @@ This is like `define-key', except the definition
 ;;                                 #'endless/round-quotes
 ;;   (not (org-in-src-block-p)))
 #+end_src
+
 *** tiny-menu
+
 #+begin_src emacs-lisp
 (use-package tiny-menu
   :ensure t)
 #+end_src
+
 *** uniq-lines
+
 #+begin_src emacs-lisp
 (defun uniq-lines (beg end)
   "Unique lines in region.
@@ -996,18 +1127,24 @@ BEG and END (region to sort)."
             (replace-match "" nil nil))
           (goto-char next-line))))))
 #+end_src
+
 *** hierarchy
+
 #+begin_src emacs-lisp
 (use-package hierarchy
   :ensure t)
 #+end_src
+
 *** suggest
+
 #+begin_src emacs-lisp
 ;; https://github.com/webyrd/Barliman/
 (use-package suggest
   :ensure t)
 #+end_src
+
 *** read-lines
+
 #+begin_src emacs-lisp
 (defun read-lines (filePath)
   "Return a list of lines of a file at filePath."
@@ -1015,7 +1152,9 @@ BEG and END (region to sort)."
     (insert-file-contents filePath)
     (split-string (buffer-string) "\n" t)))
 #+end_src
+
 *** firestarter
+
 #+begin_src emacs-lisp :results silent
 (use-package firestarter
   :config (progn
@@ -1023,7 +1162,9 @@ BEG and END (region to sort)."
             (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
   :ensure t)
 #+end_src
+
 *** google-translate
+
 #+begin_src emacs-lisp
 (use-package google-translate
   :config (progn
@@ -1041,6 +1182,7 @@ BEG and END (region to sort)."
 #+end_src
 
 **** after translation hydra
+
 #+begin_src emacs-lisp
 (defun insert-translation-at-point ()
   (interactive)
@@ -1069,8 +1211,11 @@ BEG and END (region to sort)."
   ("ш" insert-translation-at-point "Insert translation at point")
   ("<RET>" nil "Quit"))
 #+end_src
+
 *** imenu
+
 **** imenu-anywhere
+
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
     :init (progn
@@ -1078,7 +1223,9 @@ BEG and END (region to sort)."
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
 #+end_src
+
 *** rsync
+
 #+begin_src emacs-lisp
 (defun rsync-enable ()
   "Enable rsync support."
@@ -1125,18 +1272,24 @@ BEG and END (region to sort)."
         (t
          (remove-hook 'after-save-hook 'auto-rsync-exec-rsync))))
 #+end_src
+
 *** wgrep
+
 #+begin_src emacs-lisp
   (use-package wgrep
     :ensure t)
 #+end_src
+
 *** [[https://stackoverflow.com/questions/7410125/emacs-specific-region-read-only][Emacs specific region read only - Stack Overflow]]
+
 #+begin_src emacs-lisp :results silent
 (defun set-region-read-only (begin end)
   (interactive "r")
   (add-text-properties begin end '(read-only t)))
 #+end_src
+
 *** [[http://mbork.pl/2017-05-01_show-some-last-messages][Marcin Borkowski: 2017-05-01 show-some-last-messages]]
+
 #+begin_src emacs-lisp :results silent
 (defcustom default-messages-to-show 10
   "Default number of messages for `show-some-last-messages'.")
@@ -1163,8 +1316,49 @@ BEG and END (region to sort)."
 		  (point-max))))
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
+
 ** Org
+
+*** fix blank lines
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun unpackaged/org-fix-blank-lines (prefix)
+  "Ensure that blank lines exist between headings and between headings and their contents.
+With prefix, operate on whole buffer. Ensures that blank lines
+exist after each headings's drawers."
+  (interactive "P")
+  (org-map-entries (lambda ()
+                     (org-with-wide-buffer
+                      ;; `org-map-entries' narrows the buffer, which prevents us from seeing
+                      ;; newlines before the current heading, so we do this part widened.
+                      (while (not (looking-back "\n\n" nil))
+                        ;; Insert blank lines before heading.
+                        (insert "\n")))
+                     (let ((end (org-entry-end-position)))
+                       ;; Insert blank lines before entry content
+                       (forward-line)
+                       (while (and (org-at-planning-p)
+                                   (< (point) (point-max)))
+                         ;; Skip planning lines
+                         (forward-line))
+                       (while (re-search-forward org-drawer-regexp end t)
+                         ;; Skip drawers. You might think that `org-at-drawer-p' would suffice, but
+                         ;; for some reason it doesn't work correctly when operating on hidden text.
+                         ;; This works, taken from `org-agenda-get-some-entry-text'.
+                         (re-search-forward "^[ \t]*:END:.*\n?" end t)
+                         (goto-char (match-end 0)))
+                       (unless (or (= (point) (point-max))
+                                   (org-at-heading-p)
+                                   (looking-at-p "\n"))
+                         (insert "\n"))))
+                   t (if prefix
+                         nil
+                       'tree)))
+#+end_src
+
 *** org-plus-contrib
+
 #+begin_src emacs-lisp
 (use-package org-plus-contrib
   :bind (("C-c l" . org-store-link)
@@ -1178,7 +1372,9 @@ BEG and END (region to sort)."
   :config (require 'org-agenda)
   :ensure t)
 #+end_src
+
 *** auto-done
+
 #+begin_src emacs-lisp
 (defun org-summary-todo (n-done n-not-done)
   "Switch entry to DONE when all subentries are done, to TODO otherwise."
@@ -1188,7 +1384,9 @@ BEG and END (region to sort)."
 
 (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
 #+end_src
+
 *** modules
+
 #+begin_src emacs-lisp
 (setq org-modules
       '(org-bbdb
@@ -1208,24 +1406,32 @@ BEG and END (region to sort)."
         org-wl
         org-w3m))
 #+end_src
+
 *** locale
+
 #+begin_src emacs-lisp
 ;; System locale to use for formatting time values.
 (setq system-time-locale "C")         ; Make sure that the weekdays in the
                                       ; time stamps of your Org mode files and
                                       ; in the agenda appear in English.
 #+end_src
+
 *** archive partition
+
 #+begin_src emacs-lisp
 (setq org-archive-location
       (format "archives/%s/%%s_archive::"
               (format-time-string "%Y/%m" (current-time))))
 #+end_src
+
 *** refile-update-cookies
+
 #+begin_src emacs-lisp
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
 #+end_src
+
 *** COMMENT notifications
+
 #+begin_src emacs-lisp
 (require 'appt)
 (setq appt-time-msg-list nil)    ;; clear existing appt list
@@ -1254,23 +1460,31 @@ BEG and END (region to sort)."
     (format "'%s'" msg)))                                ;; passed to -message in terminal-notifier call
 (setq appt-disp-window-function (function my-appt-display))
 #+end_src
+
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
+
 #+begin_src emacs-lisp
 (use-package org-edna
   :config (progn
             (org-edna-load))
   :ensure t)
 #+end_src
+
 *** COMMENT org-git-link
+
 #+begin_src emacs-lisp
 (require 'org-git-link)
 #+end_src
+
 *** org-eshell
+
 #+begin_src emacs-lisp
 (require 'org-eshell)
 (add-to-list 'org-modules 'org-eshell)
 #+end_src
+
 *** structure-templates
+
 #+begin_src emacs-lisp
 (loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
@@ -1287,7 +1501,9 @@ BEG and END (region to sort)."
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
+
 *** org-table-fixed
+
 #+begin_src emacs-lisp
 (defconst org-table-separator-space
   " "
@@ -1296,8 +1512,11 @@ BEG and END (region to sort)."
 This space serves as a segment separator for the purposes of the
 bidirectional reordering.")
 #+end_src
+
 *** babel
+
 **** settings
+
 #+begin_src emacs-lisp
 (setq org-src-fontify-natively t
       org-src-tab-acts-natively t
@@ -1309,7 +1528,9 @@ bidirectional reordering.")
       org-hide-block-startup t
       org-src-window-setup 'current-window)
 #+end_src
+
 **** tangle-block
+
 #+begin_src emacs-lisp
 (defun org-babel-tangle-block ()
   (interactive)
@@ -1415,7 +1636,9 @@ bidirectional reordering.")
           (org-babel-when-in-src-block
            (org-ctrl-c-ctrl-c))))))
 #+end_src
+
 **** COMMENT exec from results
+
 #+begin_src emacs-lisp
 (defun ob-execute-block-from-results ()
   (save-excursion
@@ -1430,7 +1653,9 @@ bidirectional reordering.")
           nil)))))
 (add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
 #+end_src
+
 **** COMMENT run src block
+
 #+begin_src emacs-lisp
 (defun org-babel-execute-block-by-id (name)
   (save-excursion
@@ -1438,19 +1663,27 @@ bidirectional reordering.")
     (search-forward "#+begin_src")
     (org-babel-execute-maybe)))
 #+end_src
+
 **** COMMENT [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
+
 **** COMMENT [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
+
 **** ob-http
+
 #+begin_src emacs-lisp :results silent
 (use-package ob-http
   :ensure t)
 #+end_src
+
 **** ob-async
+
 #+begin_src emacs-lisp
 (use-package ob-async
   :ensure t)
 #+end_src
+
 **** ob-ipython
+
 #+begin_src emacs-lisp
 ;; (if (file-exists-p (s-chomp (shell-command-to-string "which jupyter")))
 ;;     (use-package ob-ipython
@@ -1463,7 +1696,9 @@ bidirectional reordering.")
 ;;       :ensure t)
 ;; (warn "Unable to load ob-ipython: jupyter not found."))
 #+end_src
+
 **** ob-restclient
+
 #+begin_src emacs-lisp
 (use-package restclient
   :ensure t)
@@ -1471,7 +1706,9 @@ bidirectional reordering.")
 (use-package ob-restclient
   :ensure t)
 #+end_src
+
 **** ob-languages
+
 #+begin_src emacs-lisp
 (setq ob-languages '((python . t)
                      (sql . t)
@@ -1486,6 +1723,7 @@ bidirectional reordering.")
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
+
 *** crypt
 
 #+begin_src emacs-lisp
@@ -1582,6 +1820,7 @@ bidirectional reordering.")
 #+end_src
 
 *** clock
+
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
@@ -1615,8 +1854,11 @@ bidirectional reordering.")
                                                       custom-org-clock-idle-time)))
              (when buffer-file-name (save-buffer))))))
 #+end_src
+
 *** UI
+
 **** Org todo keyword faces
+
 ***** Initialization
 
 #+begin_src emacs-lisp
@@ -1657,17 +1899,22 @@ If KWD is a number, get the corresponding match group."
 #+end_src
 
 **** Emphasis
+
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers nil)
 #+end_src
+
 **** Bullets
+
 #+begin_src emacs-lisp :results silent
 (use-package org-bullets
   :config (progn
             (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
   :ensure t)
 #+end_src
+
 *** Insert page heading on org-insert-link
+
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -1703,11 +1950,15 @@ If KWD is a number, get the corresponding match group."
       (setq x2 (search-backward "<"))
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
+
 *** Narrowing
+
 #+begin_src emacs-lisp :results silent
 (setq org-indirect-buffer-display 'current-window)
 #+end_src
+
 *** Show next entry, keeping other entries closed
+
 #+begin_src emacs-lisp
 (defun ded/org-show-next-heading-tidily ()
   "Show next entry, keeping other entries closed."
@@ -1724,7 +1975,9 @@ If KWD is a number, get the corresponding match group."
     (org-show-entry)
     (show-children)))
 #+end_src
+
 *** Show previous entry, keeping other entries closed
+
 #+begin_src emacs-lisp
 (defun ded/org-show-previous-heading-tidily ()
   "Show previous entry, keeping other entries closed."
@@ -1740,18 +1993,24 @@ If KWD is a number, get the corresponding match group."
     (org-show-entry)
     (show-children)))
 #+end_src
+
 *** Don't show tasks as scheduled if they are already shown as a deadline
+
 #+begin_src emacs-lisp
 (setq org-agenda-skip-scheduled-if-deadline-is-shown t)
 #+end_src
+
 *** Ignore scheduled and deadlines in todo-list
+
 #+begin_src emacs-lisp
 ;;don't show tasks that are scheduled or have deadlines in the
 ;;normal todo list
 (setq org-agenda-todo-ignore-deadlines (quote all))
 (setq org-agenda-todo-ignore-scheduled (quote all))
 #+end_src
+
 *** Unsorted Settings
+
 #+begin_src emacs-lisp
 (setq-default
  org-cycle-separator-lines 0
@@ -1780,8 +2039,11 @@ If KWD is a number, get the corresponding match group."
  org-id-locations-file (tmp/ "org-id-locations.txt")
  org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c!)"))))
 #+end_src
+
 *** experiments
+
 **** ob-sql
+
 #+begin_src emacs-lisp
 (defun org-babel-execute:sql (body params)
   "Execute a block of Sql code with Babel.
@@ -1944,14 +2206,18 @@ SET COLSEP '|'
 	 (org-babel-pick-name (cdr (assq :rowname-names params))
 			      (cdr (assq :rownames params))))))))
 #+end_src
+
 **** ledna
+
 #+begin_src emacs-lisp
 (use-package ledna
   :config (progn
             (ledna-dsl-init))
   :load-path "~/sync/stuff/ledna")
 #+end_src
+
 **** [#A] org-glance
+
 #+begin_src emacs-lisp
 (use-package aes
   :ensure t)
@@ -1967,7 +2233,9 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/org-glance"
   :ensure aes)
 #+end_src
+
 **** org-literate-devtools
+
 #+begin_src emacs-lisp
 (use-package org-literate-devtools
   :demand t
@@ -1980,8 +2248,11 @@ SET COLSEP '|'
   :ensure aio
   :ensure cider)
 #+end_src
+
 **** completion
+
 ***** define-completion
+
 #+begin_src emacs-lisp
 (defmacro define-completion (name string &rest body)
   (declare (doc-string 3) (indent 2))
@@ -2001,7 +2272,9 @@ SET COLSEP '|'
                (delete-char (+ 0 (length ,string)))))))
      (add-hook 'post-self-insert-hook ',name)))
 #+end_src
+
 ***** complete-structure
+
 #+begin_src emacs-lisp
 (define-completion org-complete-structure "<"
   "Complete org-structure template alist."
@@ -2024,7 +2297,9 @@ SET COLSEP '|'
     (insert "→")
     t))
 #+end_src
+
 **** org-auto-property
+
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
@@ -2043,7 +2318,9 @@ SET COLSEP '|'
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 #+end_src
+
 **** org-clock-table-data fix
+
 #+begin_src emacs-lisp
 (defun org-clock-get-table-data (file params)
   "Get the clocktable data for file FILE, with parameters PARAMS.
@@ -2156,19 +2433,24 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 		  (push (list level hdl tgs tsp time props) tbl)))))))
       (list file org-clock-file-total-minutes (nreverse tbl)))))
 #+end_src
+
 ** Editor
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
 :END:
 
 *** electric-operator
+
 #+begin_src emacs-lisp
 (use-package electric-operator
   :hook (python-mode . electric-operator-mode)
   :ensure t)
 #+end_src
+
 *** completion
+
 **** company
+
 #+begin_src emacs-lisp
 (use-package company
   :config (progn
@@ -2176,7 +2458,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (global-set-key (kbd "TAB") #'company-indent-or-complete-common))
   :ensure t)
 #+end_src
+
 **** lsp
+
 #+begin_src emacs-lisp
 (use-package lsp-mode
   ;; :hook (python-mode . lsp)
@@ -2191,7 +2475,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package dap-python)
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 #+end_src
+
 **** COMMENT pabbrev
+
 #+begin_src emacs-lisp
 (use-package pabbrev
   :config (progn
@@ -2199,7 +2485,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
   :ensure t)
 #+end_src
+
 ***** compl-read-suggestions
+
 #+begin_src emacs-lisp
 (defun pabbrevx-suggestions-goto-buffer (suggestions)
   (let* ((candidates (mapcar 'car suggestions))
@@ -2223,7 +2511,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (fset 'pabbrev-suggestions-goto-buffer 'pabbrevx-suggestions-goto-buffer)
 #+end_src
+
 **** abbrev
+
 #+begin_src emacs-lisp
 (setq abbrev-file-name (tmp/ "abbrev_defs")
       save-abbrevs 'silent)
@@ -2240,7 +2530,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (add-hook 'prog-mode-hook 'abbrev-mode)
 #+end_src
+
 *** vlf -- view large files
+
 #+begin_src emacs-lisp
 (use-package vlf
   :config (progn
@@ -2249,7 +2541,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
              '(vlf-application 'dont-ask)))
   :ensure t)
 #+end_src
+
 *** loccur
+
 #+begin_src emacs-lisp
 (use-package loccur
   :config (progn
@@ -2282,19 +2576,25 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (easy-menu-add-item (current-global-map) '("menu-bar" "extra-tools") my-loccur-menu))
   :ensure t)
 #+end_src
+
 *** sudoedit
+
 #+begin_src emacs-lisp
 (use-package sudo-edit
   :ensure t)
 #+end_src
+
 *** string-inflection
+
 #+begin_src emacs-lisp
 (use-package string-inflection
   :config (progn
             (global-set-key (kbd "M-p") 'string-inflection-cycle))
   :ensure t)
 #+end_src
+
 *** origami
+
 #+begin_src emacs-lisp
 (use-package origami
   :hook ((irony-mode . origami-mode))
@@ -2302,7 +2602,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
          ("C-c C-c" . origami-toggle-node))
   :ensure t)
 #+end_src
+
 *** duplicate-down
+
 #+begin_src emacs-lisp
 (defun duplicate-line (arg)
   "Duplicate current line, leaving point in lower line."
@@ -2341,7 +2643,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (global-set-key (kbd "C-c p") 'duplicate-line)
 #+end_src
+
 *** paredit
+
 #+begin_src emacs-lisp
 (use-package paredit
   :config (progn
@@ -2383,14 +2687,18 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (add-hook 'css-mode-hook 'paredit-everywhere-mode))
   :ensure t)
 #+end_src
+
 *** smartparens
+
 #+begin_src emacs-lisp
 (use-package smartparens
   :config (progn
             (require 'smartparens-config))
   :ensure t)
 #+end_src
+
 *** multiple-cursors
+
 #+begin_src emacs-lisp
 (use-package multiple-cursors
   :bind (("C-<" . mc/mark-previous-like-this)
@@ -2400,19 +2708,25 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (setq-default mc/list-file (tmp/ "multiple-cursors-data.el")))
   :ensure t)
 #+end_src
+
 *** regex-tool
+
 #+begin_src emacs-lisp
 (use-package regex-tool
   :ensure t)
 #+end_src
+
 *** elmacro
+
 #+begin_src emacs-lisp
 (use-package elmacro
   :config (progn
             (elmacro-mode t))
   :ensure t)
 #+end_src
+
 *** which-key
+
 #+begin_src emacs-lisp
 (use-package which-key
   :ensure t
@@ -2420,7 +2734,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (which-key-mode t)
             (which-key-setup-side-window-bottom)))
 #+end_src
+
 *** whole-line-or-region
+
 #+begin_src emacs-lisp
 (use-package whole-line-or-region
   :config (progn
@@ -2429,7 +2745,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 	    (make-variable-buffer-local 'whole-line-or-region-mode))
   :ensure t)
 #+end_src
+
 *** page-break-lines
+
 #+begin_src emacs-lisp
 (use-package page-break-lines
   :init (progn
@@ -2437,11 +2755,15 @@ PROPERTIES: The list properties specified in the `:properties' parameter
           (diminish 'page-break-lines-mode))
   :ensure t)
 #+end_src
+
 *** show-paren-mode
+
 #+begin_src emacs-lisp
 (show-paren-mode 1)
 #+end_src
+
 *** kill-back
+
 #+begin_src emacs-lisp
 (put 'narrow-to-region 'disabled nil)
 (put 'narrow-to-page 'disabled nil)
@@ -2458,7 +2780,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (global-set-key (kbd "C-M-<backspace>") 'kill-back-to-indentation)
 #+end_src
+
 *** kill-region
+
 #+begin_src emacs-lisp
 (defadvice kill-region (before slick-cut activate compile)
   "When called interactively with no active region, kill a single line instead."
@@ -2467,12 +2791,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
       (list (line-beginning-position)
         (line-beginning-position 2)))))
 #+end_src
+
 *** prettify-symbols
+
 #+begin_src emacs-lisp
 (when (fboundp 'global-prettify-symbols-mode)
   (global-prettify-symbols-mode))
 #+end_src
+
 *** newline-at-end-of-line
+
 #+begin_src emacs-lisp
 (defun sanityinc/newline-at-end-of-line ()
   "Move to end of line, enter a newline, and reindent."
@@ -2482,7 +2810,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (global-set-key (kbd "S-<return>") 'sanityinc/newline-at-end-of-line)
 #+end_src
+
 *** no-trailing-whitespace
+
 #+begin_src emacs-lisp
 (defun sanityinc/no-trailing-whitespace ()
   "Turn off display of trailing whitespace in this buffer."
@@ -2501,39 +2831,53 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                 eshell-mode-hook))
   (add-hook hook #'sanityinc/no-trailing-whitespace))
 #+end_src
+
 *** whitespace-cleanup
+
 #+begin_src emacs-lisp
 (use-package whitespace-cleanup-mode
   :config (global-whitespace-cleanup-mode t)
   :bind (("RET" . newline-and-indent))
   :ensure t)
 #+end_src
+
 *** transitient-mark
+
 #+begin_src emacs-lisp
 (transient-mark-mode)
 #+end_src
+
 *** auto-revert
+
 #+begin_src emacs-lisp
 (global-auto-revert-mode t)
 (setq global-auto-revert-non-file-buffers t
       auto-revert-verbose nil)
 #+end_src
+
 *** electric-pair
+
 #+begin_src emacs-lisp
 (when (fboundp 'electric-pair-mode)
   (electric-pair-mode))
 #+end_src
+
 *** whole-line-or-region
+
 #+begin_src emacs-lisp
 (use-package whole-line-or-region
   :ensure t)
 #+end_src
+
 *** unfill
+
 #+begin_src emacs-lisp
 (use-package unfill
   :ensure t)
 #+end_src
+
 *** expand-region
+
 #+begin_src emacs-lisp
 (use-package expand-region
   :config (progn
@@ -2543,7 +2887,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 ;; from http://endlessparentheses.com/where-do-you-bind-expand-region.html
 (global-set-key (kbd "M-2") #'er/expand-region)
 #+end_src
+
 *** flycheck
+
 #+begin_src emacs-lisp
 (use-package flycheck
   :config (progn
@@ -2554,12 +2900,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (global-flycheck-mode))
   :ensure t)
 #+end_src
+
 *** flyspell
+
 #+begin_src emacs-lisp
 (use-package flyspell
   :ensure t)
 #+end_src
+
 *** increment-number
+
 #+begin_src emacs-lisp
 (use-package increment-number
   :no-require t
@@ -2580,7 +2930,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                 (error "No number at point"))
             (replace-match (number-to-string (1- (string-to-number (match-string 0))))))))
 #+end_src
+
 *** save-macro
+
 #+begin_src emacs-lisp
 (defun save-macro (name)
   "Save a macro. Take a name as argument and save the last
@@ -2594,7 +2946,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (newline)                    ; insert a newline
   (switch-to-buffer nil))
 #+end_src
+
 *** yankpad
+
 #+begin_src emacs-lisp
 (use-package yankpad
   :bind ("C-x y i" . yankpad-insert)
@@ -2602,18 +2956,25 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (setq yankpad-file "~/sync/emacs/snippets.org"))
   :ensure t)
 #+end_src
+
 *** yaml
+
 #+begin_src emacs-lisp
 (use-package yaml-mode
   :ensure t)
 #+end_src
+
 ** Version Control
+
 *** monky
+
 #+begin_src emacs-lisp
 (use-package monky
   :ensure t)
 #+end_src
+
 *** magit
+
 #+begin_src emacs-lisp
 (use-package magit
   :commands (magit-get-current-branch)
@@ -2627,32 +2988,43 @@ PROPERTIES: The list properties specified in the `:properties' parameter
          ("C-x g p c" . magit-push-current))
   :ensure t)
 #+end_src
+
 ** Programming
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
+
 *** lilypond
+
 #+begin_src emacs-lisp
 (let ((load-path '("~/lilypond/usr/share/emacs/site-lisp")))
   (require 'lilypond-mode nil t))
 #+end_src
+
 *** docker
+
 #+begin_src emacs-lisp
 (use-package dockerfile-mode
   :ensure t)
 #+end_src
+
 *** scala
+
 #+begin_src emacs-lisp
 (use-package scala-mode
   :config (setq scala-indent:step 2)
   :ensure t)
 #+end_src
+
 *** rmsbolt
+
 #+begin_src emacs-lisp
 (use-package rmsbolt
   :ensure t)
 #+end_src
+
 *** ggtags
+
 #+begin_src emacs-lisp
 (use-package ggtags
   :hook ((c-mode . ggtags-mode)
@@ -2669,12 +3041,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
               ("C-c y g s" . ggtags-find-other-symbol))
   :ensure t)
 #+end_src
+
 *** clojure
+
 **** ob-clojure
+
 #+begin_src emacs-lisp
 (require 'ob-clojure)
 #+end_src
+
 **** cider
+
 #+begin_src emacs-lisp
 (use-package cider
   :hook ((clojure-mode . paredit-mode)
@@ -2690,7 +3067,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
   :ensure t)
 #+end_src
+
 **** cider overlays
+
 #+begin_src emacs-lisp
 (autoload 'cider--make-result-overlay "cider-overlays")
 
@@ -2719,27 +3098,38 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                  (end-of-defun)
                  (point)))))
 #+end_src
+
 *** compilation
+
 #+begin_src emacs-lisp
 (define-key global-map (kbd "C-x C-m") #'compile)
 #+end_src
+
 *** comint
+
 #+begin_src emacs-lisp
 (setq comint-prompt-read-only t)
 #+end_src
+
 *** another lisps
+
 #+begin_src emacs-lisp
 (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
 (setq byte-compile-warnings '(not cl-functions))
 #+end_src
+
 *** web
+
 **** emmet-mode
+
 #+begin_src emacs-lisp
 (use-package emmet-mode
   :ensure t)
 #+end_src
+
 **** jsx
+
 #+begin_src emacs-lisp
 (use-package rjsx-mode
   :mode ("\\.js\\'" . rjsx-mode)
@@ -2759,13 +3149,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :commands js-comint
   :ensure t)
 #+end_src
+
 **** json
+
 #+begin_src emacs-lisp
 (use-package json-mode
   :commands (json-mode json-reformat-region)
   :ensure t)
 #+end_src
+
 **** web-mode
+
 #+begin_src emacs-lisp
 (use-package web-mode
   :config (progn
@@ -2775,8 +3169,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure web-beautify
   :ensure t)
 #+end_src
+
 *** c
+
 **** [[https://www.gnu.org/software/emacs/manual/html_node/efaq/Customizing-C-and-C_002b_002b-indentation.html][Customizing C and C++ indentation - GNU Emacs FAQ]]
+
 #+begin_src emacs-lisp
 (defun set-custom-c-offsets ()
   (c-set-offset 'arglist-intro '+)
@@ -2784,13 +3181,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (add-hook 'c-mode-hook 'set-custom-c-offsets)
 (add-hook 'c++-mode-hook 'set-custom-c-offsets)
 #+end_src
+
 **** modern-cpp-font-lock
+
 #+begin_src emacs-lisp
 (use-package modern-cpp-font-lock
   :hook ((irony-mode . modern-c++-font-lock-mode))
   :ensure t)
 #+end_src
+
 **** Irony
+
 #+begin_src emacs-lisp
 (use-package irony
   :mode ("\\.cpp\\'" . c++-mode)
@@ -2818,18 +3219,22 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (define-key irony-mode-map [remap complete-symbol]
     'irony-completion-at-point-async))
 #+end_src
+
 *** python
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming.python
 :END:
 
 **** elpy
+
 #+begin_src emacs-lisp
 (use-package elpy
   :init (elpy-enable)
   :ensure t)
 #+end_src
+
 **** COMMENT jedi
+
 #+begin_src emacs-lisp
 (use-package jedi
   :config (progn
@@ -2843,24 +3248,32 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package jedi-direx
   :ensure t)
 #+end_src
+
 **** realgud
+
 #+begin_src emacs-lisp
 (use-package realgud
   :ensure t)
 #+end_src
+
 **** elpygen
+
 #+begin_src emacs-lisp
 (use-package elpygen
   :bind (:map python-mode-map
         ("C-c i" . elpygen-implement))
   :ensure t)
 #+end_src
+
 **** remove pyc files
+
 #+begin_src emacs-lisp
 (defun python2-remove-pyc-files ()
   (shell-command (concat "rm *.pyc")))
 #+end_src
+
 **** highlights
+
 #+begin_src emacs-lisp
 (defun python-highlight-breakpoints()
   (interactive)
@@ -2872,18 +3285,24 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
 #+end_src
+
 **** indent
+
 #+begin_src emacs-lisp
 (use-package indent-tools
   :bind (("C-x >" . indent-tools-hydra/body))
   :ensure t)
 #+end_src
+
 **** offset
+
 #+begin_src emacs-lisp
 (setq python-indent-offset 4
       python-indent-guess-indent-offset nil)
 #+end_src
+
 **** ipython-shell-interpreter
+
 #+begin_src emacs-lisp
 (require 'python)
 (setq-default python-shell-interpreter "ipython"
@@ -2892,19 +3311,26 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
 #+end_src
+
 *** sql
+
 #+begin_src emacs-lisp
 (use-package sql-indent
   :ensure t)
 #+end_src
+
 ** Clouds
+
 *** kubel
+
 #+begin_src emacs-lisp
 (use-package kubel
   :bind (("C-x y k" . kubel))
   :ensure t)
 #+end_src
+
 *** s3
+
 #+begin_src emacs-lisp
 (use-package s3ed
   :config (progn
@@ -2913,12 +3339,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (global-set-key (kbd "C-c s s") 's3ed-save-file))
   :ensure t)
 #+end_src
+
 ** UI
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.ui
 :END:
 
 *** grab-and-drag
+
 #+begin_src emacs-lisp
 (use-package grab-and-drag
   :config (progn
@@ -2926,6 +3354,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (setq grab-and-drag-pointer-shape nil))
   :load-path ("~/.emacs.d/packages"))
 #+end_src
+
 *** minimize
 
 #+begin_src emacs-lisp
@@ -2939,17 +3368,22 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** default font
+
 #+begin_src emacs-lisp
 (let ((face (list (list t (list :family "Inconsolata LGC")))))
   (custom-set-faces (list 'default face)))
 #+end_src
+
 *** text scale
+
 #+begin_src emacs-lisp
 (use-package default-text-scale
   :config (default-text-scale-mode 1)
   :ensure t)
 #+end_src
+
 *** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
+
 #+begin_src emacs-lisp
 (setq split-width-threshold (- (window-width) 10))
 (setq split-height-threshold nil)
@@ -2965,11 +3399,15 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
 #+end_src
+
 *** vscroll
+
 #+begin_src emacs-lisp
 (setq-default auto-window-vscroll nil)
 #+end_src
+
 *** transparency
+
 #+begin_src emacs-lisp
 (defun make-frame-more-transparent ()
   (interactive)
@@ -2979,13 +3417,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (interactive)
   (set-frame-parameter (selected-frame) 'alpha 1.0))
 #+end_src
+
 *** rainbow-mode
+
 #+begin_src emacs-lisp
 (use-package rainbow-mode
   :hook ((prog-mode . rainbow-mode))
   :ensure t)
 #+end_src
+
 *** mode-line
+
 #+begin_src emacs-lisp
 (defface mode-line-buffer-read-only-face
   '((((class color) (min-colors 88) (background light))
@@ -3056,32 +3498,45 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (add-hook 'post-command-hook 'ml-record-selected-window)
 (add-hook 'buffer-list-update-hook 'ml-update-all)
 #+end_src
+
 *** fringes
+
 #+begin_src emacs-lisp
 (when (fboundp 'set-fringe-mode)
   (set-fringe-mode '(1 . 1)))
 #+end_src
+
 *** line numbers
+
 #+begin_src emacs-lisp
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 #+end_src
+
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
+
 #+begin_src emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
+
 *** rainbow-delimiters
+
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
   :hook ((prog-mode . rainbow-delimiters-mode))
   :ensure t)
 #+end_src
+
 *** themes
+
 **** Default
+
 #+begin_src emacs-lisp
 (use-package danneskjold-theme
   :ensure t)
 #+end_src
+
 *** cleanups
+
 #+begin_src emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
@@ -3115,7 +3570,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
  frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b")))
  buffers-menu-max-size 30)
 #+end_src
+
 ** Local
+
 #+begin_src emacs-lisp
 (defun load-local-init-file (alias)
   (let* ((local-init-file (format "init-%s.el" alias)))
