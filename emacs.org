@@ -179,8 +179,7 @@ enjoy using a lot.
   :ensure t)
 
 (use-package unicode-fonts
-  :config (progn
-            (unicode-fonts-setup))
+  :config (unicode-fonts-setup)
   :ensure t)
 
 (use-package font-utils
@@ -667,9 +666,18 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (use-package reverse-im
-  :config (progn
-            (reverse-im-activate "russian-computer"))
+  :config (reverse-im-activate "russian-computer")
   :ensure t)
+#+end_src
+
+*** which-key
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :ensure t
+  :config (progn
+            (which-key-mode t)
+            (which-key-setup-side-window-bottom)))
 #+end_src
 
 ** Utils
@@ -1021,7 +1029,7 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
+*** COMMENT [[http://oremacs.com/2014/12/26/the-little-package-that-could/][tiny]]
 
 #+begin_src emacs-lisp
 (use-package tiny
@@ -1153,7 +1161,7 @@ BEG and END (region to sort)."
           (goto-char next-line))))))
 #+end_src
 
-*** hierarchy
+*** COMMENT hierarchy
 
 #+begin_src emacs-lisp
 (use-package hierarchy
@@ -1249,7 +1257,7 @@ BEG and END (region to sort)."
     :ensure t)
 #+end_src
 
-*** rsync
+*** COMMENT rsync
 
 #+begin_src emacs-lisp
 (defun rsync-enable ()
@@ -2299,8 +2307,7 @@ SET COLSEP '|'
 
 #+begin_src emacs-lisp
 (use-package ledna
-  :config (progn
-            (ledna-dsl-init))
+  :config (ledna-dsl-init)
   :load-path "~/sync/stuff/ledna")
 #+end_src
 
@@ -2811,16 +2818,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :config (progn
             (elmacro-mode t))
   :ensure t)
-#+end_src
-
-*** which-key
-
-#+begin_src emacs-lisp
-(use-package which-key
-  :ensure t
-  :config (progn
-            (which-key-mode t)
-            (which-key-setup-side-window-bottom)))
 #+end_src
 
 *** whole-line-or-region
