@@ -205,6 +205,7 @@ enjoy using a lot.
       dir)))
 
 (setq-default custom-file (tmp/ "custom.el"))
+(load custom-file)
 #+end_src
 
 *** osx
@@ -673,6 +674,30 @@ enjoy using a lot.
 
 ** Utils
 
+*** telegram-notify
+#+begin_src emacs-lisp
+(defun notify-me (message)
+  (interactive "sMessage: ")
+
+  (when (null (boundp 'telegram-notifier-bot-token))
+    (defvar telegram-notifier-bot-token)
+    (customize-save-variable 'telegram-notifier-bot-token (read-string "Telegram notifier bot token: ")))
+
+  (when (null (boundp 'telegram-chat-id))
+      (defvar telegram-chat-id)
+      (customize-save-variable 'telegram-chat-id (read-string "Telegram chat id: ")))
+
+  (start-process-shell-command "Notify" nil
+   (expand-template
+    (concat
+     "curl "
+     "--data chat_id={:chat_id} "
+     "--data text=\"{:message}\" "
+     "https://api.telegram.org/bot{:token}/sendMessage ")
+    `(:chat_id ,telegram-chat-id
+      :message ,message
+      :token ,telegram-notifier-bot-token))))
+#+end_src
 *** sqlparse
 
 #+begin_src emacs-lisp
@@ -1318,6 +1343,25 @@ BEG and END (region to sort)."
 #+end_src
 
 ** Org
+
+*** notify
+
+#+begin_src emacs-lisp
+(use-package org-notify
+  :config (progn
+            (defun org-notify-action-telegram (plist)
+              "Pop up a notification window."
+              (let* ((title (plist-get plist :heading))
+                     (body (org-notify-body-text plist)))
+                (notify-me (concat title "\n" body))))
+
+            (org-notify-start)
+            (org-notify-add 'appt
+                            '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
+                            '(:time "15m" :period "2m" :duration 100 :actions -telegram)
+                            '(:time "2h" :period "5m" :actions -telegram)
+                            '(:time "3d" :actions -telegram))))
+#+end_src
 
 *** exports
 
