@@ -683,6 +683,7 @@ enjoy using a lot.
 ** Utils
 
 *** telegram-notify
+
 #+begin_src emacs-lisp
 (defun notify-me (message)
   (interactive "sMessage: ")
@@ -706,6 +707,7 @@ enjoy using a lot.
       :message ,message
       :token ,telegram-notifier-bot-token))))
 #+end_src
+
 *** sqlparse
 
 #+begin_src emacs-lisp
@@ -1364,11 +1366,9 @@ BEG and END (region to sort)."
                 (notify-me (concat title "\n" body))))
 
             (org-notify-start)
-            (org-notify-add 'appt
+            (org-notify-add 'default
                             '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
-                            '(:time "15m" :period "2m" :duration 100 :actions -telegram)
-                            '(:time "2h" :period "5m" :actions -telegram)
-                            '(:time "3d" :actions -telegram))))
+                            '(:time "15m" :period "2m" :duration 100 :actions -telegram))))
 #+end_src
 
 *** exports
@@ -3462,7 +3462,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** text scale
 
 #+begin_src emacs-lisp
-(use-package default-text-scale
+(use-package default-text-scale ;; font-scale
   :config (default-text-scale-mode 1)
   :ensure t)
 #+end_src
