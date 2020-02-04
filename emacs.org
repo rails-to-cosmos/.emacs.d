@@ -1610,7 +1610,7 @@ bidirectional reordering.")
       org-confirm-babel-evaluate nil
       org-confirm-shell-link-function nil
       org-confirm-elisp-link-function nil
-      org-hide-block-startup t
+      org-hide-block-startup nil
       org-src-window-setup 'current-window)
 #+end_src
 
@@ -2524,6 +2524,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** macro
+#+begin_src emacs-lisp
+(fset 'fix-multiple-spaces
+      (lambda (&optional arg) "Keyboard macro."
+        (interactive "p")
+        (kmacro-exec-ring-item
+         (quote ([67108896 19 32 return backspace 32 19 32 return 134217826 134217830] 0 "%d")) arg)))
+#+end_src
 *** electric-operator
 
 #+begin_src emacs-lisp
