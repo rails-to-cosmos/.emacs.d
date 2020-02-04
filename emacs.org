@@ -2526,11 +2526,18 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 *** macro
 #+begin_src emacs-lisp
-(fset 'fix-multiple-spaces
-      (lambda (&optional arg) "Keyboard macro."
-        (interactive "p")
-        (kmacro-exec-ring-item
-         (quote ([67108896 19 32 return backspace 32 19 32 return 134217826 134217830] 0 "%d")) arg)))
+(defun fix-multiple-spaces (&optional arg)
+  "Keyboard macro."
+  (interactive "p")
+
+  (while (not (looking-at-p "[[:space:]]"))
+    (forward-word))
+
+  (message "OK")
+  (kmacro-exec-ring-item
+   (quote ([67108896 19 32 return backspace 32 19 32 return 134217826 134217830] 0 "%d")) arg))
+
+(global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
 *** electric-operator
 
