@@ -2531,11 +2531,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (interactive "p")
 
   (while (not (looking-at-p "[[:space:]]"))
-    (forward-word))
+    (forward-char))
 
-  (message "OK")
-  (kmacro-exec-ring-item
-   (quote ([67108896 19 32 return backspace 32 19 32 return 134217826 134217830] 0 "%d")) arg))
+  (while (looking-at-p "[[:space:]]")
+    (delete-char 1))
+
+  (insert " ")
+
+  )
 
 (global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
