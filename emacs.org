@@ -2533,12 +2533,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (while (not (looking-at-p "[[:space:]]"))
     (forward-char))
 
-  (while (looking-at-p "[[:space:]]")
+  (while (and (< (point) (line-end-position))
+              (looking-at-p "[[:space:]]"))
     (delete-char 1))
 
-  (insert " ")
-
-  )
+  (if (< (point) (line-end-position))
+      (insert " ")
+    (next-line)
+    (beginning-of-line)))
 
 (global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
