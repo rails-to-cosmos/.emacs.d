@@ -2540,7 +2540,8 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (if (< (point) (line-end-position))
       (insert " ")
     (next-line)
-    (beginning-of-line)))
+    (beginning-of-line)
+    (back-to-indentation)))
 
 (global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
