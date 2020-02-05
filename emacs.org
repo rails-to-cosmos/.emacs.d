@@ -1354,6 +1354,29 @@ BEG and END (region to sort)."
 
 ** Org
 
+*** ui
+#+begin_src emacs-lisp
+(setq org-priority-faces
+      '((?A . (:foreground "#E74C3C"))
+        (?B . (:foreground "#FFDB45"))
+        (?C . (:foreground "#749AF7"))))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (setq
+             org-todo-keyword-faces
+             '(("BLOCKED" . "#E74C3C")
+               ("DEPLOY" . "#292")
+               ("REVIEW" . "#292")
+               ("CANCELLED" . "#7B9ED2")
+               ("STARTED" . "#749AF7")
+               ("PENDING" . "#D0E1F9")
+               ("DELEGATED" . "#8B7FD7")
+               ("CODE_REVIEW" . "#8B7FD7")
+               ("FAILED" . "#E74C3C")
+               ("PASSED" . "#4C3")
+               ("TEST" . "#749AF7")))))
+#+end_src
 *** notify
 
 #+begin_src emacs-lisp
@@ -1365,10 +1388,15 @@ BEG and END (region to sort)."
                      (body (org-notify-body-text plist)))
                 (notify-me (concat title "\n" body))))
 
-            (org-notify-start)
+            (org-notify-start 10)
+
             (org-notify-add 'default
                             '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
-                            '(:time "15m" :period "2m" :duration 100 :actions -telegram))))
+                            '(:time "15m" :period "2m" :duration 100 :actions -telegram))
+
+            (org-notify-add 'hourly
+                            '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
+                            '(:time "1h" :period "2m" :duration 100 :actions -telegram))))
 #+end_src
 
 *** exports
@@ -1524,37 +1552,6 @@ exist after each headings's drawers."
 
 #+begin_src emacs-lisp
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
-#+end_src
-
-*** COMMENT notifications
-
-#+begin_src emacs-lisp
-(require 'appt)
-(setq appt-time-msg-list nil)    ;; clear existing appt list
-(setq appt-display-interval '10) ;; warn every 10 minutes from t - appt-message-warning-time
-(setq appt-message-warning-time '10  ;; send first warning 10 minutes before appointment
-      appt-display-mode-line nil     ;; don't show in the modeline
-      appt-display-format 'window)   ;; pass warnings to the designated window function
-(appt-activate 1)                ;; activate appointment notification
-(display-time)                   ;; activate time display
-
-(org-agenda-to-appt)             ;; generate the appt list from org agenda files on emacs launch
-(run-at-time "24:01" 3600 'org-agenda-to-appt)           ;; update appt list hourly
-(add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt) ;; update appt list on agenda view
-
-;; set up the call to terminal-notifier
-(defun my-appt-send-notification (title msg)
-  (shell-command (concat "terminal-notifier" " -message " msg " -title " title)))
-
-;; (defun my-appt-send-notification (title msg)
-;;   (shell-command (format "tg '%s: %s'" msg title)))
-
-;; designate the window function for my-appt-send-notification
-(defun my-appt-display (min-to-app new-time msg)
-  (my-appt-send-notification
-    (format "'Appointment in %s minutes'" min-to-app)    ;; passed to -title in terminal-notifier call
-    (format "'%s'" msg)))                                ;; passed to -message in terminal-notifier call
-(setq appt-disp-window-function (function my-appt-display))
 #+end_src
 
 *** [[http://www.nongnu.org/org-edna-el/][org-edna]]
@@ -1781,16 +1778,16 @@ bidirectional reordering.")
 **** ob-ipython
 
 #+begin_src emacs-lisp
-;; (if (file-exists-p (s-chomp (shell-command-to-string "which jupyter")))
-;;     (use-package ob-ipython
-;;       :config (progn
-;;                 ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
-;;                 ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-;;                 ;; (setq-default python-shell-prompt-detect-failure-warning nil)
-;;                 ;; (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
-;;                 )
-;;       :ensure t)
-;; (warn "Unable to load ob-ipython: jupyter not found."))
+(if (s-trim (s-chomp (shell-command-to-string "pip list | grep jupyter-core")))
+    (use-package ob-ipython
+      :config (progn
+                ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
+                ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+                ;; (setq-default python-shell-prompt-detect-failure-warning nil)
+                ;; (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
+                )
+      :ensure t)
+(warn "Unable to load ob-ipython: jupyter not found."))
 #+end_src
 
 **** ob-restclient
