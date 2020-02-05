@@ -145,36 +145,6 @@ enjoy using a lot.
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
 
 #+begin_src emacs-lisp
-;; UTF-8 as the default coding system
-(set-charset-priority 'unicode)
-(prefer-coding-system        'utf-8)
-(set-terminal-coding-system  'utf-8)
-(set-keyboard-coding-system  'utf-8)
-(set-selection-coding-system 'utf-8)
-(setq locale-coding-system   'utf-8)
-(setq-default buffer-file-coding-system 'utf-8)
-
-(defun sanityinc/utf8-locale-p (v)
-  "Return whether locale string V relates to a UTF-8 locale."
-  (and v (string-match "UTF-8" v)))
-
-(defun locale-is-utf8-p ()
-  "Return t iff the \"locale\" command or environment variables prefer UTF-8."
-  (or (sanityinc/utf8-locale-p (and (executable-find "locale") (shell-command-to-string "locale")))
-      (sanityinc/utf8-locale-p (getenv "LC_ALL"))
-      (sanityinc/utf8-locale-p (getenv "LC_CTYPE"))
-      (sanityinc/utf8-locale-p (getenv "LANG"))))
-
-(when (or window-system (locale-is-utf8-p))
-  (setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
-  (set-language-environment 'utf-8)
-  (setq locale-coding-system 'utf-8)
-  (set-default-coding-systems 'utf-8)
-  (set-terminal-coding-system 'utf-8)
-  (unless (eq system-type 'windows-nt)
-    (set-selection-coding-system 'utf-8))
-  (prefer-coding-system 'utf-8))
-
 (use-package ucs-utils
   :ensure t)
 
@@ -184,6 +154,44 @@ enjoy using a lot.
 
 (use-package font-utils
   :ensure t)
+#+end_src
+
+*** locale
+
+#+begin_src emacs-lisp
+(defun setup-utf-locale ()  ;; call it in init-local.el if you want
+  (setenv "LANG" "en_US.UTF-8")
+  (setenv "LC_COLLATE" "en_US.UTF-8")
+  (setenv "LC_CTYPE" "en_US.UTF-8")
+  (setenv "LC_MESSAGES" "en_US.UTF-8")
+  (setenv "LC_MONETARY" "en_US.UTF-8")
+  (setenv "LC_NUMERIC" "en_US.UTF-8")
+  (setenv "LC_TIME" "en_US.UTF-8")
+  (setenv "LC_ALL" "en_US.UTF-8")
+
+  (eval-after-load 'tramp-mode
+    (let ((process-environment tramp-remote-process-environment))
+      (setenv "LANG" "en_US.UTF-8")
+      (setenv "LC_ALL" "en_US.UTF-8")
+      (setenv "LC_CTYPE" "en_US.UTF-8")
+      (setq tramp-remote-process-environment process-environment)))
+
+  ;; UTF-8 as the default coding system
+  (set-charset-priority 'unicode)
+  (prefer-coding-system        'utf-8)
+  (set-terminal-coding-system  'utf-8)
+  (set-keyboard-coding-system  'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (setq locale-coding-system   'utf-8)
+  (setq-default buffer-file-coding-system 'utf-8)
+  (setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
+  (set-language-environment 'utf-8)
+  (setq locale-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (unless (eq system-type 'windows-nt)
+    (set-selection-coding-system 'utf-8))
+  (prefer-coding-system 'utf-8))
 #+end_src
 
 *** paths
@@ -507,13 +515,6 @@ enjoy using a lot.
               (exec-path-from-shell-copy-env "SSH_AGENT_PID")
               (exec-path-from-shell-copy-env "SSH_AUTH_SOCK")))
   :ensure t)
-
-;; (eval-after-load 'tramp-mode
-;; (let ((process-environment tramp-remote-process-environment))
-;;   (setenv "LANG" "en_US.UTF-8")
-;;   (setenv "LC_ALL" "en_US.UTF-8")
-;;   (setenv "LC_CTYPE" "en_US.UTF-8")
-;;   (setq tramp-remote-process-environment process-environment)))
 #+end_src
 
 *** spawn-custom
@@ -1497,18 +1498,6 @@ exist after each headings's drawers."
   :ensure t)
 #+end_src
 
-*** auto-done
-
-#+begin_src emacs-lisp
-(defun org-summary-todo (n-done n-not-done)
-  "Switch entry to DONE when all subentries are done, to TODO otherwise."
-  (let (org-log-done org-log-states)   ; turn off logging
-    (when (= n-not-done 0)
-      (org-todo "DONE"))))
-
-(add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-#+end_src
-
 *** modules
 
 #+begin_src emacs-lisp
@@ -1618,7 +1607,7 @@ bidirectional reordering.")
       org-confirm-babel-evaluate nil
       org-confirm-shell-link-function nil
       org-confirm-elisp-link-function nil
-      org-hide-block-startup t
+      org-hide-block-startup nil
       org-src-window-setup 'current-window)
 #+end_src
 
@@ -2317,6 +2306,7 @@ SET COLSEP '|'
 (use-package org-glance
   :bind (("C-x j j" . org-glance-bookmarks-jump)
          ("C-x j v" . org-glance-bookmarks-visit)
+         ("C-x j g" . org-glance-gists-visit)
          ("C-x c v" . org-glance-contacts-visit)
          ("C-x p p" . org-glance-password-manager-secure-data-to-kill-ring)
          ("C-x p v" . org-glance-password-manager-visit)
@@ -2531,6 +2521,27 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** macro
+#+begin_src emacs-lisp
+(defun fix-multiple-spaces (&optional arg)
+  "Keyboard macro."
+  (interactive "p")
+
+  (while (not (looking-at-p "[[:space:]]"))
+    (forward-char))
+
+  (while (and (< (point) (line-end-position))
+              (looking-at-p "[[:space:]]"))
+    (delete-char 1))
+
+  (if (< (point) (line-end-position))
+      (insert " ")
+    (next-line)
+    (beginning-of-line)
+    (back-to-indentation)))
+
+(global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
+#+end_src
 *** electric-operator
 
 #+begin_src emacs-lisp
