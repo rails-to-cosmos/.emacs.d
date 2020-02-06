@@ -1416,6 +1416,13 @@ BEG and END (region to sort)."
       (message nil))))
 #+end_src
 
+**** ox-reveal
+
+#+begin_src emacs-lisp
+(use-package ox-reveal
+  :ensure t)
+#+end_src
+
 *** fix blank lines
 
 #+begin_src emacs-lisp
