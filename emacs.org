@@ -2393,7 +2393,7 @@ SET COLSEP '|'
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
-        ((org-edna-entry-has-tags-p "Event")
+        ((and (org-edna-entry-has-tags-p "Event") (not (ledna/get-property "ATTACH_DIR")))
          (let* ((event-dir-abs (let ((default-directory (f-join default-directory "events")))
                                  (read-directory-name "Specify event directory: ")))
                 (event-dir-rel (file-relative-name event-dir-abs)))
