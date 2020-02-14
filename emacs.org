@@ -3478,7 +3478,27 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package default-text-scale ;; font-scale
-  :config (default-text-scale-mode 1)
+  :init (progn
+
+          (defun darwin-font-adapt-cyrillic (&optional font-size font-name)
+            (interactive)
+            (let ((font-size (or font-size (face-attribute 'default :height)))
+                  (font-name (or font-name (face-attribute 'default :family))))
+
+              (custom-set-faces
+               (list 'default (list (list t (list :slant 'normal :weight 'normal :height font-size
+                                                  :width 'normal :family font-name)))))
+              (set-fontset-font "fontset-default"
+                                (cons (decode-char 'ucs #x0400)
+                                      (decode-char 'ucs #x052F))
+                                (font-spec :size (/ font-size 10) :name font-name))))
+
+          )
+  :config (progn
+            (default-text-scale-mode 1)
+            (when (eq system-type 'darwin)
+              (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
+              (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)))
   :ensure t)
 #+end_src
 
