@@ -1384,6 +1384,7 @@ BEG and END (region to sort)."
 
 #+begin_src emacs-lisp
 (use-package org-notify
+  :path "~/.emacs.d/packages"
   :config (progn
             (defun org-notify-action-telegram (plist)
               "Pop up a notification window."
