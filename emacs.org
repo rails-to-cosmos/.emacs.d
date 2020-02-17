@@ -689,24 +689,26 @@ enjoy using a lot.
 (defun notify-me (message)
   (interactive "sMessage: ")
 
-  (when (null (boundp 'telegram-notifier-bot-token))
-    (defvar telegram-notifier-bot-token)
-    (customize-save-variable 'telegram-notifier-bot-token (read-string "Telegram notifier bot token: ")))
+  (defvar telegram-notifier-bot-token)
+  (unless (boundp 'telegram-notifier-bot-token)
+    (let ((token (read-string "Telegram notifier bot token: ")))
+      (customize-save-variable 'telegram-notifier-bot-token token)))
 
-  (when (null (boundp 'telegram-chat-id))
-      (defvar telegram-chat-id)
-      (customize-save-variable 'telegram-chat-id (read-string "Telegram chat id: ")))
+  (defvar telegram-chat-id)
+  (unless (boundp 'telegram-chat-id)
+    (let ((chat-id (read-string "Telegram chat id: ")))
+      (customize-save-variable 'telegram-chat-id chat-id)))
 
   (start-process-shell-command "Notify" nil
-   (expand-template
-    (concat
-     "curl "
-     "--data chat_id={:chat_id} "
-     "--data text=\"{:message}\" "
-     "https://api.telegram.org/bot{:token}/sendMessage ")
-    `(:chat_id ,telegram-chat-id
-      :message ,message
-      :token ,telegram-notifier-bot-token))))
+                               (expand-template
+                                (concat
+                                 "curl "
+                                 "--data chat_id={:chat_id} "
+                                 "--data text=\"{:message}\" "
+                                 "https://api.telegram.org/bot{:token}/sendMessage ")
+                                `(:chat_id ,telegram-chat-id
+                                           :message ,message
+                                           :token ,telegram-notifier-bot-token))))
 #+end_src
 
 *** sqlparse
@@ -1397,7 +1399,16 @@ BEG and END (region to sort)."
 
             (org-notify-add 'hourly
                             '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
-                            '(:time "1h" :period "2m" :duration 100 :actions -telegram))))
+                            '(:time "1h" :period "2m" :duration 100 :actions -telegram))
+
+            (org-notify-add 'once
+                            '(:time "-1s" :actions -telegram))
+
+            (org-notify-add 'appt
+                            '(:time "30m" :actions -telegram)
+                            '(:time "1h" :actions -telegram)
+                            '(:time "3h" :actions -telegram)
+                            '(:time "1d" :actions -telegram))))
 #+end_src
 
 *** exports
