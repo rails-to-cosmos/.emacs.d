@@ -30,7 +30,7 @@
 
 ** Lisp
 
-*** substlet
+*** [[https://www.reddit.com/r/emacs/comments/f1abxw/rfc_substlet_define_formlocal_macros_without/][substlet]]
 #+begin_src emacs-lisp
 (defmacro substlet (substs &rest body)
   "Like `macrolet' with `defsubst' semantics.
