@@ -2314,6 +2314,7 @@ SET COLSEP '|'
   :bind (("C-x j j" . org-glance-bookmarks-jump)
          ("C-x j v" . org-glance-bookmarks-visit)
          ("C-x j g" . org-glance-gists-visit)
+         ("C-x j e" . org-glance-gists-execute)
          ("C-x c v" . org-glance-contacts-visit)
          ("C-x p p" . org-glance-password-manager-secure-data-to-kill-ring)
          ("C-x p v" . org-glance-password-manager-visit)
