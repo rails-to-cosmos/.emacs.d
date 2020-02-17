@@ -30,6 +30,41 @@
 
 ** Lisp
 
+*** substlet
+#+begin_src emacs-lisp
+(defmacro substlet (substs &rest body)
+  "Like `macrolet' with `defsubst' semantics.
+In other words, like `defsubst', defining SUBSTS to be expanded
+in BODY.  In other words, like `macrolet', but macro bodies need
+not be backquoted, and arguments need not be unquoted within
+them.  In other words, like `flet', but bodies are inlined
+instead of called as functions (i.e. they are not functions, so
+they can't be used with `map' or `funcall').
+
+The purpose of this macro is to allow for clearer organization of
+code within functions while avoiding 1) the function call
+overhead of `flet' and `labels', and 2) the need to backquote
+bodies and unquote arguments of `macrolet'."
+  (declare (indent defun))
+  (let ((macros
+         (mapcar
+          (lambda (subst)
+            (pcase-let* ((`(,name ,args . ,body) subst)
+                         (comma-args
+                          (cl-loop with rest-p
+                                   for arg in args
+                                   if (eq '&rest arg)
+                                   do (setf rest-p t)
+                                   else
+                                   collect (cons arg (if rest-p
+                                                         (cons 'list (list (quote \,) arg))
+                                                       (list (quote \,) arg)))))
+                         (comma-body (cl-sublis comma-args body)))
+              (append (list name args)
+                      (list (cons 'backquote (list (cons 'progn comma-body)))))))
+          substs)))
+    `(cl-macrolet ,macros ,@body)))
+#+end_src
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
 
 #+begin_src emacs-lisp
