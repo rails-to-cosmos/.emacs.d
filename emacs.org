@@ -721,29 +721,8 @@ enjoy using a lot.
 *** telegram-notify
 
 #+begin_src emacs-lisp
-(defun notify-me (message)
-  (interactive "sMessage: ")
-
-  (defvar telegram-notifier-bot-token)
-  (unless (boundp 'telegram-notifier-bot-token)
-    (let ((token (read-string "Telegram notifier bot token: ")))
-      (customize-save-variable 'telegram-notifier-bot-token token)))
-
-  (defvar telegram-chat-id)
-  (unless (boundp 'telegram-chat-id)
-    (let ((chat-id (read-string "Telegram chat id: ")))
-      (customize-save-variable 'telegram-chat-id chat-id)))
-
-  (start-process-shell-command "Notify" nil
-                               (expand-template
-                                (concat
-                                 "curl "
-                                 "--data chat_id={:chat_id} "
-                                 "--data text=\"{:message}\" "
-                                 "https://api.telegram.org/bot{:token}/sendMessage ")
-                                `(:chat_id ,telegram-chat-id
-                                           :message ,message
-                                           :token ,telegram-notifier-bot-token))))
+(use-package telegram-notify
+  :load-path "~/.emacs.d/packages")
 #+end_src
 
 *** sqlparse
@@ -1421,12 +1400,6 @@ BEG and END (region to sort)."
 (use-package org-notify
   :load-path "~/.emacs.d/packages"
   :config (progn
-            (defun org-notify-action-telegram (plist)
-              "Pop up a notification window."
-              (let* ((title (plist-get plist :heading))
-                     (body (org-notify-body-text plist)))
-                (notify-me (concat title "\n" body))))
-
             (org-notify-start 10)
 
             (org-notify-add 'default
@@ -3642,21 +3615,47 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     (t :inverse-video t))
   "Mode-line face for modified buffers.")
 
-(setq-default mode-line-format
-              '(" %*%Z | "
-                (:eval
-                 (if (eq ml-selected-window (selected-window))
-                     (cond (buffer-read-only
-                            (propertize (buffer-name) 'face 'mode-line-buffer-read-only-face))
-                           ((buffer-modified-p)
-                            (propertize (buffer-name) 'face 'mode-line-buffer-modified-face))
-                           (t
-                            (propertize (buffer-name) 'face 'mode-line-buffer-non-modified-face)))
-                   (format "%s" (buffer-name))))
-                " | "
-                "%m"
-                (vc-mode vc-mode)
-                " %-"))
+(defface mode-line-hl-face
+  '((((class color) (min-colors 88) (background light))
+     :foreground "#000000")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#ffcc00")
+    (((class color) (min-colors 16) (background light))
+     :foreground "#000000")
+    (((class color) (min-colors 16) (background dark))
+     :foreground "#ffcc00")
+    (((class color) (min-colors 8))
+     :foreground "#ffcc00")
+    (t :inverse-video t))
+  "Mode-line highlighted face")
+
+(setq-default
+ mode-line-format
+ '(" %*%Z | "
+   (:eval
+    (if (eq ml-selected-window (selected-window))
+        (cond (buffer-read-only
+               (propertize (buffer-name) 'face 'mode-line-buffer-read-only-face))
+              ((buffer-modified-p)
+               (propertize (buffer-name) 'face 'mode-line-buffer-modified-face))
+              (t
+               (propertize (buffer-name) 'face 'mode-line-buffer-non-modified-face)))
+      (format "%s" (buffer-name))))
+
+   (:eval
+    (if (eq ml-selected-window (selected-window))
+        (propertize org-mode-line-string 'face 'mode-line-hl-face)
+      org-mode-line-string))
+
+   " | "
+   "%m"
+   (vc-mode vc-mode)
+   " %-"))
+
+(add-hook 'org-clock-out-hook
+          '(lambda ()
+             (setq org-mode-line-string nil)
+             (force-mode-line-update)))
 
 (defvar ml-selected-window nil)
 
