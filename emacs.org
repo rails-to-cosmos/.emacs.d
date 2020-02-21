@@ -3644,7 +3644,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
    (:eval
     (if (eq ml-selected-window (selected-window))
-        (propertize org-mode-line-string 'face 'mode-line-hl-face)
+        (propertize (or org-mode-line-string "") 'face 'mode-line-hl-face)
       org-mode-line-string))
 
    " | "
