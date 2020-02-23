@@ -1794,16 +1794,18 @@ bidirectional reordering.")
 **** ob-ipython
 
 #+begin_src emacs-lisp
-(if (s-trim (s-chomp (shell-command-to-string "pip list | grep jupyter-core")))
-    (use-package ob-ipython
-      :config (progn
-                ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
-                ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-                ;; (setq-default python-shell-prompt-detect-failure-warning nil)
-                ;; (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
-                )
-      :ensure t)
-(warn "Unable to load ob-ipython: jupyter not found."))
+(let ((jupyter-file-name (s-chomp (shell-command-to-string "which jupyter"))))
+  (if (and (not (string-empty-p jupyter-file-name))
+           (file-exists-p jupyter-file-name))
+      (use-package ob-ipython
+        :config (progn
+                  ;; (add-to-list 'org-latex-minted-langs '(ipython "python"))
+                  ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+                  ;; (setq-default python-shell-prompt-detect-failure-warning nil)
+                  ;; (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
+                  )
+        :ensure t)
+    (warn "Unable to load ob-ipython: jupyter not found.")))
 #+end_src
 
 **** ob-restclient
