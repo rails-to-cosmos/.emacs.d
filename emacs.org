@@ -2570,14 +2570,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
-*** electric-operator
-
-#+begin_src emacs-lisp
-(use-package electric-operator
-  :hook (python-mode . electric-operator-mode)
-  :ensure t)
-#+end_src
-
 *** completion
 
 **** company
@@ -2719,8 +2711,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package string-inflection
-  :config (progn
-            (global-set-key (kbd "M-p") 'string-inflection-cycle))
+  :bind (("M-p" . string-inflection-cycle))
   :ensure t)
 #+end_src
 
@@ -3114,13 +3105,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming
 :END:
-
-*** lilypond
-
-#+begin_src emacs-lisp
-(let ((load-path '("~/lilypond/usr/share/emacs/site-lisp")))
-  (require 'lilypond-mode nil t))
-#+end_src
 
 *** docker
 
