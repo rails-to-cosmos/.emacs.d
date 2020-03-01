@@ -2416,15 +2416,14 @@ SET COLSEP '|'
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
-        ((and (org-edna-entry-has-tags-p "Event") (not (ledna/get-property "ATTACH_DIR")))
+        ((and (org-edna-entry-has-tags-p "Event") (not (ledna/get-property "DIR")))
          (let* ((event-dir-abs (let ((default-directory (f-join default-directory "events")))
                                  (read-directory-name "Specify event directory: ")))
                 (event-dir-rel (file-relative-name event-dir-abs)))
            (condition-case nil
                (make-directory event-dir-abs)
              (error nil))
-           (org-set-property "ATTACH_DIR" event-dir-rel)
-           (org-set-property "ATTACH_DIR_INHERIT" "t")
+           (org-set-property "DIR" event-dir-rel)
            (org-set-property "ARCHIVE" (f-join event-dir-rel "events.org::"))
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
