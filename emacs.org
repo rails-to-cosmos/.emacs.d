@@ -1804,7 +1804,7 @@ bidirectional reordering.")
                   (setq-default python-shell-prompt-detect-failure-warning nil)
                   (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t)))))
         :ensure t)
-    (warn "Unable to load ob-ipython: jupyter not found.")))
+    (warn "Unable to load ob-ipython: jupyter not found."))
 #+end_src
 
 **** ob-restclient
