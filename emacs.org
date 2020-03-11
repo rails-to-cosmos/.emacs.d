@@ -1803,8 +1803,8 @@ bidirectional reordering.")
                   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
                   (setq-default python-shell-prompt-detect-failure-warning nil)
                   (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t)))))
-        :ensure t)
-    (warn "Unable to load ob-ipython: jupyter not found.")))
+    :ensure t)
+  (warn "Unable to load ob-ipython: jupyter not found."))
 #+end_src
 
 **** ob-restclient
