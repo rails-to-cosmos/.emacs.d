@@ -2418,8 +2418,9 @@ SET COLSEP '|'
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
         ((and (org-edna-entry-has-tags-p "Event") (not (ledna/get-property "DIR")))
-         (let* ((event-dir-abs (let ((default-directory (f-join default-directory "events")))
-                                 (read-directory-name "Specify event directory: ")))
+         (let* ((event-dir-abs
+                 (let ((default-directory (f-join default-directory "../resources/events")))
+                   (read-directory-name "Specify event directory: ")))
                 (event-dir-rel (file-relative-name event-dir-abs)))
            (condition-case nil
                (make-directory event-dir-abs)
