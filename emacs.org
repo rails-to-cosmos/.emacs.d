@@ -2338,11 +2338,11 @@ SET COLSEP '|'
          ("C-x j v" . org-glance-bookmarks-visit)
          ("C-x j g" . org-glance-gists-visit)
          ("C-x j e" . org-glance-gists-execute)
-         ("C-x c v" . org-glance-contacts-visit)
-         ("C-x p p" . org-glance-password-manager-secure-data-to-kill-ring)
-         ("C-x p v" . org-glance-password-manager-visit)
-         ("C-x p e" . org-glance-password-manager-encrypt-current)
-         ("C-x p d" . org-glance-password-manager-decrypt-current))
+         ("C-x y c v" . org-glance-contacts-visit)
+         ("C-x y p p" . org-glance-password-manager-secure-data-to-kill-ring)
+         ("C-x y p v" . org-glance-password-manager-visit)
+         ("C-x y p e" . org-glance-password-manager-encrypt-current)
+         ("C-x y p d" . org-glance-password-manager-decrypt-current))
   :load-path "~/sync/stuff/org-glance"
   :ensure aes)
 #+end_src
