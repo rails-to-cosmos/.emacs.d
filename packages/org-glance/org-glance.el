@@ -70,19 +70,21 @@
 (defun org-glance--get-file-archive-dirs (filename)
   (let* ((default-directory (file-name-directory filename))
          (glance-archive-dir-prop (format "#+%s:" org-glance-property--glance-archive-dir)))
-    (if (file-exists-p filename)
-        (with-temp-buffer
-          (insert-file-contents-literally filename)
-          (goto-char (point-min))
-          (loop while (search-forward glance-archive-dir-prop nil t)
-                collect (-some->> (thing-at-point 'line)
-                          substring-no-properties
-                          (s-replace glance-archive-dir-prop "")
-                          s-trim
-                          file-truename)
-                into result
-                finally (return (or result (list default-directory)))))
-      (warn "File %s not found" filename))))
+    (with-temp-buffer
+      (insert-file-contents-literally filename)
+      (goto-char (point-min))
+      (loop while (search-forward glance-archive-dir-prop nil t)
+            with glance-archive-dir
+            do (setq glance-archive-dir (-some->> (thing-at-point 'line)
+                                          substring-no-properties
+                                          (s-replace glance-archive-dir-prop "")
+                                          s-trim
+                                          file-truename))
+            if (file-exists-p glance-archive-dir)
+              collect glance-archive-dir into result
+            else
+              do (warn "glance-archive-dir from %s not found: %s" filename glance-archive-dir)
+            finally (return (or result (list default-directory)))))))
 
 (defun org-glance-scope--list-file-archives (filename)
   (let ((archive-dirs (org-glance--get-file-archive-dirs filename))
