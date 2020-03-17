@@ -782,17 +782,73 @@ used to limit the exported source code blocks by language."
     (oldt-trigger-function (list :from "TODO" :to state))))
 
 (defun oldt-aws-emr-cluster--list ()
-  (let ((clusters (->> "aws emr list-clusters --active"
+  (let ((clusters (->> "aws emr list-clusters --max-items 15 --created-after 2020-03-17T00:00:00"
                        shell-command-to-string
                        json-read-from-string)))
     (let-alist clusters
-      (cl-loop for cluster across-ref .Clusters
-               collect (let-alist cluster
-                         (list .Name .Id))))))
+      (->>
+       (cl-loop for cluster across-ref .Clusters
+                collect (let-alist cluster
+                          (list (intern .Name)
+                                (intern .Id)
+                                .NormalizedInstanceHours
+                                (intern .Status.State)
+                                (float .Status.Timeline.CreationDateTime))))
+       (--sort
+        (destructuring-bind (it-name it-id it-hours it-state it-dt) it
+          (destructuring-bind (ot-name ot-id ot-hours ot-state ot-dt) other
+            (let ((states '(BOOTSTRAPPING RUNNING STARTING WAITING TERMINATING TERMINATED)))
+              (cond ((< (-elem-index it-state states) (-elem-index ot-state states)) t)
+                    ((< (car (last other)) (car (last it))) t))))))))))
 
-;; (defun oldt-aws-emr-instance--list (cluster-id)
-;;   (let ((instances (->> (format "aws emr list-instances --cluster-id %s" )
-;;                         )))))
+(defun oldt-aws-emr-instance--browse-masters-private-dns (port)
+  (interactive)
+  (let ((instances (->> (format "aws emr list-instances --cluster-id %s --instance-group-types MASTER" (oldt-aws-emr-cluster--choose))
+                        shell-command-to-string
+                        json-read-from-string)))
+    (let-alist instances
+      (cl-loop for instance across-ref .Instances
+               collect (let-alist instance
+                         (browse-url (concat "http://" .PrivateDnsName ":" port)))))))
+
+(defun oldt-aws-emr-cluster--choose ()
+  (interactive)
+  (let* ((cluster-alist (oldt-aws-emr-cluster--list))
+         (cluster-completions
+          (loop for (name id hours state dt) in cluster-alist
+                for idx from 0
+                collect (let* ((created-at (make-ts :unix dt))
+                               (duration (ts-human-format-duration
+                                          (ts-difference (ts-now) created-at)
+                                          t))
+
+                               (name (symbol-name name))
+                               (name-max-len 50)
+                               (name-cut (substring name 0 (min name-max-len (length name))))
+                               (name-len (length name-cut))
+                               (name-padding (- name-max-len name-len))
+
+                               (state (symbol-name state))
+                               (state-max-len 15)
+                               (state-cut (substring state 0 (min state-max-len (length state))))
+                               (state-len (length state-cut))
+                               (state-padding (- state-max-len state-len)))
+                          (format "%d %s %s %s [%s] %s <%s ago>"
+                                  idx
+                                  (make-string (- 2 (length (number-to-string idx))) ?\s)
+                                  name-cut
+                                  (make-string name-padding ?\s)
+                                  state-cut
+                                  (make-string state-padding ?\s)
+                                  duration))))
+         (cluster (org-completing-read "Cluster: " cluster-completions))
+         (cluster-idx (-some->> cluster
+                        s-split-words
+                        (nth 0)
+                        string-to-number)))
+    (-some->> cluster-alist
+      (nth cluster-idx)
+      (nth 1))))
 
 (require 'request)
 (require 'ts)
@@ -814,10 +870,9 @@ used to limit the exported source code blocks by language."
 
 (cl-defun oldt-jira-worklog-add (&key comment started time-spent)
   (interactive)
-  ;; - [[https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/?_ga=2.142452725.636852713.1582009598-756261712.1582009598#api/2/issue-addWorklog][add worklog]]
   (oldt-jira-post
    :data (json-encode '(("comment" . comment)
-                        ("started" . started) ;; "2020-02-20T09:23:19.552+0000"
+                        ("started" . started)  ;; "2020-02-20T09:23:19.552+0000"
                         ("timeSpent" . time-spent))) ;; "5m"
    :method "worklog"
    :success (cl-function (lambda (&key data &allow-other-keys) (pp data)))
