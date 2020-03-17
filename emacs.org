@@ -2319,7 +2319,7 @@ SET COLSEP '|'
 #+begin_src emacs-lisp
 (use-package ledna
   :config (ledna-dsl-init)
-  :load-path "~/sync/stuff/ledna")
+  :load-path "~/.emacs.d/packages/ledna")
 #+end_src
 
 **** [#A] org-glance
@@ -2338,7 +2338,7 @@ SET COLSEP '|'
          ("C-x y p v" . org-glance-password-manager-visit)
          ("C-x y p e" . org-glance-password-manager-encrypt-current)
          ("C-x y p d" . org-glance-password-manager-decrypt-current))
-  :load-path "~/sync/stuff/org-glance"
+  :load-path "~/.emacs.d/packages/org-glance"
   :ensure aes)
 #+end_src
 
@@ -2351,7 +2351,7 @@ SET COLSEP '|'
          ("C-x t g" . oldt-goto-tangle-file)
          ("C-x t m" . oldt-build)
          ("C-x t c" . oldt-compile-project))
-  :load-path "~/sync/stuff/org-literate-devtools"
+  :load-path "~/.emacs.d/packages/org-literate-devtools"
   :ensure request
   :ensure aio
   :ensure cider)
