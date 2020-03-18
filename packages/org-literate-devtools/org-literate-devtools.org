@@ -938,6 +938,10 @@ used to limit the exported source code blocks by language."
         (destructuring-bind (it-name it-id it-hours it-state it-dt) it
           (destructuring-bind (ot-name ot-id ot-hours ot-state ot-dt) other
             (let ((states '(BOOTSTRAPPING RUNNING STARTING WAITING TERMINATING TERMINATED)))
+              (unless (member it-state states)
+                (user-error "%s is not a member of %s" it-state states))
+              (unless (member ot-state states)
+                (user-error "%s is not a member of %s" it-state states))
               (cond ((< (-elem-index it-state states) (-elem-index ot-state states)) t)
                     ((< (car (last other)) (car (last it))) t))))))))))
 
