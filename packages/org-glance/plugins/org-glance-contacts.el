@@ -56,7 +56,7 @@
    :filter #'org-glance-contacts--filter
    :cache-file org-glance-contacts-cache-file
    :title-property :TITLE)
-  (org-glance-cache-materialize org-glance-contacts-cache-file))
+  (org-glance-scope-materialize org-glance-contacts-cache-file))
 
 (provide-me)
 ;;; org-glance-contacts.el ends here

@@ -137,7 +137,7 @@
    :filter #'org-glance-pm--filter
    :cache-file org-glance-pm-cache-file
    :title-property :TITLE)
-  (org-glance-cache-materialize org-glance-pm-cache-file))
+  (org-glance-scope-materialize org-glance-pm-cache-file))
 
 (provide-me)
 ;;; org-glance-password-manager.el ends here

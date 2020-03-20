@@ -261,7 +261,7 @@
         (bury-buffer file-buffer)
       (kill-buffer (get-file-buffer file)))))
 
-(defun org-glance-cache-materialize (filename)
+(defun org-glance-scope-materialize (filename)
   (let ((headlines (org-glance-load filename))
         (file-entries (make-hash-table))
         (output-filename (make-temp-file "org-glance-materialized-" nil ".org")))

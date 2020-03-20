@@ -90,5 +90,14 @@
    :force-reread-p force-reread-p
    :action #'org-glance-act--visit-headline))
 
+(defun org-glance-gists-materialize ()
+  (interactive)
+  (org-glance-cache-rebuild
+   :scope '(agenda-with-archives)
+   :filter (lambda (headline) (-contains? (org-element-property :tags headline) "Gist"))
+   :cache-file og-gists-cache-file
+   :title-property :TITLE)
+  (org-glance-scope-materialize og-gists-cache-file))
+
 (provide-me)
 ;;; org-glance-gists.el ends here

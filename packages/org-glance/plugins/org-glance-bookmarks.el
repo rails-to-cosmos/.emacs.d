@@ -69,7 +69,7 @@
    :filter org-glance-bmkp-filter
    :cache-file org-glance-bmkp-cache-file
    :title-property :TITLE)
-  (org-glance-cache-materialize org-glance-bmkp-cache-file))
+  (org-glance-scope-materialize org-glance-bmkp-cache-file))
 
 (provide-me)
 ;;; org-glance-bookmarks.el ends here
