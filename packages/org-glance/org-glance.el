@@ -261,6 +261,61 @@
         (bury-buffer file-buffer)
       (kill-buffer (get-file-buffer file)))))
 
+(defun org-glance-cache-materialize (filename)
+  (let ((headlines (org-glance-load filename))
+        (file-entries (make-hash-table))
+        (output-filename (make-temp-file "org-glance-materialized-" nil ".org")))
+
+    (loop for hl in headlines
+          do (let ((fn (intern (org-element-property :file hl)))
+                   (pos (org-element-property :begin hl)))
+               (puthash fn (cons pos (gethash fn file-entries)) file-entries)))
+
+    (maphash (lambda (file entries)
+               (with-temp-buffer
+                 (org-mode)
+                 (insert-file-contents (symbol-name file))
+                 (loop for pos in entries
+                       do (let* ((beg (save-excursion
+                                        (goto-char pos)
+                                        (beginning-of-line)
+                                        (point)))
+                                 (end (save-excursion
+                                        (goto-char pos)
+                                        (org-end-of-subtree)
+                                        (point)))
+                                 (contents (buffer-substring-no-properties beg end)))
+                            (with-temp-buffer
+                              (org-mode)
+                              (set-buffer-file-coding-system 'raw-text)
+                              (insert contents)
+                              (goto-char (point-min))
+                              (while
+                                  (condition-case nil
+                                      (org-with-limited-levels
+                                       (org-map-tree 'org-promote)
+                                       t)
+                                    (error nil))
+                                t)
+                              (goto-char (point-max))
+                              (insert "\n")
+                              (append-to-file (point-min) (point-max) output-filename))))))
+             file-entries)
+    (find-file-other-window output-filename)
+    (with-current-buffer output-filename
+      (org-align-tags t))))
+
+(cl-defun org-glance-cache-rebuild (&key scope filter cache-file title-property &allow-other-keys)
+  (let ((headlines (org-glance-read scope :filter filter)))
+
+    (unless headlines
+      (user-error "Nothing to glance at (scope: %s)" scope))
+
+    (when cache-file
+      (org-glance-save cache-file headlines :title-property title-property))
+
+    headlines))
+
 (cl-defun org-glance (&key
                       filter
                       fallback
@@ -279,12 +334,20 @@ Specify CACHE-FILE to save headlines to read-optimized el-file.
 Specify FORCE-REREAD-P predicate to reread cache file. Usually this flag is set by C-u prefix.
 If user input doesn't match any entry, call FALLBACK method with user input as argument.
 Read headline title in completing read prompt from org-property TITLE-PROPERTY."
-  (let ((headlines (if (and cache-file
-                            (file-exists-p cache-file)
-                            (null force-reread-p))
-                       (org-glance-load cache-file :title-property title-property)
-                     (org-glance-read scope :filter filter))))
 
+  (let (headlines)
+    (when (or force-reread-p (not cache-file))
+      (when (and force-reread-p cache-file)
+        (message "Force rebuilding cache file %s..." cache-file))
+      (setq headlines
+            (org-glance-cache-rebuild
+             :scope scope
+             :filter filter
+             :cache-file cache-file
+             :title-property title-property)))
+
+    (unless headlines
+      (setq headlines (org-glance-load cache-file :title-property title-property)))
     (unless headlines
       (user-error "Nothing to glance at (scope: %s)" scope))
 

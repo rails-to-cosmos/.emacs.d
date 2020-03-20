@@ -62,5 +62,14 @@
    :title-property :TITLE
    :filter org-glance-bmkp-filter))
 
+(defun org-glance-bookmarks-materialize ()
+  (interactive)
+  (org-glance-cache-rebuild
+   :scope '(agenda-with-archives)
+   :filter org-glance-bmkp-filter
+   :cache-file org-glance-bmkp-cache-file
+   :title-property :TITLE)
+  (org-glance-cache-materialize org-glance-bmkp-cache-file))
+
 (provide-me)
 ;;; org-glance-bookmarks.el ends here

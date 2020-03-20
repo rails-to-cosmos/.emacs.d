@@ -49,5 +49,14 @@
    :filter #'org-glance-contacts--filter
    :action #'org-glance-act--visit-headline))
 
+(defun org-glance-contacts-materialize ()
+  (interactive)
+  (org-glance-cache-rebuild
+   :scope '(agenda-with-archives)
+   :filter #'org-glance-contacts--filter
+   :cache-file org-glance-contacts-cache-file
+   :title-property :TITLE)
+  (org-glance-cache-materialize org-glance-contacts-cache-file))
+
 (provide-me)
 ;;; org-glance-contacts.el ends here

@@ -130,5 +130,14 @@
         (insert contents)
         (aes-is-encrypted)))))
 
+(defun org-glance-password-manager-materialize ()
+  (interactive)
+  (org-glance-cache-rebuild
+   :scope '(agenda-with-archives)
+   :filter #'org-glance-pm--filter
+   :cache-file org-glance-pm-cache-file
+   :title-property :TITLE)
+  (org-glance-cache-materialize org-glance-pm-cache-file))
+
 (provide-me)
 ;;; org-glance-password-manager.el ends here
