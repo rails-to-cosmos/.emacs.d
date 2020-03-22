@@ -301,9 +301,12 @@
                               (insert "\n")
                               (append-to-file (point-min) (point-max) output-filename))))))
              file-entries)
-    (find-file-other-window output-filename)
-    (with-current-buffer output-filename
-      (org-align-tags t))))
+    (with-current-buffer (find-file-other-window output-filename)
+      (org-mode)
+      (set-mark (point-min))
+      (goto-char (point-max))
+      (org-sort-entries nil ?a)
+      (deactivate-mark))))
 
 (cl-defun org-glance-cache-rebuild (&key scope filter cache-file title-property &allow-other-keys)
   (let ((headlines (org-glance-read scope :filter filter)))
