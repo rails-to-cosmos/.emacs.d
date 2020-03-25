@@ -797,7 +797,7 @@ used to limit the exported source code blocks by language."
        (--sort
         (destructuring-bind (it-name it-id it-hours it-state it-dt) it
           (destructuring-bind (ot-name ot-id ot-hours ot-state ot-dt) other
-            (let ((states '(BOOTSTRAPPING RUNNING STARTING WAITING TERMINATING TERMINATED)))
+            (let ((states '(BOOTSTRAPPING RUNNING STARTING WAITING TERMINATING TERMINATED TERMINATED_WITH_ERRORS)))
               (unless (member it-state states)
                 (user-error "%s is not a member of %s" it-state states))
               (unless (member ot-state states)
@@ -820,7 +820,7 @@ used to limit the exported source code blocks by language."
   (let* ((cluster-alist (oldt-aws-emr-cluster--list))
          (cluster-completions
           (loop for (name id hours state dt) in cluster-alist
-                for idx from 0
+                for idx from 1
                 collect (let* ((created-at (make-ts :unix dt))
                                (duration (ts-human-format-duration
                                           (ts-difference (ts-now) created-at)
@@ -833,7 +833,7 @@ used to limit the exported source code blocks by language."
                                (name-padding (- name-max-len name-len))
 
                                (state (symbol-name state))
-                               (state-max-len 15)
+                               (state-max-len 30)
                                (state-cut (substring state 0 (min state-max-len (length state))))
                                (state-len (length state-cut))
                                (state-padding (- state-max-len state-len)))
@@ -851,7 +851,7 @@ used to limit the exported source code blocks by language."
                         (nth 0)
                         string-to-number)))
     (-some->> cluster-alist
-      (nth cluster-idx)
+      (nth (- cluster-idx 1))
       (nth 1))))
 
 (require 'request)

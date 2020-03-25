@@ -328,6 +328,7 @@ enjoy using a lot.
               (rx (or (seq bol (? ".") "#")
                       (seq bol "." (0+ anything) eol)
                       (seq bol "." eol)
+                      (seq bol "__pycache__" eol)
                       (seq bol ".." eol))))
 #+end_src
 
@@ -1819,8 +1820,6 @@ bidirectional reordering.")
 #+begin_src emacs-lisp
 (setq ob-languages '((python . t)
                      (sql . t)
-                     ;; (sql-mode . t)
-                     ;; (lilypond . t)
                      (emacs-lisp . t)
                      (clojure . t)
                      (http . t)
@@ -2154,18 +2153,13 @@ If KWD is a number, get the corresponding match group."
 #+begin_src emacs-lisp
 (defun org-tweaks--insert-org-mode-header ()
   (goto-char (point-min))
-  (insert "#    -*- mode: org -*-\n"))
+  (insert "#    -*- mode: org -*-\n\n"))
 
 (defun org-tweaks--current-buffer-to-org-table ()
   (org-tweaks--insert-org-mode-header)
   (while (not (eobp))
-    (let ((bol (save-excursion
-                 (beginning-of-line)
-                 (point)))
-          (eol (save-excursion
-                 (forward-line +2)
-                 (end-of-line)
-                 (point))))
+    (let ((bol (save-excursion (beginning-of-line) (point)))
+          (eol (save-excursion (forward-line +2) (end-of-line) (point))))
       (org-table-convert-region bol eol nil)
       (forward-line +3))))
 
@@ -2347,24 +2341,62 @@ SET COLSEP '|'
   :load-path "~/.emacs.d/packages/ledna")
 #+end_src
 
-**** [#A] org-glance
+**** TODO [#A] org-glance
+:LOGBOOK:
+- State "STARTED"    from              T:[2020-03-25 Wed 22:48]
+CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
+:END:
 
 #+begin_src emacs-lisp
 (use-package aes
   :ensure t)
 
 (use-package org-glance
-  :bind (("C-x j j" . org-glance-bookmarks-jump)
-         ("C-x j v" . org-glance-bookmarks-visit)
-         ("C-x j g" . org-glance-gists-visit)
-         ("C-x j e" . org-glance-gists-execute)
-         ("C-x y c v" . org-glance-contacts-visit)
-         ("C-x y p p" . org-glance-password-manager-secure-data-to-kill-ring)
-         ("C-x y p v" . org-glance-password-manager-visit)
-         ("C-x y p e" . org-glance-password-manager-encrypt-current)
-         ("C-x y p d" . org-glance-password-manager-decrypt-current))
+
+  :config
+
+  (org-glance-def-view "Bookmark"
+    :bind (("C-x j j" . org-glance-bookmark-open)
+           ("C-x j v" . org-glance-bookmark-visit)))
+
+  ;; open
+  ;; reread
+  ;; fallback
+  ;; filter
+  ;; visit
+  ;; materialize
+
+  (org-glance-def-view "Contact"
+    :bind (("C-x j c" . org-glance-contact-visit)))
+
+  (org-glance-def-view "Gist"
+    :bind (("C-x j g" . org-glance-gist-visit)))
+
+  (org-glance-def-view "Event"
+    :bind (("C-x j e" . org-glance-event-visit)))
+
+  ;; (org-glance-def-view "New events"
+  ;;  :select (:todo-state :title "starring" "archive_time")
+  ;;  :from "Event"
+  ;;  :inner-join "Contact" :on "Contact.Title" :in "Event.Starring"
+  ;;  :order-by (:todo-state "archive_time") :desc
+  ;;  :bind "C-x j g" :action (lambda (todo-state title starring archive_time) (message todo-state)))
+
+  (org-glance-def-view "Password"
+    :bind (("C-x j p" . org-glance-password-visit)
+           ("C-x y p p" . org-glance-password-manager-secure-data-to-kill-ring)
+           ("C-x y p v" . org-glance-password-manager-visit)
+           ("C-x y p e" . org-glance-password-manager-encrypt-current)
+           ("C-x y p d" . org-glance-password-manager-decrypt-current)))
+
   :load-path "~/.emacs.d/packages/org-glance"
   :ensure aes)
+
+;; (defun org-glance-password-manage ()
+;;   (unless (org-at-heading-p)
+;;     (user-error "Not at heading."))
+;;   (org-completing-read "Headline is encrypted. What do you want? "
+;;                        '("decrypt it" "extract data to kill ring")))
 #+end_src
 
 **** org-literate-devtools

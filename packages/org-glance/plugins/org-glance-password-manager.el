@@ -48,7 +48,7 @@
       (kill-region beg end)
       (insert encrypted))))
 
-(defun org-glance-password-manager-decrypt-current ()
+(defun org-glance-password-manager-decrypt-current (&optional return-plain)
   (interactive)
   (let* ((beg (save-excursion (org-end-of-meta-data) (point)))
          (end (save-excursion (org-end-of-subtree t)))
@@ -65,7 +65,9 @@
       (org-end-of-meta-data)
       (kill-region beg end)
       (insert plain)
-      plain)))
+      (if return-plain
+          plain
+        t))))
 
 (defun org-glance-password-manager-visit (&optional force-reread-p)
   (interactive "P")
@@ -98,7 +100,7 @@
     (goto-char (org-element-property :begin headline))
     (org-narrow-to-subtree)
     (let ((tf (make-temp-file "org-glance-pm"))
-          (dc (org-glance-password-manager-decrypt-current)))
+          (dc (org-glance-password-manager-decrypt-current t)))
       (unwind-protect
           (with-temp-file tf
             (insert dc))
@@ -132,7 +134,7 @@
 
 (defun org-glance-password-manager-materialize ()
   (interactive)
-  (org-glance-cache-rebuild
+  (org-glance-cache-reread
    :scope '(agenda-with-archives)
    :filter #'org-glance-pm--filter
    :cache-file org-glance-pm-cache-file

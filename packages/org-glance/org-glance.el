@@ -41,18 +41,15 @@
   (require 'dash-functional)
   (require 'subr-x))
 
-(load-relative "plugins/org-glance-bookmarks.el")
 (load-relative "plugins/org-glance-password-manager.el")
-(load-relative "plugins/org-glance-contacts.el")
-(load-relative "plugins/org-glance-gists.el")
 
 (defgroup org-glance nil
   "Options concerning glancing entries."
   :tag "Org Glance"
   :group 'org)
 
-(defconst org-glance-property--glance-archive-dir
-  "GLANCE_ARCHIVE_DIR")
+(defconst org-glance-property--glance-dir
+  "GLANCE_DIR")
 
 (defvar org-glance--default-scope-alist
   `((file-with-archives . org-glance-scope--list-archives)
@@ -67,33 +64,38 @@
   (signal 'org-glance-cache-outdated
           (list (apply #'format-message format args))))
 
-(defun org-glance--get-file-archive-dirs (filename)
+(defun org-glance--get-directories-from-headers (filename)
   (let* ((default-directory (file-name-directory filename))
-         (glance-archive-dir-prop (format "#+%s:" org-glance-property--glance-archive-dir)))
+         (glance-dir-property (format "#+%s:" org-glance-property--glance-dir)))
     (with-temp-buffer
-      (insert-file-contents-literally filename)
+      (insert-file-contents filename)
       (goto-char (point-min))
-      (loop while (search-forward glance-archive-dir-prop nil t)
+      (loop while (search-forward glance-dir-property nil t)
             with glance-archive-dir
-            do (setq glance-archive-dir (-some->> (thing-at-point 'line)
-                                          substring-no-properties
-                                          (s-replace glance-archive-dir-prop "")
-                                          s-trim
-                                          file-truename))
+            do (setq glance-archive-dir
+                     (-some->> (thing-at-point 'line)
+                       substring-no-properties
+                       (s-replace glance-dir-property "")
+                       s-trim
+                       file-truename))
             if (file-exists-p glance-archive-dir)
-              collect glance-archive-dir into result
+            collect glance-archive-dir into result
             else
-              do (warn "glance-archive-dir from %s not found: %s" filename glance-archive-dir)
+            do (warn "glance-archive-dir from %s not found: %s" filename glance-archive-dir)
             finally (return (or result (list default-directory)))))))
 
 (defun org-glance-scope--list-file-archives (filename)
-  (let ((archive-dirs (org-glance--get-file-archive-dirs filename))
-        (archive-filename (-some->> filename
-                            file-name-nondirectory
-                            file-name-sans-extension
-                            (s-append ".org_archive"))))
+  (let* ((archive-dirs (org-glance--get-directories-from-headers filename))
+         (base-filename (-some->> filename
+                          file-name-nondirectory
+                          file-name-sans-extension))
+         (archive-filename (-some->> base-filename
+                             (s-append ".org_archive")))
+         (org-filename (-some->> base-filename
+                         (s-append ".org"))))
     (loop for archive-dir in archive-dirs
-          append (directory-files-recursively archive-dir archive-filename))))
+          append (directory-files-recursively archive-dir archive-filename)
+          append (directory-files-recursively archive-dir org-filename))))
 
 (defun org-glance-scope--list-archives ()
   (append (list (buffer-file-name))
@@ -111,22 +113,22 @@
   "Return list of file LFOB if exists."
   (list (or (expand-file-name lfob)
             (-some->> lfob
-                      expand-file-name
-                      get-file-buffer
-                      buffer-name))))
+              expand-file-name
+              get-file-buffer
+              buffer-name))))
 
 (cl-defmethod org-glance-adapt-scope ((lfob sequence))
   "Adapt each element of LFOB."
   (-some->> lfob
-            (-keep #'(lambda (fob) (->> fob org-glance-adapt-scope)))
-            (-flatten)
-            (seq-uniq)))
+    (-keep #'(lambda (fob) (->> fob org-glance-adapt-scope)))
+    (-flatten)
+    (seq-uniq)))
 
 (cl-defmethod org-glance-adapt-scope ((lfob symbol))
   "Return extracted LFOB from `org-glance--default-scope-alist'."
   (-some->> lfob
-            (funcall (-cut alist-get <> org-glance--default-scope-alist))
-            (funcall)))
+    (funcall (-cut alist-get <> org-glance--default-scope-alist))
+    (funcall)))
 
 (cl-defmethod org-glance-adapt-scope ((lfob buffer))
   "Return list of LFOB."
@@ -138,8 +140,8 @@
 (cl-defmethod org-glance-adapt-scope ((lfob function))
   "Adapt result of LFOB."
   (-some->> lfob
-            funcall
-            org-glance-adapt-scope))
+    funcall
+    org-glance-adapt-scope))
 
 (cl-defun org-glance-serialize (headline &key title-property)
   (prin1-to-string
@@ -159,8 +161,8 @@
 
 (cl-defun org-glance-completing-read (headlines &key prompt title-property)
   (org-completing-read prompt
-   (cl-loop for headline in headlines
-            collect (org-glance-format headline :title-property title-property))))
+                       (cl-loop for headline in headlines
+                                collect (org-glance-format headline :title-property title-property))))
 
 (cl-defun org-glance-format (headline &key title-property)
   (or (and title-property (org-element-property title-property headline))
@@ -207,7 +209,7 @@
     (insert "`(")
     (dolist (entry entries)
       (insert (org-glance-serialize entry
-               :title-property title-property) "\n"))
+                                    :title-property title-property) "\n"))
     (insert ")"))
   entries)
 
@@ -301,18 +303,20 @@
                               (insert "\n")
                               (append-to-file (point-min) (point-max) output-filename))))))
              file-entries)
+
     (with-current-buffer (find-file-other-window output-filename)
       (org-mode)
       (set-mark (point-min))
       (goto-char (point-max))
       (org-sort-entries nil ?a)
-      (deactivate-mark))))
+      (deactivate-mark)
+      (org-overview))))
 
-(cl-defun org-glance-cache-rebuild (&key scope filter cache-file title-property &allow-other-keys)
+(cl-defun org-glance-cache-reread (&key scope filter cache-file title-property &allow-other-keys)
   (let ((headlines (org-glance-read scope :filter filter)))
 
     (unless headlines
-      (user-error "Nothing to glance at (scope: %s)" scope))
+      (user-error "Nothing to glance at scope %s" (pp-to-string scope)))
 
     (when cache-file
       (org-glance-save cache-file headlines :title-property title-property))
@@ -328,7 +332,7 @@
                       (scope '(agenda))
                       (action #'org-glance-act--visit-headline)
                       (prompt "Glance: ")
-                      (title-property :title))
+                      (title-property :TITLE))
   "Run completing read on org-files entries from SCOPE list prompting a PROMPT.
 Scope can be file name or list of file names.
 Filter headlines by FILTER method.
@@ -339,11 +343,11 @@ If user input doesn't match any entry, call FALLBACK method with user input as a
 Read headline title in completing read prompt from org-property TITLE-PROPERTY."
 
   (let (headlines)
-    (when (or force-reread-p (not cache-file))
+    (when (or force-reread-p (not cache-file) (not (file-exists-p cache-file)))
       (when (and force-reread-p cache-file)
-        (message "Force rebuilding cache file %s..." cache-file))
+        (message "Reread cache file %s..." cache-file))
       (setq headlines
-            (org-glance-cache-rebuild
+            (org-glance-cache-reread
              :scope scope
              :filter filter
              :cache-file cache-file
@@ -351,6 +355,7 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
 
     (unless headlines
       (setq headlines (org-glance-load cache-file :title-property title-property)))
+
     (unless headlines
       (user-error "Nothing to glance at (scope: %s)" scope))
 
@@ -386,6 +391,72 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
                  (or force-reread-p
                      (not (file-exists-p cache-file))))
         (org-glance-save cache-file headlines :title-property title-property)))))
+
+(cl-defmacro org-glance-def-view (tag &key bind &allow-other-keys)
+  (declare (indent 1))
+  (let* ((dtag (s-downcase tag))
+         (ctag (s-capitalize tag))
+         (ns (format "org-glance-%s-" dtag))
+
+         ;; default params
+         (cache-file-name (format "~/.emacs.d/org-glance/org-glance-%s.el" dtag))
+         (scope '(agenda-with-archives))
+
+         ;; function names
+         (fn-open (intern (concat ns "open")))
+         (fn-reread (intern (concat ns "reread")))
+         (fn-fallback (intern (concat ns "fallback")))
+         (fn-filter (intern (concat ns "filter")))
+         (fn-visit (intern (concat ns "visit")))
+         (fn-materialize (intern (concat ns "materialize"))))
+    `(progn
+
+       (defun ,fn-filter (headline)
+         (-contains? (mapcar #'s-downcase (org-element-property :tags headline)) ,dtag))
+
+       (defun ,fn-fallback (_)
+         (user-error "%s not found." ,ctag))
+
+       (defun ,fn-open (&optional force-reread-p)
+         (interactive "P")
+         (org-glance
+          :scope (quote ,scope)
+          :prompt ,(format "Open %s: " dtag)
+          :cache-file ,cache-file-name
+          :force-reread-p force-reread-p
+          :filter (function ,fn-filter)
+          :fallback (function ,fn-fallback)
+          :action (function org-glance-act--open-org-link)))
+
+       (defun ,fn-visit (&optional force-reread-p)
+         (interactive "P")
+         (org-glance
+          :scope (quote ,scope)
+          :prompt ,(format "Visit %s: " dtag)
+          :cache-file ,cache-file-name
+          :force-reread-p force-reread-p
+          :filter (function ,fn-filter)
+          :fallback (function ,fn-fallback)
+          :action (function org-glance-act--visit-headline)))
+
+       (defun ,fn-reread ()
+         (interactive)
+         (org-glance-cache-reread
+          :scope (quote ,scope)
+          :filter (function ,fn-filter)
+          :cache-file ,cache-file-name))
+
+       (defun ,fn-materialize ()
+         (interactive)
+         (,fn-reread)
+         (org-glance-scope-materialize ,cache-file-name))
+
+       (when (quote ,bind)
+         (cl-loop for (k . cmd) in (quote ,bind)
+                  do (global-set-key (kbd k) cmd))))))
+
+(cl-defmacro org-glance-def-view-test (view-name &key bind &allow-other-keys)
+  (pp bind))
 
 (provide-me)
 ;;; org-glance.el ends here
