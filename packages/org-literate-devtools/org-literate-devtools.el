@@ -434,10 +434,10 @@
   (aio-await (oldt-service-start-process "docker-compose down" "*oldt-service-docker-output*" "docker-compose" "down")))
 
 (aio-defun oldt-service-docker-compose-build ()
-  (aio-await (oldt-service-start-process "docker-compose build app" "*oldt-service-docker-output*" "docker-compose" "build" "app")))
+  (aio-await (oldt-service-start-process "docker-compose build" "*oldt-service-docker-output*" "docker-compose" "build")))
 
 (aio-defun oldt-service-docker-compose-up ()
-  (aio-await (oldt-service-start-process "docker-compose up" "*oldt-service-docker-output*" "docker-compose" "up")))
+  (aio-await (oldt-service-start-process "docker-compose up app" "*oldt-service-docker-output*" "docker-compose" "up")))
 
 (aio-defun oldt-service-docker-compose-restart ()
   (aio-await (oldt-service-docker-compose-down))
