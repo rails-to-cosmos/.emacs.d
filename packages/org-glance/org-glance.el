@@ -394,10 +394,10 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
                      (not (file-exists-p cache-file))))
         (org-glance-save cache-file headlines :title-property title-property)))))
 
-(defun org-glance-browse ()
+(defun org-glance-list-views ()
   (interactive)
   (let ((view (org-completing-read "View: " org-glance--views)))
-    (funcall (intern (format "org-glance-%s-visit" view)))))
+    (funcall (intern (format "org-glance-%s-visit" (s-downcase view))))))
 
 (cl-defmacro org-glance-def-view (tag &key bind &allow-other-keys)
   (declare (indent 1))
