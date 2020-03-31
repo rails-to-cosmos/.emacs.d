@@ -2352,7 +2352,6 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   :ensure t)
 
 (use-package org-glance
-
   :config
 
   (org-glance-def-view "Bookmark"
@@ -2370,6 +2369,9 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
 
   (org-glance-def-view "Event"
     :bind (("C-x j e" . org-glance-event-visit)))
+
+  (org-glance-def-view "Food")  ;; restaurants, recipes, wine etc
+  (org-glance-def-view "POI")  ;; points of interest
 
   ;; (org-glance-def-view "New events"
   ;;  :select (:todo-state :title "starring" "archive_time")

@@ -48,6 +48,8 @@
   :tag "Org Glance"
   :group 'org)
 
+(defvar org-glance--views '())
+
 (defconst org-glance-property--glance-dir
   "GLANCE_DIR")
 
@@ -392,6 +394,11 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
                      (not (file-exists-p cache-file))))
         (org-glance-save cache-file headlines :title-property title-property)))))
 
+(defun org-glance-browse ()
+  (interactive)
+  (let ((view (org-completing-read "View: " org-glance--views)))
+    (funcall (intern (format "org-glance-%s-visit" view)))))
+
 (cl-defmacro org-glance-def-view (tag &key bind &allow-other-keys)
   (declare (indent 1))
   (let* ((dtag (s-downcase tag))
@@ -409,6 +416,7 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
          (fn-filter (intern (concat ns "filter")))
          (fn-visit (intern (concat ns "visit")))
          (fn-materialize (intern (concat ns "materialize"))))
+    (add-to-list 'org-glance--views (intern tag))
     `(progn
 
        (defun ,fn-filter (headline)
