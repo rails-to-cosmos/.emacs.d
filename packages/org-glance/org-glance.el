@@ -313,6 +313,7 @@
       (let* ((source (safe-extract-property "ORG_GLANCE_SOURCE"))
              (beg (safe-extract-num-property "ORG_GLANCE_BEG"))
              (end (safe-extract-num-property "ORG_GLANCE_END"))
+             (end-old end)
              (glance-hash (safe-extract-property "ORG_GLANCE_HASH"))
              (promote-level (safe-extract-num-property "ORG_GLANCE_INDENT"))
              (mat-hash (get-subtree-hash))
@@ -354,7 +355,25 @@
               (insert new-contents)
               (setq end (point)))
 
-            (org-set-property "ORG_GLANCE_HASH" (get-src-hash source beg end))))))))
+            (org-set-property "ORG_GLANCE_BEG" (number-to-string beg))
+            (org-set-property "ORG_GLANCE_END" (number-to-string end))
+            (org-set-property "ORG_GLANCE_HASH" (get-src-hash source beg end))
+
+            (let ((end-diff (- end end-old)))
+              (org-map-entries
+               (lambda ()
+                 (condition-case nil
+                     (when (and (> (safe-extract-num-property "ORG_GLANCE_BEG") beg)
+                                (string= source (safe-extract-property "ORG_GLANCE_SOURCE")))
+                       (org-set-property "ORG_GLANCE_BEG" (number-to-string (+ end-diff (safe-extract-num-property "ORG_GLANCE_BEG"))))
+                       (org-set-property "ORG_GLANCE_END" (number-to-string (+ end-diff (safe-extract-num-property "ORG_GLANCE_END"))))
+                       (message "Update indentation for headline %s" (org-entry-get (point) "ITEM")))
+                   (user-error (message "Skip headline %s" (org-entry-get (point) "ITEM")))
+                   (error (message "Unable to apply offset for headline %s" (org-entry-get (point) "ITEM")))))))))))))
+
+(defun org-glance-sync-materialized-buffer ()
+  (interactive)
+  (org-map-entries #'org-glance-sync-materialized-subtree))
 
 (defun org-glance-scope-materialize (filename)
   (let ((headlines (org-glance-load filename))
@@ -411,7 +430,13 @@
       (goto-char (point-max))
       (org-sort-entries nil ?a)
       (deactivate-mark)
-      (org-overview))))
+      (org-overview)
+      (goto-char (point-max))
+      (insert "* Settings
+# Local Variables:
+# firestarter: org-glance-sync-materialized-subtree
+# end:")
+      (goto-char (point-min)))))
 
 (defun org-glance-sec--decrypt-current-headline (&optional return-plain)
   "Decrypt encrypted `org-mode` subtree at point.
