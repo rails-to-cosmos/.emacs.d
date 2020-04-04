@@ -2355,20 +2355,25 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   :config
 
   (org-glance-def-view "Bookmark"
-    :bind (("C-x j j" . org-glance-bookmark-open)
-           ("C-x j v" . org-glance-bookmark-visit)))
+    :bind (("C-x j j" . org-glance--bookmark-open)
+           ("C-x j v" . org-glance--bookmark-visit))
+    :type 'link)
 
   ;; public: open, visit, reread, materialize
   ;; private: fallback, filter
 
+  (global-set-key (kbd "C-x y g v") #'org-glance-list-views)
+
   (org-glance-def-view "Contact"
-    :bind (("C-x j c" . org-glance-contact-visit)))
+    :bind (("C-x j c" . org-glance--contact-visit)))
 
   (org-glance-def-view "Gist"
-    :bind (("C-x j g" . org-glance-gist-visit)))
+    :bind (("C-x j g" . org-glance--gist-visit))
+    :type 'babel)
 
   (org-glance-def-view "Event"
-    :bind (("C-x j e" . org-glance-event-visit)))
+    :bind (("C-x j e" . org-glance--event-visit))
+    :columns '(state title))
 
   (org-glance-def-view "Food")  ;; restaurants, recipes, wine etc
   (org-glance-def-view "POI")  ;; points of interest
@@ -2380,21 +2385,23 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   ;;  :order-by (:todo-state "archive_time") :desc
   ;;  :bind "C-x j g" :action (lambda (todo-state title starring archive_time) (message todo-state)))
 
+  ;; (org-glance-def-view "Events"
+  ;;   :query "SELECT state, title, archive_time
+  ;;           FROM event
+  ;;           JOIN contact on contact.title in event.starring
+  ;;           ORDER BY state, archive_time DESC")
+
   (org-glance-def-view "Password"
     :bind (("C-x j p" . org-glance-password-visit)
            ("C-x y p p" . org-glance-password-manager-secure-data-to-kill-ring)
            ("C-x y p v" . org-glance-password-manager-visit)
            ("C-x y p e" . org-glance-password-manager-encrypt-current)
-           ("C-x y p d" . org-glance-password-manager-decrypt-current)))
+           ("C-x y p d" . org-glance-password-manager-decrypt-current))
+    :encrypted t
+    :type 'kv)
 
   :load-path "~/.emacs.d/packages/org-glance"
   :ensure aes)
-
-;; (defun org-glance-password-manage ()
-;;   (unless (org-at-heading-p)
-;;     (user-error "Not at heading."))
-;;   (org-completing-read "Headline is encrypted. What do you want? "
-;;                        '("decrypt it" "extract data to kill ring")))
 #+end_src
 
 **** org-literate-devtools

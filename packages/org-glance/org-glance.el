@@ -248,7 +248,8 @@
 
     (cond ((org-glance--element-at-point-equals-headline headline)
            (org-narrow-to-subtree)
-           (org-show-all))
+           (org-show-all)
+           (widen))
           (t
            (unless file-buffer
              (kill-buffer))
@@ -264,6 +265,56 @@
     (if file-buffer
         (bury-buffer file-buffer)
       (kill-buffer (get-file-buffer file)))))
+
+(defun org-glance-sync-materialized-subtree ()
+  (interactive)
+  (save-excursion
+
+    (unless (org-at-heading-p)
+      (org-back-to-heading))
+
+    (let* ((source (org-entry-get (point) "ORG_GLANCE_SOURCE"))
+           (beg (condition-case nil
+                    (string-to-number (org-entry-get (point) "ORG_GLANCE_BEG"))
+                  (error (user-error "Materialized properties corrupted, please reread"))))
+           (end (condition-case nil
+                    (string-to-number (org-entry-get (point) "ORG_GLANCE_END"))
+                  (error (user-error "Materialized properties corrupted, please reread"))))
+           (glance-hash (org-entry-get (point) "ORG_GLANCE_HASH"))
+           (mat-hash (save-restriction
+                       (org-narrow-to-subtree)
+                       (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+                         (with-temp-buffer
+                           (insert buffer-contents)
+                           (goto-char (point-min))
+                           (delete-matching-lines "^.*:ORG_GLANCE_.*$")
+                           (buffer-hash)))))
+           (src-hash (with-temp-buffer
+                       (org-mode)
+                       (insert-file-contents source)
+                       (let ((subtree (condition-case nil
+                                          (buffer-substring-no-properties beg end)
+                                        (error (user-error "Materialized properties corrupted, please reread")))))
+                         (with-temp-buffer
+                           (org-mode)
+                           (insert subtree)
+                           (goto-char (point-min))
+                           (while
+                               (condition-case nil
+                                   (org-with-limited-levels
+                                    (org-map-tree 'org-promote)
+                                    t)
+                                 (error nil))
+                             t)
+                           (buffer-hash))))))
+
+      (when (not (string= glance-hash src-hash))
+        (user-error "Source file modified or materialized properties corrupted, please reread"))
+
+      (when (string= glance-hash mat-hash)
+        (user-error "No changes made in subtree"))
+
+      (message "Subtree has been changed"))))
 
 (defun org-glance-scope-materialize (filename)
   (let ((headlines (org-glance-load filename))
@@ -291,7 +342,6 @@
                                  (contents (buffer-substring-no-properties beg end)))
                             (with-temp-buffer
                               (org-mode)
-                              (set-buffer-file-coding-system 'raw-text)
                               (insert contents)
                               (goto-char (point-min))
                               (while
@@ -301,9 +351,16 @@
                                        t)
                                     (error nil))
                                 t)
-                              (goto-char (point-max))
-                              (insert "\n")
-                              (append-to-file (point-min) (point-max) output-filename))))))
+
+                              (let ((hash (buffer-hash)))
+                                (goto-char (point-min))
+                                (org-set-property "ORG_GLANCE_SOURCE" (symbol-name file))
+                                (org-set-property "ORG_GLANCE_BEG" (number-to-string beg))
+                                (org-set-property "ORG_GLANCE_END" (number-to-string end))
+                                (org-set-property "ORG_GLANCE_HASH" hash)
+                                (goto-char (point-max))
+                                (insert "\n")
+                                (append-to-file (point-min) (point-max) output-filename)))))))
              file-entries)
 
     (with-current-buffer (find-file-other-window output-filename)
@@ -313,6 +370,74 @@
       (org-sort-entries nil ?a)
       (deactivate-mark)
       (org-overview))))
+
+(defun org-glance-sec--decrypt-current-headline (&optional return-plain)
+  "Decrypt encrypted `org-mode` subtree at point.
+If RETURN-PLAIN is non-nil, return decrypted contents as string."
+  (let* ((beg (save-excursion (org-end-of-meta-data) (point)))
+         (end (save-excursion (org-end-of-subtree t)))
+         (encrypted (let ((encrypted (buffer-substring-no-properties beg end)))
+                      (if (not (with-temp-buffer
+                                 (insert encrypted)
+                                 (aes-is-encrypted)))
+                          (user-error "Headline is not encrypted")
+                        encrypted)))
+         (plain (aes-decrypt-buffer-or-string encrypted)))
+    (unless plain
+      (user-error "Wrong password"))
+    (save-excursion
+      (org-end-of-meta-data)
+      (kill-region beg end)
+      (insert plain)
+      (if return-plain
+          plain
+        t))))
+
+(defun org-glance-sec--encrypt-current-headline ()
+  "Encrypt org subtree contents at point."
+  (let* ((beg (save-excursion (org-end-of-meta-data) (point)))
+         (end (save-excursion (org-end-of-subtree t)))
+         (plain (let ((plain (buffer-substring-no-properties beg end)))
+                  (if (with-temp-buffer
+                        (insert plain)
+                        (aes-is-encrypted))
+                      (user-error "Headline is already encrypted")
+                    plain)))
+         (encrypted (aes-encrypt-buffer-or-string plain)))
+    (save-excursion
+      (org-end-of-meta-data)
+      (kill-region beg end)
+      (insert encrypted))))
+
+(defun org-glance-sec--extract (headline)
+  (with-temp-buffer
+    (org-mode)
+    (insert-file-contents (org-element-property :file headline))
+    (goto-char (org-element-property :begin headline))
+    (org-narrow-to-subtree)
+    (let ((tf (make-temp-file "org-glance-pm"))
+          (dc (org-glance-sec--decrypt-current-headline t)))
+      (unwind-protect
+          (with-temp-file tf
+            (insert dc))
+        (while
+            (condition-case exc
+                (org-glance :scope tf
+                            :prompt "Copy to kill ring: "
+                            :action #'org-glance-pm--copy)
+              (quit (kill-new "" t) nil)
+              (error (kill-new "" t) nil)))
+        (delete-file tf)))))
+
+(defun org-glance-sec--copy (headline)
+  (with-temp-buffer
+    (org-mode)
+    (insert-file-contents (org-element-property :file headline))
+    (goto-char (org-element-property :begin headline))
+    (let* ((beg (save-excursion (org-end-of-line) (1+ (point))))
+           (end (save-excursion (org-end-of-subtree t)))
+           (contents (buffer-substring-no-properties beg end)))
+      (kill-new contents t))))
 
 (cl-defun org-glance-cache-reread (&key scope filter cache-file title-property &allow-other-keys)
   (let ((headlines (org-glance-read scope :filter filter)))
@@ -399,11 +524,11 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
   (let ((view (org-completing-read "View: " org-glance--views)))
     (funcall (intern (format "org-glance-%s-visit" (s-downcase view))))))
 
-(cl-defmacro org-glance-def-view (tag &key bind &allow-other-keys)
+(cl-defmacro org-glance-def-view (tag &key bind encrypted type &allow-other-keys)
   (declare (indent 1))
   (let* ((dtag (s-downcase tag))
          (ctag (s-capitalize tag))
-         (ns (format "org-glance-%s-" dtag))
+         (ns (format "org-glance--%s-" dtag))
 
          ;; default params
          (cache-file-name (format "~/.emacs.d/org-glance/org-glance-%s.el" dtag))
@@ -415,8 +540,15 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
          (fn-fallback (intern (concat ns "fallback")))
          (fn-filter (intern (concat ns "filter")))
          (fn-visit (intern (concat ns "visit")))
-         (fn-materialize (intern (concat ns "materialize"))))
+         (fn-materialize (intern (concat ns "materialize")))
+
+         ;; only for encrypted views
+         (fn-encrypt-current-headline (intern (concat ns "encrypt-current-headline")))
+         (fn-decrypt-current-headline (intern (concat ns "decrypt-current-headline")))
+         (fn-decrypt-extract (intern (concat ns "decrypt-extract"))))
+
     (add-to-list 'org-glance--views (intern tag))
+
     `(progn
 
        (defun ,fn-filter (headline)
@@ -424,17 +556,6 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
 
        (defun ,fn-fallback (_)
          (user-error "%s not found." ,ctag))
-
-       (defun ,fn-open (&optional force-reread-p)
-         (interactive "P")
-         (org-glance
-          :scope (quote ,scope)
-          :prompt ,(format "Open %s: " dtag)
-          :cache-file ,cache-file-name
-          :force-reread-p force-reread-p
-          :filter (function ,fn-filter)
-          :fallback (function ,fn-fallback)
-          :action (function org-glance-act--open-org-link)))
 
        (defun ,fn-visit (&optional force-reread-p)
          (interactive "P")
@@ -459,12 +580,48 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
          (,fn-reread)
          (org-glance-scope-materialize ,cache-file-name))
 
+       (when ,(cond ((symbolp type) (eq type 'link))
+                    ((listp type) (-contains? type 'link))
+                    (t nil))
+
+         (defun ,fn-open (&optional force-reread-p)
+           (interactive "P")
+           (org-glance
+            :scope (quote ,scope)
+            :prompt ,(format "Open %s: " dtag)
+            :cache-file ,cache-file-name
+            :force-reread-p force-reread-p
+            :filter (function ,fn-filter)
+            :fallback (function ,fn-fallback)
+            :action (function org-glance-act--open-org-link))))
+
+       (when ,encrypted ;; methods for encrypted views
+
+         (defun ,fn-encrypt-current-headline ()
+           (interactive)
+           (org-glance-sec--encrypt-current-headline))
+
+         (defun ,fn-decrypt-current-headline ()
+           (interactive)
+           (org-glance-sec--decrypt-current-headline))
+
+         (when ,(cond ((symbolp type) (eq type 'kv))
+                      ((listp type) (-contains? type 'kv))
+                      (t nil))
+           (defun ,fn-decrypt-extract (&optional force-reread-p)
+             (interactive "P")
+             (org-glance
+              :scope (quote ,scope)
+              :prompt ,(format "Decrypt and extract %s: " dtag)
+              :cache-file ,cache-file-name
+              :force-reread-p force-reread-p
+              :filter (function ,fn-filter)
+              :fallback (function ,fn-fallback)
+              :action #'org-glance-sec--extract))))
+
        (when (quote ,bind)
          (cl-loop for (k . cmd) in (quote ,bind)
                   do (global-set-key (kbd k) cmd))))))
-
-(cl-defmacro org-glance-def-view-test (view-name &key bind &allow-other-keys)
-  (pp bind))
 
 (provide-me)
 ;;; org-glance.el ends here
