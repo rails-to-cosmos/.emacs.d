@@ -273,56 +273,88 @@
     (unless (org-at-heading-p)
       (org-back-to-heading))
 
-    (let* ((source (org-entry-get (point) "ORG_GLANCE_SOURCE"))
-           (beg (condition-case nil
-                    (string-to-number (org-entry-get (point) "ORG_GLANCE_BEG"))
-                  (error (user-error "Materialized properties corrupted, please reread"))))
-           (end (condition-case nil
-                    (string-to-number (org-entry-get (point) "ORG_GLANCE_END"))
-                  (error (user-error "Materialized properties corrupted, please reread"))))
-           (glance-hash (org-entry-get (point) "ORG_GLANCE_HASH"))
-           (mat-hash (save-restriction
-                       (org-narrow-to-subtree)
-                       (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-                         (with-temp-buffer
-                           (org-mode)
-                           (insert buffer-contents)
-                           (goto-char (point-min))
+    (cl-flet* ((get-subtree-hash () (save-restriction
+                                      (org-narrow-to-subtree)
+                                      (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+                                        (with-temp-buffer
+                                          (org-mode)
+                                          (insert buffer-contents)
+                                          (goto-char (point-min))
 
-                           (org-delete-property "ORG_GLANCE_SOURCE")
-                           (org-delete-property "ORG_GLANCE_BEG")
-                           (org-delete-property "ORG_GLANCE_END")
-                           (org-delete-property "ORG_GLANCE_HASH")
+                                          (org-delete-property "ORG_GLANCE_SOURCE")
+                                          (org-delete-property "ORG_GLANCE_BEG")
+                                          (org-delete-property "ORG_GLANCE_END")
+                                          (org-delete-property "ORG_GLANCE_HASH")
+                                          (org-delete-property "ORG_GLANCE_INDENT")
 
-                           ;; (prin1 (buffer-substring-no-properties (point-min) (point-max)))
-                           (buffer-hash)))))
-           (src-hash (with-temp-buffer
-                       (org-mode)
-                       (insert-file-contents source)
-                       (let ((subtree (condition-case nil
-                                          (buffer-substring-no-properties beg end)
-                                        (error (user-error "Materialized properties corrupted, please reread")))))
-                         (with-temp-buffer
-                           (org-mode)
-                           (insert subtree)
-                           (goto-char (point-min))
-                           (while
-                               (condition-case nil
-                                   (org-with-limited-levels
-                                    (org-map-tree 'org-promote)
-                                    t)
-                                 (error nil))
-                             t)
-                           ;; (prin1 (buffer-substring-no-properties (point-min) (point-max)))
-                           (buffer-hash))))))
+                                          (buffer-hash)))))
+               (get-src-hash (src beg end) (with-temp-buffer
+                                             (org-mode)
+                                             (insert-file-contents src)
+                                             (let ((subtree (condition-case nil
+                                                                (buffer-substring-no-properties beg end)
+                                                              (error (user-error "Materialized properties corrupted, please reread")))))
+                                               (with-temp-buffer
+                                                 (org-mode)
+                                                 (insert subtree)
+                                                 (goto-char (point-min))
+                                                 (while
+                                                     (condition-case nil
+                                                         (org-with-limited-levels
+                                                          (org-map-tree 'org-promote)
+                                                          t)
+                                                       (error nil))
+                                                   t)
+                                                 (buffer-hash)))))
+               (safe-extract-property (property) (condition-case nil
+                                                     (org-entry-get (point) property)
+                                                   (error (user-error "Materialized properties corrupted, please reread"))))
+               (safe-extract-num-property (property) (string-to-number (safe-extract-property property))))
+      (let* ((source (safe-extract-property "ORG_GLANCE_SOURCE"))
+             (beg (safe-extract-num-property "ORG_GLANCE_BEG"))
+             (end (safe-extract-num-property "ORG_GLANCE_END"))
+             (glance-hash (safe-extract-property "ORG_GLANCE_HASH"))
+             (promote-level (safe-extract-num-property "ORG_GLANCE_INDENT"))
+             (mat-hash (get-subtree-hash))
+             (src-hash (get-src-hash source beg end)))
 
-      (when (not (string= glance-hash src-hash))
-        (user-error "Source file modified or materialized properties corrupted, please reread"))
+        (when (not (string= glance-hash src-hash))
+          (user-error "Source file modified or materialized properties corrupted, please reread"))
 
-      (when (string= glance-hash mat-hash)
-        (user-error "No changes made in subtree"))
+        (when (string= glance-hash mat-hash)
+          (user-error "No changes made in subtree"))
 
-      (message "Subtree has been changed"))))
+        (when (y-or-n-p "Subtree has been changed. Apply changes?")
+
+          (let ((new-contents (save-restriction
+                                (org-narrow-to-subtree)
+                                (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+                                  (with-temp-buffer
+                                    (org-mode)
+                                    (insert buffer-contents)
+                                    (goto-char (point-min))
+
+                                    (org-delete-property "ORG_GLANCE_SOURCE")
+                                    (org-delete-property "ORG_GLANCE_BEG")
+                                    (org-delete-property "ORG_GLANCE_END")
+                                    (org-delete-property "ORG_GLANCE_HASH")
+                                    (org-delete-property "ORG_GLANCE_INDENT")
+
+                                    (loop repeat promote-level
+                                          do (org-with-limited-levels
+                                              (org-map-tree 'org-demote)))
+
+                                    (buffer-substring-no-properties (point-min) (point-max)))))))
+
+            (with-temp-file source
+              (org-mode)
+              (insert-file-contents source)
+              (delete-region beg end)
+              (goto-char beg)
+              (insert new-contents)
+              (setq end (point)))
+
+            (org-set-property "ORG_GLANCE_HASH" (get-src-hash source beg end))))))))
 
 (defun org-glance-scope-materialize (filename)
   (let ((headlines (org-glance-load filename))
@@ -352,23 +384,25 @@
                               (org-mode)
                               (insert contents)
                               (goto-char (point-min))
-                              (while
-                                  (condition-case nil
-                                      (org-with-limited-levels
-                                       (org-map-tree 'org-promote)
-                                       t)
-                                    (error nil))
-                                t)
+                              (let ((promote-level 0))
+                                (while
+                                    (condition-case nil
+                                        (org-with-limited-levels
+                                         (org-map-tree 'org-promote)
+                                         t)
+                                      (error nil))
+                                  (incf promote-level))
 
-                              (let ((hash (buffer-hash)))
-                                (goto-char (point-min))
-                                (org-set-property "ORG_GLANCE_SOURCE" (symbol-name file))
-                                (org-set-property "ORG_GLANCE_BEG" (number-to-string beg))
-                                (org-set-property "ORG_GLANCE_END" (number-to-string end))
-                                (org-set-property "ORG_GLANCE_HASH" hash)
-                                (goto-char (point-max))
-                                (insert "\n")
-                                (append-to-file (point-min) (point-max) output-filename)))))))
+                                (let ((hash (buffer-hash)))
+                                  (goto-char (point-min))
+                                  (org-set-property "ORG_GLANCE_SOURCE" (symbol-name file))
+                                  (org-set-property "ORG_GLANCE_INDENT" (number-to-string promote-level))
+                                  (org-set-property "ORG_GLANCE_BEG" (number-to-string beg))
+                                  (org-set-property "ORG_GLANCE_END" (number-to-string end))
+                                  (org-set-property "ORG_GLANCE_HASH" hash)
+                                  (goto-char (point-max))
+                                  (insert "\n")
+                                  (append-to-file (point-min) (point-max) output-filename))))))))
              file-entries)
 
     (with-current-buffer (find-file-other-window output-filename)
