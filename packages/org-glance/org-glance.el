@@ -247,9 +247,12 @@
     (goto-char point)
 
     (cond ((org-glance--element-at-point-equals-headline headline)
+           (while (org-up-heading-safe)
+             t)
            (org-narrow-to-subtree)
            (org-show-all)
-           (widen))
+           (widen)
+           (goto-char point))
           (t
            (unless file-buffer
              (kill-buffer))
