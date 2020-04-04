@@ -247,8 +247,7 @@
     (goto-char point)
 
     (cond ((org-glance--element-at-point-equals-headline headline)
-           (while (org-up-heading-safe)
-             t)
+           (while (org-up-heading-safe) t)
            (org-narrow-to-subtree)
            (org-show-all)
            (widen)
@@ -273,8 +272,7 @@
   (interactive)
   (save-excursion
 
-    (unless (org-at-heading-p)
-      (org-back-to-heading))
+    (while (org-up-heading-safe) t)
 
     (cl-flet* ((get-subtree-hash () (save-restriction
                                       (org-narrow-to-subtree)
