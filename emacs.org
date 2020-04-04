@@ -2359,8 +2359,11 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
            ("C-x j v" . org-glance--bookmark-visit))
     :type 'link)
 
-  ;; public: open, visit, reread, materialize
-  ;; private: fallback, filter
+  ;; public: visit, materialize
+  ;; private: reread, fallback, filter
+  ;; type=link: open
+  ;; type=password: decrypt-extract, encrypt-current, decrypt-current
+  ;; type=babel: execute
 
   (global-set-key (kbd "C-x y g v") #'org-glance-list-views)
 

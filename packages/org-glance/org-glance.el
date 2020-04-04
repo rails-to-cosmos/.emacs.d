@@ -637,7 +637,6 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
           :action (function org-glance-act--visit-headline)))
 
        (defun ,fn-reread ()
-         (interactive)
          (org-glance-cache-reread
           :scope (quote ,scope)
           :filter (function ,fn-filter)
@@ -678,6 +677,7 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
          (when (cond ((symbolp ,type) (eq ,type 'kv))
                      ((listp ,type) (-contains? ,type 'kv))
                      (t nil))
+
            (defun ,fn-decrypt-extract (&optional force-reread-p)
              (interactive "P")
              (org-glance
