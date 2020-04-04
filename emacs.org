@@ -2368,7 +2368,13 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   (global-set-key (kbd "C-x y g v") #'org-glance-list-views)
 
   (org-glance-def-view "Contact"
-    :bind (("C-x j c" . org-glance--contact-visit)))
+    :bind (("C-x j c" . org-glance--contact-visit))
+    :schema '(("CUSTOM_ID"   50)
+              ("FIRST_NAME"  15)
+              ("MIDDLE_NAME" 15)
+              ("LAST_NAME"   15)
+              ("ITEM"        100)
+              ("PHONE"       20))
 
   (org-glance-def-view "Gist"
     :bind (("C-x j g" . org-glance--gist-visit))
