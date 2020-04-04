@@ -2341,7 +2341,7 @@ SET COLSEP '|'
   :load-path "~/.emacs.d/packages/ledna")
 #+end_src
 
-**** TODO [#A] org-glance
+**** [#A] org-glance
 :LOGBOOK:
 - State "STARTED"    from              T:[2020-03-25 Wed 22:48]
 CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
@@ -2392,13 +2392,12 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   ;;           ORDER BY state, archive_time DESC")
 
   (org-glance-def-view "Password"
-    :bind (("C-x j p" . org-glance-password-visit)
-           ("C-x y p p" . org-glance-password-manager-secure-data-to-kill-ring)
-           ("C-x y p v" . org-glance-password-manager-visit)
-           ("C-x y p e" . org-glance-password-manager-encrypt-current)
-           ("C-x y p d" . org-glance-password-manager-decrypt-current))
-    :encrypted t
-    :type 'kv)
+    :bind (("C-x y p p" . org-glance--password-decrypt-extract)
+           ("C-x y p v" . org-glance--password-visit)
+           ("C-x y p e" . org-glance--password-encrypt-current-headline)
+           ("C-x y p d" . org-glance--password-decrypt-current-headline)
+           ("C-x y p m" . org-glance--password-materialize))
+    :type '(kv encrypted))
 
   :load-path "~/.emacs.d/packages/org-glance"
   :ensure aes)

@@ -368,8 +368,7 @@
                        (org-set-property "ORG_GLANCE_BEG" (number-to-string (+ end-diff (safe-extract-num-property "ORG_GLANCE_BEG"))))
                        (org-set-property "ORG_GLANCE_END" (number-to-string (+ end-diff (safe-extract-num-property "ORG_GLANCE_END"))))
                        (message "Update indentation for headline %s" (org-entry-get (point) "ITEM")))
-                   (user-error (message "Skip headline %s" (org-entry-get (point) "ITEM")))
-                   (error (message "Unable to apply offset for headline %s" (org-entry-get (point) "ITEM")))))))))))))
+                   (error (message "Skip headline %s" (org-entry-get (point) "ITEM")))))))))))))
 
 (defun org-glance-sync-materialized-buffer ()
   (interactive)
@@ -424,19 +423,21 @@
                                   (append-to-file (point-min) (point-max) output-filename))))))))
              file-entries)
 
-    (with-current-buffer (find-file-other-window output-filename)
-      (org-mode)
-      (set-mark (point-min))
-      (goto-char (point-max))
-      (org-sort-entries nil ?a)
-      (deactivate-mark)
-      (org-overview)
-      (goto-char (point-max))
-      (insert "* Settings
+    (append-to-file "* COMMENT Settings
 # Local Variables:
 # firestarter: org-glance-sync-materialized-subtree
-# end:")
-      (goto-char (point-min)))))
+# end:" nil output-filename)
+
+    (with-current-buffer (find-file-other-window output-filename)
+      (org-mode)
+      ;; (set-mark (point-min))
+      ;; (goto-char (point-max))
+      ;; (org-sort-entries nil ?a)
+      ;; (deactivate-mark)
+      (org-overview)
+      ;; (goto-char (point-max))
+      ;; (goto-char (point-min))
+      )))
 
 (defun org-glance-sec--decrypt-current-headline (&optional return-plain)
   "Decrypt encrypted `org-mode` subtree at point.
@@ -591,7 +592,7 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
   (let ((view (org-completing-read "View: " org-glance--views)))
     (funcall (intern (format "org-glance--%s-visit" (s-downcase view))))))
 
-(cl-defmacro org-glance-def-view (tag &key bind encrypted type &allow-other-keys)
+(cl-defmacro org-glance-def-view (tag &key bind type &allow-other-keys)
   (declare (indent 1))
   (let* ((dtag (s-downcase tag))
          (ctag (s-capitalize tag))
@@ -647,9 +648,9 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
          (,fn-reread)
          (org-glance-scope-materialize ,cache-file-name))
 
-       (when ,(cond ((symbolp type) (eq type 'link))
-                    ((listp type) (-contains? type 'link))
-                    (t nil))
+       (when (cond ((symbolp ,type) (eq ,type 'link))
+                   ((listp ,type) (-contains? ,type 'link))
+                   (t nil))
 
          (defun ,fn-open (&optional force-reread-p)
            (interactive "P")
@@ -662,7 +663,9 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
             :fallback (function ,fn-fallback)
             :action (function org-glance-act--open-org-link))))
 
-       (when ,encrypted ;; methods for encrypted views
+       (when (cond ((symbolp ,type) (eq ,type 'encrypted))
+                   ((listp ,type) (-contains? ,type 'encrypted))
+                   (t nil))
 
          (defun ,fn-encrypt-current-headline ()
            (interactive)
@@ -672,9 +675,9 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
            (interactive)
            (org-glance-sec--decrypt-current-headline))
 
-         (when ,(cond ((symbolp type) (eq type 'kv))
-                      ((listp type) (-contains? type 'kv))
-                      (t nil))
+         (when (cond ((symbolp ,type) (eq ,type 'kv))
+                     ((listp ,type) (-contains? ,type 'kv))
+                     (t nil))
            (defun ,fn-decrypt-extract (&optional force-reread-p)
              (interactive "P")
              (org-glance
