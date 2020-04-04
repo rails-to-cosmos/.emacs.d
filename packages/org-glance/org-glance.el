@@ -285,9 +285,16 @@
                        (org-narrow-to-subtree)
                        (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
                          (with-temp-buffer
+                           (org-mode)
                            (insert buffer-contents)
                            (goto-char (point-min))
-                           (delete-matching-lines "^.*:ORG_GLANCE_.*$")
+
+                           (org-delete-property "ORG_GLANCE_SOURCE")
+                           (org-delete-property "ORG_GLANCE_BEG")
+                           (org-delete-property "ORG_GLANCE_END")
+                           (org-delete-property "ORG_GLANCE_HASH")
+
+                           ;; (prin1 (buffer-substring-no-properties (point-min) (point-max)))
                            (buffer-hash)))))
            (src-hash (with-temp-buffer
                        (org-mode)
@@ -306,6 +313,7 @@
                                     t)
                                  (error nil))
                              t)
+                           ;; (prin1 (buffer-substring-no-properties (point-min) (point-max)))
                            (buffer-hash))))))
 
       (when (not (string= glance-hash src-hash))
@@ -522,7 +530,7 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
 (defun org-glance-list-views ()
   (interactive)
   (let ((view (org-completing-read "View: " org-glance--views)))
-    (funcall (intern (format "org-glance-%s-visit" (s-downcase view))))))
+    (funcall (intern (format "org-glance--%s-visit" (s-downcase view))))))
 
 (cl-defmacro org-glance-def-view (tag &key bind encrypted type &allow-other-keys)
   (declare (indent 1))
