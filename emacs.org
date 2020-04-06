@@ -2359,12 +2359,6 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
            ("C-x j v" . org-glance--bookmark-visit))
     :type 'link)
 
-  ;; public: visit, materialize
-  ;; private: reread, fallback, filter
-  ;; type=link: open
-  ;; type=password: decrypt-extract, encrypt-current, decrypt-current
-  ;; type=babel: execute
-
   (global-set-key (kbd "C-x y g v") #'org-glance-list-views)
 
   (org-glance-def-view "Contact"
@@ -2381,12 +2375,13 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
     :type 'babel)
 
   (org-glance-def-view "Event"
-    :bind (("C-x j e" . org-glance--event-visit))
-    :columns '(state title))
+    :bind (("C-x j e" . org-glance--event-visit)))
 
   (org-glance-def-view "Food")  ;; restaurants, recipes, wine etc
   (org-glance-def-view "POI")  ;; points of interest
   (org-glance-def-view "Debt")  ;; finance relationships
+
+  ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
   ;; (org-glance-def-view "New events"
   ;;  :select (:todo-state :title "starring" "archive_time")

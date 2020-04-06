@@ -28,6 +28,31 @@
 ;; This package allows you to manage bookmarks and travel around the
 ;; digital world with an org-mode power behind your shoulders.
 
+;; glance types:
+
+;; default
+;; - define interactive methods:
+;;   - visit
+;;   - materialize
+;;   - reread
+;; - define private methods:
+;;   - fallback
+;;   - filter
+;; - create cache file in ~/.emacs.d/org-glance/org-glance-[view].el
+
+;; link
+;; - interactive methods:
+;;   - open
+
+;; type=link: open
+;; type=password: decrypt-extract, encrypt-current, decrypt-current
+;; type=babel: execute
+
+;; 'link -- headline must contain org-link
+;; 'kv -- key-value storage, can copy values to kill-ring
+;; 'babel -- contain one or many blocks
+;; 'encrypted -- encrypted subtree
+
 ;;; Code:
 
 (require 'org)
@@ -40,8 +65,6 @@
   (require 'cl-generic)
   (require 'dash-functional)
   (require 'subr-x))
-
-(load-relative "plugins/org-glance-password-manager.el")
 
 (defgroup org-glance nil
   "Options concerning glancing entries."
