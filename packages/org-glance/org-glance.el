@@ -445,6 +445,12 @@
       (error nil))
     (copy-file vf (f-join dir (concat (s-downcase view) ".org")) t)))
 
+(defun org-glance-backup-all-views (&optional view dir)
+  (interactive)
+  (let ((dir (or dir (read-directory-name "Backup directory: "))))
+    (loop for view in org-glance--views
+          do (org-glance-backup-view (symbol-name view) dir))))
+
 (defun org-glance-sec--decrypt-current-headline (&optional return-plain)
   "Decrypt encrypted `org-mode` subtree at point.
 If RETURN-PLAIN is non-nil, return decrypted contents as string."
