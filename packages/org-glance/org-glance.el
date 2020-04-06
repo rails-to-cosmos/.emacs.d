@@ -424,21 +424,27 @@
                                   (append-to-file (point-min) (point-max) output-filename))))))))
              file-entries)
 
-    (append-to-file "* COMMENT Settings
+    (when (called-interactively-p 'interactive)
+      (append-to-file "* COMMENT Settings
 # Local Variables:
 # firestarter: org-glance-sync-materialized-subtree
 # end:" nil output-filename)
+      (with-current-buffer (find-file-other-window output-filename)
+        (org-mode)
+        (org-overview)))
 
-    (with-current-buffer (find-file-other-window output-filename)
-      (org-mode)
-      ;; (set-mark (point-min))
-      ;; (goto-char (point-max))
-      ;; (org-sort-entries nil ?a)
-      ;; (deactivate-mark)
-      (org-overview)
-      ;; (goto-char (point-max))
-      ;; (goto-char (point-min))
-      )))
+    output-filename))
+
+(defun org-glance-backup-views (backup-dir)
+  (interactive "DDirectory: ")
+
+  (condition-case nil
+      (mkdir backup-dir)
+    (error nil))
+
+  (loop for view in org-glance--views
+        do (let ((vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase (symbol-name view)))))))
+             (copy-file vf (f-join backup-dir (concat (s-downcase (symbol-name view)) ".org")) t))))
 
 (defun org-glance-sec--decrypt-current-headline (&optional return-plain)
   "Decrypt encrypted `org-mode` subtree at point.
