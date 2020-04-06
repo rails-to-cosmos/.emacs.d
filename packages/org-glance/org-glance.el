@@ -638,6 +638,7 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
           :action (function org-glance-act--visit-headline)))
 
        (defun ,fn-reread ()
+         (interactive)
          (org-glance-cache-reread
           :scope (quote ,scope)
           :filter (function ,fn-filter)

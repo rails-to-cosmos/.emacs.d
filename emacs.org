@@ -2386,6 +2386,7 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
 
   (org-glance-def-view "Food")  ;; restaurants, recipes, wine etc
   (org-glance-def-view "POI")  ;; points of interest
+  (org-glance-def-view "Debt")  ;; finance relationships
 
   ;; (org-glance-def-view "New events"
   ;;  :select (:todo-state :title "starring" "archive_time")
