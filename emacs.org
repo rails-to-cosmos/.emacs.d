@@ -1788,7 +1788,7 @@ bidirectional reordering.")
   :ensure t)
 #+end_src
 
-**** ob-ipython
+**** COMMENT ob-ipython
 
 #+begin_src emacs-lisp
 (if (-some->> "which jupyter"

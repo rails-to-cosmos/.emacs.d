@@ -781,6 +781,8 @@ used to limit the exported source code blocks by language."
         (default-directory (file-name-directory (buffer-file-name (org-clocking-buffer)))))
     (oldt-trigger-function (list :from "TODO" :to state))))
 
+(defconst oldt-aws-emr-states '(BOOTSTRAPPING STARTING RUNNING WAITING TERMINATING TERMINATED TERMINATED_WITH_ERRORS))
+
 (defun oldt-aws-emr-cluster--list ()
   (let ((clusters (->> "aws emr list-clusters --max-items 15 --created-after 2020-03-17T00:00:00"
                        shell-command-to-string
@@ -797,13 +799,12 @@ used to limit the exported source code blocks by language."
        (--sort
         (destructuring-bind (it-name it-id it-hours it-state it-dt) it
           (destructuring-bind (ot-name ot-id ot-hours ot-state ot-dt) other
-            (let ((states '(BOOTSTRAPPING RUNNING STARTING WAITING TERMINATING TERMINATED TERMINATED_WITH_ERRORS)))
-              (unless (member it-state states)
-                (user-error "%s is not a member of %s" it-state states))
-              (unless (member ot-state states)
-                (user-error "%s is not a member of %s" it-state states))
-              (cond ((< (-elem-index it-state states) (-elem-index ot-state states)) t)
-                    ((< (car (last other)) (car (last it))) t))))))))))
+            (unless (member it-state oldt-aws-emr-states)
+              (user-error "%s is not a member of %s" it-state oldt-aws-emr-states))
+            (unless (member ot-state oldt-aws-emr-states)
+              (user-error "%s is not a member of %s" it-state oldt-aws-emr-states))
+            (cond ((< (-elem-index it-state oldt-aws-emr-states) (-elem-index ot-state oldt-aws-emr-states)) t)
+                  ((< (car (last other)) (car (last it))) t)))))))))
 
 (defun oldt-aws-emr-instance--browse-masters-private-dns (port)
   (interactive)
