@@ -435,16 +435,15 @@
 
     output-filename))
 
-(defun org-glance-backup-views (backup-dir)
-  (interactive "DDirectory: ")
-
-  (condition-case nil
-      (mkdir backup-dir)
-    (error nil))
-
-  (loop for view in org-glance--views
-        do (let ((vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase (symbol-name view)))))))
-             (copy-file vf (f-join backup-dir (concat (s-downcase (symbol-name view)) ".org")) t))))
+(defun org-glance-backup-view (&optional view dir)
+  (interactive)
+  (let* ((view (or view (org-completing-read "View: " org-glance--views)))
+         (dir (or dir (read-directory-name "Backup directory: ")))
+         (vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase view))))))
+    (condition-case nil
+        (mkdir dir)
+      (error nil))
+    (copy-file vf (f-join dir (concat (s-downcase view) ".org")) t)))
 
 (defun org-glance-sec--decrypt-current-headline (&optional return-plain)
   "Decrypt encrypted `org-mode` subtree at point.
