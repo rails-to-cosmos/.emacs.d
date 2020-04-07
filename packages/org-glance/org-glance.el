@@ -527,7 +527,7 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
             (condition-case exc
                 (org-glance :scope tf
                             :prompt "Copy to kill ring: "
-                            :action #'org-glance-pm--copy)
+                            :action #'org-glance-sec--copy)
               (quit (kill-new "" t) nil)
               (error (kill-new "" t) nil)))
         (delete-file tf)))))
