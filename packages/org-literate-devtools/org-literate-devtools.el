@@ -952,11 +952,11 @@ used to limit the exported source code blocks by language."
          (message "Setting ITEM property extracted from Jira task")
          (oldt-project-set-property "ITEM" (concat summary " [0%]")))))))
 
-(cl-defun oldt-jira-ticket-from-ticket-or-url (ticket)
-  (car (last (s-split "/" ticket))))
+;; (cl-defun oldt-jira-ticket-from-ticket-or-url (ticket)
+;;   (car (last (s-split "/" ticket))))
 
 (cl-defun oldt-jira-get (&key ticket success error method sync)
-  (when-let (ticket (oldt-jira-ticket-from-ticket-or-url (oldt-project-get-property "TICKET")))
+  (when-let (ticket (oldt-project-get-property "TICKET"))
     (request (oldt-jira-ticket-url ticket method)
       :headers `(("Authorization" . ,(oldt-jira-get-auth-token)))
       :parser 'json-read
@@ -997,8 +997,7 @@ used to limit the exported source code blocks by language."
    :success #'oldt-jira-project-status-update))
 
 (defun oldt-jira-capture-ticket-title (&optional ticket)
-  (oldt-jira-get
-   :success #'oldt-jira-ticket-capture))
+  (oldt-jira-get :success #'oldt-jira-ticket-capture))
 
 (add-hook 'org-capture-before-finalize-hook 'oldt-jira-capture-ticket-title)
 

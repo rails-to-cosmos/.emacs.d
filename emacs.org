@@ -2148,6 +2148,11 @@ If KWD is a number, get the corresponding match group."
 
 *** experiments
 
+**** ob-json
+#+begin_src emacs-lisp
+(defun org-babel-execute:json (body params)
+  (json-reformat-from-string body))
+#+end_src
 **** ob-sql
 
 #+begin_src emacs-lisp
@@ -2377,9 +2382,12 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   (org-glance-def-view "Event"
     :bind (("C-x j e" . org-glance--event-visit)))
 
-  (org-glance-def-view "Food")  ;; restaurants, recipes, wine etc
+  (org-glance-def-view "Food")  ;; restaurants, wine etc
   (org-glance-def-view "POI")  ;; points of interest
   (org-glance-def-view "Debt")  ;; finance relationships
+  (org-glance-def-view "Recipe")  ;; food recipes
+  (org-glance-def-view "Song"
+    :bind (("C-x j s" . org-glance--song-visit)))
 
   ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
