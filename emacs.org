@@ -2386,6 +2386,7 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   (org-glance-def-view "POI")  ;; points of interest
   (org-glance-def-view "Debt")  ;; finance relationships
   (org-glance-def-view "Recipe")  ;; food recipes
+  (org-glance-def-view "Doc")  ;; documents
   (org-glance-def-view "Song"
     :bind (("C-x j s" . org-glance--song-visit)))
 
@@ -3402,6 +3403,18 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.programming.python
 :END:
 
+**** mine refactor
+#+begin_src emacs-lisp
+(defun mine--python-refactor ()
+  (interactive)
+  (when (s-ends-with? ".py" buffer-file-name)
+    ;; (elpy-format-code)
+    ;; (save-buffer)
+    ;; (elpy-check)
+    ))
+
+(add-hook 'after-save-hook #'mine--python-refactor)
+#+end_src
 **** jinja
 #+begin_src emacs-lisp
 (use-package jinja2-mode

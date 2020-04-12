@@ -542,7 +542,12 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
            (contents (buffer-substring-no-properties beg end)))
       (kill-new contents t))))
 
-(cl-defun org-glance-cache-reread (&key scope filter cache-file title-property &allow-other-keys)
+(cl-defun org-glance-cache-reread (&key
+                                   filter
+                                   cache-file
+                                   (scope '(agenda))
+                                   (title-property :TITLE)
+                                   &allow-other-keys)
   (let ((headlines (org-glance-read scope :filter filter)))
 
     (unless headlines
@@ -567,10 +572,10 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
 Scope can be file name or list of file names.
 Filter headlines by FILTER method.
 Call ACTION method on selected headline.
-Specify CACHE-FILE to save headlines to read-optimized el-file.
+Specify CACHE-FILE to save headlines in read-optimized el-file.
 Specify FORCE-REREAD-P predicate to reread cache file. Usually this flag is set by C-u prefix.
 If user input doesn't match any entry, call FALLBACK method with user input as argument.
-Read headline title in completing read prompt from org-property TITLE-PROPERTY."
+Read headline title in completing read prompt from org property named TITLE-PROPERTY."
 
   (let (headlines)
     (when (or force-reread-p (not cache-file) (not (file-exists-p cache-file)))
@@ -627,7 +632,13 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
   (let ((view (org-completing-read "View: " org-glance--views)))
     (funcall (intern (format "org-glance--%s-visit" (s-downcase view))))))
 
-(cl-defmacro org-glance-def-view (tag &key bind type &allow-other-keys)
+(cl-defmacro org-glance-def-view (tag
+                                  &key
+                                  bind
+                                  type
+                                  (scope '(agenda-with-archives))
+                                  (title-property :TITLE)
+                                  &allow-other-keys)
   (declare (indent 1))
   (let* ((dtag (s-downcase tag))
          (ctag (s-capitalize tag))
@@ -635,7 +646,6 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
 
          ;; default params
          (cache-file-name (format "~/.emacs.d/org-glance/org-glance-%s.el" dtag))
-         (scope '(agenda-with-archives))
 
          ;; function names
          (fn-open (intern (concat ns "open")))
@@ -669,14 +679,16 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
           :force-reread-p force-reread-p
           :filter (function ,fn-filter)
           :fallback (function ,fn-fallback)
-          :action (function org-glance-act--visit-headline)))
+          :action (function org-glance-act--visit-headline)
+          :title-property title-property))
 
        (defun ,fn-reread ()
          (interactive)
          (org-glance-cache-reread
           :scope (quote ,scope)
           :filter (function ,fn-filter)
-          :cache-file ,cache-file-name))
+          :cache-file ,cache-file-name
+          :title-property title-property))
 
        (defun ,fn-materialize ()
          (interactive)
@@ -696,7 +708,8 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
             :force-reread-p force-reread-p
             :filter (function ,fn-filter)
             :fallback (function ,fn-fallback)
-            :action (function org-glance-act--open-org-link))))
+            :action (function org-glance-act--open-org-link)
+            :title-property title-property)))
 
        (when (cond ((symbolp ,type) (eq ,type 'encrypted))
                    ((listp ,type) (-contains? ,type 'encrypted))
@@ -723,7 +736,8 @@ Read headline title in completing read prompt from org-property TITLE-PROPERTY."
               :force-reread-p force-reread-p
               :filter (function ,fn-filter)
               :fallback (function ,fn-fallback)
-              :action #'org-glance-sec--extract))))
+              :action #'org-glance-sec--extract
+              :title-property title-property))))
 
        (when (quote ,bind)
          (cl-loop for (k . cmd) in (quote ,bind)
