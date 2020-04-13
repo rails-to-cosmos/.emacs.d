@@ -398,7 +398,7 @@
   (interactive)
   (org-map-entries #'org-glance-sync-materialized-subtree))
 
-(defun org-glance-scope-materialize (filename)
+(defun org-glance-scope-materialize (filename &optional minify)
   (let ((headlines (org-glance-load filename))
         (file-entries (make-hash-table))
         (output-filename (make-temp-file "org-glance-materialized-" nil ".org")))
@@ -447,7 +447,7 @@
                                   (append-to-file (point-min) (point-max) output-filename))))))))
              file-entries)
 
-    (when (called-interactively-p 'interactive)
+    (unless minify
       (append-to-file "* COMMENT Settings
 # Local Variables:
 # firestarter: org-glance-sync-materialized-subtree
@@ -462,7 +462,7 @@
   (interactive)
   (let* ((view (or view (org-completing-read "View: " org-glance--views)))
          (dir (or dir (read-directory-name "Backup directory: ")))
-         (vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase view))))))
+         (vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase view))) 'minify)))
     (condition-case nil
         (mkdir dir)
       (error nil))
@@ -541,6 +541,66 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
            (end (save-excursion (org-end-of-subtree t)))
            (contents (buffer-substring-no-properties beg end)))
       (kill-new contents t))))
+
+(defun re-seq (regexp string)
+  "Get a list of all regexp matches in a string"
+  (save-match-data
+    (let ((pos 0)
+          matches)
+      (while (string-match regexp string pos)
+        (push (match-string 0 string) matches)
+        (setq pos (match-end 0)))
+      matches)))
+
+(defconst org-glance-ledger-amount-regex
+  (concat
+   "\\(?:" ledger-commodity-regexp " *\\)?"
+   ;; We either match just a number after the commodity with no
+   ;; decimal or thousand separators or a number with thousand
+   ;; separators.  If we have a decimal part starting with `,'
+   ;; or `.', because the match is non-greedy, it must leave at
+   ;; least one of those symbols for the following capture
+   ;; group, which then finishes the decimal part.
+   "\\(-?\\(?:[0-9]+\\|[0-9,.]+?\\)\\)"
+   "\\([,. ][0-9)]+\\)?"
+   "\\(?: *" ledger-commodity-regexp "\\)?"
+   "\\([ \t]*[@={]@?[^\n;]+?\\)?"
+   "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
+
+(defun org-glance-ledger--build-report-from-subtree-at-point ()
+  (interactive)
+
+  (org-back-to-heading)
+
+  (unless (org-at-heading-p)
+    (user-error "Not at heading"))
+
+  (save-excursion
+    (save-restriction
+      (org-narrow-to-subtree)
+      (let* ((tags (org-get-tags-string))
+             (title (org-entry-get (point) "ITEM"))
+             (contents (buffer-substring-no-properties
+                        (point-min)
+                        (save-excursion
+                          (if (org-goto-first-child)
+                              (point)
+                            (point-max)))))
+             (ts (-some->>
+                     (re-seq org-ts-regexp contents)
+                   (-sort #'s-less?)
+                   (car)
+                   (ts-parse-org)))
+             (amounts (re-seq org-glance-ledger-amount-regex contents))
+             (output-filename (make-temp-file "org-glance-ledger-" nil ".org")))
+        (with-temp-file output-filename
+          (insert "#+begin_src ledger\n")
+          (insert (format "%04d/%02d/%02d %s\n" (ts-year ts) (ts-month ts) (ts-day ts) title))
+          (loop for amount in amounts
+                do (insert "\tExpenses" tags title "\t" amount "\n"))
+          (insert "\tAssets:Default\n")
+          (insert "#+end_src"))
+        (find-file-other-window output-filename)))))
 
 (cl-defun org-glance-cache-reread (&key
                                    filter
@@ -658,7 +718,10 @@ Read headline title in completing read prompt from org property named TITLE-PROP
          ;; only for encrypted views
          (fn-encrypt-current-headline (intern (concat ns "encrypt-current-headline")))
          (fn-decrypt-current-headline (intern (concat ns "decrypt-current-headline")))
-         (fn-decrypt-extract (intern (concat ns "decrypt-extract"))))
+         (fn-decrypt-extract (intern (concat ns "decrypt-extract")))
+
+         ;; only for ledger views
+         (fn-build-ledger-report (intern (concat ns "build-ledger-report"))))
 
     (add-to-list 'org-glance--views (intern tag))
 
@@ -680,7 +743,7 @@ Read headline title in completing read prompt from org property named TITLE-PROP
           :filter (function ,fn-filter)
           :fallback (function ,fn-fallback)
           :action (function org-glance-act--visit-headline)
-          :title-property title-property))
+          :title-property ,title-property))
 
        (defun ,fn-reread ()
          (interactive)
@@ -688,12 +751,12 @@ Read headline title in completing read prompt from org property named TITLE-PROP
           :scope (quote ,scope)
           :filter (function ,fn-filter)
           :cache-file ,cache-file-name
-          :title-property title-property))
+          :title-property ,title-property))
 
-       (defun ,fn-materialize ()
+       (defun ,fn-materialize (&optional minify)
          (interactive)
          (,fn-reread)
-         (org-glance-scope-materialize ,cache-file-name))
+         (org-glance-scope-materialize ,cache-file-name minify))
 
        (when (cond ((symbolp ,type) (eq ,type 'link))
                    ((listp ,type) (-contains? ,type 'link))
@@ -709,7 +772,16 @@ Read headline title in completing read prompt from org property named TITLE-PROP
             :filter (function ,fn-filter)
             :fallback (function ,fn-fallback)
             :action (function org-glance-act--open-org-link)
-            :title-property title-property)))
+            :title-property ,title-property)))
+
+       (when (cond ((symbolp ,type) (eq ,type 'ledger))
+                   ((listp ,type) (-contains? ,type 'ledger))
+                   (t nil))
+
+         (defun ,fn-build-ledger-report ()
+           (interactive)
+           (,fn-visit)
+           (org-glance-ledger--build-report-from-subtree-at-point)))
 
        (when (cond ((symbolp ,type) (eq ,type 'encrypted))
                    ((listp ,type) (-contains? ,type 'encrypted))
@@ -737,7 +809,7 @@ Read headline title in completing read prompt from org property named TITLE-PROP
               :filter (function ,fn-filter)
               :fallback (function ,fn-fallback)
               :action #'org-glance-sec--extract
-              :title-property title-property))))
+              :title-property ,title-property))))
 
        (when (quote ,bind)
          (cl-loop for (k . cmd) in (quote ,bind)
