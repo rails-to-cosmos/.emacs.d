@@ -462,13 +462,27 @@
   (interactive)
   (let* ((view (or view (org-completing-read "View: " org-glance--views)))
          (dir (or dir (read-directory-name "Backup directory: ")))
-         (vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase view))) 'minify)))
+         (vf (funcall (intern (format "org-glance--%s-materialize" (s-downcase view))) 'minify))
+         (new-file (concat (s-downcase view) ".org"))
+         (new-file-path (f-join dir new-file)))
+
     (condition-case nil
         (mkdir dir)
       (error nil))
-    (copy-file vf (f-join dir (concat (s-downcase view) ".org")) t)))
 
-(defun org-glance-backup-all-views (&optional view dir)
+    (if (file-exists-p new-file-path)
+        (let ((existed-buffer-hash (with-temp-buffer
+                                     (insert-file-contents new-file-path)
+                                     (buffer-hash)))
+              (new-buffer-hash (with-temp-buffer
+                                 (insert-file-contents vf)
+                                 (buffer-hash))))
+          (if (not (string= existed-buffer-hash new-buffer-hash))
+              (copy-file vf new-file-path t)
+            (message "View %s backup is up to date" view)))
+      (copy-file vf new-file-path t))))
+
+(defun org-glance-backup-all-views (&optional dir)
   (interactive)
   (let ((dir (or dir (read-directory-name "Backup directory: "))))
     (loop for view in org-glance--views
@@ -578,7 +592,7 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
   (save-excursion
     (save-restriction
       (org-narrow-to-subtree)
-      (let* ((tags (org-get-tags-string))
+      (let* ((tags (if (string-empty-p (org-get-tags-string)) ":" (org-get-tags-string)))
              (title (org-entry-get (point) "ITEM"))
              (contents (buffer-substring-no-properties
                         (point-min)
@@ -593,14 +607,18 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
                    (ts-parse-org)))
              (amounts (re-seq org-glance-ledger-amount-regex contents))
              (output-filename (make-temp-file "org-glance-ledger-" nil ".org")))
-        (with-temp-file output-filename
-          (insert "#+begin_src ledger\n")
-          (insert (format "%04d/%02d/%02d %s\n" (ts-year ts) (ts-month ts) (ts-day ts) title))
-          (loop for amount in amounts
-                do (insert "\tExpenses" tags title "\t" amount "\n"))
-          (insert "\tAssets:Default\n")
-          (insert "#+end_src"))
-        (find-file-other-window output-filename)))))
+        (unless ts
+          (user-error "Timestamp not found in subtree contents."))
+        (with-current-buffer-window
+         "*org-glance-ledger-report*" nil nil
+         (org-mode)
+         (insert "#+begin_src ledger\n")
+         (insert (format "%04d/%02d/%02d %s\n" (ts-year ts) (ts-month ts) (ts-day ts) title))
+         (loop for amount in amounts
+               do (insert (format "    Expenses%s%s    %s\n" tags title amount)))
+         (insert "    Assets:Default\n")
+         (insert "#+end_src")
+         (switch-to-buffer-other-window "*org-glance-ledger-report*"))))))
 
 (cl-defun org-glance-cache-reread (&key
                                    filter
