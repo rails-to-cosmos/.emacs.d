@@ -2340,6 +2340,7 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
 
   (org-glance-def-view "Event"
     :bind (("C-x j e" . org-glance--event-visit))
+    :commodities '(usd eur rub)
     :type '(ledger))
 
   (org-glance-def-view "Food"
