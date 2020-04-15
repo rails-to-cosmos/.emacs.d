@@ -2327,12 +2327,12 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
 
   (org-glance-def-view "Contact"
     :bind (("C-x j c" . org-glance--contact-visit))
-    :schema '(("CUSTOM_ID"   <50>)
-              ("FIRST_NAME"  <15>)
-              ("MIDDLE_NAME" <15>)
-              ("LAST_NAME"   <15>)
-              ("ITEM"        <100>)
-              ("PHONE"       <20>)))
+    :schema '(("CUSTOM_ID"   50)
+              ("FIRST_NAME"  15)
+              ("MIDDLE_NAME" 15)
+              ("LAST_NAME"   15)
+              ("ITEM"        100)
+              ("PHONE"       20)))
 
   (org-glance-def-view "Gist"
     :bind (("C-x j g" . org-glance--gist-visit))
@@ -2342,7 +2342,9 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
     :bind (("C-x j e" . org-glance--event-visit))
     :type '(ledger))
 
-  (org-glance-def-view "Food")  ;; restaurants, wine, recipes etc
+  (org-glance-def-view "Food"
+    :schema '(location title rating))  ;; restaurants, wine, recipes etc
+
   (org-glance-def-view "POI")  ;; points of interest
   (org-glance-def-view "Debt")  ;; finance relationships
   (org-glance-def-view "Doc")  ;; documents

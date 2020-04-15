@@ -642,13 +642,11 @@ If RETURN-PLAIN is non-nil, return decrypted contents as string."
           (user-error "Timestamp not found in subtree contents."))
         (with-current-buffer-window
          "*org-glance-ledger-report*" nil nil
-         (org-mode)
-         (insert "#+begin_src ledger\n")
+         (ledger-mode)
          (insert (format "%04d/%02d/%02d %s\n" (ts-year ts) (ts-month ts) (ts-day ts) title))
          (loop for amount in amounts
                do (insert (format "    Expenses%s%s    %s\n" tags title amount)))
          (insert "    Assets:Default\n")
-         (insert "#+end_src")
          (switch-to-buffer-other-window "*org-glance-ledger-report*"))))))
 
 (cl-defun org-glance-cache-reread (&key
