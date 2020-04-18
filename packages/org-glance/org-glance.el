@@ -747,6 +747,7 @@ Read headline title in completing read prompt from org property named TITLE-PROP
                                   (title-property :TITLE)
                                   &allow-other-keys)
   (declare (indent 1))
+
   (let* ((dtag (s-downcase tag))
          (ctag (s-capitalize tag))
          (ns (format "org-glance--%s-" dtag))
@@ -762,12 +763,12 @@ Read headline title in completing read prompt from org property named TITLE-PROP
          (fn-visit (intern (concat ns "visit")))
          (fn-materialize (intern (concat ns "materialize")))
 
-         ;; only for encrypted views
+         ;; encrypted views
          (fn-encrypt-current-headline (intern (concat ns "encrypt-current-headline")))
          (fn-decrypt-current-headline (intern (concat ns "decrypt-current-headline")))
          (fn-decrypt-extract (intern (concat ns "decrypt-extract")))
 
-         ;; only for ledger views
+         ;; ledger views
          (fn-build-ledger-report (intern (concat ns "build-ledger-report"))))
 
     (add-to-list 'org-glance--views (intern tag))
@@ -861,6 +862,9 @@ Read headline title in completing read prompt from org property named TITLE-PROP
        (when (quote ,bind)
          (cl-loop for (k . cmd) in (quote ,bind)
                   do (global-set-key (kbd k) cmd))))))
+
+(ert-deftest org-glance-test--feature-provided ()
+  (should (featurep 'org-glance)))
 
 (provide-me)
 ;;; org-glance.el ends here
