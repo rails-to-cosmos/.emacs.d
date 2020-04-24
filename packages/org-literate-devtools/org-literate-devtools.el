@@ -732,10 +732,14 @@ used to limit the exported source code blocks by language."
 (defun oldt-build ()
   (interactive)
   (let ((project-files (files-in-below-directory "./")))
-    (org-babel-tangle)
-    (mapc 'load-file project-files)
-    (mapc 'byte-compile-file project-files)
 
+    ;; tangle org-mode file
+    (when (eq major-mode 'org-mode)
+      (org-babel-tangle)
+      (mapc 'load-file project-files)
+      (mapc 'byte-compile-file project-files))
+
+    ;; run tests
     (let* ((org-literate-test-selector (oldt-ensure-local-var 'org-literate-test-selector))
            (org-literate-test-buffer (oldt-ensure-local-var 'org-literate-test-buffer))
            (ert-stats (ert-run-tests-interactively org-literate-test-selector org-literate-test-buffer))

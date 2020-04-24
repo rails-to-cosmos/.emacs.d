@@ -2318,6 +2318,8 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
 (use-package org-glance
   :config
 
+  (org-glance-def-view "Service")
+
   (org-glance-def-view "Bookmark"
     :bind (("C-x j j" . org-glance--bookmark-open)
            ("C-x j v" . org-glance--bookmark-visit))
@@ -2375,7 +2377,7 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
            ("C-x y p m" . org-glance--password-materialize))
     :type '(kv encrypted))
 
-  :load-path "~/.emacs.d/packages/org-glance"
+  :load-path "~/sync/stuff/org-glance"
   :ensure aes)
 #+end_src
 
