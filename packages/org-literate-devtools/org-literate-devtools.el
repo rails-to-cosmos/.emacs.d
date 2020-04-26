@@ -823,8 +823,7 @@ used to limit the exported source code blocks by language."
 (defun oldt-aws-emr--cluster-terminate ()
   (interactive)
   (->> (format "aws emr terminate-clusters --cluster-ids %s" (oldt-aws-emr-cluster--choose))
-       (shell-command-to-string)
-       (json-read-from-string)))
+       (shell-command-to-string)))
 
 (defun oldt-aws-emr-cluster--choose ()
   (interactive)
