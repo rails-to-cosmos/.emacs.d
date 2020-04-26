@@ -813,12 +813,18 @@ used to limit the exported source code blocks by language."
 (defun oldt-aws-emr-instance--browse-masters-private-dns (port)
   (interactive)
   (let ((instances (->> (format "aws emr list-instances --cluster-id %s --instance-group-types MASTER" (oldt-aws-emr-cluster--choose))
-                        shell-command-to-string
-                        json-read-from-string)))
+                        (shell-command-to-string)
+                        (json-read-from-string))))
     (let-alist instances
       (cl-loop for instance across-ref .Instances
                collect (let-alist instance
                          (browse-url (concat "http://" .PrivateDnsName ":" port)))))))
+
+(defun oldt-aws-emr--cluster-terminate ()
+  (interactive)
+  (->> (format "aws emr terminate-clusters --cluster-ids %s" (oldt-aws-emr-cluster--choose))
+       (shell-command-to-string)
+       (json-read-from-string)))
 
 (defun oldt-aws-emr-cluster--choose ()
   (interactive)
