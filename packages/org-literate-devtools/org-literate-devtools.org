@@ -960,6 +960,12 @@ used to limit the exported source code blocks by language."
                collect (let-alist instance
                          (browse-url (concat "http://" .PrivateDnsName ":" port)))))))
 
+(defun oldt-aws-emr--cluster-terminate ()
+  (interactive)
+  (->> (format "aws emr terminate-clusters --cluster-ids %s" (oldt-aws-emr-cluster--choose))
+       (shell-command-to-string)
+       (json-read-from-string)))
+
 (defun oldt-aws-emr-cluster--choose ()
   (interactive)
   (let* ((cluster-alist (oldt-aws-emr-cluster--list))
