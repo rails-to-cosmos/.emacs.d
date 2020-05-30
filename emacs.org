@@ -398,7 +398,7 @@ enjoy using a lot.
   (dired/sort))
 #+end_src
 
-*** collapsed dirs
+*** COMMENT collapsed dirs
 
 #+begin_src emacs-lisp
 (defface dired-collapsed-dirs
@@ -719,6 +719,12 @@ enjoy using a lot.
 
 ** Utils
 
+*** buffer-location-to-kill-ring
+#+begin_src emacs-lisp
+(defun buffer-location-to-kill-ring ()
+  (interactive)
+  (->> default-directory f-full kill-new message))
+#+end_src
 *** ledger
 
 #+begin_src emacs-lisp
@@ -798,7 +804,7 @@ enjoy using a lot.
 ;;           (match-string 5 url))))
 #+end_src
 
-*** find file in project
+*** COMMENT find file in project
 
 #+begin_src emacs-lisp
 (use-package find-file-in-project
@@ -1000,9 +1006,7 @@ enjoy using a lot.
 *** delete-other-windows
 
 #+begin_src emacs-lisp
-(use-package delete-other-windows
-  :no-require t
-  :bind (("C-x 1" . delete-other-windows)))
+(global-set-key (kbd "C-x 1") #'delete-other-windows)
 #+end_src
 
 *** delete-this-file
@@ -2305,11 +2309,7 @@ SET COLSEP '|'
   :load-path "~/.emacs.d/packages/ledna")
 #+end_src
 
-**** [#A] org-glance
-:LOGBOOK:
-- State "STARTED"    from              T:[2020-03-25 Wed 22:48]
-CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
-:END:
+**** [#A] org-glance                                                         :Emacs:
 
 #+begin_src emacs-lisp
 (use-package aes
@@ -2318,32 +2318,53 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
 (use-package org-glance
   :config
 
-  (org-glance-def-view "Service")
+  (require 'org-glance-views)
+
+  (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
+
+  (org-glance-def-view "Inventory")
 
   (org-glance-def-view "Bookmark"
-    :bind (("C-x j j" . org-glance--bookmark-open)
-           ("C-x j v" . org-glance--bookmark-visit))
-    :type 'link)
-
-  (global-set-key (kbd "C-x y g v") #'org-glance-list-views)
+    :bind (("C-x j j" . open)
+           ("C-x j m" . materialize)
+           ("C-x j v" . visit))
+    :scope '(agenda-with-archives)
+    :type '(link))
 
   (org-glance-def-view "Contact"
-    :bind (("C-x j c" . org-glance--contact-visit))
-    :schema '(("CUSTOM_ID"   50)
-              ("FIRST_NAME"  15)
-              ("MIDDLE_NAME" 15)
-              ("LAST_NAME"   15)
-              ("ITEM"        100)
-              ("PHONE"       20)))
+    :bind (("C-x j c" . materialize)))
+
+  ;; :schema '(("CUSTOM_ID"   50)
+  ;;           ("FIRST_NAME"  15)
+  ;;           ("MIDDLE_NAME" 15)
+  ;;           ("LAST_NAME"   15)
+  ;;           ("ITEM"        100)
+  ;;           ("PHONE"       20))
 
   (org-glance-def-view "Gist"
-    :bind (("C-x j g" . org-glance--gist-visit))
+    :bind (("C-x j g" . materialize))
+    :scope '(agenda-with-archives)
     :type '(babel))
 
   (org-glance-def-view "Event"
-    :bind (("C-x j e" . org-glance--event-visit))
+    :bind (("C-x j e" . visit))
     :commodities '(usd eur rub)
     :type '(ledger))
+
+  (org-glance-def-view "Password"
+    :bind (("C-x y p p" . extract)
+           ("C-x y p v" . visit)
+           ("C-x y p d" . decrypt))
+    :scope '(agenda-with-archives)
+    :capture '(add-tag add-key-value generate-password encrypt-view)
+    :type '(kv crypt))
+
+  (org-glance-def-view "Emacs"
+    :scope '("~/.emacs.d/emacs.org"))
+
+  (org-glance-def-view "Service"
+    :scope '("~/sync/stuff/org-glance/org-glance.org")
+    :type '(link))
 
   (org-glance-def-view "Food"
     :schema '(location title rating))  ;; restaurants, wine, recipes etc
@@ -2352,7 +2373,9 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   (org-glance-def-view "Debt")  ;; finance relationships
   (org-glance-def-view "Doc")  ;; documents
   (org-glance-def-view "Song"
-    :bind (("C-x j s" . org-glance--song-visit)))
+    :bind (("C-x j s" . materialize)))
+  (org-glance-def-view "Game")
+
 
   ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
@@ -2368,14 +2391,6 @@ CLOCK: [2020-03-25 Wed 22:48]--[2020-03-25 Wed 22:49] =>  0:01
   ;;           FROM event
   ;;           JOIN contact on contact.title in event.starring
   ;;           ORDER BY state, archive_time DESC")
-
-  (org-glance-def-view "Password"
-    :bind (("C-x y p p" . org-glance--password-decrypt-extract)
-           ("C-x y p v" . org-glance--password-visit)
-           ("C-x y p e" . org-glance--password-encrypt-current-headline)
-           ("C-x y p d" . org-glance--password-decrypt-current-headline)
-           ("C-x y p m" . org-glance--password-materialize))
-    :type '(kv encrypted))
 
   :load-path "~/sync/stuff/org-glance"
   :ensure aes)
@@ -2586,6 +2601,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** COMMENT yasnippet
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :config (progn
+            (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+            (yas-global-mode)))
+#+end_src
 *** macro
 #+begin_src emacs-lisp
 (defun fix-multiple-spaces (&optional arg)
@@ -2632,7 +2654,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package company-lsp :commands company-lsp)
 ;; optionally if you want to use debugger
 (use-package dap-mode :ensure t)
-(use-package dap-python)
+;; (use-package dap-python)
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 #+end_src
 
@@ -3057,7 +3079,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-*** increment-number
+*** COMMENT increment-number
 
 #+begin_src emacs-lisp
 (use-package increment-number
@@ -3143,6 +3165,15 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.programming
 :END:
 
+*** projectile
+#+begin_src emacs-lisp
+(use-package projectile
+  :bind (("C-x f" . projectile-find-file)
+         ("C-c r" . projectile-ripgrep))
+  :config (progn
+            (setq projectile-completion-system 'ivy))
+  :ensure t)
+#+end_src
 *** docker
 
 #+begin_src emacs-lisp
@@ -3154,8 +3185,46 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package scala-mode
-  :config (setq scala-indent:step 2)
-  :ensure t)
+  :mode "\\.s\\(cala\\|bt\\)$"
+  :config (setq scala-indent:step 2))
+
+(use-package sbt-mode
+  :commands sbt-start sbt-command
+  :config
+
+  (defun sbt-mode-beginning-of-line ()
+    (interactive)
+    (beginning-of-line)
+    (search-forward ">")
+    (forward-char))
+
+  (define-key sbt:mode-map (kbd "C-a") 'sbt-mode-beginning-of-line)
+
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition 'minibuffer-complete-word
+                             'self-insert-command
+                             minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+  (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  :hook (scala-mode . lsp)
+        (lsp-mode . lsp-lens-mode)
+  :config (setq lsp-prefer-flymake nil))
+
+(use-package lsp-ui)
+(use-package company-lsp)
+(use-package posframe)
+
+(use-package dap-mode
+  :hook (lsp-mode . dap-mode)
+        (lsp-mode . dap-ui-mode))
+
+(use-package lsp-treemacs
+  :config (lsp-metals-treeview-enable t)
+  (setq lsp-metals-treeview-show-when-views-received t))
 #+end_src
 
 *** rmsbolt

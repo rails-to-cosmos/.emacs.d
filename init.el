@@ -18,6 +18,11 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(setq ;; use-package-always-defer t
+ use-package-always-ensure t
+ backup-directory-alist `((".*" . ,temporary-file-directory))
+ auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
+
 (use-package diminish
   :ensure t)
 

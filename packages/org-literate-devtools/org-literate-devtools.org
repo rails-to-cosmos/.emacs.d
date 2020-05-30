@@ -867,9 +867,10 @@ used to limit the exported source code blocks by language."
 
     ;; tangle org-mode file
     (when (eq major-mode 'org-mode)
-      (org-babel-tangle)
-      (mapc 'load-file project-files)
-      (mapc 'byte-compile-file project-files))
+      (org-babel-tangle))
+
+    (mapc 'load-file project-files)
+    (mapc 'byte-compile-file project-files)
 
     ;; run tests
     (let* ((org-literate-test-selector (oldt-ensure-local-var 'org-literate-test-selector))
@@ -928,7 +929,7 @@ used to limit the exported source code blocks by language."
 (defconst oldt-aws-emr-states '(BOOTSTRAPPING STARTING RUNNING WAITING TERMINATING TERMINATED TERMINATED_WITH_ERRORS))
 
 (defun oldt-aws-emr-cluster--list ()
-  (let ((clusters (->> "aws emr list-clusters --max-items 15 --created-after 2020-03-17T00:00:00"
+  (let ((clusters (->> "aws emr list-clusters --max-items 15 --active"
                        shell-command-to-string
                        json-read-from-string)))
     (let-alist clusters
