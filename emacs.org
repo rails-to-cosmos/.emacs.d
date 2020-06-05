@@ -2332,7 +2332,8 @@ SET COLSEP '|'
     :type '(link))
 
   (org-glance-def-view "Contact"
-    :bind (("C-x j c" . materialize)))
+    :scope '(agenda-with-archives)
+    :bind (("C-x c v" . materialize)))
 
   ;; :schema '(("CUSTOM_ID"   50)
   ;;           ("FIRST_NAME"  15)
@@ -2347,8 +2348,9 @@ SET COLSEP '|'
     :type '(babel))
 
   (org-glance-def-view "Event"
-    :bind (("C-x j e" . visit))
+    :bind (("C-x j e" . materialize))
     :commodities '(usd eur rub)
+    :scope '(agenda-with-archives)
     :type '(ledger))
 
   (org-glance-def-view "Password"
@@ -2362,22 +2364,21 @@ SET COLSEP '|'
   (org-glance-def-view "Emacs"
     :scope '("~/.emacs.d/emacs.org"))
 
-  (org-glance-def-view "Service"
-    :scope '("~/sync/stuff/org-glance/org-glance.org")
-    :type '(link))
-
   (org-glance-def-view "Food"
     :schema '(location title rating))  ;; restaurants, wine, recipes etc
 
   (org-glance-def-view "POI")  ;; points of interest
   (org-glance-def-view "Debt")  ;; finance relationships
   (org-glance-def-view "Doc")  ;; documents
-  (org-glance-def-view "Song"
-    :bind (("C-x j s" . materialize)))
+  (org-glance-def-view "Song")
   (org-glance-def-view "Game")
 
+  (org-glance-def-view "Service"
+    :bind (("C-x j s" . open))
+    :scope '(agenda)
+    :type '(link))
 
-  ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
+;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
   ;; (org-glance-def-view "New events"
   ;;  :select (:todo-state :title "starring" "archive_time")
@@ -3573,7 +3574,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.ui
 :END:
 
-*** grab-and-drag
+*** COMMENT grab-and-drag
 
 #+begin_src emacs-lisp
 (use-package grab-and-drag
