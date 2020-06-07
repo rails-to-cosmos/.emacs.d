@@ -719,6 +719,16 @@ enjoy using a lot.
 
 ** Utils
 
+*** sqlite
+#+begin_src emacs-lisp
+(use-package emacsql-sqlite3)
+#+end_src
+*** vega-view
+#+begin_src emacs-lisp
+(use-package vega-view
+  :config
+  (setq vega-view-prefer-png t))
+#+end_src
 *** buffer-location-to-kill-ring
 #+begin_src emacs-lisp
 (defun buffer-location-to-kill-ring ()
@@ -1112,7 +1122,12 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (use-package pdf-tools
-  :commands (pdf-view-mode)
+  :mode
+  ("\\.pdf\\$" . pdf-view-mode)
+  :init
+  (pdf-loader-install)
+  :commands
+  (pdf-view-mode)
   :diminish t
   :ensure t)
 #+end_src
@@ -1386,6 +1401,22 @@ BEG and END (region to sort)."
 
 ** Org
 
+*** pdf
+#+begin_src emacs-lisp
+(use-package org-pdftools
+  :hook (org-load . org-pdftools-setup-link))
+
+(use-package org-noter-pdftools
+  :after org-noter
+  :config
+  (with-eval-after-load 'pdf-annot
+    (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
+
+(use-package pdf-view-restore
+  :after pdf-tools
+  :config
+  (add-hook 'pdf-view-mode-hook 'pdf-view-restore-mode))
+#+end_src
 *** ui
 #+begin_src emacs-lisp
 (setq org-priority-faces
@@ -2321,13 +2352,14 @@ SET COLSEP '|'
   (require 'org-glance-views)
 
   (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
+  (global-set-key (kbd "C-x j") #'org-glance-transient-actions)
 
   (org-glance-def-view "Inventory")
 
   (org-glance-def-view "Bookmark"
-    :bind (("C-x j j" . open)
-           ("C-x j m" . materialize)
-           ("C-x j v" . visit))
+    ;; :bind (("C-x j j" . open)
+    ;;        ("C-x j m" . materialize)
+    ;;        ("C-x j v" . visit))
     :scope '(agenda-with-archives)
     :type '(link))
 
@@ -2374,8 +2406,14 @@ SET COLSEP '|'
   (org-glance-def-view "Game")
 
   (org-glance-def-view "Service"
-    :bind (("C-x j s" . open))
     :scope '(agenda)
+    :type '(link))
+
+  (org-glance-def-view "Book"
+    :bind (("C-x j b m" . materialize)
+           ("C-x j b o" . open))
+    :scope '(agenda-with-archives)
+    :title "${CATEGORY} -> ${AUTHOR} -> ${TITLE} (${PROGRESS}%)"
     :type '(link))
 
 ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
