@@ -2352,7 +2352,7 @@ SET COLSEP '|'
   (require 'org-glance-views)
 
   (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
-  (global-set-key (kbd "C-x j") #'org-glance-transient-actions)
+  (global-set-key (kbd "C-x j") #'org-glance-act)
 
   (org-glance-def-view "Inventory")
 
@@ -2360,11 +2360,11 @@ SET COLSEP '|'
     ;; :bind (("C-x j j" . open)
     ;;        ("C-x j m" . materialize)
     ;;        ("C-x j v" . visit))
-    :scope '(agenda-with-archives)
-    :type '(link))
+    :type '(link)
+    ;; :file "/tmp/bookmarks.el"
+    :db 'sqlite3)  ;; elisp sqlite sqlite3
 
   (org-glance-def-view "Contact"
-    :scope '(agenda-with-archives)
     :bind (("C-x c v" . materialize)))
 
   ;; :schema '(("CUSTOM_ID"   50)
@@ -2375,21 +2375,18 @@ SET COLSEP '|'
   ;;           ("PHONE"       20))
 
   (org-glance-def-view "Gist"
-    :bind (("C-x j g" . materialize))
-    :scope '(agenda-with-archives)
+    ;; :bind (("C-x j g" . materialize))
     :type '(babel))
 
   (org-glance-def-view "Event"
-    :bind (("C-x j e" . materialize))
+    ;; :bind (("C-x j e" . materialize))
     :commodities '(usd eur rub)
-    :scope '(agenda-with-archives)
     :type '(ledger))
 
   (org-glance-def-view "Password"
-    :bind (("C-x y p p" . extract)
-           ("C-x y p v" . visit)
-           ("C-x y p d" . decrypt))
-    :scope '(agenda-with-archives)
+    ;; :bind (("C-x y p p" . extract)
+    ;;        ("C-x y p v" . visit)
+    ;;        ("C-x y p d" . decrypt))
     :capture '(add-tag add-key-value generate-password encrypt-view)
     :type '(kv crypt))
 
@@ -2405,16 +2402,15 @@ SET COLSEP '|'
   (org-glance-def-view "Song")
   (org-glance-def-view "Game")
 
-  (org-glance-def-view "Service"
-    :scope '(agenda)
-    :type '(link))
+  ;; (org-glance-def-view "Service"
+  ;;   :scope '(agenda)
+  ;;   :type '(link))
 
   (org-glance-def-view "Book"
-    :bind (("C-x j b m" . materialize)
-           ("C-x j b o" . open))
-    :scope '(agenda-with-archives)
+    ;; :bind (("C-x j b m" . materialize)
+    ;;        ("C-x j b o" . open))
     :title "${CATEGORY} -> ${AUTHOR} -> ${TITLE} (${PROGRESS}%)"
-    :type '(link))
+    :type '(pdf))
 
 ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
@@ -3516,7 +3512,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-**** realgud
+**** COMMENT realgud
 
 #+begin_src emacs-lisp
 (use-package realgud
