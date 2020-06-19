@@ -2397,7 +2397,8 @@ SET COLSEP '|'
     :schema '(location title rating))  ;; restaurants, wine, recipes etc
 
   (org-glance-def-view "POI")  ;; points of interest
-  (org-glance-def-view "Debt")  ;; finance relationships
+  (org-glance-def-view "Debt"
+    :scope '(agenda))  ;; finance relationships
   (org-glance-def-view "Doc")  ;; documents
   (org-glance-def-view "Song")
   (org-glance-def-view "Game")
@@ -3258,7 +3259,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
         (lsp-mode . dap-ui-mode))
 
 (use-package lsp-treemacs
-  :config (lsp-metals-treeview-enable t)
+  :config
   (setq lsp-metals-treeview-show-when-views-received t))
 #+end_src
 
@@ -3633,7 +3634,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** default font
 
 #+begin_src emacs-lisp
-(let ((face (list (list t (list :family "Inconsolata LGC")))))
+(let ((face (list (list t (list :family "Inconsolata LGC" :height 110)))))
   (custom-set-faces (list 'default face)))
 #+end_src
 
