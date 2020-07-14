@@ -719,6 +719,18 @@ enjoy using a lot.
 
 ** Utils
 
+*** ripgrep
+#+begin_src emacs-lisp
+(use-package ripgrep)
+#+end_src
+*** ts
+#+begin_src emacs-lisp
+(use-package ts)
+#+end_src
+*** load-relative
+#+begin_src emacs-lisp
+(use-package load-relative)
+#+end_src
 *** sqlite
 #+begin_src emacs-lisp
 (use-package emacsql-sqlite3)
@@ -953,7 +965,7 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** Counsel
+*** COMMENT Counsel
 
 #+begin_src emacs-lisp
 (use-package counsel
@@ -1606,7 +1618,7 @@ exist after each headings's drawers."
 
 #+begin_src emacs-lisp
 (setq org-archive-location
-      (format "archives/%s/%%s_archive::"
+      (format "~/sync/archives/%s/%%s_archive::"
               (format-time-string "%Y/%m" (current-time))))
 #+end_src
 
@@ -2349,44 +2361,34 @@ SET COLSEP '|'
 (use-package org-glance
   :config
 
-  (require 'org-glance-views)
-
   (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
   (global-set-key (kbd "C-x j") #'org-glance-act)
 
-  (org-glance-def-view "Inventory")
+  (org-glance-def-view "Inventory"
+    :scope '(agenda))
 
   (org-glance-def-view "Bookmark"
-    ;; :bind (("C-x j j" . open)
-    ;;        ("C-x j m" . materialize)
-    ;;        ("C-x j v" . visit))
     :type '(link)
-    ;; :file "/tmp/bookmarks.el"
-    :db 'sqlite3)  ;; elisp sqlite sqlite3
+    :scope org-glance-default-scope
+    :db 'sqlite3)
 
   (org-glance-def-view "Contact"
+    :scope org-glance-default-scope
     :bind (("C-x c v" . materialize)))
 
-  ;; :schema '(("CUSTOM_ID"   50)
-  ;;           ("FIRST_NAME"  15)
-  ;;           ("MIDDLE_NAME" 15)
-  ;;           ("LAST_NAME"   15)
-  ;;           ("ITEM"        100)
-  ;;           ("PHONE"       20))
-
   (org-glance-def-view "Gist"
-    ;; :bind (("C-x j g" . materialize))
+    :scope org-glance-default-scope
     :type '(babel))
 
-  (org-glance-def-view "Event"
-    ;; :bind (("C-x j e" . materialize))
+  (org-glance-def-view "Epic"
+    :scope org-glance-default-scope)
+
+  (org-glance-def-view "Story"
+    :scope org-glance-default-scope
     :commodities '(usd eur rub)
-    :type '(ledger))
+    :type '(link ledger))
 
   (org-glance-def-view "Password"
-    ;; :bind (("C-x y p p" . extract)
-    ;;        ("C-x y p v" . visit)
-    ;;        ("C-x y p d" . decrypt))
     :capture '(add-tag add-key-value generate-password encrypt-view)
     :type '(kv crypt))
 
@@ -2399,17 +2401,14 @@ SET COLSEP '|'
   (org-glance-def-view "POI")  ;; points of interest
   (org-glance-def-view "Debt"
     :scope '(agenda))  ;; finance relationships
-  (org-glance-def-view "Doc")  ;; documents
   (org-glance-def-view "Song")
   (org-glance-def-view "Game")
 
-  ;; (org-glance-def-view "Service"
-  ;;   :scope '(agenda)
-  ;;   :type '(link))
+  (org-glance-def-view "Service"
+    :scope '(agenda)
+    :type '(link))
 
   (org-glance-def-view "Book"
-    ;; :bind (("C-x j b m" . materialize)
-    ;;        ("C-x j b o" . open))
     :title "${CATEGORY} -> ${AUTHOR} -> ${TITLE} (${PROGRESS}%)"
     :type '(pdf))
 
@@ -2431,6 +2430,7 @@ SET COLSEP '|'
   :load-path "~/sync/stuff/org-glance"
   :ensure aes)
 #+end_src
+
 
 **** org-literate-devtools
 
@@ -2637,6 +2637,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** markdown
+#+begin_src emacs-lisp
+(use-package markdown-mode)
+#+end_src
 *** COMMENT yasnippet
 #+begin_src emacs-lisp
 (use-package yasnippet
@@ -2667,7 +2671,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 *** completion
 
-**** company
+**** COMMENT company
 
 #+begin_src emacs-lisp
 (use-package company
@@ -2677,7 +2681,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-**** lsp
+**** COMMENT lsp
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
@@ -2694,13 +2698,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 #+end_src
 
-**** COMMENT pabbrev
+**** pabbrev
 
 #+begin_src emacs-lisp
 (use-package pabbrev
-  :config (progn
-            (global-pabbrev-mode)
-            (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
+  :config
+(global-pabbrev-mode)
+(define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe)
   :ensure t)
 #+end_src
 
