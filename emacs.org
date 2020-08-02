@@ -2359,27 +2359,22 @@ SET COLSEP '|'
   (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
   (global-set-key (kbd "C-x j") #'org-glance-act)
 
-  (org-glance-def-view 'Inventory :type '(kvs))
-  (org-glance-def-view 'Epic)
-  (org-glance-def-view 'Story :type '(link ledger))
-  (org-glance-def-view 'Bookmark :type '(link))
-  (org-glance-def-view 'Contact :type '(kvs))
-  (org-glance-def-view 'Gist :type '(babel))
-  (org-glance-def-view 'Password :type '(kvs crypt))
-  (org-glance-def-view 'Emacs :scope '("~/.emacs.d/emacs.org"))
-  (org-glance-def-view 'Food :schema '(location title rating))  ;; restaurants, wine, recipes etc
-  (org-glance-def-view 'POI)  ;; points of interest
-  (org-glance-def-view 'Debt :scope '(agenda))  ;; finance relationships
-  (org-glance-def-view 'Song)
-  (org-glance-def-view 'Game)
-
-  (org-glance-def-view 'Service
-                       :scope '(agenda)
-                       :type '(link))
-
-  (org-glance-def-view 'Book
-                       :title "${CATEGORY} -> ${AUTHOR} -> ${TITLE} (${PROGRESS}%)"
-                       :type '(pdf))
+  (require 'org-glance-views)
+  (org-glance-def-view Inventory :type '(kvs))
+  (org-glance-def-view Epic)
+  (org-glance-def-view Story :type '(link ledger))
+  (org-glance-def-view Bookmark :type '(link))
+  (org-glance-def-view Contact :type '(kvs))
+  (org-glance-def-view Gist :type '(babel))
+  (org-glance-def-view Password :type '(kvs crypt))
+  (org-glance-def-view Emacs :scope '("~/.emacs.d/emacs.org"))
+  (org-glance-def-view Food :schema '(location title rating))  ;; restaurants, wine, recipes etc
+  (org-glance-def-view POI)  ;; points of interest
+  (org-glance-def-view Debt :scope '(agenda))  ;; finance relationships
+  (org-glance-def-view Song)
+  (org-glance-def-view Game)
+  (org-glance-def-view Service :scope '(agenda) :type '(link))
+  (org-glance-def-view Book :type '(pdf))
 
 ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
