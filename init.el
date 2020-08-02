@@ -5,11 +5,12 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (dolist (package-archive
-         '(("melpa" . "http://melpa.milkbox.net/packages/")
-           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
+         '(("melpa" . "https://melpa.org/packages/")
+           ("melpa-stable" . "https://stable.melpa.org/packages/")
            ("org" . "https://orgmode.org/elpa/")
            ("marmalade" . "http://marmalade-repo.org/packages/")
-           ("elpy" . "https://jorgenschaefer.github.io/packages/")))
+           ;; ("elpy" . "https://jorgenschaefer.github.io/packages/")
+           ))
   (add-to-list 'package-archives package-archive))
 (package-initialize)
 

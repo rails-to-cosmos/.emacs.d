@@ -258,9 +258,9 @@ enjoy using a lot.
 	       mac-option-modifier  'alt
 	       ;; sane trackpad/mouse scroll settings
 	       mac-redisplay-dont-reset-vscroll t
-	       mac-mouse-wheel-smooth-scroll nil
-	       mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
-	       mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
+	       ;; mac-mouse-wheel-smooth-scroll nil
+	       ;; mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
+	       ;; mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
 	       ;; Curse Lion and its sudden but inevitable fullscreen mode!
 	       ;; NOTE Meaningless to railwaycat's emacs-mac build
 	       ns-use-native-fullscreen t
@@ -718,7 +718,6 @@ enjoy using a lot.
 #+end_src
 
 ** Utils
-
 *** ripgrep
 #+begin_src emacs-lisp
 (use-package ripgrep)
@@ -965,7 +964,7 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** COMMENT Counsel
+*** Counsel
 
 #+begin_src emacs-lisp
 (use-package counsel
@@ -985,8 +984,7 @@ enjoy using a lot.
          ("C-r" . counsel-minibuffer-history))
   :init (counsel-mode)
   :config (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin|$")
-  :ensure t
-  :ensure smex)
+  :ensure t)
 #+end_src
 
 *** COMMENT Mirror minibuffer
@@ -1307,9 +1305,7 @@ BEG and END (region to sort)."
 #+end_src
 
 *** imenu
-
 **** imenu-anywhere
-
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
     :init (progn
@@ -1317,7 +1313,6 @@ BEG and END (region to sort)."
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
 #+end_src
-
 *** COMMENT rsync
 
 #+begin_src emacs-lisp
@@ -1412,8 +1407,7 @@ BEG and END (region to sort)."
 #+end_src
 
 ** Org
-
-*** pdf
+*** COMMENT pdf
 #+begin_src emacs-lisp
 (use-package org-pdftools
   :hook (org-load . org-pdftools-setup-link))
@@ -1453,7 +1447,6 @@ BEG and END (region to sort)."
                ("TEST" . "#749AF7")))))
 #+end_src
 *** notify
-
 #+begin_src emacs-lisp
 (use-package org-notify
   :load-path "~/.emacs.d/packages"
@@ -1477,9 +1470,7 @@ BEG and END (region to sort)."
                             '(:time "3h" :actions -telegram)
                             '(:time "1d" :actions -telegram))))
 #+end_src
-
 *** exports
-
 **** proper html exports
 
 #+begin_src emacs-lisp
@@ -1523,7 +1514,6 @@ BEG and END (region to sort)."
 #+end_src
 
 **** ox-reveal
-
 #+begin_src emacs-lisp
 (use-package ox-reveal
   :ensure t)
@@ -1579,11 +1569,10 @@ exist after each headings's drawers."
          ("C-M-p" . ded/org-show-previous-heading-tidily)
          ("C-c f" . org-sparse-tree)
          ([(shift tab)] . org-overview))
-  :config (require 'org-agenda)
-  :ensure t)
+  :config (require 'org-agenda))
 #+end_src
 
-*** modules
+*** COMMENT modules
 
 #+begin_src emacs-lisp
 (setq org-modules
@@ -1628,7 +1617,7 @@ exist after each headings's drawers."
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
 #+end_src
 
-*** [[http://www.nongnu.org/org-edna-el/][org-edna]]
+*** COMMENT [[http://www.nongnu.org/org-edna-el/][org-edna]]
 
 #+begin_src emacs-lisp
 (use-package org-edna
@@ -2125,6 +2114,7 @@ If KWD is a number, get the corresponding match group."
 
 #+begin_src emacs-lisp
 (setq-default
+ org-use-property-inheritance t
  org-cycle-separator-lines 0
  org-catch-invisible-edits 'error
  org-read-date-prefer-future 'time
@@ -2361,67 +2351,46 @@ SET COLSEP '|'
 (use-package org-glance
   :config
 
+  (setq org-glance-default-scope '("~/sync/archives"
+                                   "~/sync/notes"
+                                   "~/sync/resources"
+                                   "~/sync/workshop"))
+
   (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
   (global-set-key (kbd "C-x j") #'org-glance-act)
 
-  (org-glance-def-view "Inventory"
-    :scope '(agenda))
+  (org-glance-def-view 'Inventory :type '(kvs))
+  (org-glance-def-view 'Epic)
+  (org-glance-def-view 'Story :type '(link ledger))
+  (org-glance-def-view 'Bookmark :type '(link))
+  (org-glance-def-view 'Contact :type '(kvs))
+  (org-glance-def-view 'Gist :type '(babel))
+  (org-glance-def-view 'Password :type '(kvs crypt))
+  (org-glance-def-view 'Emacs :scope '("~/.emacs.d/emacs.org"))
+  (org-glance-def-view 'Food :schema '(location title rating))  ;; restaurants, wine, recipes etc
+  (org-glance-def-view 'POI)  ;; points of interest
+  (org-glance-def-view 'Debt :scope '(agenda))  ;; finance relationships
+  (org-glance-def-view 'Song)
+  (org-glance-def-view 'Game)
 
-  (org-glance-def-view "Bookmark"
-    :type '(link)
-    :scope org-glance-default-scope
-    :db 'sqlite3)
+  (org-glance-def-view 'Service
+                       :scope '(agenda)
+                       :type '(link))
 
-  (org-glance-def-view "Contact"
-    :scope org-glance-default-scope
-    :bind (("C-x c v" . materialize)))
-
-  (org-glance-def-view "Gist"
-    :scope org-glance-default-scope
-    :type '(babel))
-
-  (org-glance-def-view "Epic"
-    :scope org-glance-default-scope)
-
-  (org-glance-def-view "Story"
-    :scope org-glance-default-scope
-    :commodities '(usd eur rub)
-    :type '(link ledger))
-
-  (org-glance-def-view "Password"
-    :capture '(add-tag add-key-value generate-password encrypt-view)
-    :type '(kv crypt))
-
-  (org-glance-def-view "Emacs"
-    :scope '("~/.emacs.d/emacs.org"))
-
-  (org-glance-def-view "Food"
-    :schema '(location title rating))  ;; restaurants, wine, recipes etc
-
-  (org-glance-def-view "POI")  ;; points of interest
-  (org-glance-def-view "Debt"
-    :scope '(agenda))  ;; finance relationships
-  (org-glance-def-view "Song")
-  (org-glance-def-view "Game")
-
-  (org-glance-def-view "Service"
-    :scope '(agenda)
-    :type '(link))
-
-  (org-glance-def-view "Book"
-    :title "${CATEGORY} -> ${AUTHOR} -> ${TITLE} (${PROGRESS}%)"
-    :type '(pdf))
+  (org-glance-def-view 'Book
+                       :title "${CATEGORY} -> ${AUTHOR} -> ${TITLE} (${PROGRESS}%)"
+                       :type '(pdf))
 
 ;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
 
-  ;; (org-glance-def-view "New events"
+  ;; (org-glance-def-view 'New events"
   ;;  :select (:todo-state :title "starring" "archive_time")
   ;;  :from "Event"
   ;;  :inner-join "Contact" :on "Contact.Title" :in "Event.Starring"
   ;;  :order-by (:todo-state "archive_time") :desc
   ;;  :bind "C-x j g" :action (lambda (todo-state title starring archive_time) (message todo-state)))
 
-  ;; (org-glance-def-view "events-with-contacts"
+  ;; (org-glance-def-view 'events-with-contacts"
   ;;   :query "SELECT state, title, archive_time
   ;;           FROM event
   ;;           JOIN contact on contact.title in event.starring
@@ -2431,6 +2400,8 @@ SET COLSEP '|'
   :ensure aes)
 #+end_src
 
+#+RESULTS:
+: t
 
 **** org-literate-devtools
 
@@ -2496,22 +2467,22 @@ SET COLSEP '|'
     t))
 #+end_src
 
-**** org-auto-property
+**** COMMENT org-auto-property
 
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
   (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
         ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
-        ((and (org-edna-entry-has-tags-p "Event") (not (ledna/get-property "DIR")))
+        ((and (org-edna-entry-has-tags-p "Story") (not (ledna/get-property "DIR")))
          (let* ((event-dir-abs
-                 (let ((default-directory (f-join default-directory "../resources/events")))
-                   (read-directory-name "Specify event directory: ")))
+                 (let ((default-directory (f-join default-directory "../resources/stories")))
+                   (read-directory-name "Specify story directory: ")))
                 (event-dir-rel (file-relative-name event-dir-abs)))
            (condition-case nil
                (make-directory event-dir-abs)
              (error nil))
            (org-set-property "DIR" event-dir-rel)
-           (org-set-property "ARCHIVE" (f-join event-dir-rel "events.org::"))
+           (org-set-property "ARCHIVE" (f-join event-dir-rel "stories.org::"))
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)
@@ -2632,6 +2603,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
       (list file org-clock-file-total-minutes (nreverse tbl)))))
 #+end_src
 
+**** elgannt
+
+#+begin_src emacs-lisp
+(use-package elgantt
+  :load-path "~/sync/stuff/elgantt"
+  :ensure org-ql)
+#+end_src
+
 ** Editor
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
@@ -2670,6 +2649,42 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
 *** completion
+**** abbrev
+
+#+begin_src emacs-lisp
+(setq abbrev-file-name (tmp/ "abbrev_defs")
+      save-abbrevs 'silent)
+
+(define-abbrev-table 'python-mode-abbrev-table
+  '(("pdb" "import pdb; pdb.set_trace()" nil 0)
+    ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
+
+(define-abbrev-table 'sql-mode-abbrev-table
+  '(("select" "SELECT" nil 0)
+    ("fr" "FROM" nil 0)
+    ("where" "WHERE" nil 0)
+    ("ord" "ORDER BY" nil 0)))
+
+(add-hook 'prog-mode-hook 'abbrev-mode)
+#+end_src
+
+**** COMMENT lsp
+
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :commands lsp)
+
+(use-package lsp-ui
+  :commands lsp-ui-mode)
+
+(use-package company-lsp
+  :commands company-lsp)
+
+;; (use-package dap-mode)
+;; (use-package dap-scala)
+;; (use-package dap-python)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+#+end_src
 
 **** COMMENT company
 
@@ -2681,24 +2696,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-**** COMMENT lsp
-
-#+begin_src emacs-lisp
-(use-package lsp-mode
-  ;; :hook (python-mode . lsp)
-  :commands lsp
-  :ensure t)
-
-;; optionally
-(use-package lsp-ui :commands lsp-ui-mode)
-(use-package company-lsp :commands company-lsp)
-;; optionally if you want to use debugger
-(use-package dap-mode :ensure t)
-;; (use-package dap-python)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-#+end_src
-
-**** pabbrev
+**** COMMENT pabbrev
 
 #+begin_src emacs-lisp
 (use-package pabbrev
@@ -2732,25 +2730,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
         (setq pabbrev-last-expansion-suggestions nil)))))
 
 (fset 'pabbrev-suggestions-goto-buffer 'pabbrevx-suggestions-goto-buffer)
-#+end_src
-
-**** abbrev
-
-#+begin_src emacs-lisp
-(setq abbrev-file-name (tmp/ "abbrev_defs")
-      save-abbrevs 'silent)
-
-(define-abbrev-table 'python-mode-abbrev-table
-  '(("pdb" "import pdb; pdb.set_trace()" nil 0)
-    ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
-
-(define-abbrev-table 'sql-mode-abbrev-table
-  '(("select" "SELECT" nil 0)
-    ("fr" "FROM" nil 0)
-    ("where" "WHERE" nil 0)
-    ("ord" "ORDER BY" nil 0)))
-
-(add-hook 'prog-mode-hook 'abbrev-mode)
 #+end_src
 
 *** vlf -- view large files
@@ -2937,7 +2916,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-*** elmacro
+*** COMMENT elmacro
 
 #+begin_src emacs-lisp
 (use-package elmacro
@@ -3103,16 +3082,19 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package flycheck
-  :config (progn
-            (setq-default
-             flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-             flycheck-idle-change-delay 5
-             flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
-            (global-flycheck-mode))
+  :config
+
+  (setq-default
+   flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+   flycheck-idle-change-delay 5
+   flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
+
+  (add-hook 'prog-mode-hook 'flycheck-mode)
+
   :ensure t)
 #+end_src
 
-*** flyspell
+*** COMMENT flyspell
 
 #+begin_src emacs-lisp
 (use-package flyspell
@@ -3208,21 +3190,19 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** projectile
 #+begin_src emacs-lisp
 (use-package projectile
-  :bind (("C-x f" . projectile-find-file)
-         ("C-c r" . projectile-ripgrep))
-  :config (progn
-            (setq projectile-completion-system 'ivy))
+  :bind
+  (("C-x f" . projectile-find-file)
+   ("C-c r" . projectile-ripgrep))
+  :config
+  (setq projectile-completion-system 'ivy)
   :ensure t)
 #+end_src
 *** docker
-
 #+begin_src emacs-lisp
 (use-package dockerfile-mode
   :ensure t)
 #+end_src
-
-*** scala
-
+*** scala                                                                     :Emacs:
 #+begin_src emacs-lisp
 (use-package scala-mode
   :mode "\\.s\\(cala\\|bt\\)$"
@@ -3231,42 +3211,29 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package sbt-mode
   :commands sbt-start sbt-command
   :config
-
-  (defun sbt-mode-beginning-of-line ()
-    (interactive)
-    (beginning-of-line)
-    (search-forward ">")
-    (forward-char))
-
-  (define-key sbt:mode-map (kbd "C-a") 'sbt-mode-beginning-of-line)
-
-  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
-  ;; allows using SPACE when in the minibuffer
-  (substitute-key-definition 'minibuffer-complete-word
-                             'self-insert-command
-                             minibuffer-local-completion-map)
-   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
   (setq sbt:program-options '("-Dsbt.supershell=false")))
 
-(use-package lsp-mode
-  ;; Optional - enable lsp-mode automatically in scala files
-  :hook (scala-mode . lsp)
-        (lsp-mode . lsp-lens-mode)
-  :config (setq lsp-prefer-flymake nil))
-
-(use-package lsp-ui)
-(use-package company-lsp)
-(use-package posframe)
-
 (use-package dap-mode
-  :hook (lsp-mode . dap-mode)
-        (lsp-mode . dap-ui-mode))
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
 
-(use-package lsp-treemacs
-  :config
-  (setq lsp-metals-treeview-show-when-views-received t))
+;; (use-package lsp-mode
+;;   ;; Optional - enable lsp-mode automatically in scala files
+;;   :hook (scala-mode . lsp)
+;;         (lsp-mode . lsp-lens-mode)
+;;   :config (setq lsp-prefer-flymake nil)
+;;   :ensure lsp-scala
+;;   :ensure lsp-metals
+;;   :ensure lsp-ui
+;;   :ensure company-lsp
+;;   :ensure posframe
+;;   :ensure dap-mode)
 #+end_src
-
 *** rmsbolt
 
 #+begin_src emacs-lisp
@@ -3274,16 +3241,19 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-*** ggtags
+*** COMMENT ggtags
 
 #+begin_src emacs-lisp
 (use-package ggtags
   :hook ((c-mode . ggtags-mode)
          (c++-mode . ggtags-mode)
          (java-mode . ggtags-mode)
+         (python-mode . ggtags-mode)
+         (scala-mode . ggtags-mode)
          (asm-mode . ggtags-mode))
   :bind (:map ggtags-mode-map
               ("M-," . pop-tag-mark)
+              ("M-." . ggtags-find-definition)
               ("C-c y g u" . ggtags-update-tags)
               ("C-c y g c" . ggtags-create-tags)
               ("C-c y g f" . ggtags-find-file)
@@ -3471,36 +3441,21 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     'irony-completion-at-point-async))
 #+end_src
 
-*** python
+*** python                                                                    :Emacs:
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.programming.python
 :END:
 
-**** mine refactor
-#+begin_src emacs-lisp
-(defun mine--python-refactor ()
-  (interactive)
-  (when (s-ends-with? ".py" buffer-file-name)
-    ;; (elpy-format-code)
-    ;; (save-buffer)
-    ;; (elpy-check)
-    ))
-
-(add-hook 'after-save-hook #'mine--python-refactor)
-#+end_src
-**** jinja
+**** COMMENT jinja
 #+begin_src emacs-lisp
 (use-package jinja2-mode
   :ensure t)
 #+end_src
-**** elpy
-
+**** COMMENT elpy
 #+begin_src emacs-lisp
 (use-package elpy
-  :init (elpy-enable)
-  :ensure t)
+  :init (elpy-enable))
 #+end_src
-
 **** COMMENT jedi
 
 #+begin_src emacs-lisp
@@ -3524,24 +3479,19 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure t)
 #+end_src
 
-**** elpygen
-
+**** COMMENT elpygen
 #+begin_src emacs-lisp
 (use-package elpygen
   :bind (:map python-mode-map
         ("C-c i" . elpygen-implement))
   :ensure t)
 #+end_src
-
-**** remove pyc files
-
+**** COMMENT remove pyc files
 #+begin_src emacs-lisp
 (defun python2-remove-pyc-files ()
   (shell-command (concat "rm *.pyc")))
 #+end_src
-
 **** highlights
-
 #+begin_src emacs-lisp
 (defun python-highlight-breakpoints()
   (interactive)
@@ -3553,32 +3503,35 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
 #+end_src
-
-**** indent
-
-#+begin_src emacs-lisp
-(use-package indent-tools
-  :bind (("C-x >" . indent-tools-hydra/body))
-  :ensure t)
-#+end_src
-
-**** offset
-
+**** offsets
 #+begin_src emacs-lisp
 (setq python-indent-offset 4
       python-indent-guess-indent-offset nil)
 #+end_src
-
 **** ipython-shell-interpreter
-
 #+begin_src emacs-lisp
 (require 'python)
 (setq-default python-shell-interpreter "ipython"
-      python-shell-interpreter-args "--simple-prompt -i"
-      python-shell-completion-native nil)
+              python-shell-interpreter-args "--simple-prompt -i"
+              python-shell-completion-native nil)
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
 #+end_src
+**** lsp
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  :hook (python-mode . lsp)
+        (lsp-mode . lsp-lens-mode)
+  :config (setq lsp-prefer-flymake nil)
+  :ensure lsp-metals
+  :ensure lsp-ui
+  :ensure company-lsp
+  :ensure posframe
+  :ensure dap-mode)
+#+end_src
+
+
 
 *** sql
 
