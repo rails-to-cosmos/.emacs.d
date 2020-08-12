@@ -718,6 +718,13 @@ enjoy using a lot.
 #+end_src
 
 ** Utils
+
+*** copy current dir
+#+begin_src emacs-lisp
+(defun copy-default-directory ()
+  (interactive)
+  (kill-new default-directory))
+#+end_src
 *** ripgrep
 #+begin_src emacs-lisp
 (use-package ripgrep)
