@@ -2363,14 +2363,19 @@ SET COLSEP '|'
 
   ;; material world
   (org-glance-def-view Inventory :type '(kvs))
-  (org-glance-def-view Document :type '(kvs))
+  (org-glance-def-view Document :type '(kvs link))
   (org-glance-def-view Contact :type '(kvs))
   (org-glance-def-view Food :schema '(location title rating))  ;; restaurants, wine, recipes etc
   (org-glance-def-view POI)  ;; points of interest
 
+  ;; test
+  (org-glance-def-view Mail_Template)
+
   ;; task management
+  (org-glance-def-view Value)
   (org-glance-def-view Epic)
   (org-glance-def-view Story :type '(link ledger))
+  (org-glance-def-view Task)
 
   ;; data management
   (org-glance-def-view Bookmark :type '(link))
@@ -2408,7 +2413,6 @@ SET COLSEP '|'
 
 #+RESULTS:
 : t
-
 
 **** org-literate-devtools
 
