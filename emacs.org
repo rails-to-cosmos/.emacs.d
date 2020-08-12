@@ -180,15 +180,10 @@ enjoy using a lot.
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
 
 #+begin_src emacs-lisp
-(use-package ucs-utils
-  :ensure t)
-
+(use-package font-utils)
+(use-package ucs-utils)
 (use-package unicode-fonts
-  :config (unicode-fonts-setup)
-  :ensure t)
-
-(use-package font-utils
-  :ensure t)
+  :config (unicode-fonts-setup))
 #+end_src
 
 *** locale
@@ -234,7 +229,7 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (defun tmp/ (filename)
   "Get path to FILENAME in temp directory."
-  (let ((dir "~/.tmp/emacs/"))
+  (let ((dir (concat user-emacs-directory "tmp/")))
     (make-directory dir t)
     (concat dir filename)))
 
@@ -247,7 +242,7 @@ enjoy using a lot.
       dir)))
 
 (setq-default custom-file (tmp/ "custom.el"))
-(load custom-file)
+;; (load custom-file)
 #+end_src
 
 *** osx
@@ -1430,29 +1425,6 @@ BEG and END (region to sort)."
   :config
   (add-hook 'pdf-view-mode-hook 'pdf-view-restore-mode))
 #+end_src
-*** ui
-#+begin_src emacs-lisp
-(setq org-priority-faces
-      '((?A . (:foreground "#E74C3C"))
-        (?B . (:foreground "#FFDB45"))
-        (?C . (:foreground "#749AF7"))))
-
-(add-hook 'org-mode-hook
-          (lambda ()
-            (setq
-             org-todo-keyword-faces
-             '(("BLOCKED" . "#E74C3C")
-               ("DEPLOY" . "#292")
-               ("REVIEW" . "#292")
-               ("CANCELLED" . "#7B9ED2")
-               ("STARTED" . "#749AF7")
-               ("PENDING" . "#D0E1F9")
-               ("DELEGATED" . "#8B7FD7")
-               ("CODE_REVIEW" . "#8B7FD7")
-               ("FAILED" . "#E74C3C")
-               ("PASSED" . "#4C3")
-               ("TEST" . "#749AF7")))))
-#+end_src
 *** notify
 #+begin_src emacs-lisp
 (use-package org-notify
@@ -1639,7 +1611,7 @@ exist after each headings's drawers."
 (require 'org-git-link)
 #+end_src
 
-*** org-eshell
+*** COMMENT org-eshell
 
 #+begin_src emacs-lisp
 (require 'org-eshell)
@@ -1964,7 +1936,29 @@ bidirectional reordering.")
 #+end_src
 
 *** UI
+**** Unsorted
+#+begin_src emacs-lisp
+(setq org-priority-faces
+      '((?A . (:foreground "#E74C3C"))
+        (?B . (:foreground "#FFDB45"))
+        (?C . (:foreground "#749AF7"))))
 
+(add-hook 'org-mode-hook
+          (lambda ()
+            (setq
+             org-todo-keyword-faces
+             '(("BLOCKED" . "#E74C3C")
+               ("DEPLOY" . "#292")
+               ("REVIEW" . "#292")
+               ("CANCELLED" . "#7B9ED2")
+               ("STARTED" . "#749AF7")
+               ("PENDING" . "#D0E1F9")
+               ("DELEGATED" . "#8B7FD7")
+               ("CODE_REVIEW" . "#8B7FD7")
+               ("FAILED" . "#E74C3C")
+               ("PASSED" . "#4C3")
+               ("TEST" . "#749AF7")))))
+#+end_src
 **** Org todo keyword faces
 
 ***** Initialization
@@ -2149,7 +2143,7 @@ If KWD is a number, get the corresponding match group."
  org-todo-keywords (quote ((sequence "TODO(t)" "STARTED(s!)" "DELEGATED(e@/!)" "PENDING(p!)" "|" "DONE(d!)" "CANCELLED(c!)"))))
 #+end_src
 
-*** experiments
+*** Experiments
 
 **** ob-json
 #+begin_src emacs-lisp
