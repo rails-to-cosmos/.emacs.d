@@ -930,43 +930,25 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** Ivy
+*** ivy
 
 #+begin_src emacs-lisp
-(use-package ivy
-  :bind (:map ivy-minibuffer-map
-              ("RET" . ivy-alt-done)
-              ("C-j" . ivy-immediate-done))
-  :init (progn
-          (setq ivy-re-builders-alist
-                '((nil . ivy--regex-fuzzy)
-                  (t . ivy--regex-plus))
-                ivy-initial-inputs-alist nil
-                ivy-use-virtual-buffers t
-                enable-recursive-minibuffers t)
-          (ivy-mode))
-  :config (progn
-            (defun ivy--add-face (str face)
-              "Propertize STR with FACE.
-`font-lock-append-text-property' is used, since it's better than
-`propertize' or `add-face-text-property' in this case."
-              (condition-case nil
-                  (progn
-                    (let ((foreground (face-foreground face)))
-                      (when foreground
-                        (add-face-text-property
-                         0 (length str)
-                         `(:foreground ,foreground)
-                         nil
-                         str))))
-                (error
-                 (ignore-errors
-                   (font-lock-append-text-property 0 (length str) 'face face str))))
-              str))
-  :ensure t)
+  (use-package ivy
+    :bind (:map ivy-minibuffer-map
+		("RET" . ivy-alt-done)
+		("C-j" . ivy-immediate-done))
+    :init (progn
+	    (setq ivy-re-builders-alist
+		  '((nil . ivy--regex-fuzzy)
+		    (t . ivy--regex-plus))
+		  ivy-initial-inputs-alist nil
+		  ivy-use-virtual-buffers t
+		  enable-recursive-minibuffers t)
+	    (ivy-mode)
+	    ))
 #+end_src
 
-*** Counsel
+*** counsel
 
 #+begin_src emacs-lisp
 (use-package counsel
@@ -1251,10 +1233,7 @@ BEG and END (region to sort)."
 
 #+begin_src emacs-lisp :results silent
 (use-package firestarter
-  :config (progn
-            (firestarter-mode)
-            (add-to-list 'safe-local-variable-values '(firestarter org-babel-tangle)))
-  :ensure t)
+  :config (firestarter-mode))
 #+end_src
 
 *** google-translate
@@ -3701,15 +3680,15 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (defface mode-line-buffer-non-modified-face
   '((((class color) (min-colors 88) (background light))
-     :foreground "#D0E1F9")
+     :foreground "#2c3e50")
     (((class color) (min-colors 88) (background dark))
      :foreground "#D0E1F9")
     (((class color) (min-colors 16) (background light))
-     :foreground "#D0E1F9")
+     :foreground "#2c3e50")
     (((class color) (min-colors 16) (background dark))
      :foreground "#D0E1F9")
     (((class color) (min-colors 8))
-     :foreground "#D0E1F9")
+     :foreground "#000000")
     (t :inverse-video t))
   "Mode-line face for non-modified buffers.")
 
@@ -3804,17 +3783,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
-  :hook ((prog-mode . rainbow-delimiters-mode))
-  :ensure t)
+  :hook ((prog-mode . rainbow-delimiters-mode)))
 #+end_src
 
 *** themes
 
-**** Default
-
 #+begin_src emacs-lisp
 (use-package danneskjold-theme
-  :ensure t)
+  :config (load-theme 'danneskjold t))
 #+end_src
 
 *** cleanups
