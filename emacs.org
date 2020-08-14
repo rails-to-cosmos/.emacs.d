@@ -2325,74 +2325,10 @@ SET COLSEP '|'
 **** [#A] org-glance                                                         :Emacs:
 
 #+begin_src emacs-lisp
-(use-package aes
-  :ensure t)
-
 (use-package org-glance
-  :config
-
-  (setq org-glance-default-scope '("~/sync/archives"
-                                   "~/sync/notes"
-                                   "~/sync/resources"
-                                   "~/sync/workshop"))
-
-  (global-set-key (kbd "C-x y c") #'org-glance-capture-subtree-at-point)
-  (global-set-key (kbd "C-x j") #'org-glance-act)
-
-  (require 'org-glance-views)
-
-  ;; material world
-  (org-glance-def-view Inventory :type '(kvs))
-  (org-glance-def-view Document :type '(kvs link))
-  (org-glance-def-view Contact :type '(kvs))
-  (org-glance-def-view Food :schema '(location title rating))  ;; restaurants, wine, recipes etc
-  (org-glance-def-view POI)  ;; points of interest
-
-  ;; test
-  (org-glance-def-view Mail_Template)
-
-  ;; task management
-  (org-glance-def-view Value)
-  (org-glance-def-view Epic)
-  (org-glance-def-view Story :type '(link ledger))
-  (org-glance-def-view Task)
-
-  ;; data management
-  (org-glance-def-view Bookmark :type '(link))
-  (org-glance-def-view Gist :type '(babel))
-  (org-glance-def-view Password :type '(kvs crypt))
-  (org-glance-def-view Service :scope '(agenda) :type '(link))
-  (org-glance-def-view Book :type '(pdf))
-  (org-glance-def-view Song)
-  (org-glance-def-view Game)
-
-  ;; financial management
-  (org-glance-def-view Debt :scope '(agenda))  ;; finance relationships
-
-  ;; emacs configuration
-  (org-glance-def-view Emacs :scope '("~/.emacs.d/emacs.org"))
-
-;;; (add-hook 'org-after-tags-change-hook 'org-auto-properties)
-
-  ;; (org-glance-def-view 'New events"
-  ;;  :select (:todo-state :title "starring" "archive_time")
-  ;;  :from "Event"
-  ;;  :inner-join "Contact" :on "Contact.Title" :in "Event.Starring"
-  ;;  :order-by (:todo-state "archive_time") :desc
-  ;;  :bind "C-x j g" :action (lambda (todo-state title starring archive_time) (message todo-state)))
-
-  ;; (org-glance-def-view 'events-with-contacts"
-  ;;   :query "SELECT state, title, archive_time
-  ;;           FROM event
-  ;;           JOIN contact on contact.title in event.starring
-  ;;           ORDER BY state, archive_time DESC")
-
   :load-path "~/sync/stuff/org-glance"
   :ensure aes)
 #+end_src
-
-#+RESULTS:
-: t
 
 **** org-literate-devtools
 
