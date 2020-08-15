@@ -2530,14 +2530,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
       (list file org-clock-file-total-minutes (nreverse tbl)))))
 #+end_src
 
-**** elgannt
-
-#+begin_src emacs-lisp
-(use-package elgantt
-  :load-path "~/sync/stuff/elgantt"
-  :ensure org-ql)
-#+end_src
-
 ** Editor
 :PROPERTIES:
 :CUSTOM_ID: emacs.config.editor
