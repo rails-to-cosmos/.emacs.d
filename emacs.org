@@ -3124,7 +3124,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** scala                                                                     :Emacs:
 #+begin_src emacs-lisp
 (use-package scala-mode
-  :mode "\\.s\\(cala\\|bt\\)$"
+  :mode "\\.s\\(cala\\|bt\\|c\\)$"
   :config (setq scala-indent:step 2))
 
 (use-package sbt-mode

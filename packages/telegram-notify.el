@@ -15,16 +15,17 @@
                     (read-string "Telegram chat id: "))))
       (customize-save-variable 'telegram-chat-id chat-id)))
 
-  (start-process-shell-command "Notify" nil
-                               (expand-template
-                                (concat
-                                 "curl "
-                                 "--data chat_id={:chat_id} "
-                                 "--data text=\"{:message}\" "
-                                 "https://api.telegram.org/bot{:token}/sendMessage ")
-                                `(:chat_id ,telegram-chat-id
-                                           :message ,message
-                                           :token ,telegram-notifier-bot-token))))
+  (start-process-shell-command
+   "Notify" nil
+   (expand-template
+    (concat
+     "curl "
+     "--data chat_id={:chat_id} "
+     "--data text=\"{:message}\" "
+     "https://api.telegram.org/bot{:token}/sendMessage ")
+    `(:chat_id ,telegram-chat-id
+      :message ,message
+      :token ,telegram-notifier-bot-token))))
 
 (defun org-notify-action-telegram (plist)
   "Telegram notify action for org-notify."
