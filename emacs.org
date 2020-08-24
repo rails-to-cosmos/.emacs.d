@@ -2394,13 +2394,13 @@ SET COLSEP '|'
     t))
 #+end_src
 
-**** COMMENT org-auto-property
+**** org-auto-property
 
 #+begin_src emacs-lisp
 (defun org-auto-properties ()
-  (cond ((org-edna-entry-has-tags-p "Question") (org-set-property "LOGGING" "DONE(@/!)"))
-        ((org-edna-entry-has-tags-p "Support") (org-set-property "PROJECT" "SUPPORT"))
-        ((and (org-edna-entry-has-tags-p "Story") (not (ledna/get-property "DIR")))
+  (cond ((member "Question" (org-get-tags)) (org-set-property "LOGGING" "DONE(@/!)"))
+        ((member "Support" (org-get-tags)) (org-set-property "PROJECT" "SUPPORT"))
+        ((and (member "Story" (org-get-tags)) (not (ledna/get-property "DIR")))
          (let* ((event-dir-abs
                  (let ((default-directory (f-join default-directory "../resources/stories")))
                    (read-directory-name "Specify story directory: ")))
@@ -2409,7 +2409,7 @@ SET COLSEP '|'
                (make-directory event-dir-abs)
              (error nil))
            (org-set-property "DIR" event-dir-rel)
-           (org-set-property "ARCHIVE" (f-join event-dir-rel "stories.org::"))
+           (org-set-property "ARCHIVE" (f-join event-dir-rel "story.org::"))
            (org-set-property "COOKIE_DATA" "todo recursive")))))
 
 (add-hook 'org-after-tags-change-hook 'org-auto-properties)

@@ -811,15 +811,31 @@ used to limit the exported source code blocks by language."
             (cond ((< (-elem-index it-state oldt-aws-emr-states) (-elem-index ot-state oldt-aws-emr-states)) t)
                   ((< (car (last other)) (car (last it))) t)))))))))
 
-(defun oldt-aws-emr-instance--browse-masters-private-dns (port)
+(cl-defun oldt-aws-emr-instance--get-masters-private-dns-name (&optional (cluster-id (oldt-aws-emr-cluster--choose)))
   (interactive)
-  (let ((instances (->> (format "aws emr list-instances --cluster-id %s --instance-group-types MASTER" (oldt-aws-emr-cluster--choose))
+  (let ((instances (->> (format "aws emr list-instances --cluster-id %s --instance-group-types MASTER" cluster-id)
                         shell-command-to-string
                         json-read-from-string)))
     (let-alist instances
       (cl-loop for instance across-ref .Instances
-               collect (let-alist instance
-                         (browse-url (concat "http://" .PrivateDnsName ":" port)))))))
+               do (return (let-alist instance .PrivateDnsName))))))
+
+(cl-defun oldt-aws-emr-instance--get-masters-private-ip-addr (&optional (cluster-id (oldt-aws-emr-cluster--choose)))
+  (interactive)
+  (let ((instances (->> (format "aws emr list-instances --cluster-id %s --instance-group-types MASTER" cluster-id)
+                        shell-command-to-string
+                        json-read-from-string)))
+    (let-alist instances
+      (cl-loop for instance across-ref .Instances
+               do (return (let-alist instance .PrivateIpAddress))))))
+
+(cl-defun oldt-aws-emr-instance--browse-in-dired (&optional (cluster-id (oldt-aws-emr-instance--get-masters-private-ip-addr)))
+  (interactive)
+  (find-file (concat "/ssh:hadoop@" cluster-id ":/usr/lib")))
+
+(defun oldt-aws-emr-instance--browse-masters-private-dns (port)
+  (interactive)
+  (browse-url (concat "http://" (oldt-aws-emr-instance--get-masters-private-dns-name) ":" port)))
 
 (defun oldt-aws-emr--cluster-terminate ()
   (interactive)
