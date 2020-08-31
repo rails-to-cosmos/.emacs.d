@@ -3511,14 +3511,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** default font
-
 #+begin_src emacs-lisp
-;; (setq current-iso639-language 'ru)
-
-(let ((face (list (list t (list :family "JetBrains Mono" :height 110)))))
+(let ((face (list (list t (list :family "JetBrains Mono" :height 100)))))
   (custom-set-faces (list 'default face)))
 #+end_src
-
 *** text scale
 
 #+begin_src emacs-lisp
