@@ -1412,12 +1412,12 @@ BEG and END (region to sort)."
             (org-notify-start 10)
 
             (org-notify-add 'default
-                            '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
-                            '(:time "15m" :period "2m" :duration 100 :actions -telegram))
+                            '(:time "-1s" :actions -telegram)
+                            '(:time "15m" :actions -telegram))
 
             (org-notify-add 'hourly
-                            '(:time "-1s" :period "20s" :duration 10 :actions -telegram)
-                            '(:time "1h" :period "2m" :duration 100 :actions -telegram))
+                            '(:time "-1s" :duration 10 :actions -telegram)
+                            '(:time "1h" :duration 100 :actions -telegram))
 
             (org-notify-add 'once
                             '(:time "-1s" :actions -telegram))
@@ -2346,7 +2346,10 @@ SET COLSEP '|'
 #+end_src
 
 **** completion
-
+***** tab-always-indent
+#+begin_src emacs-lisp
+(setq tab-always-indent 'complete)
+#+end_src
 ***** define-completion
 
 #+begin_src emacs-lisp
@@ -3510,7 +3513,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** default font
 
 #+begin_src emacs-lisp
-(let ((face (list (list t (list :family "Inconsolata LGC" :height 110)))))
+;; (setq current-iso639-language 'ru)
+
+(let ((face (list (list t (list :family "JetBrains Mono" :height 110)))))
   (custom-set-faces (list 'default face)))
 #+end_src
 
