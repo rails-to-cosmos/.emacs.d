@@ -66,3 +66,6 @@ image-dired
 /tutorial/
 .lsp-session*
 /org-glance/
+/.cache/
+/.dap-breakpoints
+/places
