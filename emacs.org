@@ -3506,7 +3506,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     (custom-set-faces
      (list 'default (list (list t (list :slant 'normal :weight 'normal :height font-size
                                         :width 'normal :family font-name)))))
-    (set-fontset-font font-name
+    (set-fontset-font "fontset-default"
                       (cons (decode-char 'ucs #x0400)
                             (decode-char 'ucs #x052F))
                       (font-spec :size (/ font-size 10) :name font-name))))
