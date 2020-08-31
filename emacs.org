@@ -3488,6 +3488,39 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.ui
 :END:
 
+*** font
+**** default font
+#+begin_src emacs-lisp
+(setq my/default-font "JetBrains Mono")
+
+(let ((face (list (list t (list :family my/default-font  :height 100)))))
+  (custom-set-faces (list 'default face)))
+#+end_src
+**** cyrillic adaptation
+#+begin_src emacs-lisp
+(defun darwin-font-adapt-cyrillic (&optional font-size font-name)
+  (interactive)
+  (let ((font-size (or font-size (face-attribute 'default :height)))
+        (font-name (or font-name (face-attribute 'default :family))))
+
+    (custom-set-faces
+     (list 'default (list (list t (list :slant 'normal :weight 'normal :height font-size
+                                        :width 'normal :family font-name)))))
+    (set-fontset-font font-name
+                      (cons (decode-char 'ucs #x0400)
+                            (decode-char 'ucs #x052F))
+                      (font-spec :size (/ font-size 10) :name font-name))))
+#+end_src
+**** text scale
+#+begin_src emacs-lisp
+(use-package default-text-scale
+  :config (progn
+            (default-text-scale-mode 1)
+            (when (eq system-type 'darwin)
+              (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
+              (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)))
+  :ensure t)
+#+end_src
 *** COMMENT grab-and-drag
 
 #+begin_src emacs-lisp
@@ -3499,7 +3532,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** minimize
-
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
 (when (fboundp 'tool-bar-mode)
@@ -3509,45 +3541,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (when (fboundp 'horizontal-scroll-bar-mode)
   (horizontal-scroll-bar-mode -1))
 #+end_src
-
-*** default font
-#+begin_src emacs-lisp
-(let ((face (list (list t (list :family "JetBrains Mono" :height 100)))))
-  (custom-set-faces (list 'default face)))
-#+end_src
-*** text scale
-
-#+begin_src emacs-lisp
-(use-package default-text-scale
-  :init (progn
-
-          (defun darwin-font-adapt-cyrillic (&optional font-size font-name)
-            (interactive)
-            (let ((font-size (or font-size (face-attribute 'default :height)))
-                  (font-name (or font-name (face-attribute 'default :family))))
-
-              (custom-set-faces
-               (list 'default (list (list t (list :slant 'normal :weight 'normal :height font-size
-                                                  :width 'normal :family font-name)))))
-              (set-fontset-font font-name
-                                (cons (decode-char 'ucs #x0400)
-                                      (decode-char 'ucs #x052F))
-                                (font-spec :size (/ font-size 10) :name font-name))))
-
-          )
-  :config (progn
-
-            (default-text-scale-mode 1)
-            (when (eq system-type 'darwin)
-              (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
-              (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic))
-
-            )
-  :ensure t)
-#+end_src
-
 *** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
-
 #+begin_src emacs-lisp
 (setq split-width-threshold (- (window-width) 10))
 (setq split-height-threshold nil)
@@ -3563,15 +3557,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
 #+end_src
-
 *** vscroll
-
 #+begin_src emacs-lisp
 (setq-default auto-window-vscroll nil)
 #+end_src
-
 *** transparency
-
 #+begin_src emacs-lisp
 (defun make-frame-more-transparent ()
   (interactive)
@@ -3581,15 +3571,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (interactive)
   (set-frame-parameter (selected-frame) 'alpha 1.0))
 #+end_src
-
 *** rainbow-mode
-
 #+begin_src emacs-lisp
 (use-package rainbow-mode
-  :hook ((prog-mode . rainbow-mode))
-  :ensure t)
+  :hook ((prog-mode . rainbow-mode)))
 #+end_src
-
 *** mode-line
 
 #+begin_src emacs-lisp
@@ -3703,11 +3689,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
-
 #+begin_src emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
-
 *** rainbow-delimiters
 
 #+begin_src emacs-lisp
