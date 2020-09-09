@@ -1982,7 +1982,7 @@ If KWD is a number, get the corresponding match group."
 **** Emphasis
 
 #+begin_src emacs-lisp
-(setq org-hide-emphasis-markers nil)
+(setq org-hide-emphasis-markers t)
 #+end_src
 
 **** Bullets
@@ -3144,17 +3144,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (lsp-mode . dap-mode)
   (lsp-mode . dap-ui-mode))
 
-;; (use-package lsp-mode
-;;   ;; Optional - enable lsp-mode automatically in scala files
-;;   :hook (scala-mode . lsp)
-;;         (lsp-mode . lsp-lens-mode)
-;;   :config (setq lsp-prefer-flymake nil)
-;;   :ensure lsp-scala
-;;   :ensure lsp-metals
-;;   :ensure lsp-ui
-;;   :ensure company-lsp
-;;   :ensure posframe
-;;   :ensure dap-mode)
+(use-package lsp-mode
+  :hook (scala-mode . lsp)
+        (lsp-mode . lsp-lens-mode)
+  :config (setq lsp-prefer-flymake nil)
+  :ensure lsp-scala
+  :ensure lsp-metals
+  :ensure lsp-ui
+  :ensure company-lsp
+  :ensure posframe
+  :ensure dap-mode)
 #+end_src
 *** rmsbolt
 
