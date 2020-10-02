@@ -1514,7 +1514,6 @@ exist after each headings's drawers."
 #+end_src
 
 *** org-plus-contrib
-
 #+begin_src emacs-lisp
 (use-package org-plus-contrib
   :bind (("C-c l" . org-store-link)
@@ -1527,9 +1526,7 @@ exist after each headings's drawers."
          ([(shift tab)] . org-overview))
   :config (require 'org-agenda))
 #+end_src
-
 *** COMMENT modules
-
 #+begin_src emacs-lisp
 (setq org-modules
       '(org-bbdb
@@ -1549,7 +1546,6 @@ exist after each headings's drawers."
         org-wl
         org-w3m))
 #+end_src
-
 *** locale
 
 #+begin_src emacs-lisp
@@ -1913,87 +1909,18 @@ bidirectional reordering.")
 #+end_src
 
 *** UI
-**** Unsorted
-#+begin_src emacs-lisp
-(setq org-priority-faces
-      '((?A . (:foreground "#E74C3C"))
-        (?B . (:foreground "#FFDB45"))
-        (?C . (:foreground "#749AF7"))))
-
-(add-hook 'org-mode-hook
-          (lambda ()
-            (setq
-             org-todo-keyword-faces
-             '(("BLOCKED" . "#E74C3C")
-               ("DEPLOY" . "#292")
-               ("REVIEW" . "#292")
-               ("CANCELLED" . "#7B9ED2")
-               ("STARTED" . "#749AF7")
-               ("PENDING" . "#D0E1F9")
-               ("DELEGATED" . "#8B7FD7")
-               ("CODE_REVIEW" . "#8B7FD7")
-               ("FAILED" . "#E74C3C")
-               ("PASSED" . "#4C3")
-               ("TEST" . "#749AF7")))))
-#+end_src
-**** Org todo keyword faces
-
-***** Initialization
-
-#+begin_src emacs-lisp
-(eval-after-load 'org-faces
- '(progn
-    (defcustom org-todo-keyword-faces nil
-      "Faces for specific TODO keywords.
-This is a list of cons cells, with TODO keywords in the car and
-faces in the cdr.  The face can be a symbol, a color, or a
-property list of attributes, like (:foreground \"blue\" :weight
-bold :underline t)."
-      :group 'org-faces
-      :group 'org-todo
-      :type '(repeat
-              (cons
-               (string :tag "Keyword")
-               (choice color (sexp :tag "Face")))))))
-
-(eval-after-load 'org
- '(progn
-    (defun org-get-todo-face-from-color (color)
-      "Returns a specification for a face that inherits from org-todo
- face and has the given color as foreground. Returns nil if
- color is nil."
-      (when color
-        `(:inherit org-warning :foreground ,color)))
-
-    (defun org-get-todo-face (kwd)
-      "Get the right face for a TODO keyword KWD.
-If KWD is a number, get the corresponding match group."
-      (if (numberp kwd) (setq kwd (match-string kwd)))
-      (or (let ((face (cdr (assoc kwd org-todo-keyword-faces))))
-            (if (stringp face)
-                (org-get-todo-face-from-color face)
-              face))
-          (and (member kwd org-done-keywords) 'org-done)
-          'org-todo))))
-#+end_src
-
-**** Emphasis
-
+**** Hide emphasis markers
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
 #+end_src
-
-**** Bullets
-
+**** Bullets beautify
 #+begin_src emacs-lisp :results silent
 (use-package org-bullets
   :config (progn
             (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
   :ensure t)
 #+end_src
-
 *** Insert page heading on org-insert-link
-
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -3462,7 +3389,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 ** Clouds
 
-*** COMMENT kubel
+*** kubel
 
 #+begin_src emacs-lisp
 (use-package kubel
