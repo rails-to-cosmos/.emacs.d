@@ -28,9 +28,22 @@
 :header-args: :results silent :mkdirp yes
 :END:
 
-** Lisp
+** lisp
+
+*** ts
+
+#+begin_src emacs-lisp
+(use-package ts)
+#+end_src
+
+*** load-relative
+
+#+begin_src emacs-lisp
+(use-package load-relative)
+#+end_src
 
 *** [[https://www.reddit.com/r/emacs/comments/f1abxw/rfc_substlet_define_formlocal_macros_without/][substlet]]
+
 #+begin_src emacs-lisp
 (defmacro substlet (substs &rest body)
   "Like `macrolet' with `defsubst' semantics.
@@ -65,6 +78,7 @@ bodies and unquote arguments of `macrolet'."
           substs)))
     `(cl-macrolet ,macros ,@body)))
 #+end_src
+
 *** [[http://kitchingroup.cheme.cmu.edu/blog/2018/05/14/f-strings-in-emacs-lisp/][f-string]]
 
 #+begin_src emacs-lisp
@@ -168,7 +182,7 @@ enjoy using a lot.
     size-str))
 #+end_src
 
-** Core
+** core
 
 *** welcome
 
@@ -182,8 +196,7 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (use-package font-utils)
 (use-package ucs-utils)
-(use-package unicode-fonts
-  :config (unicode-fonts-setup))
+(use-package unicode-fonts :config (unicode-fonts-setup))
 #+end_src
 
 *** locale
@@ -248,23 +261,23 @@ enjoy using a lot.
 *** osx
 
 #+begin_src emacs-lisp
-  (cond ((eq system-type 'darwin)
-	 (setq mac-command-modifier 'meta
-	       mac-option-modifier  'alt
-	       ;; sane trackpad/mouse scroll settings
-	       mac-redisplay-dont-reset-vscroll t
-	       ;; mac-mouse-wheel-smooth-scroll nil
-	       ;; mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
-	       ;; mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
-	       ;; Curse Lion and its sudden but inevitable fullscreen mode!
-	       ;; NOTE Meaningless to railwaycat's emacs-mac build
-	       ns-use-native-fullscreen t
-	       ;; Don't open files from the workspace in a new frame
-	       ns-pop-up-frames nil
-	       alert-default-style 'osx-notifier)))
+(cond ((eq system-type 'darwin)
+       (setq mac-command-modifier 'meta
+	     mac-option-modifier  'alt
+	     ;; sane trackpad/mouse scroll settings
+	     mac-redisplay-dont-reset-vscroll t
+	     ;; mac-mouse-wheel-smooth-scroll nil
+	     ;; mouse-wheel-scroll-amount '(5 ((shift) . 2))  ; one line at a time
+	     ;; mouse-wheel-progressive-speed nil             ; don't accelerate scrolling
+	     ;; Curse Lion and its sudden but inevitable fullscreen mode!
+	     ;; NOTE Meaningless to railwaycat's emacs-mac build
+	     ns-use-native-fullscreen t
+	     ;; Don't open files from the workspace in a new frame
+	     ns-pop-up-frames nil
+	     alert-default-style 'osx-notifier)))
 #+end_src
 
-** Dired
+** dired
 
 *** dired+
 
@@ -444,7 +457,7 @@ enjoy using a lot.
 (add-hook 'dired-after-readin-hook 'my-dired-collapse-directories 'append) ; must come after other dired-hacks hooks
 #+end_src
 
-** EShell
+** eshell
 
 *** [[https://blog.hoetzel.info/post/eshell-notifications/][notifications]]
 
@@ -623,14 +636,13 @@ enjoy using a lot.
 (setq-default eshell-ls-exclude-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin$")
 #+end_src
 
-** Window Managment
+** window managment
 
 *** shackle
 
 #+begin_src emacs-lisp
 (use-package shackle
-  :config (setq shackle-default-rule '(:same t))
-  :ensure t)
+  :config (setq shackle-default-rule '(:same t)))
 #+end_src
 
 *** ace-window
@@ -663,11 +675,12 @@ enjoy using a lot.
   (interactive)
   (funcall (split-window-func-with-other-buffer 'split-window-horizontally)))
 
+(define-key global-map (kbd "C-x 1") 'delete-other-windows)
 (define-key global-map (kbd "C-x 2") 'split-window-vertically-swap)
 (define-key global-map (kbd "C-x 3") 'split-window-horizontally-swap)
 #+end_src
 
-** Keyboard
+** keyboard
 
 *** default bindings
 
@@ -677,7 +690,7 @@ enjoy using a lot.
 (define-key global-map (kbd "C-x k") 'kill-this-buffer)
 #+end_src
 
-*** key-freq
+*** COMMENT key-freq
 
 #+begin_src emacs-lisp :results silent
 (use-package keyfreq
@@ -690,64 +703,71 @@ enjoy using a lot.
 *** mwe-log-commands
 
 #+begin_src emacs-lisp
-(use-package mwe-log-commands
-  :ensure t)
+(use-package mwe-log-commands)
 #+end_src
 
 *** reverse-im
 
 #+begin_src emacs-lisp
 (use-package reverse-im
-  :config (reverse-im-activate "russian-computer")
-  :ensure t)
+  :config (reverse-im-activate "russian-computer"))
 #+end_src
 
-*** which-key
+*** COMMENT which-key
 
 #+begin_src emacs-lisp
 (use-package which-key
-  :ensure t
-  :config (progn
-            (which-key-mode t)
-            (which-key-setup-side-window-bottom)))
+  :config
+  (which-key-mode t)
+  (which-key-setup-side-window-bottom))
 #+end_src
 
-** Utils
+** utils
+
+*** open current dir
+
+#+begin_src emacs-lisp
+(defun default-directory-open ()
+  (interactive)
+  (shell-command (concat "open " default-directory)))
+#+end_src
 
 *** copy current dir
+
 #+begin_src emacs-lisp
-(defun copy-default-directory ()
+(defun default-directory-copy ()
   (interactive)
   (kill-new default-directory))
 #+end_src
+
 *** ripgrep
+
 #+begin_src emacs-lisp
 (use-package ripgrep)
 #+end_src
-*** ts
-#+begin_src emacs-lisp
-(use-package ts)
-#+end_src
-*** load-relative
-#+begin_src emacs-lisp
-(use-package load-relative)
-#+end_src
+
 *** sqlite
+
 #+begin_src emacs-lisp
 (use-package emacsql-sqlite3)
 #+end_src
+
 *** vega-view
+
 #+begin_src emacs-lisp
 (use-package vega-view
   :config
   (setq vega-view-prefer-png t))
 #+end_src
+
 *** buffer-location-to-kill-ring
+
 #+begin_src emacs-lisp
 (defun buffer-location-to-kill-ring ()
   (interactive)
   (->> default-directory f-full kill-new message))
 #+end_src
+
 *** ledger
 
 #+begin_src emacs-lisp
@@ -795,8 +815,7 @@ enjoy using a lot.
 *** docker
 
 #+begin_src emacs-lisp
-(use-package docker
-  :ensure t)
+(use-package docker)
 #+end_src
 
 *** [[https://www.reddit.com/r/emacs/comments/9auzla/example_showing_how_useful_the_ampleregexps/][ample-regexps]]
@@ -827,14 +846,6 @@ enjoy using a lot.
 ;;           (match-string 5 url))))
 #+end_src
 
-*** COMMENT find file in project
-
-#+begin_src emacs-lisp
-(use-package find-file-in-project
-  :bind ("C-x f" . find-file-in-project)
-  :ensure t)
-#+end_src
-
 *** syncthing-conflict-manager
 
 #+begin_src emacs-lisp
@@ -862,7 +873,7 @@ enjoy using a lot.
       (move-file-to-trash file))))
 #+end_src
 
-*** num-with-ordinal-indicator
+*** COMMENT num-with-ordinal-indicator
 
 #+begin_src emacs-lisp
 (defun get-ordinal-indicator (num)
@@ -878,7 +889,7 @@ enjoy using a lot.
   (format "%d%s" num (get-ordinal-indicator num)))
 #+end_src
 
-*** volatile-highlights
+*** COMMENT volatile-highlights
 
 #+begin_src emacs-lisp
 (use-package volatile-highlights
@@ -889,25 +900,23 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** [[https://github.com/bbatsov/super-save][super-save]]
+*** COMMENT [[https://github.com/bbatsov/super-save][super-save]]
 
 #+begin_src emacs-lisp
 (use-package super-save
   :config (progn
             (super-save-initialize)
             (setq auto-save-default nil)
-            (setq super-save-auto-save-when-idle t))
-  :ensure t)
+            (setq super-save-auto-save-when-idle t)))
 #+end_src
 
-*** hydra
+*** COMMENT hydra
 
 #+begin_src emacs-lisp
-(use-package hydra
-  :ensure t)
+(use-package hydra)
 #+end_src
 
-*** move-text
+*** COMMENT move-text
 
 #+begin_src emacs-lisp
 (use-package move-text
@@ -926,8 +935,7 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (use-package restart-emacs
-  :bind ("C-x y d r" . restart-emacs)
-  :ensure t)
+  :bind ("C-x y d r" . restart-emacs))
 #+end_src
 
 *** ivy
@@ -1005,12 +1013,6 @@ enjoy using a lot.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 #+end_src
 
-*** delete-other-windows
-
-#+begin_src emacs-lisp
-(global-set-key (kbd "C-x 1") #'delete-other-windows)
-#+end_src
-
 *** delete-this-file
 
 #+begin_src emacs-lisp
@@ -1032,7 +1034,9 @@ enjoy using a lot.
 (defun immortal-scratch ()
   (if (eq (current-buffer) (get-buffer "*scratch*"))
       (progn (bury-buffer) nil) t))
+
 (add-hook 'kill-buffer-query-functions 'immortal-scratch)
+
 (setq kill-buffer-query-functions
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
@@ -1252,39 +1256,41 @@ BEG and END (region to sort)."
   :ensure t)
 #+end_src
 
-**** after translation hydra
+**** COMMENT after translation hydra
 
 #+begin_src emacs-lisp
-(defun insert-translation-at-point ()
-  (interactive)
-  (save-window-excursion
-    (switch-to-buffer "*Google Translate*")
-    (beginning-of-buffer)
+  ;; (defun insert-translation-at-point ()
+  ;;   (interactive)
+  ;;   (save-window-excursion
+  ;;     (switch-to-buffer "*Google Translate*")
+  ;;     (beginning-of-buffer)
 
-    (dotimes (i 3)
-      (forward-sentence))
+  ;;     (dotimes (i 3)
+  ;;       (forward-sentence))
 
-    (let ((beg (point)))
-      (backward-sentence)
-      (copy-region-as-kill beg (point))))
-  (yank))
+  ;;     (let ((beg (point)))
+  ;;       (backward-sentence)
+  ;;       (copy-region-as-kill beg (point))))
+  ;;   (yank))
 
-(defun after-translation-hydra-pre ()
-  (let ((timer (timer-create)))
-    (timer-set-time timer (timer-relative-time (current-time) 5))
-    (timer-set-function timer 'hydra-keyboard-quit)
-    (timer-activate timer)))
+  ;; (defun after-translation-hydra-pre ()
+  ;;   (let ((timer (timer-create)))
+  ;;     (timer-set-time timer (timer-relative-time (current-time) 5))
+  ;;     (timer-set-function timer 'hydra-keyboard-quit)
+  ;;     (timer-activate timer)))
 
-(defhydra after-translation-hydra (:body-pre after-translation-hydra-pre
-                                   :color blue
-                                   :hint "Translation manipulations")
-  ("i" insert-translation-at-point "Insert translation at point")
-  ("ш" insert-translation-at-point "Insert translation at point")
-  ("<RET>" nil "Quit"))
+  ;; (defhydra after-translation-hydra (:body-pre after-translation-hydra-pre
+  ;;                                    :color blue
+  ;;                                    :hint "Translation manipulations")
+  ;;   ("i" insert-translation-at-point "Insert translation at point")
+  ;;   ("ш" insert-translation-at-point "Insert translation at point")
+  ;;   ("<RET>" nil "Quit"))
 #+end_src
 
 *** imenu
+
 **** imenu-anywhere
+
 #+begin_src emacs-lisp
   (use-package imenu-anywhere
     :init (progn
@@ -1292,6 +1298,7 @@ BEG and END (region to sort)."
     :bind (("C-x i m" . imenu-anywhere))
     :ensure t)
 #+end_src
+
 *** COMMENT rsync
 
 #+begin_src emacs-lisp
@@ -1386,23 +1393,9 @@ BEG and END (region to sort)."
 #+end_src
 
 ** Org
-*** COMMENT pdf
-#+begin_src emacs-lisp
-(use-package org-pdftools
-  :hook (org-load . org-pdftools-setup-link))
 
-(use-package org-noter-pdftools
-  :after org-noter
-  :config
-  (with-eval-after-load 'pdf-annot
-    (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
-
-(use-package pdf-view-restore
-  :after pdf-tools
-  :config
-  (add-hook 'pdf-view-mode-hook 'pdf-view-restore-mode))
-#+end_src
 *** notify
+
 #+begin_src emacs-lisp
 (use-package org-notify
   :load-path "~/.emacs.d/packages"
@@ -1426,94 +1419,55 @@ BEG and END (region to sort)."
                             '(:time "3h" :actions -telegram)
                             '(:time "1d" :actions -telegram))))
 #+end_src
-*** exports
-**** proper html exports
 
-#+begin_src emacs-lisp
-;;;###autoload
-(defun unpackaged/org-agenda-current-subtree-or-region (only-todos)
-  "Display an agenda view for the current subtree or region.
- With prefix, display only TODO-keyword items."
-  (interactive "P")
-  (let ((starting-point (point))
-        header)
-    (with-current-buffer (or (buffer-base-buffer (current-buffer))
-                             (current-buffer))
-      (if (use-region-p)
-          (progn
-            (setq header "Region")
-            (put 'org-agenda-files 'org-restrict (list (buffer-file-name (current-buffer))))
-            (setq org-agenda-restrict (current-buffer))
-            (move-marker org-agenda-restrict-begin (region-beginning))
-            (move-marker org-agenda-restrict-end
-                         (save-excursion
-                           ;; If point is at beginning of line, include
-                           ;; heading on that line by moving forward 1.
-                           (goto-char (1+ (region-end)))
-                           (org-end-of-subtree))))
-        ;; No region; restrict to subtree.
-        (save-excursion
-          (save-restriction
-            ;; In case the command was called from an indirect buffer, set point
-            ;; in the base buffer to the same position while setting restriction.
-            (widen)
-            (goto-char starting-point)
-            (setq header "Subtree")
-            (org-agenda-set-restriction-lock))))
-      ;; NOTE: Unlike other agenda commands, binding `org-agenda-sorting-strategy'
-      ;; around `org-search-view' seems to have no effect.
-      (let ((org-agenda-sorting-strategy '(priority-down timestamp-up))
-            (org-agenda-overriding-header header))
-        (org-search-view (if only-todos t nil) "*"))
-      (org-agenda-remove-restriction-lock t)
-      (message nil))))
-#+end_src
+*** exports
 
 **** ox-reveal
+
 #+begin_src emacs-lisp
-(use-package ox-reveal
-  :ensure t)
+(use-package ox-reveal)
 #+end_src
 
 *** fix blank lines
 
 #+begin_src emacs-lisp
-;;;###autoload
-(defun unpackaged/org-fix-blank-lines (prefix)
+(defun unpackaged/org-fix-blank-lines ()
   "Ensure that blank lines exist between headings and between headings and their contents.
 With prefix, operate on whole buffer. Ensures that blank lines
 exist after each headings's drawers."
   (interactive "P")
-  (org-map-entries (lambda ()
-                     (org-with-wide-buffer
-                      ;; `org-map-entries' narrows the buffer, which prevents us from seeing
-                      ;; newlines before the current heading, so we do this part widened.
-                      (while (not (looking-back "\n\n" nil))
-                        ;; Insert blank lines before heading.
-                        (insert "\n")))
-                     (let ((end (org-entry-end-position)))
-                       ;; Insert blank lines before entry content
-                       (forward-line)
-                       (while (and (org-at-planning-p)
-                                   (< (point) (point-max)))
-                         ;; Skip planning lines
-                         (forward-line))
-                       (while (re-search-forward org-drawer-regexp end t)
-                         ;; Skip drawers. You might think that `org-at-drawer-p' would suffice, but
-                         ;; for some reason it doesn't work correctly when operating on hidden text.
-                         ;; This works, taken from `org-agenda-get-some-entry-text'.
-                         (re-search-forward "^[ \t]*:END:.*\n?" end t)
-                         (goto-char (match-end 0)))
-                       (unless (or (= (point) (point-max))
-                                   (org-at-heading-p)
-                                   (looking-at-p "\n"))
-                         (insert "\n"))))
-                   t (if prefix
-                         nil
-                       'tree)))
+  (when (string= major-mode "org-mode")
+    (org-map-entries (lambda ()
+                       (org-with-wide-buffer
+                        ;; `org-map-entries' narrows the buffer, which prevents us from seeing
+                        ;; newlines before the current heading, so we do this part widened.
+                        (while (not (looking-back "\n\n" nil))
+                          ;; Insert blank lines before heading.
+                          (insert "\n")))
+                       (let ((end (org-entry-end-position)))
+                         ;; Insert blank lines before entry content
+                         (forward-line)
+                         (while (and (org-at-planning-p)
+                                     (< (point) (point-max)))
+                           ;; Skip planning lines
+                           (forward-line))
+                         (while (re-search-forward org-drawer-regexp end t)
+                           ;; Skip drawers. You might think that `org-at-drawer-p' would suffice, but
+                           ;; for some reason it doesn't work correctly when operating on hidden text.
+                           ;; This works, taken from `org-agenda-get-some-entry-text'.
+                           (re-search-forward "^[ \t]*:END:.*\n?" end t)
+                           (goto-char (match-end 0)))
+                         (unless (or (= (point) (point-max))
+                                     (org-at-heading-p)
+                                     (looking-at-p "\n"))
+                           (insert "\n"))))
+                     t nil)))
+
+(add-hook 'after-save-hook 'unpackaged/org-fix-blank-lines)
 #+end_src
 
 *** org-plus-contrib
+
 #+begin_src emacs-lisp
 (use-package org-plus-contrib
   :bind (("C-c l" . org-store-link)
@@ -1526,7 +1480,9 @@ exist after each headings's drawers."
          ([(shift tab)] . org-overview))
   :config (require 'org-agenda))
 #+end_src
+
 *** COMMENT modules
+
 #+begin_src emacs-lisp
 (setq org-modules
       '(org-bbdb
@@ -1546,6 +1502,7 @@ exist after each headings's drawers."
         org-wl
         org-w3m))
 #+end_src
+
 *** locale
 
 #+begin_src emacs-lisp
@@ -1605,6 +1562,7 @@ exist after each headings's drawers."
                    ("cpp" . "src C++"))
       do (add-to-list 'org-structure-template-alist tpl))
 #+end_src
+
 *** org-table-fixed
 
 #+begin_src emacs-lisp
@@ -1740,75 +1698,16 @@ bidirectional reordering.")
            (org-ctrl-c-ctrl-c))))))
 #+end_src
 
-**** COMMENT exec from results
-
-#+begin_src emacs-lisp
-(defun ob-execute-block-from-results ()
-  (save-excursion
-    (save-restriction
-      (let ((line (thing-at-point 'line)))
-        (if (string-match "#\\+RESULTS: \\(.*\\)" (thing-at-point 'line))
-            (let ((block-name (replace-regexp-in-string "#\\+RESULTS: " "" line)))
-              (beginning-of-buffer)
-              (search-forward (format "%s %s" "#+name:" block-name))
-              (org-ctrl-c-ctrl-c)
-              t)
-          nil)))))
-(add-to-list 'org-ctrl-c-ctrl-c-hook 'ob-execute-block-from-results)
-#+end_src
-
-**** COMMENT run src block
-
-#+begin_src emacs-lisp
-(defun org-babel-execute-block-by-id (name)
-  (save-excursion
-    (org-id-goto name)
-    (search-forward "#+begin_src")
-    (org-babel-execute-maybe)))
-#+end_src
-
-**** COMMENT [[http://kitchingroup.cheme.cmu.edu/blog/2015/03/19/Restarting-org-babel-sessions-in-org-mode-more-effectively/][Restarting org-babel sessions in org-mode more effectively]]
-
-**** COMMENT [[http://orgmode.org/worg/org-contrib/babel/languages/ob-doc-screen.html][org-babel-screen]]
-
 **** ob-http
 
 #+begin_src emacs-lisp :results silent
-(use-package ob-http
-  :ensure t)
+(use-package ob-http)
 #+end_src
 
 **** ob-async
 
 #+begin_src emacs-lisp
 (use-package ob-async
-  :ensure t)
-#+end_src
-
-**** COMMENT ob-ipython
-
-#+begin_src emacs-lisp
-(if (-some->> "which jupyter"
-      shell-command-to-string
-      s-chomp
-      file-exists-p)
-    (use-package ob-ipython
-      :config (progn
-                (add-to-list 'org-latex-minted-langs '(ipython "python"))
-                (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-                (setq-default python-shell-prompt-detect-failure-warning nil)
-                (org-babel-do-load-languages 'org-babel-load-languages '((ipython . t))))
-      :ensure t)
-  (warn "Unable to load ob-ipython: jupyter not found."))
-#+end_src
-
-**** ob-restclient
-
-#+begin_src emacs-lisp
-(use-package restclient
-  :ensure t)
-
-(use-package ob-restclient
   :ensure t)
 #+end_src
 
@@ -1821,7 +1720,6 @@ bidirectional reordering.")
                      (clojure . t)
                      (http . t)
                      (shell . t)
-                     (restclient . t)
                      (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
@@ -1909,18 +1807,24 @@ bidirectional reordering.")
 #+end_src
 
 *** UI
+
 **** Hide emphasis markers
+
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
 #+end_src
+
 **** Bullets beautify
+
 #+begin_src emacs-lisp :results silent
 (use-package org-bullets
   :config (progn
             (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
   :ensure t)
 #+end_src
+
 *** Insert page heading on org-insert-link
+
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -2050,10 +1954,12 @@ bidirectional reordering.")
 *** Experiments
 
 **** ob-json
+
 #+begin_src emacs-lisp
 (defun org-babel-execute:json (body params)
   (json-reformat-from-string body))
 #+end_src
+
 **** ob-sql
 
 #+begin_src emacs-lisp
@@ -2271,10 +2177,13 @@ SET COLSEP '|'
 #+end_src
 
 **** completion
+
 ***** tab-always-indent
+
 #+begin_src emacs-lisp
 (setq tab-always-indent 'complete)
 #+end_src
+
 ***** define-completion
 
 #+begin_src emacs-lisp
@@ -2464,17 +2373,22 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :END:
 
 *** markdown
+
 #+begin_src emacs-lisp
 (use-package markdown-mode)
 #+end_src
+
 *** COMMENT yasnippet
+
 #+begin_src emacs-lisp
 (use-package yasnippet
   :config (progn
             (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
             (yas-global-mode)))
 #+end_src
+
 *** macro
+
 #+begin_src emacs-lisp
 (defun fix-multiple-spaces (&optional arg)
   "Keyboard macro."
@@ -2495,16 +2409,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (global-set-key (kbd "C-M-f") #'fix-multiple-spaces)
 #+end_src
+
 *** completion
+
 **** abbrev
 
 #+begin_src emacs-lisp
 (setq abbrev-file-name (tmp/ "abbrev_defs")
       save-abbrevs 'silent)
-
-(define-abbrev-table 'python-mode-abbrev-table
-  '(("pdb" "import pdb; pdb.set_trace()" nil 0)
-    ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
 
 (define-abbrev-table 'sql-mode-abbrev-table
   '(("select" "SELECT" nil 0)
@@ -3036,6 +2948,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :END:
 
 *** projectile
+
 #+begin_src emacs-lisp
 (use-package projectile
   :bind
@@ -3045,12 +2958,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (setq projectile-completion-system 'ivy)
   :ensure t)
 #+end_src
+
 *** docker
+
 #+begin_src emacs-lisp
 (use-package dockerfile-mode
   :ensure t)
 #+end_src
+
 *** scala                                                                     :Emacs:
+
 #+begin_src emacs-lisp
 (use-package scala-mode
   :mode "\\.s\\(cala\\|bt\\|c\\)$"
@@ -3081,6 +2998,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure posframe
   :ensure dap-mode)
 #+end_src
+
 *** rmsbolt
 
 #+begin_src emacs-lisp
@@ -3289,20 +3207,29 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** python                                                                    :Emacs:
-:PROPERTIES:
-:CUSTOM_ID: emacs.config.programming.python
-:END:
+
+**** abbrevs
+
+#+begin_src emacs-lisp
+(define-abbrev-table 'python-mode-abbrev-table
+  '(("pdb" "import pdb; pdb.set_trace()" nil 0)
+    ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
+#+end_src
 
 **** COMMENT jinja
+
 #+begin_src emacs-lisp
 (use-package jinja2-mode
   :ensure t)
 #+end_src
+
 **** COMMENT elpy
+
 #+begin_src emacs-lisp
 (use-package elpy
   :init (elpy-enable))
 #+end_src
+
 **** COMMENT jedi
 
 #+begin_src emacs-lisp
@@ -3327,18 +3254,23 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 **** COMMENT elpygen
+
 #+begin_src emacs-lisp
 (use-package elpygen
   :bind (:map python-mode-map
         ("C-c i" . elpygen-implement))
   :ensure t)
 #+end_src
+
 **** COMMENT remove pyc files
+
 #+begin_src emacs-lisp
 (defun python2-remove-pyc-files ()
   (shell-command (concat "rm *.pyc")))
 #+end_src
+
 **** highlights
+
 #+begin_src emacs-lisp
 (defun python-highlight-breakpoints()
   (interactive)
@@ -3350,12 +3282,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (add-hook 'python-mode-hook 'python-highlight-breakpoints)
 #+end_src
-**** offsets
+
+**** COMMENT offsets
+
 #+begin_src emacs-lisp
 (setq python-indent-offset 4
       python-indent-guess-indent-offset nil)
 #+end_src
-**** ipython-shell-interpreter
+
+**** COMMENT ipython-shell-interpreter
+
 #+begin_src emacs-lisp
 (require 'python)
 (setq-default python-shell-interpreter "ipython"
@@ -3364,7 +3300,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (add-to-list 'python-shell-completion-native-disabled-interpreters "python")
 (add-to-list 'python-shell-completion-native-disabled-interpreters "jupyter")
 #+end_src
-**** lsp
+
+**** COMMENT lsp
+
 #+begin_src emacs-lisp
 (use-package lsp-mode
   ;; Optional - enable lsp-mode automatically in scala files
@@ -3377,8 +3315,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure posframe
   :ensure dap-mode)
 #+end_src
-
-
 
 *** sql
 
@@ -3414,14 +3350,18 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :END:
 
 *** font
+
 **** default font
+
 #+begin_src emacs-lisp
 (setq my/default-font "JetBrains Mono")
 
 (let ((face (list (list t (list :family my/default-font  :height 100)))))
   (custom-set-faces (list 'default face)))
 #+end_src
+
 **** cyrillic adaptation
+
 #+begin_src emacs-lisp
 (defun darwin-font-adapt-cyrillic (&optional font-size font-name)
   (interactive)
@@ -3436,7 +3376,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                             (decode-char 'ucs #x052F))
                       (font-spec :size (/ font-size 10) :name font-name))))
 #+end_src
+
 **** text scale
+
 #+begin_src emacs-lisp
 (use-package default-text-scale
   :config (progn
@@ -3446,6 +3388,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
               (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)))
   :ensure t)
 #+end_src
+
 *** COMMENT grab-and-drag
 
 #+begin_src emacs-lisp
@@ -3457,6 +3400,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** minimize
+
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
 (when (fboundp 'tool-bar-mode)
@@ -3466,7 +3410,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (when (fboundp 'horizontal-scroll-bar-mode)
   (horizontal-scroll-bar-mode -1))
 #+end_src
+
 *** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
+
 #+begin_src emacs-lisp
 (setq split-width-threshold (- (window-width) 10))
 (setq split-height-threshold nil)
@@ -3482,11 +3428,15 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
 #+end_src
+
 *** vscroll
+
 #+begin_src emacs-lisp
 (setq-default auto-window-vscroll nil)
 #+end_src
+
 *** transparency
+
 #+begin_src emacs-lisp
 (defun make-frame-more-transparent ()
   (interactive)
@@ -3496,11 +3446,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (interactive)
   (set-frame-parameter (selected-frame) 'alpha 1.0))
 #+end_src
+
 *** rainbow-mode
+
 #+begin_src emacs-lisp
 (use-package rainbow-mode
   :hook ((prog-mode . rainbow-mode)))
 #+end_src
+
 *** mode-line
 
 #+begin_src emacs-lisp
@@ -3614,9 +3567,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
+
 #+begin_src emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
+
 *** rainbow-delimiters
 
 #+begin_src emacs-lisp
@@ -3628,7 +3583,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package danneskjold-theme
-  :config (load-theme 'danneskjold t))
+  :config (enable-theme 'danneskjold))
 #+end_src
 
 *** cleanups
