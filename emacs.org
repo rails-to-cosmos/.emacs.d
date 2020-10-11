@@ -948,7 +948,7 @@ enjoy using a lot.
   :init (progn
 	  (setq ivy-re-builders-alist
 		'((nil . ivy--regex-fuzzy)
-		  (t . ivy--regex-plus))
+                  (t . ivy--regex-plus))
 		ivy-initial-inputs-alist nil
 		ivy-use-virtual-buffers t
 		enable-recursive-minibuffers t)
@@ -974,7 +974,8 @@ enjoy using a lot.
          :map read-expression-map
          ("C-r" . counsel-minibuffer-history))
   :init (counsel-mode)
-  :config (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin|$"))
+  :config (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin|$")
+  :ensure smex)
 #+end_src
 
 *** COMMENT Mirror minibuffer
@@ -1426,44 +1427,6 @@ BEG and END (region to sort)."
 
 #+begin_src emacs-lisp
 (use-package ox-reveal)
-#+end_src
-
-*** fix blank lines
-
-#+begin_src emacs-lisp
-(defun unpackaged/org-fix-blank-lines ()
-  "Ensure that blank lines exist between headings and between headings and their contents.
-With prefix, operate on whole buffer. Ensures that blank lines
-exist after each headings's drawers."
-  (interactive "P")
-  (when (string= major-mode "org-mode")
-    (org-map-entries (lambda ()
-                       (org-with-wide-buffer
-                        ;; `org-map-entries' narrows the buffer, which prevents us from seeing
-                        ;; newlines before the current heading, so we do this part widened.
-                        (while (not (looking-back "\n\n" nil))
-                          ;; Insert blank lines before heading.
-                          (insert "\n")))
-                       (let ((end (org-entry-end-position)))
-                         ;; Insert blank lines before entry content
-                         (forward-line)
-                         (while (and (org-at-planning-p)
-                                     (< (point) (point-max)))
-                           ;; Skip planning lines
-                           (forward-line))
-                         (while (re-search-forward org-drawer-regexp end t)
-                           ;; Skip drawers. You might think that `org-at-drawer-p' would suffice, but
-                           ;; for some reason it doesn't work correctly when operating on hidden text.
-                           ;; This works, taken from `org-agenda-get-some-entry-text'.
-                           (re-search-forward "^[ \t]*:END:.*\n?" end t)
-                           (goto-char (match-end 0)))
-                         (unless (or (= (point) (point-max))
-                                     (org-at-heading-p)
-                                     (looking-at-p "\n"))
-                           (insert "\n"))))
-                     t nil)))
-
-(add-hook 'after-save-hook 'unpackaged/org-fix-blank-lines)
 #+end_src
 
 *** org-plus-contrib
@@ -2947,6 +2910,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.programming
 :END:
 
+*** eglot
+#+begin_src emacs-lisp
+(use-package eglot
+  :config
+  (add-hook 'python-mode-hook 'eglot-ensure)
+  :ensure project-root)
+
+(defun project-root (project)
+    (car (project-roots project)))
+#+end_src
 *** projectile
 
 #+begin_src emacs-lisp
