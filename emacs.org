@@ -947,11 +947,12 @@ enjoy using a lot.
               ("C-j" . ivy-immediate-done))
   :init (progn
 	  (setq ivy-re-builders-alist
-		'((nil . ivy--regex-fuzzy)
+                '((nil . ivy--regex-fuzzy)
                   (t . ivy--regex-plus))
-		ivy-initial-inputs-alist nil
-		ivy-use-virtual-buffers t
-		enable-recursive-minibuffers t)
+                ivy-initial-inputs-alist nil
+                ivy-use-virtual-buffers t
+                enable-recursive-minibuffers t
+                ivy-extra-directories '())
 	  (ivy-mode)))
 #+end_src
 
@@ -3347,7 +3348,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     (set-fontset-font "fontset-default"
                       (cons (decode-char 'ucs #x0400)
                             (decode-char 'ucs #x052F))
-                      (font-spec :size (/ font-size 10) :name font-name))))
+                      (font-spec :size (/ font-size 10) :name font-name :family font-name))))
 #+end_src
 
 **** text scale
@@ -3358,8 +3359,8 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (default-text-scale-mode 1)
             (when (eq system-type 'darwin)
               (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
-              (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)))
-  :ensure t)
+              (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)
+              (darwin-font-adapt-cyrillic))))
 #+end_src
 
 *** COMMENT grab-and-drag
