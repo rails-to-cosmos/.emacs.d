@@ -338,6 +338,8 @@ enjoy using a lot.
                       (seq bol "." eol)
                       (seq bol "__pycache__" eol)
                       (seq bol ".." eol))))
+
+(add-hook 'dired-after-readin-hook 'dired-omit-mode)
 #+end_src
 
 *** dired-switch-buffers
@@ -953,7 +955,9 @@ enjoy using a lot.
                 ivy-use-virtual-buffers t
                 enable-recursive-minibuffers t
                 ivy-extra-directories '())
-	  (ivy-mode)))
+          (ivy-mode)
+          (global-set-key (kbd "C-.") #'ivy-yasnippet))
+  :ensure ivy-yasnippet)
 #+end_src
 
 *** counsel
@@ -2342,7 +2346,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package markdown-mode)
 #+end_src
 
-*** COMMENT yasnippet
+*** yasnippet
 
 #+begin_src emacs-lisp
 (use-package yasnippet
