@@ -330,6 +330,8 @@ enjoy using a lot.
 *** omit
 
 #+begin_src emacs-lisp
+(require 'dired-x)
+
 (setq-default dired-omit-files-p t
               dired-omit-verbose t
               dired-omit-files
@@ -339,7 +341,7 @@ enjoy using a lot.
                       (seq bol "__pycache__" eol)
                       (seq bol ".." eol))))
 
-(add-hook 'dired-after-readin-hook 'dired-omit-mode)
+(add-hook 'dired-mode-hook 'dired-omit-mode)
 #+end_src
 
 *** dired-switch-buffers
