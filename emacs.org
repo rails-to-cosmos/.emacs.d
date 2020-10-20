@@ -410,57 +410,11 @@ enjoy using a lot.
   (dired/sort))
 #+end_src
 
-*** COMMENT collapsed dirs
-
+*** dired-collapse
 #+begin_src emacs-lisp
-(defface dired-collapsed-dirs
-  '((((class color) (min-colors 88) (background light))
-     :background "white")
-    (((class color) (min-colors 88) (background dark))
-     :background "black")
-    (((class color) (min-colors 16) (background light))
-     :background "white")
-    (((class color) (min-colors 16) (background dark))
-     :background "black")
-    (((class color) (min-colors 8))
-     :background "black" :foreground "#A4C2EB")
-    (t :inverse-video t))
-  "Face for collapsed directories."
-  :group 'dired-faces)
-
-(defun my-dired-collapse-directories ()
-  (let ((inhibit-read-only t))
-    (save-excursion
-      (goto-char (point-min))
-      (while (not (eobp))
-        (when (and (looking-at-p dired-re-dir)
-                   (not (member (dired-get-filename t t) (list "." "..")))
-                   (not (eolp)))
-          (let ((path (dired-get-filename t t))
-                (switches (delete ?\ (delete ?- (append dired-listing-switches nil))))
-                files)
-            (while (and (file-directory-p path)
-                        (setq files (f-entries path))
-                        (= 1 (length files)))
-              (setq path (concat path "/" (f-filename (car files)))))
-            (when (string-match-p "/" path)
-              (delete-region (line-beginning-position) (1+ (line-end-position)))
-              (insert "  ")
-              (ls-lisp-insert-directory path switches nil nil nil)
-              (forward-line -1)
-              (dired-insert-set-properties (line-beginning-position) (line-end-position))
-              (dired-move-to-filename)
-              (let* ((beg (point))
-                     (end (save-excursion
-                            (dired-move-to-end-of-filename)
-                            (1+ (search-backward "/"))))
-                     (ov (make-overlay beg end)))
-                (overlay-put ov 'face 'dired-collapsed-dirs)))))
-        (forward-line 1)))))
-
-(add-hook 'dired-after-readin-hook 'my-dired-collapse-directories 'append) ; must come after other dired-hacks hooks
+(use-package dired-collapse
+  :config (add-hook 'dired-after-readin-hook 'dired-collapse-mode))
 #+end_src
-
 ** eshell
 
 *** [[https://blog.hoetzel.info/post/eshell-notifications/][notifications]]
