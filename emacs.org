@@ -980,7 +980,6 @@ enjoy using a lot.
          ("C-x b" . ido-switch-buffer)
          :map read-expression-map
          ("C-r" . counsel-minibuffer-history))
-  :init (counsel-mode)
   :config (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin|$")
   :ensure smex)
 #+end_src
@@ -2922,7 +2921,8 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package eglot
   :config
   (add-hook 'python-mode-hook 'eglot-ensure)
-  :ensure project-root)
+  :ensure project-root
+  :ensure eldoc)
 
 (defun project-root (project)
     (car (project-roots project)))
