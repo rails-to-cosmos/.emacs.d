@@ -413,7 +413,7 @@ enjoy using a lot.
 *** dired-collapse
 #+begin_src emacs-lisp
 (use-package dired-collapse
-  :config (add-hook 'dired-mode-hook 'dired-collapse-mode))
+  :config (add-hook 'dired-after-readin-hook 'dired-collapse-mode))
 #+end_src
 ** eshell
 
