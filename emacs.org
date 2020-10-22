@@ -2871,11 +2871,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.programming
 :END:
 
+*** terraform
+#+begin_src emacs-lisp
+(use-package terraform-mode
+  :mode "\\.tf$")
+#+end_src
 *** eglot
 #+begin_src emacs-lisp
 (use-package eglot
-  :config
-  (add-hook 'python-mode-hook 'eglot-ensure)
   :ensure project-root)
 
 (defun project-root (project)
@@ -2896,8 +2899,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** docker
 
 #+begin_src emacs-lisp
-(use-package dockerfile-mode
-  :ensure t)
+(use-package dockerfile-mode)
 #+end_src
 
 *** scala                                                                     :Emacs:
@@ -3142,14 +3144,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 *** python                                                                    :Emacs:
 
-**** abbrevs
-
+**** hooks
 #+begin_src emacs-lisp
-(define-abbrev-table 'python-mode-abbrev-table
-  '(("pdb" "import pdb; pdb.set_trace()" nil 0)
-    ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
-#+end_src
+(use-package python
+  :config
+  (add-hook 'python-mode-hook 'eglot-ensure)
+  (add-hook 'python-mode-hook 'company-mode)
 
+  (define-abbrev-table 'python-mode-abbrev-table
+    '(("pdb" "import pdb; pdb.set_trace()" nil 0)
+      ("ipdb" "import ipdb; ipdb.set_trace()" nil 0))))
+#+end_src
 **** COMMENT jinja
 
 #+begin_src emacs-lisp
