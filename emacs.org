@@ -1,4 +1,5 @@
 #+CATEGORY: Emacs
+#+STARTUP: overview
 
 * Whoami
 
@@ -374,12 +375,11 @@ enjoy using a lot.
 #+begin_src emacs-lisp
 (use-package dired-rainbow
   :after (:all dired dired+)
-  :config (progn
-            (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
-            (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
-            (dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
-            (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
-  :ensure t)
+  :config
+  (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
+  (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
+  (dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
+  (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
 #+end_src
 
 *** [[http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/][Case-Insensitive Sorting in Dired on OS X | Pragmatic Emacs]]
@@ -922,6 +922,7 @@ enjoy using a lot.
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
          ("C-x C-f" . counsel-find-file)
+         ("C-h a" . counsel-describe-face)
          ("C-h f" . counsel-describe-function)
          ("C-h v" . counsel-describe-variable)
          ("C-h l" . counsel-find-library)
@@ -1084,9 +1085,7 @@ enjoy using a lot.
   :init
   (pdf-loader-install)
   :commands
-  (pdf-view-mode)
-  :diminish t
-  :ensure t)
+  (pdf-view-mode))
 #+end_src
 
 *** undo-tree
@@ -1474,6 +1473,8 @@ BEG and END (region to sort)."
 *** structure-templates
 
 #+begin_src emacs-lisp
+(require 'ob-scala)
+
 (loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
@@ -1643,6 +1644,7 @@ bidirectional reordering.")
                      (clojure . t)
                      (http . t)
                      (shell . t)
+                     (scala . t)
                      (C . t)))
 
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
@@ -1682,15 +1684,15 @@ bidirectional reordering.")
               org-log-redeadline 'time
               org-deadline-warning-days 30)
 
-(setq org-log-note-headings '((done . "CLOSING NOTE T:%t")
-                              (state . "State %-12s from %-12S T:%t")
-                              (note . "Note taken on T:%t")
-                              (reschedule . "Rescheduled from %S on T:%t")
-                              (delschedule . "Not scheduled, was %S on T:%t")
-                              (redeadline . "New deadline from %S on T:%t")
-                              (deldeadline . "Removed deadline, was %S on T:%t")
-                              (refile . "Refiled on T:%t")
-                              (clock-out . "Clocked out on T:%t")))
+(setq org-log-note-headings '((done . "CLOSING NOTE %t")
+                              (state . "State %-12s from %-12S %t")
+                              (note . "Note taken on %t")
+                              (reschedule . "Rescheduled from %S on %t")
+                              (delschedule . "Not scheduled, was %S on %t")
+                              (redeadline . "New deadline from %S on %t")
+                              (deldeadline . "Removed deadline, was %S on %t")
+                              (refile . "Refiled on %t")
+                              (clock-out . "Clocked out on %t")))
 #+end_src
 
 *** clock
@@ -2295,6 +2297,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** auto-complete
+#+begin_src emacs-lisp
+;; (setq hippie-expand-try-functions-list '(try-complete-file-name))
+(global-unset-key (kbd "M-/"))
+(global-set-key (kbd "M-/") 'completion-at-point)
+#+end_src
 *** markdown
 
 #+begin_src emacs-lisp
@@ -2700,8 +2708,8 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                 compilation-mode-hook
                 twittering-mode-hook
                 minibuffer-setup-hook
-                python-mode-hook
-                eshell-mode-hook))
+                eshell-mode-hook
+                prog-mode-hook))
   (add-hook hook #'sanityinc/no-trailing-whitespace))
 #+end_src
 
@@ -2935,6 +2943,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure dap-mode)
 #+end_src
 
+*** ammonite
+#+begin_src emacs-lisp
+(use-package ammonite-term-repl
+  :config
+  (setq ammonite-term-repl-program-args '("-w")))
+#+end_src
 *** rmsbolt
 
 #+begin_src emacs-lisp
@@ -3288,16 +3302,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 *** font
 
-**** default font
-
-#+begin_src emacs-lisp
-(setq my/default-font "JetBrains Mono")
-
-(let ((face (list (list t (list :family my/default-font  :height 100)))))
-  (custom-set-faces (list 'default face)))
-#+end_src
-
-**** cyrillic adaptation
+**** default font + cyrillic adaptation
 
 #+begin_src emacs-lisp
 (defun darwin-font-adapt-cyrillic (&optional font-size font-name)
@@ -3312,6 +3317,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                       (cons (decode-char 'ucs #x0400)
                             (decode-char 'ucs #x052F))
                       (font-spec :size (/ font-size 10) :name font-name :family font-name))))
+
+(setq my/default-font "JetBrains Mono")
+
+(let ((face (list (list t (list :family my/default-font  :height 100)))))
+  (custom-set-faces (list 'default face)))
+
+(darwin-font-adapt-cyrillic)
 #+end_src
 
 **** text scale
@@ -3520,7 +3532,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package danneskjold-theme
-  :config (enable-theme 'danneskjold))
+  ;; :config (enable-theme 'danneskjold)
+)
+
+(load-file "~/sync/stuff/danneskjold-theme/danneskjold-light-theme.el")
+(enable-theme 'danneskjold-light)
 #+end_src
 
 *** cleanups
