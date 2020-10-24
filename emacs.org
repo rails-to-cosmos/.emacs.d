@@ -1674,7 +1674,6 @@ bidirectional reordering.")
 #+end_src
 
 *** log
-
 #+begin_src emacs-lisp
 (setq-default org-log-into-drawer t
               org-log-done 'time
@@ -1694,7 +1693,6 @@ bidirectional reordering.")
                               (refile . "Refiled on %t")
                               (clock-out . "Clocked out on %t")))
 #+end_src
-
 *** clock
 
 #+begin_src emacs-lisp
