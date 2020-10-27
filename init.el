@@ -24,14 +24,9 @@
  backup-directory-alist `((".*" . ,temporary-file-directory))
  auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
 
-(use-package diminish
-  :ensure t)
-
-(use-package bind-key
-  :ensure t)
-
-(use-package org
-  :ensure t)
+(use-package diminish)
+(use-package bind-key)
+(use-package org)
 
 (org-babel-load-file
  (expand-file-name "emacs.org" user-emacs-directory))

@@ -1048,19 +1048,20 @@ used to limit the exported source code blocks by language."
   (org-mode))
 
 (defun oldt-report-create (headline)
-  (let ((entry-id (org-id-new))
-        (report-buffer (get-buffer-create "*oldt-projects-overview*")))
-    (with-current-buffer report-buffer
-      (if (string-empty-p (buffer-string))
-          (oldt-report-buffer-init)
-        (goto-char (point-max)))
-      (org-insert-heading)
-      (insert headline)
-      (org-set-property "ID" entry-id)
-      (org-set-property "VISIBILITY" "folded")
-      (org-back-to-heading)
-      (org-todo "STARTED"))
-    entry-id))
+  (save-window-excursion
+    (let ((entry-id (org-id-new))
+          (report-buffer (get-buffer-create "*oldt-projects-overview*")))
+      (with-current-buffer report-buffer
+        (if (string-empty-p (buffer-string))
+            (oldt-report-buffer-init)
+          (goto-char (point-max)))
+        (org-insert-heading)
+        (insert headline)
+        (org-set-property "ID" entry-id)
+        (org-set-property "VISIBILITY" "folded")
+        (org-back-to-heading)
+        (org-todo "STARTED"))
+      entry-id)))
 
 (defun oldt-report-log (id state &rest messages)
   (let* ((report-buffer (get-buffer-create "*oldt-projects-overview*"))

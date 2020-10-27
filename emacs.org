@@ -30,7 +30,10 @@
 :END:
 
 ** lisp
-
+*** indent
+#+begin_src emacs-lisp
+(setq lisp-indent-function 'common-lisp-indent-function)
+#+end_src
 *** ts
 
 #+begin_src emacs-lisp
@@ -188,8 +191,9 @@ enjoy using a lot.
 *** welcome
 
 #+begin_src emacs-lisp
-(setq-default initial-scratch-message
-              (concat "# I've always thought they were lighthouses\n\n"))
+(setq-default
+ initial-scratch-message (concat "# I've always thought they were lighthouses\n\n")
+ default-directory "~/")
 #+end_src
 
 *** [[https://github.com/hlissner/.emacs.d/blob/master/core/core.el][encoding]]
@@ -278,8 +282,12 @@ enjoy using a lot.
 	     alert-default-style 'osx-notifier)))
 #+end_src
 
-** dired
+** dired                                                                       :Emacs:
 
+*** unsorted
+#+begin_src emacs-lisp
+(put 'dired-find-alternate-file 'disabled nil)
+#+end_src
 *** dired+
 
 #+begin_src emacs-lisp
@@ -1352,7 +1360,12 @@ BEG and END (region to sort)."
 	  (delete-region (point-max) prev-point-max))))
 #+end_src
 
-** Org
+** Org                                                                         :Emacs:
+*** modules
+
+#+begin_src emacs-lisp
+(setq-default org-modules '())
+#+end_src
 
 *** notify
 
@@ -1403,28 +1416,6 @@ BEG and END (region to sort)."
   :config (require 'org-agenda))
 #+end_src
 
-*** COMMENT modules
-
-#+begin_src emacs-lisp
-(setq org-modules
-      '(org-bbdb
-        org-bibtex
-        org-gnus
-        org-id
-        org-info
-        org-jsinfo
-        org-habit
-        org-inlinetask
-        org-irc
-        org-mew
-        org-mhe
-        org-protocol
-        org-rmail
-        org-vm
-        org-wl
-        org-w3m))
-#+end_src
-
 *** locale
 
 #+begin_src emacs-lisp
@@ -1446,15 +1437,6 @@ BEG and END (region to sort)."
 
 #+begin_src emacs-lisp
 (add-hook 'org-after-refile-insert-hook '(lambda () (org-update-statistics-cookies 'all)))
-#+end_src
-
-*** COMMENT [[http://www.nongnu.org/org-edna-el/][org-edna]]
-
-#+begin_src emacs-lisp
-(use-package org-edna
-  :config (progn
-            (org-edna-load))
-  :ensure t)
 #+end_src
 
 *** COMMENT org-git-link
@@ -3316,9 +3298,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                             (decode-char 'ucs #x052F))
                       (font-spec :size (/ font-size 10) :name font-name :family font-name))))
 
-(setq my/default-font "JetBrains Mono")
+(defvar my-default-font "JetBrains Mono")
+(defvar my-default-font-height 100)
 
-(let ((face (list (list t (list :family my/default-font  :height 100)))))
+(let ((face (list (list t (list :family my-default-font :height my-default-font-height)))))
   (custom-set-faces (list 'default face)))
 
 (darwin-font-adapt-cyrillic)
@@ -3328,12 +3311,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package default-text-scale
-  :config (progn
-            (default-text-scale-mode 1)
-            (when (eq system-type 'darwin)
-              (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
-              (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)
-              (darwin-font-adapt-cyrillic))))
+  :config
+  (default-text-scale-mode 1)
+  (when (eq system-type 'darwin)
+    (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
+    (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)
+    (darwin-font-adapt-cyrillic)))
 #+end_src
 
 *** COMMENT grab-and-drag
@@ -3526,16 +3509,44 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :hook ((prog-mode . rainbow-delimiters-mode)))
 #+end_src
 
-*** themes
-
+*** danneskjold-theme                                                         :Emacs:
 #+begin_src emacs-lisp
-(use-package danneskjold-theme
-  ;; :config (enable-theme 'danneskjold)
-)
+;; (use-package danneskjold-theme
+;;   :config (enable-theme 'danneskjold))
+
+;; (require 'color)
+;; (set-face-attribute 'org-block nil :background
+;;                     (color-darken-name
+;;                      (face-attribute 'default :background) 3))
+
+;; (setq org-src-block-faces '(("emacs-lisp" (:background "#EEE2FF"))
+;;                             ("python" (:background "#E5FFB8"))))
 
 (load-file "~/sync/stuff/danneskjold-theme/danneskjold-light-theme.el")
 (enable-theme 'danneskjold-light)
+
+(setq org-priority-faces
+      '((?A . (:background "#E74C3C"))
+        (?B . (:background "#FFDB45"))
+        (?C . (:background "#749AF7"))))
+
+(setq org-todo-keyword-faces
+      '(("REVIEW" . (:foreground "#292"))
+        ("CANCELLED" . (:foreground "#7B9ED2"))
+        ("STARTED" . (:foreground "#749AF7"))
+        ("PENDING" . (:foreground "#FFDB45"))
+        ("DELEGATED" . (:foreground "#FFDB45"))
+        ("CODE_REVIEW" . (:foreground "#8B7FD7"))))
+
+(add-to-list 'org-emphasis-alist '("`" (:background "#e31ce51ae718")))
+
+(set-frame-width (selected-frame) 170)
+(set-frame-height (selected-frame) 60)
+(set-frame-position (selected-frame) 50 50)
 #+end_src
+
+#+RESULTS:
+: t
 
 *** cleanups
 
