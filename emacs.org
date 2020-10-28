@@ -666,7 +666,7 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** mwe-log-commands
+*** COMMENT mwe-log-commands
 
 #+begin_src emacs-lisp
 (use-package mwe-log-commands)
@@ -944,7 +944,8 @@ enjoy using a lot.
          :map read-expression-map
          ("C-r" . counsel-minibuffer-history))
   :config (setq-default counsel-find-file-ignore-regexp "^\\.[^.]\\|\\.pyc$\\|\\.bin|$")
-  :ensure smex)
+  :ensure smex
+  :ensure t)
 #+end_src
 
 *** COMMENT Mirror minibuffer
@@ -2864,14 +2865,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :mode "\\.tf$")
 #+end_src
 *** eglot
+
 #+begin_src emacs-lisp
 (use-package eglot
   :ensure project-root
-  :ensure eldoc)
+  :ensure eldoc
+  :ensure t)
 
 (defun project-root (project)
     (car (project-roots project)))
 #+end_src
+
 *** projectile
 
 #+begin_src emacs-lisp
@@ -3285,10 +3289,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 **** default font + cyrillic adaptation
 
 #+begin_src emacs-lisp
-(defun darwin-font-adapt-cyrillic (&optional font-size font-name)
+(defun adapt-cyrillic-font (&optional font-size font-name)
   (interactive)
   (let ((font-size (or font-size (face-attribute 'default :height)))
-        (font-name (or font-name (face-attribute 'default :family))))
+        (font-name (or font-name (face-attribute 'default :family)))
+        (factor (case system-type
+                  ('darwin 10)
+                  ('windows-nt 5))))
 
     (custom-set-faces
      (list 'default (list (list t (list :slant 'normal :weight 'normal :height font-size
@@ -3296,15 +3303,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     (set-fontset-font "fontset-default"
                       (cons (decode-char 'ucs #x0400)
                             (decode-char 'ucs #x052F))
-                      (font-spec :size (/ font-size 10) :name font-name :family font-name))))
-
-(defvar my-default-font "JetBrains Mono")
-(defvar my-default-font-height 100)
-
-(let ((face (list (list t (list :family my-default-font :height my-default-font-height)))))
-  (custom-set-faces (list 'default face)))
-
-(darwin-font-adapt-cyrillic)
+                      (font-spec :size (/ font-size factor) :name font-name :family font-name))))
 #+end_src
 
 **** text scale
@@ -3539,10 +3538,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
         ("CODE_REVIEW" . (:foreground "#8B7FD7"))))
 
 (add-to-list 'org-emphasis-alist '("`" (:background "#e31ce51ae718")))
-
-(set-frame-width (selected-frame) 170)
-(set-frame-height (selected-frame) 60)
-(set-frame-position (selected-frame) 50 50)
 #+end_src
 
 #+RESULTS:
