@@ -1047,10 +1047,10 @@ used to limit the exported source code blocks by language."
     (insert todo-states))
   (org-mode))
 
-(defun oldt-report-create (headline)
+(cl-defun oldt-report-create (headline &optional (buffer-name "*oldt-report*"))
   (save-window-excursion
     (let ((entry-id (org-id-new))
-          (report-buffer (get-buffer-create "*oldt-projects-overview*")))
+          (report-buffer (get-buffer-create buffer-name)))
       (with-current-buffer report-buffer
         (if (string-empty-p (buffer-string))
             (oldt-report-buffer-init)
@@ -1063,8 +1063,8 @@ used to limit the exported source code blocks by language."
         (org-todo "STARTED"))
       entry-id)))
 
-(defun oldt-report-log (id state &rest messages)
-  (let* ((report-buffer (get-buffer-create "*oldt-projects-overview*"))
+(defun oldt-report-log (id buffer-name state &rest messages)
+  (let* ((report-buffer (get-buffer-create buffer-name))
          (note (cdr (assq 'note org-log-note-headings))))
     (setq note (org-replace-escapes
 	        note

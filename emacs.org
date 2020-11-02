@@ -1705,10 +1705,35 @@ bidirectional reordering.")
   (run-with-idle-timer
    custom-org-clock-idle-time 'repeat
    #'(lambda () (when (org-clock-is-active)
-             (org-clock-goto)
-             (org-clock-out nil t (seconds-to-time (- (float-time (org-current-time org-clock-rounding-minutes t))
-                                                      custom-org-clock-idle-time)))
-             (when buffer-file-name (save-buffer))))))
+                  (org-clock-goto)
+                  (org-clock-out nil t (seconds-to-time (- (float-time (org-current-time org-clock-rounding-minutes t))
+                                                           custom-org-clock-idle-time)))
+                  (when buffer-file-name (save-buffer))))))
+
+(defun consider-effort-as-clocktime ()
+  (interactive)
+  (save-excursion
+    (let ((clocktime (clocktime-from-timestamp-or-effort)))
+      (org-clock-find-position t)
+      (insert-before-markers "\n")
+      (backward-char 1)
+      (org-indent-line)
+      (when (and (save-excursion (end-of-line 0) (org-in-item-p)))
+        (beginning-of-line 1)
+        (indent-line-to (- (current-indentation) 2)))
+      (insert clocktime)
+      (org-back-to-heading))))
+
+(defun my-org-state-change (params)
+  (cl-destructuring-bind
+        (&key type from to &allow-other-keys)
+      params
+    (when (and
+           (string= (substring-no-properties to) "DONE")
+           (not (string= (substring-no-properties from) "STARTED")))
+      (consider-effort-as-clocktime))))
+
+;; (add-hook 'org-trigger-hook 'my-org-state-change)
 #+end_src
 
 *** UI
@@ -1723,9 +1748,9 @@ bidirectional reordering.")
 
 #+begin_src emacs-lisp :results silent
 (use-package org-bullets
-  :config (progn
-            (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-  :ensure t)
+    :config (progn
+              (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+    :ensure t)
 #+end_src
 
 *** Insert page heading on org-insert-link
@@ -2083,7 +2108,7 @@ SET COLSEP '|'
 
 **** completion
 
-***** tab-always-indent
+***** COMMENT tab-always-indent
 
 #+begin_src emacs-lisp
 (setq tab-always-indent 'complete)
@@ -2336,44 +2361,19 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     ("ord" "ORDER BY" nil 0)))
 
 (add-hook 'prog-mode-hook 'abbrev-mode)
+
+(define-abbrev-table 'org-mode-abbrev-table
+  '(("rub" "₽" nil 0)))
+(add-hook 'org-mode-hook 'abbrev-mode)
 #+end_src
 
-**** COMMENT lsp
-
-#+begin_src emacs-lisp
-(use-package lsp-mode
-  :commands lsp)
-
-(use-package lsp-ui
-  :commands lsp-ui-mode)
-
-(use-package company-lsp
-  :commands company-lsp)
-
-;; (use-package dap-mode)
-;; (use-package dap-scala)
-;; (use-package dap-python)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-#+end_src
-
-**** COMMENT company
-
-#+begin_src emacs-lisp
-(use-package company
-  :config (progn
-            (global-company-mode)
-            (global-set-key (kbd "TAB") #'company-indent-or-complete-common))
-  :ensure t)
-#+end_src
-
-**** COMMENT pabbrev
+**** pabbrev
 
 #+begin_src emacs-lisp
 (use-package pabbrev
-  :config
-(global-pabbrev-mode)
-(define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe)
-  :ensure t)
+    :config
+  (global-pabbrev-mode)
+  (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
 #+end_src
 
 ***** compl-read-suggestions

@@ -497,6 +497,7 @@ SCOPE defaults to agenda, and SKIP defaults to nil."
       (buffer-string))))
 
 (defun ledna/consider-effort-as-clocktime ()
+  (interactive)
   (save-excursion
     (let ((clocktime (clocktime-from-timestamp-or-effort)))
       (org-clock-find-position t)
