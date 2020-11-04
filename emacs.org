@@ -1456,8 +1456,6 @@ BEG and END (region to sort)."
 *** structure-templates
 
 #+begin_src emacs-lisp
-(require 'ob-scala)
-
 (loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
@@ -2872,8 +2870,18 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure eldoc
   :ensure t)
 
-(defun project-root (project)
-    (car (project-roots project)))
+(defun* project-root (&optional buffer)
+  "Return the root of the project for BUFFER, determined using
+`project-root-functions', or nil if BUFFER isn't in a project.
+
+No argument means use the current buffer."
+  (do ((dir (file-truename (buffer-file-name buffer))
+            (directory-file-name (file-name-directory dir))))
+      ((string-equal dir "/"))
+    (dolist (fn project-root-functions)
+      (when (funcall fn dir) (return-from project-root dir)))))
+
+(defalias 'project-current 'project-root)
 #+end_src
 
 *** projectile
@@ -2899,32 +2907,32 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+begin_src emacs-lisp
 (use-package scala-mode
   :mode "\\.s\\(cala\\|bt\\|c\\)$"
-  :config (setq scala-indent:step 2))
+  :config
+  (setq scala-indent:step 2)
+  (add-hook 'scala-mode-hook 'eglot-ensure)
+  (add-hook 'scala-mode-hook 'company-mode))
 
 (use-package sbt-mode
   :commands sbt-start sbt-command
   :config
-  (substitute-key-definition
-   'minibuffer-complete-word
-   'self-insert-command
-   minibuffer-local-completion-map)
+  (substitute-key-definition 'minibuffer-complete-word 'self-insert-command minibuffer-local-completion-map)
   (setq sbt:program-options '("-Dsbt.supershell=false")))
 
-(use-package dap-mode
-  :hook
-  (lsp-mode . dap-mode)
-  (lsp-mode . dap-ui-mode))
+;; (use-package dap-mode
+;;   :hook
+;;   (lsp-mode . dap-mode)
+;;   (lsp-mode . dap-ui-mode))
 
-(use-package lsp-mode
-  :hook (scala-mode . lsp)
-        (lsp-mode . lsp-lens-mode)
-  :config (setq lsp-prefer-flymake nil)
-  :ensure lsp-scala
-  :ensure lsp-metals
-  :ensure lsp-ui
-  :ensure company-lsp
-  :ensure posframe
-  :ensure dap-mode)
+;; (use-package lsp-mode
+;;   :hook (scala-mode . lsp)
+;;         (lsp-mode . lsp-lens-mode)
+;;   :config (setq lsp-prefer-flymake nil)
+;;   :ensure lsp-scala
+;;   :ensure lsp-metals
+;;   :ensure lsp-ui
+;;   :ensure company-lsp
+;;   :ensure posframe
+;;   :ensure dap-mode)
 #+end_src
 
 *** ammonite
@@ -3289,7 +3297,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 **** default font + cyrillic adaptation
 
 #+begin_src emacs-lisp
-(defun adapt-cyrillic-font (&optional font-size font-name)
+(defun darwin-font-adapt-cyrillic (&optional font-size font-name)
   (interactive)
   (let ((font-size (or font-size (face-attribute 'default :height)))
         (font-name (or font-name (face-attribute 'default :family)))
