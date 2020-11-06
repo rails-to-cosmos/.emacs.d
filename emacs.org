@@ -4,9 +4,8 @@
 * Whoami
 
 #+begin_src emacs-lisp
-(setq-default
- user-mail-address "akatovda@yandex.com"
- user-full-name "Dmitry Akatov")
+(setq-default user-mail-address "akatovda@yandex.com"
+              user-full-name "Dmitry Akatov")
 #+end_src
 
 * Links
@@ -31,9 +30,11 @@
 
 ** lisp
 *** indent
+
 #+begin_src emacs-lisp
 (setq lisp-indent-function 'common-lisp-indent-function)
 #+end_src
+
 *** ts
 
 #+begin_src emacs-lisp
@@ -207,7 +208,7 @@ enjoy using a lot.
 *** locale
 
 #+begin_src emacs-lisp
-(defun setup-utf-locale ()  ;; call it in init-local.el if you want
+(defun setup-utf-locale ()
   (setenv "LANG" "en_US.UTF-8")
   (setenv "LC_COLLATE" "en_US.UTF-8")
   (setenv "LC_CTYPE" "en_US.UTF-8")
@@ -285,9 +286,11 @@ enjoy using a lot.
 ** dired                                                                       :Emacs:
 
 *** unsorted
+
 #+begin_src emacs-lisp
 (put 'dired-find-alternate-file 'disabled nil)
 #+end_src
+
 *** dired+
 
 #+begin_src emacs-lisp
@@ -676,7 +679,9 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (use-package reverse-im
-  :config (reverse-im-activate "russian-computer"))
+  :config (reverse-im-activate "russian-computer")
+
+  :ensure t)
 #+end_src
 
 *** COMMENT which-key
@@ -1606,7 +1611,8 @@ bidirectional reordering.")
 **** ob-http
 
 #+begin_src emacs-lisp :results silent
-(use-package ob-http)
+(use-package ob-http
+    :ensure t)
 #+end_src
 
 **** ob-async
@@ -1631,7 +1637,7 @@ bidirectional reordering.")
 (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 #+end_src
 
-*** crypt
+*** COMMENT crypt
 
 #+begin_src emacs-lisp
 (require 'epa-file)
@@ -2302,11 +2308,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :END:
 
 *** auto-complete
+
 #+begin_src emacs-lisp
 ;; (setq hippie-expand-try-functions-list '(try-complete-file-name))
 (global-unset-key (kbd "M-/"))
 (global-set-key (kbd "M-/") 'completion-at-point)
 #+end_src
+
 *** markdown
 
 #+begin_src emacs-lisp
@@ -2829,7 +2837,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 ** Version Control
 
-*** monky
+*** COMMENT monky
 
 #+begin_src emacs-lisp
 (use-package monky
@@ -2862,26 +2870,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package terraform-mode
   :mode "\\.tf$")
 #+end_src
-*** eglot
+*** COMMENT eglot
 
 #+begin_src emacs-lisp
 (use-package eglot
   :ensure project-root
   :ensure eldoc
   :ensure t)
-
-(defun* project-root (&optional buffer)
-  "Return the root of the project for BUFFER, determined using
-`project-root-functions', or nil if BUFFER isn't in a project.
-
-No argument means use the current buffer."
-  (do ((dir (file-truename (buffer-file-name buffer))
-            (directory-file-name (file-name-directory dir))))
-      ((string-equal dir "/"))
-    (dolist (fn project-root-functions)
-      (when (funcall fn dir) (return-from project-root dir)))))
-
-(defalias 'project-current 'project-root)
 #+end_src
 
 *** projectile
@@ -2909,7 +2904,7 @@ No argument means use the current buffer."
   :mode "\\.s\\(cala\\|bt\\|c\\)$"
   :config
   (setq scala-indent:step 2)
-  (add-hook 'scala-mode-hook 'eglot-ensure)
+  ;; (add-hook 'scala-mode-hook 'eglot-ensure)
   (add-hook 'scala-mode-hook 'company-mode))
 
 (use-package sbt-mode
@@ -2918,21 +2913,21 @@ No argument means use the current buffer."
   (substitute-key-definition 'minibuffer-complete-word 'self-insert-command minibuffer-local-completion-map)
   (setq sbt:program-options '("-Dsbt.supershell=false")))
 
-;; (use-package dap-mode
-;;   :hook
-;;   (lsp-mode . dap-mode)
-;;   (lsp-mode . dap-ui-mode))
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
 
-;; (use-package lsp-mode
-;;   :hook (scala-mode . lsp)
-;;         (lsp-mode . lsp-lens-mode)
-;;   :config (setq lsp-prefer-flymake nil)
-;;   :ensure lsp-scala
-;;   :ensure lsp-metals
-;;   :ensure lsp-ui
-;;   :ensure company-lsp
-;;   :ensure posframe
-;;   :ensure dap-mode)
+(use-package lsp-mode
+  :hook (scala-mode . lsp)
+        (lsp-mode . lsp-lens-mode)
+  :config (setq lsp-prefer-flymake nil)
+  :ensure lsp-scala
+  :ensure lsp-metals
+  :ensure lsp-ui
+  :ensure company-lsp
+  :ensure posframe
+  :ensure dap-mode)
 #+end_src
 
 *** ammonite
@@ -3154,12 +3149,14 @@ No argument means use the current buffer."
 #+begin_src emacs-lisp
 (use-package python
   :config
-  (add-hook 'python-mode-hook 'eglot-ensure)
+  (add-hook 'python-mode-hook 'anaconda-mode)
   (add-hook 'python-mode-hook 'company-mode)
 
   (define-abbrev-table 'python-mode-abbrev-table
     '(("pdb" "import pdb; pdb.set_trace()" nil 0)
-      ("ipdb" "import ipdb; ipdb.set_trace()" nil 0))))
+      ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
+  :ensure anaconda-mode
+  :ensure t)
 #+end_src
 **** COMMENT jinja
 
@@ -3266,7 +3263,7 @@ No argument means use the current buffer."
   :ensure t)
 #+end_src
 
-** Clouds
+** Infra
 
 *** kubel
 
