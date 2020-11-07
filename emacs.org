@@ -3289,41 +3289,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.ui
 :END:
 
-*** font
-
-**** default font + cyrillic adaptation
-
-#+begin_src emacs-lisp
-(defun font-adaptation (&optional font-size font-name)
-  (interactive)
-  (let ((font-size (or font-size (face-attribute 'default :height)))
-        (font-name (or font-name (face-attribute 'default :family)))
-        (factor (case system-type
-                  ('darwin 10)
-                  ('windows-nt 5))))
-
-    (custom-set-faces
-     (list 'default (list (list t (list :slant 'normal :weight 'normal :height font-size
-                                        :width 'normal :family font-name)))))
-    (set-fontset-font "fontset-default"
-                      (cons (decode-char 'ucs #x0400)
-                            (decode-char 'ucs #x052F))
-                      (font-spec :size (/ font-size factor) :name font-name :family font-name))))
-#+end_src
-
-**** text scale
-
-#+begin_src emacs-lisp
-(use-package default-text-scale
-    :config (progn
-              (default-text-scale-mode 1)
-              (when (eq system-type 'darwin)
-                (advice-add #'default-text-scale-increase :after #'font-adaptation)
-                (advice-add #'default-text-scale-decrease :after #'font-adaptation)
-                (font-adaptation 110 "Jetbrains Mono NL ExtraLight")))
-    :ensure t)
-#+end_src
-
 *** COMMENT grab-and-drag
 
 #+begin_src emacs-lisp
@@ -3515,6 +3480,44 @@ If KWD is a number, get the corresponding match group."
  split-height-threshold nil
  frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b")))
  buffers-menu-max-size 30)
+#+end_src
+
+*** font
+
+**** text scale
+
+#+begin_src emacs-lisp
+(defun my--set-font (face &rest params)
+  (custom-set-faces (list face (list (list t params)))))
+
+(defun my--adapt-font (&optional font-size font-name)
+  (interactive)
+  (let ((font-size (or font-size (face-attribute 'default :height)))
+        (font-name (or font-name (face-attribute 'default :family)))
+        (factor (case system-type
+                  ('darwin 10)
+                  ('windows-nt 5))))
+
+    (my--set-font 'default
+                  :slant 'normal
+                  :weight 'normal
+                  :height font-size
+                  :width 'normal
+                  :family font-name)
+
+    (set-fontset-font "fontset-default"
+                      (cons (decode-char 'ucs #x0400)
+                            (decode-char 'ucs #x052F))
+                      (font-spec :size (/ font-size factor) :name font-name :family font-name))))
+
+(use-package default-text-scale
+    :config (progn
+              (default-text-scale-mode 1)
+              (advice-add #'default-text-scale-increase :after #'my--adapt-font)
+              (advice-add #'default-text-scale-decrease :after #'my--adapt-font)
+              (my--adapt-font 110 "Jetbrains Mono NL ExtraLight")
+              (add-hook 'org-mode-hook #'my--adapt-font))
+    :ensure t)
 #+end_src
 
 ** Local
