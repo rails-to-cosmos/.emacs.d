@@ -3434,7 +3434,7 @@ If KWD is a number, get the corresponding match group."
 
 (setq org-priority-faces
       '((?A . (:background "#E74C3C"))
-        (?B . (:background "#FFDB45"))
+        (?B . (:background "#16a085"))
         (?C . (:background "#749AF7"))))
 
 (setq org-todo-keyword-faces
