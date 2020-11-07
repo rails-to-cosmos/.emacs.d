@@ -3388,105 +3388,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :hook ((prog-mode . rainbow-mode)))
 #+end_src
 
-*** mode-line
-
-#+begin_src emacs-lisp
-(defface mode-line-buffer-read-only-face
-  '((((class color) (min-colors 88) (background light))
-     :foreground "#749AF7")
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#749AF7")
-    (((class color) (min-colors 16) (background light))
-     :foreground "#749AF7")
-    (((class color) (min-colors 16) (background dark))
-     :foreground "#749AF7")
-    (((class color) (min-colors 8))
-     :foreground "#749AF7")
-    (t :inverse-video t))
-  "Mode-line face for read-only buffers.")
-
-(defface mode-line-buffer-non-modified-face
-  '((((class color) (min-colors 88) (background light))
-     :foreground "#2c3e50")
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#D0E1F9")
-    (((class color) (min-colors 16) (background light))
-     :foreground "#2c3e50")
-    (((class color) (min-colors 16) (background dark))
-     :foreground "#D0E1F9")
-    (((class color) (min-colors 8))
-     :foreground "#000000")
-    (t :inverse-video t))
-  "Mode-line face for non-modified buffers.")
-
-(defface mode-line-buffer-modified-face
-  '((((class color) (min-colors 88) (background light))
-     :foreground "#000000")
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#ffcc00")
-    (((class color) (min-colors 16) (background light))
-     :foreground "#000000")
-    (((class color) (min-colors 16) (background dark))
-     :foreground "#ffcc00")
-    (((class color) (min-colors 8))
-     :foreground "#ffcc00")
-    (t :inverse-video t))
-  "Mode-line face for modified buffers.")
-
-(defface mode-line-hl-face
-  '((((class color) (min-colors 88) (background light))
-     :foreground "#000000")
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#ffcc00")
-    (((class color) (min-colors 16) (background light))
-     :foreground "#000000")
-    (((class color) (min-colors 16) (background dark))
-     :foreground "#ffcc00")
-    (((class color) (min-colors 8))
-     :foreground "#ffcc00")
-    (t :inverse-video t))
-  "Mode-line highlighted face")
-
-(setq-default
- mode-line-format
- '(" %*%Z | "
-   (:eval
-    (if (eq ml-selected-window (selected-window))
-        (cond (buffer-read-only
-               (propertize (buffer-name) 'face 'mode-line-buffer-read-only-face))
-              ((buffer-modified-p)
-               (propertize (buffer-name) 'face 'mode-line-buffer-modified-face))
-              (t
-               (propertize (buffer-name) 'face 'mode-line-buffer-non-modified-face)))
-      (format "%s" (buffer-name))))
-
-   (:eval
-    (if (eq ml-selected-window (selected-window))
-        (propertize (or org-mode-line-string "") 'face 'mode-line-hl-face)
-      org-mode-line-string))
-
-   " | "
-   "%m"
-   (vc-mode vc-mode)
-   " %-"))
-
-(add-hook 'org-clock-out-hook
-          '(lambda ()
-             (setq org-mode-line-string nil)
-             (force-mode-line-update)))
-
-(defvar ml-selected-window nil)
-
-(defun ml-record-selected-window ()
-  (setq ml-selected-window (selected-window)))
-
-(defun ml-update-all ()
-  (force-mode-line-update t))
-
-(add-hook 'post-command-hook 'ml-record-selected-window)
-(add-hook 'buffer-list-update-hook 'ml-update-all)
-#+end_src
-
 *** fringes
 
 #+begin_src emacs-lisp
@@ -3514,9 +3415,45 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** danneskjold-theme                                                         :Emacs:
+
 #+begin_src emacs-lisp
-;; (use-package danneskjold-theme
-;;   :config (enable-theme 'danneskjold))
+(use-package danneskjold-theme
+    :config
+  (enable-theme 'danneskjold)
+  (eval-after-load 'org-faces
+    '(progn
+      (defcustom org-todo-keyword-faces nil
+        "Faces for specific TODO keywords.
+This is a list of cons cells, with TODO keywords in the car and
+faces in the cdr.  The face can be a symbol, a color, or a
+property list of attributes, like (:foreground \"blue\" :weight
+bold :underline t)."
+        :group 'org-faces
+        :group 'org-todo
+        :type '(repeat
+                (cons
+                 (string :tag "Keyword")
+                 (choice color (sexp :tag "Face")))))))
+
+  (eval-after-load 'org
+    '(progn
+      (defun org-get-todo-face-from-color (color)
+        "Returns a specification for a face that inherits from org-todo
+ face and has the given color as foreground. Returns nil if
+ color is nil."
+        (when color
+          `(:inherit org-warning :foreground ,color)))
+
+      (defun org-get-todo-face (kwd)
+        "Get the right face for a TODO keyword KWD.
+If KWD is a number, get the corresponding match group."
+        (if (numberp kwd) (setq kwd (match-string kwd)))
+        (or (let ((face (cdr (assoc kwd org-todo-keyword-faces))))
+              (if (stringp face)
+                  (org-get-todo-face-from-color face)
+                face))
+            (and (member kwd org-done-keywords) 'org-done)
+            'org-todo)))))
 
 ;; (require 'color)
 ;; (set-face-attribute 'org-block nil :background
@@ -3526,8 +3463,8 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 ;; (setq org-src-block-faces '(("emacs-lisp" (:background "#EEE2FF"))
 ;;                             ("python" (:background "#E5FFB8"))))
 
-(load-file "~/sync/stuff/danneskjold-theme/danneskjold-light-theme.el")
-(enable-theme 'danneskjold-light)
+;; (load-file "~/sync/stuff/danneskjold-theme/danneskjold-light-theme.el")
+;; (enable-theme 'danneskjold-light)
 
 (setq org-priority-faces
       '((?A . (:background "#E74C3C"))
@@ -3541,12 +3478,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
         ("PENDING" . (:foreground "#FFDB45"))
         ("DELEGATED" . (:foreground "#FFDB45"))
         ("CODE_REVIEW" . (:foreground "#8B7FD7"))))
-
-(add-to-list 'org-emphasis-alist '("`" (:background "#e31ce51ae718")))
 #+end_src
-
-#+RESULTS:
-: t
 
 *** cleanups
 
