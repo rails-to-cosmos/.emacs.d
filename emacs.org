@@ -3294,7 +3294,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 **** default font + cyrillic adaptation
 
 #+begin_src emacs-lisp
-(defun darwin-font-adapt-cyrillic (&optional font-size font-name)
+(defun font-adaptation (&optional font-size font-name)
   (interactive)
   (let ((font-size (or font-size (face-attribute 'default :height)))
         (font-name (or font-name (face-attribute 'default :family)))
@@ -3315,12 +3315,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package default-text-scale
-  :config
-  (default-text-scale-mode 1)
-  (when (eq system-type 'darwin)
-    (advice-add #'default-text-scale-increase :after #'darwin-font-adapt-cyrillic)
-    (advice-add #'default-text-scale-decrease :after #'darwin-font-adapt-cyrillic)
-    (darwin-font-adapt-cyrillic)))
+    :config (progn
+              (default-text-scale-mode 1)
+              (when (eq system-type 'darwin)
+                (advice-add #'default-text-scale-increase :after #'font-adaptation)
+                (advice-add #'default-text-scale-decrease :after #'font-adaptation)
+                (font-adaptation 110 "Jetbrains Mono NL ExtraLight")))
+    :ensure t)
 #+end_src
 
 *** COMMENT grab-and-drag
