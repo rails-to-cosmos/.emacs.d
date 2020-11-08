@@ -27,7 +27,7 @@
 (use-package diminish)
 (use-package bind-key)
 (use-package org)
-(use-package org-element)
+(require 'org-element)
 
 (org-babel-load-file
  (expand-file-name "emacs.org" user-emacs-directory))
