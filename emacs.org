@@ -187,8 +187,12 @@ enjoy using a lot.
     size-str))
 #+end_src
 
+*** cask
+#+begin_src emacs-lisp
+(use-package cask-mode
+    :ensure t)
+#+end_src
 ** core
-
 *** welcome
 
 #+begin_src emacs-lisp
@@ -1425,7 +1429,7 @@ BEG and END (region to sort)."
   :config (require 'org-agenda))
 #+end_src
 
-*** locale
+*** Locale
 
 #+begin_src emacs-lisp
 ;; System locale to use for formatting time values.
@@ -1434,12 +1438,12 @@ BEG and END (region to sort)."
                                       ; in the agenda appear in English.
 #+end_src
 
-*** archive partition
+*** Archive partition
 
 #+begin_src emacs-lisp
 (setq org-archive-location
       (format "~/sync/archives/%s/%%s_archive::"
-              (format-time-string "%Y/%m" (current-time))))
+              (format-time-string "year=%Y/month=%m/day=%d" (current-time))))
 #+end_src
 
 *** refile-update-cookies
