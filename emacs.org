@@ -187,8 +187,12 @@ enjoy using a lot.
     size-str))
 #+end_src
 
+*** cask
+#+begin_src emacs-lisp
+(use-package cask-mode
+    :ensure t)
+#+end_src
 ** core
-
 *** welcome
 
 #+begin_src emacs-lisp
@@ -375,7 +379,8 @@ enjoy using a lot.
   (interactive)
   (dired default-directory)
   (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))
-  (dired-collapse-mode))
+  ;; (dired-collapse-mode)
+  )
 
 (define-key global-map (kbd "C-x C-d") 'dired-switch-buffers)
 (define-key global-map (kbd "C-x d") 'dired-default-directory)
@@ -424,7 +429,9 @@ enjoy using a lot.
 *** dired-collapse
 #+begin_src emacs-lisp
 (use-package dired-collapse
-  :config (add-hook 'dired-after-readin-hook 'dired-collapse-mode))
+    ;; :config (add-hook 'dired-after-readin-hook 'dired-collapse-mode)
+
+  )
 #+end_src
 ** eshell
 
@@ -1422,7 +1429,7 @@ BEG and END (region to sort)."
   :config (require 'org-agenda))
 #+end_src
 
-*** locale
+*** Locale
 
 #+begin_src emacs-lisp
 ;; System locale to use for formatting time values.
@@ -1431,12 +1438,12 @@ BEG and END (region to sort)."
                                       ; in the agenda appear in English.
 #+end_src
 
-*** archive partition
+*** Archive partition
 
 #+begin_src emacs-lisp
 (setq org-archive-location
       (format "~/sync/archives/%s/%%s_archive::"
-              (format-time-string "%Y/%m" (current-time))))
+              (format-time-string "year=%Y/month=%m/day=%d" (current-time))))
 #+end_src
 
 *** refile-update-cookies
@@ -2379,7 +2386,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+begin_src emacs-lisp
 (use-package pabbrev
     :config
-  (global-pabbrev-mode)
+  (add-hook 'prog-mode-hook #'pabbrev-mode)
   (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
 #+end_src
 
@@ -2409,15 +2416,15 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (fset 'pabbrev-suggestions-goto-buffer 'pabbrevx-suggestions-goto-buffer)
 #+end_src
 
-*** vlf -- view large files
+*** [[https://github.com/m00natic/vlfi][vlf: view large files]]
 
 #+begin_src emacs-lisp
 (use-package vlf
-  :config (progn
-            (require 'vlf-setup)
-            (custom-set-variables
-             '(vlf-application 'dont-ask)))
-  :ensure t)
+    :config (progn
+              (require 'vlf-setup)
+              (custom-set-variables
+               '(vlf-application 'dont-ask)))
+    :ensure t)
 #+end_src
 
 *** loccur
