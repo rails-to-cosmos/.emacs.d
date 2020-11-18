@@ -2314,6 +2314,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** nix
+#+begin_src emacs-lisp
+(use-package nix-mode
+    :mode "\\.nix$"
+    :ensure t)
+#+end_src
 *** auto-complete
 
 #+begin_src emacs-lisp
