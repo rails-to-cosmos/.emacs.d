@@ -188,10 +188,19 @@ enjoy using a lot.
 #+end_src
 
 *** cask
+
 #+begin_src emacs-lisp
 (use-package cask-mode
     :ensure t)
 #+end_src
+
+*** feature-mode
+
+#+begin_src emacs-lisp
+(use-package feature-mode
+    :ensure t)
+#+end_src
+
 ** core
 *** welcome
 
@@ -1374,6 +1383,17 @@ BEG and END (region to sort)."
 #+end_src
 
 ** Org                                                                         :Emacs:
+
+*** keybindings
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-c l") 'org-store-link)
+(define-key global-map (kbd "C-c a") 'org-agenda)
+(define-key global-map (kbd "C-c c") 'org-capture)
+(define-key org-mode-map (kbd "C-M-n") 'ded/org-show-next-heading-tidily)
+(define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
+(define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
+(define-key org-mode-map (kbd "S-<tab>") 'org-overview)
+#+end_src
 *** modules
 
 #+begin_src emacs-lisp
@@ -1414,7 +1434,7 @@ BEG and END (region to sort)."
 (use-package ox-reveal)
 #+end_src
 
-*** org-plus-contrib
+*** COMMENT org-plus-contrib
 
 #+begin_src emacs-lisp
 (use-package org-plus-contrib
@@ -1471,7 +1491,7 @@ BEG and END (region to sort)."
 (loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
-                   ("scala" . "src scala")
+                   ("scala" . "src amm")
                    ("sql" . "src sql")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
@@ -2856,9 +2876,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+begin_src emacs-lisp
 (use-package magit
   :commands (magit-get-current-branch)
-  :config (progn
-            ;; (setq magit-completing-read-function 'magit-ido-completing-read)
-            (global-magit-file-mode 0))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
@@ -2935,6 +2952,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure company-lsp
   :ensure posframe
   :ensure dap-mode)
+
+(use-package ob-ammonite
+    :ensure t)
+
+(use-package ammonite-term-repl
+    :ensure t)
 #+end_src
 
 *** ammonite
