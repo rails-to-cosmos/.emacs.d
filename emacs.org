@@ -298,12 +298,6 @@ enjoy using a lot.
 
 ** dired                                                                       :Emacs:
 
-*** unsorted
-
-#+begin_src emacs-lisp
-(put 'dired-find-alternate-file 'disabled nil)
-#+end_src
-
 *** dired+
 
 #+begin_src emacs-lisp
@@ -337,6 +331,9 @@ enjoy using a lot.
     (revert-buffer)
     (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
+
+(put 'dired-find-alternate-file 'disabled nil)
+(define-key dired-mode-map (kbd "C-c w") 'wdired-change-to-wdired-mode)
 #+end_src
 
 *** hide-details
