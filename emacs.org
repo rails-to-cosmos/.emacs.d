@@ -2398,7 +2398,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (add-hook 'org-mode-hook 'abbrev-mode)
 #+end_src
 
-**** pabbrev
+**** COMMENT pabbrev
 
 #+begin_src emacs-lisp
 (use-package pabbrev
@@ -3184,6 +3184,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
       ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
   :ensure anaconda-mode
   :ensure t)
+#+end_src
+
+**** flycheck
+#+begin_src emacs-lisp
+(use-package flycheck-pycheckers
+    :config (progn
+              (global-flycheck-mode 1)
+              (with-eval-after-load 'flycheck
+                (add-hook 'flycheck-mode-hook #'flycheck-pycheckers-setup)))
+    :ensure t)
 #+end_src
 **** COMMENT jinja
 
