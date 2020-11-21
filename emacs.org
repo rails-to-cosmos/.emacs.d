@@ -188,10 +188,19 @@ enjoy using a lot.
 #+end_src
 
 *** cask
+
 #+begin_src emacs-lisp
 (use-package cask-mode
     :ensure t)
 #+end_src
+
+*** feature-mode
+
+#+begin_src emacs-lisp
+(use-package feature-mode
+    :ensure t)
+#+end_src
+
 ** core
 *** welcome
 
@@ -289,12 +298,6 @@ enjoy using a lot.
 
 ** dired                                                                       :Emacs:
 
-*** unsorted
-
-#+begin_src emacs-lisp
-(put 'dired-find-alternate-file 'disabled nil)
-#+end_src
-
 *** dired+
 
 #+begin_src emacs-lisp
@@ -328,6 +331,9 @@ enjoy using a lot.
     (revert-buffer)
     (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))))
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
+
+(put 'dired-find-alternate-file 'disabled nil)
+(define-key dired-mode-map (kbd "C-c w") 'wdired-change-to-wdired-mode)
 #+end_src
 
 *** hide-details
@@ -1374,6 +1380,17 @@ BEG and END (region to sort)."
 #+end_src
 
 ** Org                                                                         :Emacs:
+
+*** keybindings
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-c l") 'org-store-link)
+(define-key global-map (kbd "C-c a") 'org-agenda)
+(define-key global-map (kbd "C-c c") 'org-capture)
+(define-key org-mode-map (kbd "C-M-n") 'ded/org-show-next-heading-tidily)
+(define-key org-mode-map (kbd "C-M-p") 'ded/org-show-previous-heading-tidily)
+(define-key org-mode-map (kbd "C-c f") 'org-sparse-tree)
+(define-key org-mode-map (kbd "S-<tab>") 'org-overview)
+#+end_src
 *** modules
 
 #+begin_src emacs-lisp
@@ -1414,7 +1431,7 @@ BEG and END (region to sort)."
 (use-package ox-reveal)
 #+end_src
 
-*** org-plus-contrib
+*** COMMENT org-plus-contrib
 
 #+begin_src emacs-lisp
 (use-package org-plus-contrib
@@ -1471,7 +1488,7 @@ BEG and END (region to sort)."
 (loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
-                   ("scala" . "src scala")
+                   ("scala" . "src amm")
                    ("sql" . "src sql")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
@@ -2320,14 +2337,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     :mode "\\.nix$"
     :ensure t)
 #+end_src
-*** auto-complete
-
+*** autocomplete
 #+begin_src emacs-lisp
 ;; (setq hippie-expand-try-functions-list '(try-complete-file-name))
-(global-unset-key (kbd "M-/"))
-(global-set-key (kbd "M-/") 'completion-at-point)
 #+end_src
-
 *** markdown
 
 #+begin_src emacs-lisp
@@ -2387,7 +2400,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (add-hook 'org-mode-hook 'abbrev-mode)
 #+end_src
 
-**** pabbrev
+**** COMMENT pabbrev
 
 #+begin_src emacs-lisp
 (use-package pabbrev
@@ -2396,7 +2409,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (define-key pabbrev-mode-map (kbd "<tab>") 'pabbrev-expand-maybe))
 #+end_src
 
-***** compl-read-suggestions
+***** COMMENT compl-read-suggestions
 
 #+begin_src emacs-lisp
 (defun pabbrevx-suggestions-goto-buffer (suggestions)
@@ -2423,7 +2436,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** [[https://github.com/m00natic/vlfi][vlf: view large files]]
-
 #+begin_src emacs-lisp
 (use-package vlf
     :config (progn
@@ -2432,7 +2444,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
                '(vlf-application 'dont-ask)))
     :ensure t)
 #+end_src
-
 *** loccur
 
 #+begin_src emacs-lisp
@@ -2469,22 +2480,17 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** sudoedit
-
 #+begin_src emacs-lisp
 (use-package sudo-edit
   :ensure t)
 #+end_src
-
 *** string-inflection
-
 #+begin_src emacs-lisp
 (use-package string-inflection
-  :bind (("M-p" . string-inflection-cycle))
-  :ensure t)
+    :bind (("M-p" . string-inflection-cycle))
+    :ensure t)
 #+end_src
-
-*** origami
-
+*** COMMENT origami
 #+begin_src emacs-lisp
 (use-package origami
   :hook ((irony-mode . origami-mode))
@@ -2492,7 +2498,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
          ("C-c C-c" . origami-toggle-node))
   :ensure t)
 #+end_src
-
 *** duplicate-down
 
 #+begin_src emacs-lisp
@@ -2535,7 +2540,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** paredit
-
 #+begin_src emacs-lisp
 (use-package paredit
   :config (progn
@@ -2570,14 +2574,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
               (if (memq this-command paredit-minibuffer-commands)
                   (enable-paredit-mode)))
 
-            (use-package paredit-everywhere
-              :ensure t)
-
-            (add-hook 'prog-mode-hook 'paredit-everywhere-mode)
-            (add-hook 'css-mode-hook 'paredit-everywhere-mode))
+            ;; (use-package paredit-everywhere
+            ;;   :ensure t)
+            ;; (add-hook 'prog-mode-hook 'paredit-everywhere-mode)
+            ;; (add-hook 'css-mode-hook 'paredit-everywhere-mode)
+            )
   :ensure t)
 #+end_src
-
 *** smartparens
 
 #+begin_src emacs-lisp
@@ -2862,9 +2865,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+begin_src emacs-lisp
 (use-package magit
   :commands (magit-get-current-branch)
-  :config (progn
-            ;; (setq magit-completing-read-function 'magit-ido-completing-read)
-            (global-magit-file-mode 0))
   :bind (("C-x g s" . magit-status)
          ("C-x g b" . magit-blame)
          ("C-x g l" . magit-log-buffer-file)
@@ -2941,6 +2941,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :ensure company-lsp
   :ensure posframe
   :ensure dap-mode)
+
+(use-package ob-ammonite
+    :ensure t)
+
+(use-package ammonite-term-repl
+    :ensure t)
 #+end_src
 
 *** ammonite
@@ -3157,19 +3163,38 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** python                                                                    :Emacs:
-
-**** hooks
+**** abbrev
 #+begin_src emacs-lisp
-(use-package python
-  :config
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'company-mode)
-
-  (define-abbrev-table 'python-mode-abbrev-table
+(define-abbrev-table 'python-mode-abbrev-table
     '(("pdb" "import pdb; pdb.set_trace()" nil 0)
       ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
-  :ensure anaconda-mode
-  :ensure t)
+#+end_src
+**** anaconda
+#+begin_src emacs-lisp
+(use-package anaconda-mode
+    :config (progn
+              (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+              (add-hook 'python-mode-hook 'anaconda-mode))
+    :ensure t)
+#+end_src
+**** flycheck
+#+begin_src emacs-lisp
+(use-package flycheck-pycheckers
+    :config (progn
+              (add-hook 'python-mode-hook 'flycheck-mode)
+              (add-hook 'python-mode-hook 'flycheck-pycheckers-setup))
+    :ensure t)
+#+end_src
+**** pyvenv
+#+begin_src emacs-lisp
+(use-package pyvenv
+    :config (progn
+              (add-hook 'python-mode-hook 'pyvenv-mode))
+    :ensure t)
+#+end_src
+**** COMMENT company
+#+begin_src emacs-lisp
+(add-hook 'python-mode-hook 'company-mode)
 #+end_src
 **** COMMENT jinja
 
