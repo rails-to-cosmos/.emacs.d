@@ -1274,7 +1274,7 @@ BEG and END (region to sort)."
   ;;   ("<RET>" nil "Quit"))
 #+end_src
 
-*** imenu
+*** COMMENT imenu
 
 **** imenu-anywhere
 
@@ -1282,7 +1282,7 @@ BEG and END (region to sort)."
   (use-package imenu-anywhere
     :init (progn
             (global-unset-key "\C-xi"))
-    :bind (("C-x i m" . imenu-anywhere))
+    :bind (("C-x i m" . imenu))
     :ensure t)
 #+end_src
 
