@@ -2331,12 +2331,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.editor
 :END:
 
+*** nix
+#+begin_src emacs-lisp
+(use-package nix-mode
+    :mode "\\.nix$"
+    :ensure t)
+#+end_src
 *** autocomplete
-
 #+begin_src emacs-lisp
 ;; (setq hippie-expand-try-functions-list '(try-complete-file-name))
 #+end_src
-
 *** markdown
 
 #+begin_src emacs-lisp
@@ -3547,11 +3551,13 @@ If KWD is a number, get the corresponding match group."
 (use-package default-text-scale
     :config (progn
               (default-text-scale-mode 1)
-              (advice-add #'default-text-scale-increase :after #'my--adapt-font)
-              (advice-add #'default-text-scale-decrease :after #'my--adapt-font)
-              (my--adapt-font 110 "Jetbrains Mono NL ExtraLight")
-              (add-hook 'org-mode-hook #'my--adapt-font))
+              (when (not (eq system-type 'gnu/linux))
+                (advice-add #'default-text-scale-increase :after #'my--adapt-font)
+                (advice-add #'default-text-scale-decrease :after #'my--adapt-font)
+                (my--adapt-font 110 "Jetbrains Mono NL ExtraLight")
+                (add-hook 'org-mode-hook #'my--adapt-font)))
     :ensure t)
+
 #+end_src
 
 ** Local

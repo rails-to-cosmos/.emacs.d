@@ -8,7 +8,7 @@
          '(("melpa" . "https://melpa.org/packages/")
            ("melpa-stable" . "https://stable.melpa.org/packages/")
            ("org" . "https://orgmode.org/elpa/")
-           ("marmalade" . "http://marmalade-repo.org/packages/")
+           ;; ("marmalade" . "http://marmalade-repo.org/packages/")
            ;; ("elpy" . "https://jorgenschaefer.github.io/packages/")
            ))
   (add-to-list 'package-archives package-archive))
