@@ -3456,6 +3456,8 @@ If KWD is a number, get the corresponding match group."
 *** nord-theme
 #+begin_src emacs-lisp
 (use-package nord-theme
+    :config (progn
+              (load-theme 'nord))
     :ensure t)
 #+end_src
 *** cleanups
