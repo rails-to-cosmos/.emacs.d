@@ -3322,7 +3322,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :END:
 
 *** COMMENT grab-and-drag
-
 #+begin_src emacs-lisp
 (use-package grab-and-drag
   :config (progn
@@ -3330,7 +3329,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
             (setq grab-and-drag-pointer-shape nil))
   :load-path ("~/.emacs.d/packages"))
 #+end_src
-
 *** minimize
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
