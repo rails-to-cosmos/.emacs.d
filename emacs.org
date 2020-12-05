@@ -1687,7 +1687,6 @@ bidirectional reordering.")
                               (clock-out . "Clocked out on %t")))
 #+end_src
 *** clock
-
 #+begin_src emacs-lisp
 (setq-default org-clock-persistence-insinuate t
               org-clock-persist t
@@ -1746,26 +1745,19 @@ bidirectional reordering.")
 
 ;; (add-hook 'org-trigger-hook 'my-org-state-change)
 #+end_src
-
 *** UI
-
 **** Hide emphasis markers
-
 #+begin_src emacs-lisp
 (setq org-hide-emphasis-markers t)
 #+end_src
-
 **** Bullets beautify
-
 #+begin_src emacs-lisp :results silent
 (use-package org-bullets
     :config (progn
               (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
     :ensure t)
 #+end_src
-
 *** Insert page heading on org-insert-link
-
 #+begin_src emacs-lisp
 (require 'mm-url) ; to include mm-url-decode-entities-string
 
@@ -1801,7 +1793,6 @@ bidirectional reordering.")
       (setq x2 (search-backward "<"))
       (decode-coding-string (mm-url-decode-entities-string (buffer-substring-no-properties x1 x2)) 'utf-8))))
 #+end_src
-
 *** Narrowing
 
 #+begin_src emacs-lisp :results silent
@@ -3341,19 +3332,13 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** minimize
-
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
-(when (fboundp 'tool-bar-mode)
-  (tool-bar-mode -1))
-(when (fboundp 'scroll-bar-mode)
-  (scroll-bar-mode -1))
-(when (fboundp 'horizontal-scroll-bar-mode)
-  (horizontal-scroll-bar-mode -1))
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(when (fboundp 'horizontal-scroll-bar-mode) (horizontal-scroll-bar-mode -1))
 #+end_src
-
 *** [[https://stackoverflow.com/a/49861904/2715516][do-not-split-more-than-two-windows]]
-
 #+begin_src emacs-lisp
 (setq split-width-threshold (- (window-width) 10))
 (setq split-height-threshold nil)
@@ -3369,15 +3354,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
 #+end_src
-
 *** vscroll
-
 #+begin_src emacs-lisp
 (setq-default auto-window-vscroll nil)
 #+end_src
-
 *** transparency
-
 #+begin_src emacs-lisp
 (defun make-frame-more-transparent ()
   (interactive)
@@ -3387,42 +3368,30 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (interactive)
   (set-frame-parameter (selected-frame) 'alpha 1.0))
 #+end_src
-
 *** rainbow-mode
-
 #+begin_src emacs-lisp
 (use-package rainbow-mode
   :hook ((prog-mode . rainbow-mode)))
 #+end_src
-
-*** fringes
-
+*** COMMENT fringes
 #+begin_src emacs-lisp
 (when (fboundp 'set-fringe-mode)
   (set-fringe-mode '(1 . 1)))
 #+end_src
-
 *** line numbers
-
 #+begin_src emacs-lisp
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 #+end_src
-
 *** [[http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/][Make emacs bit quieter]]
-
 #+begin_src emacs-lisp
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 #+end_src
-
 *** rainbow-delimiters
-
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
   :hook ((prog-mode . rainbow-delimiters-mode)))
 #+end_src
-
-*** danneskjold-theme                                                         :Emacs:
-
+*** COMMENT danneskjold-theme                                                         :Emacs:
 #+begin_src emacs-lisp
 (use-package danneskjold-theme
     :config
@@ -3486,9 +3455,12 @@ If KWD is a number, get the corresponding match group."
         ("DELEGATED" . (:foreground "#FFDB45"))
         ("CODE_REVIEW" . (:foreground "#8B7FD7"))))
 #+end_src
-
+*** nord-theme
+#+begin_src emacs-lisp
+(use-package nord-theme
+    :ensure t)
+#+end_src
 *** cleanups
-
 #+begin_src emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
@@ -3522,11 +3494,8 @@ If KWD is a number, get the corresponding match group."
  frame-title-format '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b")))
  buffers-menu-max-size 30)
 #+end_src
-
 *** font
-
 **** text scale
-
 #+begin_src emacs-lisp
 (defun my--set-font (face &rest params)
   (custom-set-faces (list face (list (list t params)))))
@@ -3562,7 +3531,6 @@ If KWD is a number, get the corresponding match group."
     :ensure t)
 
 #+end_src
-
 ** Local
 
 #+begin_src emacs-lisp
