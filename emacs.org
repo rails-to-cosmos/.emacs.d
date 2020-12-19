@@ -762,7 +762,7 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** telegram-notify
+*** COMMENT telegram-notify
 
 #+begin_src emacs-lisp
 (use-package telegram-notify
@@ -1397,7 +1397,7 @@ BEG and END (region to sort)."
 (setq-default org-modules '())
 #+end_src
 
-*** notify
+*** COMMENT notify
 
 #+begin_src emacs-lisp
 (use-package org-notify
@@ -3534,7 +3534,8 @@ If KWD is a number, get the corresponding match group."
         (font-name (or font-name (face-attribute 'default :family)))
         (factor (case system-type
                   ('darwin 10)
-                  ('windows-nt 5))))
+                  ('windows-nt 5)
+                  (t 0))))
 
     (my--set-font 'default
                   :slant 'normal
@@ -3546,16 +3547,17 @@ If KWD is a number, get the corresponding match group."
     (set-fontset-font "fontset-default"
                       (cons (decode-char 'ucs #x0400)
                             (decode-char 'ucs #x052F))
-                      (font-spec :size (/ font-size factor) :name font-name :family font-name))))
+                      (if (> factor 0)
+                          (font-spec :size (/ font-size factor) :name font-name :family font-name)
+                        (font-spec :name font-name :family font-name)))))
 
 (use-package default-text-scale
     :config (progn
               (default-text-scale-mode 1)
-              (when (not (eq system-type 'gnu/linux))
-                (advice-add #'default-text-scale-increase :after #'my--adapt-font)
-                (advice-add #'default-text-scale-decrease :after #'my--adapt-font)
-                (my--adapt-font 110 "Jetbrains Mono NL ExtraLight")
-                (add-hook 'org-mode-hook #'my--adapt-font)))
+              (advice-add #'default-text-scale-increase :after #'my--adapt-font)
+              (advice-add #'default-text-scale-decrease :after #'my--adapt-font)
+              (my--adapt-font 110 "Jetbrains Mono NL")
+              (add-hook 'org-mode-hook #'my--adapt-font))
     :ensure t)
 
 #+end_src
