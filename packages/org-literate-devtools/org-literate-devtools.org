@@ -572,12 +572,12 @@
 (defun oldt-service-browse-url ()
   (let ((property "URL"))
     (if-let (val (-> property
-                   oldt-service-get-property
-                   split-string))
-      (if (> (length val) 1)
-          (org-link-open-from-string
-           (org-completing-read (format "Browse %s: " property) val))
-        (org-link-open-from-string (car val))))))
+                     oldt-service-get-property
+                     split-string))
+        (if (> (length val) 1)
+            (org-link-open-from-string
+             (org-completing-read (format "Browse %s: " property) val))
+          (org-link-open-from-string (car val))))))
 #+end_src
 ** Extended tangling
 *** tangle-by-tags
