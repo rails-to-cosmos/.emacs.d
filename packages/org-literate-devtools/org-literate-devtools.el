@@ -369,6 +369,7 @@
     (save-window-excursion
       (save-excursion
         (org-id-goto service)
+        (widen)
         (oldt-get-node-property property)))))
 
 (defun oldt-service-docker-system-prune ()
@@ -460,13 +461,13 @@
 
 (defun oldt-service-browse-url ()
   (let ((property "URL"))
-    (if-let (val (-> property
-                   oldt-service-get-property
-                   split-string))
-      (if (> (length val) 1)
-          (org-link-open-from-string
-           (org-completing-read (format "Browse %s: " property) val))
-        (org-link-open-from-string (car val))))))
+    (if-let (url (-> property
+                     oldt-service-get-property
+                     split-string))
+        (if (> (length url) 1)
+            (org-link-open-from-string
+             (org-completing-read (format "Browse %s: " property) url))
+          (org-link-open-from-string (car url))))))
 
 (defun oldt-tt (&rest mappings)
   (loop for mapping in mappings
