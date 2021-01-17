@@ -762,13 +762,6 @@ enjoy using a lot.
   :ensure t)
 #+end_src
 
-*** COMMENT telegram-notify
-
-#+begin_src emacs-lisp
-(use-package telegram-notify
-  :load-path "~/.emacs.d/packages")
-#+end_src
-
 *** sqlparse
 
 #+begin_src emacs-lisp
@@ -1395,32 +1388,6 @@ BEG and END (region to sort)."
 
 #+begin_src emacs-lisp
 (setq-default org-modules '())
-#+end_src
-
-*** COMMENT notify
-
-#+begin_src emacs-lisp
-(use-package org-notify
-  :load-path "~/.emacs.d/packages"
-  :config (progn
-            (org-notify-start 10)
-
-            (org-notify-add 'default
-                            '(:time "-1s" :actions -telegram)
-                            '(:time "15m" :actions -telegram))
-
-            (org-notify-add 'hourly
-                            '(:time "-1s" :duration 10 :actions -telegram)
-                            '(:time "1h" :duration 100 :actions -telegram))
-
-            (org-notify-add 'once
-                            '(:time "-1s" :actions -telegram))
-
-            (org-notify-add 'appt
-                            '(:time "30m" :actions -telegram)
-                            '(:time "1h" :actions -telegram)
-                            '(:time "3h" :actions -telegram)
-                            '(:time "1d" :actions -telegram))))
 #+end_src
 
 *** exports
