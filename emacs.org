@@ -334,6 +334,7 @@ enjoy using a lot.
 
 (put 'dired-find-alternate-file 'disabled nil)
 (define-key dired-mode-map (kbd "C-c w") 'wdired-change-to-wdired-mode)
+(define-key dired-mode-map (kbd "C-c C-w") 'wdired-change-to-wdired-mode)
 #+end_src
 
 *** hide-details
