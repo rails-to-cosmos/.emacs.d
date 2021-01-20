@@ -709,6 +709,21 @@ enjoy using a lot.
 
 ** utils
 
+*** plantuml
+#+begin_src emacs-lisp
+(use-package plantuml-mode
+    :config (progn
+              (org-babel-do-load-languages
+               'org-babel-load-languages
+               '((plantuml . t)))
+
+              (setq org-plantuml-jar-path
+                    (expand-file-name "~/plantuml.jar")))
+    :ensure t)
+
+(use-package flycheck-plantuml
+    :ensure t)
+#+end_src
 *** open current dir
 
 #+begin_src emacs-lisp
