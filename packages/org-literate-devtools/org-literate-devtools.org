@@ -470,6 +470,8 @@
     (save-window-excursion
       (save-excursion
         (org-id-goto service)
+        (widen)
+        (org-id-goto service)
         (oldt-get-node-property property)))))
 #+end_src
 *** docker

@@ -28,7 +28,16 @@
 :header-args: :results silent :mkdirp yes
 :END:
 
+** defaults
+#+begin_src emacs-lisp
+(defvar ob-languages '())
+#+end_src
 ** lisp
+*** ob
+#+begin_src emacs-lisp
+(add-to-list 'ob-languages '(emacs-lisp . t))
+(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
 *** indent
 
 #+begin_src emacs-lisp
@@ -297,7 +306,6 @@ enjoy using a lot.
 #+end_src
 
 ** dired                                                                       :Emacs:
-
 *** dired+
 
 #+begin_src emacs-lisp
@@ -441,7 +449,11 @@ enjoy using a lot.
   )
 #+end_src
 ** eshell
-
+*** ob
+#+begin_src emacs-lisp
+(add-to-list 'ob-languages '(shell . t))
+(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
 *** [[https://blog.hoetzel.info/post/eshell-notifications/][notifications]]
 
 #+begin_src emacs-lisp
@@ -712,13 +724,14 @@ enjoy using a lot.
 *** plantuml
 #+begin_src emacs-lisp
 (use-package plantuml-mode
+    :mode ("\\.plantuml\\$" . plantuml-mode)
     :config (progn
-              (org-babel-do-load-languages
-               'org-babel-load-languages
-               '((plantuml . t)))
-
-              (setq org-plantuml-jar-path
-                    (expand-file-name "~/plantuml.jar")))
+              (add-to-list 'ob-languages '(plantuml . t))
+              (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+              (add-to-list 'org-structure-template-alist '("plantuml" . "src plantuml"))
+              (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+              (setq org-plantuml-jar-path (expand-file-name "~/plantuml.jar"))
+              (setq plantuml-default-exec-mode 'jar))
     :ensure t)
 
 (use-package flycheck-plantuml
@@ -1615,33 +1628,18 @@ bidirectional reordering.")
 #+end_src
 
 **** ob-http
-
 #+begin_src emacs-lisp :results silent
 (use-package ob-http
+    :config (progn
+              (add-to-list 'ob-languages '(http . t))
+              (org-babel-do-load-languages 'org-babel-load-languages ob-languages))
     :ensure t)
 #+end_src
-
 **** ob-async
-
 #+begin_src emacs-lisp
 (use-package ob-async
   :ensure t)
 #+end_src
-
-**** ob-languages
-
-#+begin_src emacs-lisp
-(setq ob-languages '((python . t)
-                     (sql . t)
-                     (emacs-lisp . t)
-                     (clojure . t)
-                     (http . t)
-                     (shell . t)
-                     (C . t)))
-
-(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
-#+end_src
-
 *** export
 
 #+begin_src emacs-lisp
@@ -2965,11 +2963,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 *** clojure
 
 **** ob-clojure
-
 #+begin_src emacs-lisp
 (require 'ob-clojure)
-#+end_src
 
+(add-to-list 'ob-languages '(clojure . t))
+(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
 **** cider
 
 #+begin_src emacs-lisp
@@ -3091,7 +3090,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** c
-
+**** ob
+#+begin_src emacs-lisp
+(add-to-list 'ob-languages '(C . t))
+(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
 **** [[https://www.gnu.org/software/emacs/manual/html_node/efaq/Customizing-C-and-C_002b_002b-indentation.html][Customizing C and C++ indentation - GNU Emacs FAQ]]
 
 #+begin_src emacs-lisp
@@ -3141,6 +3144,11 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** python                                                                    :Emacs:
+**** ob
+#+begin_src emacs-lisp
+(add-to-list 'ob-languages '(python . t))
+(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
 **** abbrev
 #+begin_src emacs-lisp
 (define-abbrev-table 'python-mode-abbrev-table
@@ -3273,7 +3281,12 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+end_src
 
 *** sql
-
+**** ob
+#+begin_src emacs-lisp
+(add-to-list 'ob-languages '(sql . t))
+(org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+#+end_src
+**** indente
 #+begin_src emacs-lisp
 (use-package sql-indent
   :ensure t)
@@ -3348,7 +3361,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 #+begin_src emacs-lisp
 (defun make-frame-more-transparent ()
   (interactive)
-  (set-frame-parameter (selected-frame) 'alpha 0.8))
+  (set-frame-parameter (selected-frame) 'alpha 0.5))
 
 (defun make-frame-more-opaque ()
   (interactive)

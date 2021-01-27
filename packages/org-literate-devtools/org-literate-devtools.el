@@ -370,6 +370,7 @@
       (save-excursion
         (org-id-goto service)
         (widen)
+        (org-id-goto service)
         (oldt-get-node-property property)))))
 
 (defun oldt-service-docker-system-prune ()
