@@ -862,21 +862,62 @@ enjoy using a lot.
          (files (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" sefn))))
     files))
 
-(defun syncthing-diff-conflict ()
+(cl-defun syncthing-diff-conflict (&optional (file (buffer-file-name)))
   (interactive)
-  (if-let ((files (syncthing-get-conflicted-files)))
-      (progn
-        (diff (car files) (buffer-file-name))
-        (car files))
-    (progn
-      (message "No conflicts found.")
-      nil)))
+  (let* ((base-file-name (file-name-base file))
+         (dir (file-name-directory base-file-name))
+         (conflicts (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" base-file-name))))
+    (if conflicts
+        (diff (car conflicts) file)
+      (message "No conflicts found."))))
 
-(defun syncthing-trash-conflicted ()
+(defun syncthing-trash-conflicted (file)
   (interactive)
-  (when-let ((file (syncthing-diff-conflict)))
-    (when (y-or-n-p "Do you really want to move conflicted file to trash?")
-      (move-file-to-trash file))))
+  (when (y-or-n-p (format "Do you really want to move file %s to trash?" file))
+    (move-file-to-trash file)
+    (org-back-to-heading)
+    (org-todo "RESOLVED")
+    (org-next-visible-heading)))
+
+(cl-defun org-file-link (file-name &optional (label (file-name-nondirectory file-name)))
+  (concat "[[file+emacs:" file-name "][" label "]]"))
+
+(cl-defun syncthing-show-conflicts (&optional (dir "~/sync"))
+  (interactive)
+  (let ((buf (get-buffer-create "*syncthing-conflicts*")))
+    (with-current-buffer buf
+      (delete-region (point-min) (point-max))
+      (insert "#+TODO: CONFLICT(c) | RESOLVED(r)" "\n\n")
+      (org-mode)
+      (goto-char (point-max))
+      (loop
+         for conflict in (directory-files-recursively dir "\\.*sync-conflict\\.*")
+         do (let* ((orig-file-name (->> conflict
+                                        file-name-nondirectory
+                                        file-name-sans-extension
+                                        (s-split "\\.")
+                                        car))
+                   (orig-file-ext (if (string-prefix-p "sync-conflict" (file-name-extension conflict))
+                                      ""
+                                    (file-name-extension conflict)))
+                   (orig-file-name-full (concat orig-file-name (if (string-empty-p orig-file-ext) "" (concat "." orig-file-ext))))
+                   (orig-file-name-location (file-name-directory conflict))
+                   (orig-file-name-path (f-join orig-file-name-location orig-file-name-full)))
+              (insert
+               "* CONFLICT "
+               (org-file-link orig-file-name-path)
+               " [[elisp:(diff \"" conflict "\" \"" orig-file-name-path "\")][vs]] "
+               (org-file-link conflict)
+               "\n"
+               ":Properties:\n"
+               ":Location: " orig-file-name-location "\n"
+               ":End:\n\n"
+               "- [[elisp:(syncthing-trash-conflicted \"" conflict "\")][Move conflicted file to trash]] \n"
+               "\n"
+               ))
+           ))
+    (switch-to-buffer-other-window buf t)
+    (other-window 1)))
 #+end_src
 
 *** COMMENT num-with-ordinal-indicator
