@@ -855,22 +855,6 @@ enjoy using a lot.
 *** syncthing-conflict-manager
 
 #+begin_src emacs-lisp
-(defun syncthing-get-conflicted-files ()
-  (let* ((bfn (buffer-file-name))
-         (sefn (file-name-base bfn))
-         (dir (file-name-directory bfn))
-         (files (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" sefn))))
-    files))
-
-(cl-defun syncthing-diff-conflict (&optional (file (buffer-file-name)))
-  (interactive)
-  (let* ((base-file-name (file-name-base file))
-         (dir (file-name-directory base-file-name))
-         (conflicts (directory-files dir t (format "^.*%s\\.sync-conflict-.*$" base-file-name))))
-    (if conflicts
-        (diff (car conflicts) file)
-      (message "No conflicts found."))))
-
 (defun syncthing-trash-conflicted (file)
   (interactive)
   (when (y-or-n-p (format "Do you really want to move file %s to trash?" file))
