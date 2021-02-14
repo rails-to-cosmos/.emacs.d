@@ -632,7 +632,6 @@ enjoy using a lot.
 #+end_src
 
 ** window managment
-
 *** shackle
 
 #+begin_src emacs-lisp
@@ -2093,13 +2092,6 @@ SET COLSEP '|'
 #+end_src
 
 **** [#A] org-glance                                                         :Emacs:
-
-#+begin_src emacs-lisp
-(use-package org-glance
-  :load-path "~/sync/stuff/org-glance"
-  :ensure aes)
-#+end_src
-
 **** org-literate-devtools
 
 #+begin_src emacs-lisp
@@ -2889,6 +2881,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package dockerfile-mode)
+
+(defun docker-stop-all ()
+  (interactive)
+  (async-shell-command "docker stop $(docker ps -aq)"))
 #+end_src
 
 *** scala                                                                     :Emacs:
@@ -2931,7 +2927,6 @@ PROPERTIES: The list properties specified in the `:properties' parameter
     :hook (scala-mode . lsp)
     (lsp-mode . lsp-lens-mode)
     :config (setq lsp-prefer-flymake nil)
-    :ensure lsp-scala
     :ensure lsp-metals
     :ensure lsp-ui
     :ensure company-lsp
@@ -3326,6 +3321,10 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 (use-package kubel
   :bind (("C-x y k" . kubel))
   :ensure t)
+
+(defun kubectl-delete-pods (pattern)
+  (interactive "MDelete pods matching: ")
+  (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod")))
 #+end_src
 
 *** s3
@@ -3571,19 +3570,9 @@ If KWD is a number, get the corresponding match group."
               (my--adapt-font 110 "Jetbrains Mono NL")
               (add-hook 'org-mode-hook #'my--adapt-font))
     :ensure t)
-
 #+end_src
 ** Local
 
 #+begin_src emacs-lisp
-(defun load-local-init-file (alias)
-  (let* ((local-init-file (format "init-%s.el" alias)))
-    (if (file-exists-p (sync/ local-init-file))
-        (load-file (sync/ local-init-file))
-      (message (format "%s was not loaded." (sync/ local-init-file))))))
-
-(load-local-init-file "local")
-(let ((system-type (string-join (s-split-words (symbol-name system-type)))))
-  (load-local-init-file system-type))
-(load-local-init-file (system-name))
+(load-file (f-join user-emacs-directory "init-local.el"))
 #+end_src

@@ -69,3 +69,4 @@ image-dired
 /.cache/
 /.dap-breakpoints
 /places
+session.*
