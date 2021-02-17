@@ -341,8 +341,7 @@ enjoy using a lot.
 (define-key dired-mode-map (kbd "<RET>") 'dired-down-please)
 
 (put 'dired-find-alternate-file 'disabled nil)
-(define-key dired-mode-map (kbd "C-c w") 'wdired-change-to-wdired-mode)
-(define-key dired-mode-map (kbd "C-c C-w") 'wdired-change-to-wdired-mode)
+(define-key dired-mode-map (kbd "C-c C-p") 'wdired-change-to-wdired-mode)
 #+end_src
 
 *** hide-details
@@ -1508,6 +1507,7 @@ BEG and END (region to sort)."
 (loop for tpl in '(("py" . "src python")
                    ("el" . "src emacs-lisp")
                    ("json" . "src json")
+                   ("base64" . "src base64")
                    ("sql" . "src sql")
                    ("clojure" . "src clojure")
                    ("rest" . "src restclient :async")
@@ -1895,6 +1895,13 @@ bidirectional reordering.")
 #+begin_src emacs-lisp
 (defun org-babel-execute:json (body params)
   (json-reformat-from-string body))
+#+end_src
+
+**** ob-base64
+
+#+begin_src emacs-lisp
+(defun org-babel-execute:base64 (body params)
+  (base64-decode-string body))
 #+end_src
 
 **** ob-sql
@@ -2850,10 +2857,16 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 :CUSTOM_ID: emacs.config.programming
 :END:
 
+*** minizync
+#+begin_src emacs-lisp
+(use-package minizinc-mode
+    :mode "\\.\\(m\\|d\\)zn$"
+    :ensure t)
+#+end_src
 *** terraform
 #+begin_src emacs-lisp
 (use-package terraform-mode
-  :mode "\\.tf$")
+    :mode "\\.tf$")
 #+end_src
 *** COMMENT eglot
 
@@ -2890,24 +2903,24 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 #+begin_src emacs-lisp
 (use-package scala-mode
-  :mode "\\.s\\(cala\\|bt\\|c\\)$"
-  :config (progn
-            (setq scala-indent:step 2)
-            (add-to-list 'org-structure-template-alist '("scala" . "src amm"))
-            (add-to-list 'ob-languages '(scala . t))
-            (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
-            (add-hook 'scala-mode-hook 'company-mode))
-  :ensure t)
+    :mode "\\.s\\(cala\\|bt\\|c\\)$"
+    :config (progn
+              (setq scala-indent:step 2)
+              (add-to-list 'org-structure-template-alist '("scala" . "src amm"))
+              (add-to-list 'ob-languages '(scala . t))
+              (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
+              (add-hook 'scala-mode-hook 'company-mode))
+    :ensure t)
 
 (use-package sbt-mode
-  :commands sbt-start sbt-command
-  :config (progn
-            (substitute-key-definition
-             'minibuffer-complete-word
-             'self-insert-command
-             minibuffer-local-completion-map)
-            (setq sbt:program-options '("-Dsbt.supershell=false")))
-  :ensure t)
+    :commands sbt-start sbt-command
+    :config (progn
+              (substitute-key-definition
+               'minibuffer-complete-word
+               'self-insert-command
+               minibuffer-local-completion-map)
+              (setq sbt:program-options '("-Dsbt.supershell=false")))
+    :ensure t)
 
 (use-package flycheck
     :config (add-hook 'scala-mode-hook #'flycheck-mode)
