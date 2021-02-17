@@ -854,7 +854,6 @@ enjoy using a lot.
 
 #+begin_src emacs-lisp
 (defun syncthing-trash-conflicted (file)
-  (interactive)
   (when (y-or-n-p (format "Do you really want to move file %s to trash?" file))
     (move-file-to-trash file)
     (org-back-to-heading)
@@ -866,14 +865,15 @@ enjoy using a lot.
 
 (cl-defun syncthing-show-conflicts (&optional (dir "~/sync"))
   (interactive)
-  (let ((buf (get-buffer-create "*syncthing-conflicts*")))
+  (let ((buf (get-buffer-create "*syncthing-conflicts*"))
+        (conflicts (directory-files-recursively dir "\\.*sync-conflict\\.*")))
     (with-current-buffer buf
       (delete-region (point-min) (point-max))
       (insert "#+TODO: CONFLICT(c) | RESOLVED(r)" "\n\n")
       (org-mode)
       (goto-char (point-max))
-      (loop
-         for conflict in (directory-files-recursively dir "\\.*sync-conflict\\.*")
+
+      (loop for conflict in conflicts
          do (let* ((orig-file-name (->> conflict
                                         file-name-nondirectory
                                         file-name-sans-extension
@@ -896,8 +896,9 @@ enjoy using a lot.
                ":End:\n\n"
                "- [[elisp:(syncthing-trash-conflicted \"" conflict "\")][Move conflicted file to trash]] \n"
                "\n"
-               ))
-           ))
+               )))
+      (unless conflicts
+        (insert "No conflicts.")))
     (switch-to-buffer-other-window buf t)
     (other-window 1)))
 #+end_src
@@ -3336,7 +3337,9 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (defun kubectl-delete-pods (pattern)
   (interactive "MDelete pods matching: ")
-  (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod")))
+  (shell-command (concat "kubectl get pods | grep " pattern))
+  (when (y-or-n-p "Remove pods matching pattern?")
+    (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod"))))
 #+end_src
 
 *** s3
