@@ -3324,9 +3324,14 @@ PROPERTIES: The list properties specified in the `:properties' parameter
 
 (defun kubectl-delete-pods (pattern)
   (interactive "MDelete pods matching: ")
-  (shell-command (concat "kubectl get pods | grep " pattern))
-  (when (y-or-n-p "Remove pods matching pattern?")
-    (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod"))))
+  (save-window-excursion
+    (with-current-buffer (get-buffer-create "*Kube Pods*")
+      (read-only-mode -1)
+      (shell-command (concat "kubectl get pods | grep " pattern) (current-buffer))
+      (switch-to-buffer-other-window (current-buffer))
+      (read-only-mode)
+      (when (y-or-n-p "Remove pods matching pattern?")
+        (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod"))))))
 #+end_src
 
 *** s3
