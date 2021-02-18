@@ -318,6 +318,7 @@ enjoy using a lot.
   :load-path "~/.emacs.d/packages")
 
 (define-key dired-mode-map "/" 'dired-narrow-fuzzy)
+(define-key dired-mode-map (kbd "M-w") 'diredp-copy-abs-filenames-as-kill)
 
 (defun dired-up-please ()
   (interactive)
