@@ -3341,6 +3341,7 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   (save-window-excursion
     (with-current-buffer (get-buffer-create "*Kube Pods*")
       (read-only-mode -1)
+      (kill-region (point-min) (point-max))
       (shell-command (concat "kubectl get pods | grep " pattern) (current-buffer))
       (switch-to-buffer-other-window (current-buffer))
       (read-only-mode)
