@@ -318,6 +318,7 @@ enjoy using a lot.
   :load-path "~/.emacs.d/packages")
 
 (define-key dired-mode-map "/" 'dired-narrow-fuzzy)
+(define-key dired-mode-map (kbd "C-w") 'diredp-copy-abs-filenames-as-kill)
 
 (defun dired-up-please ()
   (interactive)
@@ -3336,11 +3337,30 @@ PROPERTIES: The list properties specified in the `:properties' parameter
   :bind (("C-x y k" . kubel))
   :ensure t)
 
+(defun kubectl-get-pods (pattern)
+  (interactive "MDelete pods matching: ")
+  (with-current-buffer (get-buffer-create "*Kube Pods*")
+      (read-only-mode -1)
+      (kill-region (point-min) (point-max))
+      (shell-command (concat "kubectl get pods | grep " pattern) (current-buffer))
+      (switch-to-buffer-other-window (current-buffer))
+      (read-only-mode)))
+
 (defun kubectl-delete-pods (pattern)
   (interactive "MDelete pods matching: ")
-  (shell-command (concat "kubectl get pods | grep " pattern))
-  (when (y-or-n-p "Remove pods matching pattern?")
-    (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod"))))
+  (save-window-excursion
+    (with-current-buffer (get-buffer-create "*Kube Pods*")
+      (read-only-mode -1)
+      (kill-region (point-min) (point-max))
+      (shell-command (concat "kubectl get pods | grep " pattern) (current-buffer))
+      (switch-to-buffer-other-window (current-buffer))
+      (read-only-mode)
+      (when (y-or-n-p "Remove pods matching pattern?")
+        (async-shell-command (concat "kubectl get pods | grep " pattern " | awk '{print $1}' | xargs kubectl delete pod"))))))
+
+(defun kubectl-get-running-dashboards ()
+  (interactive)
+  (async-shell-command "kubectl get pods -l dag_id=analytics_dashboards | grep Running"))
 #+end_src
 
 *** s3
