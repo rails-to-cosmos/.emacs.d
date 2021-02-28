@@ -1286,6 +1286,7 @@ BEG and END (region to sort)."
                     (google-translate-translate (nth 1 lang-regex) (nth 2 lang-regex) sentence)))
               (after-translation-hydra/body)))
   :bind ("C-x y t t" . translate-text)
+  :ensure popup
   :ensure t)
 #+end_src
 
