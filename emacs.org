@@ -1709,7 +1709,13 @@ bidirectional reordering.")
               org-clock-out-remove-zero-time-clocks nil
               org-clock-out-when-done t)
 (org-clock-persistence-insinuate)
-(define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto)
+
+(defun org-clock-goto-narrowed ()
+  (interactive)
+  (org-clock-goto)
+  (org-narrow-to-subtree))
+
+(define-key global-map (kbd "C-c C-x C-j") 'org-clock-goto-narrowed)
 
 (defun org-clock-add-note ()
   (interactive)
@@ -1717,6 +1723,7 @@ bidirectional reordering.")
     (save-excursion
       (org-clock-goto)
       (org-add-note))))
+
 (define-key global-map (kbd "C-x y n") 'org-clock-add-note)
 
 (lexical-let ((custom-org-clock-idle-time 3600)) ;; seconds
