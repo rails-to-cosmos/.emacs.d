@@ -1,0 +1,4 @@
+/.cask
+*.elc
+*-pkg.el
+.yas-compiled-snippets.el

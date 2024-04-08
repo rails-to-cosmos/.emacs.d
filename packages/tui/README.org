@@ -1,0 +1,346 @@
+* tui.el
+:PROPERTIES:
+:ID:       ddb48016-ee39-4503-a61d-7f37c4032022
+:pin:  t
+:label: An experimental UI framework for Emacs inspired by React
+:keywords: ui-framework emacs
+:END:
+
+[[file:images/tui-bird.png]]
+
+#+COMMENT: Badges
+[[http://www.gnu.org/licenses/gpl-3.0.txt][file:https://img.shields.io/badge/license-GPL_3-green.svg]]
+[[https://travis-ci.org/ebpa/tui.el][file:https://api.travis-ci.org/ebpa/tui.el.svg?branch=master]]
+#+COMMENT: [[https://coveralls.io/github/ebpa/tui?branch=master][file:https://coveralls.io/repos/ebpa/tui/badge.svg?branch=master&service=github]]
+#+COMMENT: [[http://melpa.org/#/tui][file:http://melpa.org/packages/tui-badge.svg]]
+#+COMMENT: [[http://stable.melpa.org/#/tui][file:http://stable.melpa.org/packages/tui-badge.svg]]
+
+ ⚠ *Requires emacs version 26.1 or higher* ⚠
+
+** Introduction
+:PROPERTIES:
+:pin:  0
+:ID:       8ff5465c-8ffc-4237-8302-964fbaab6454
+:END:
+This is an experiment in building purely text-based user interfaces (TUI's).  The ultimate goal is to explore new paradigms for user interface design and development using Emacs.  To this end, tui.el implements an API based on the popular React JavaScript framework in order to reduce the demands involved with designing and building complex text-based UI's.
+
+This is all currently experimental!  Expect things to change as I get feedback about what works, what does not!
+
+** Installing
+:PROPERTIES:
+:pin:  2
+:ID:       21c4d574-5de0-43ac-ae9d-444b2cbc5b86
+:END:
+
+*** Using Straight.el
+:PROPERTIES:
+:ID:       b106a1f4-3817-4ab8-b3f8-0e8b2d09a4b6
+:END:
+#+begin_src emacs-lisp
+(straight-use-package
+ '(tui :type git :host github :repo "ebpa/tui.el" :files ("*.el" "components" "layout" "demo" "snippets")))
+#+end_src
+
+*** Manually
+:PROPERTIES:
+:ID:       5fde6a5c-ba8b-42de-898c-95c03d4af06a
+:END:
+
+The package hasn't been submitted to Melpa yet.  To install the package manually: clone the repository, add the folder to your load path and install the dependencies with the following:
+
+#+begin_src sh
+git clone git@github.com:ebpa/tui.el.git
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+(add-to-list 'load-path "~/path/to/tui.el")
+
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.org/packages/") t)
+
+(package-initialize)
+(package-refresh-contents)
+
+;; Manually install package dependencies
+(package-install 's)
+(package-install 'dash-functional)
+#+end_src
+
+** Getting started
+:PROPERTIES:
+:pin:  3
+:ID:       2ed4f7e4-4982-429c-974d-c07ce9cc5d3b
+:END:
+
+**** Tic Tac Toe
+:PROPERTIES:
+:ID:       cd178658-1421-4a82-abaa-f7d73659bdd6
+:END:
+
+Tui contains a tic tac toe game as a demonstration component.  You can play the game with `M-x tui-play-tic-tac-toe`.  Check out the source code with `M-x find-function "tui-play-tic-tac-toe"`.
+
+**** Rendering content
+:PROPERTIES:
+:ID:       8e45f5bf-b357-4491-aff3-0117080f8dff
+:END:
+
+If all goes well you should be able to require the library and render something to the buffer.  The following will render a greeting at the point.
+
+#+begin_src emacs-lisp
+(tui-render-element "Hello world!")
+#+end_src
+
+# **Note: The `(progn ... nil)` wrapper is a recommended measure to avoid printing the value returned by `tui-render-element` when calling it using `eval-last-sexp` or `eval-expression`.  Printing the complex object can cause Emacs hang badly.**
+
+**** Defining a component
+:PROPERTIES:
+:ID:       1f39155a-2c9a-4688-a24c-7c6c4b3e2c9d
+:END:
+
+Tui components are defined using `tui-define-component`.
+
+** Overview
+:PROPERTIES:
+:pin:  4
+:ID:       55b5d38e-176e-4cdb-8700-9994991e0b6c
+:END:
+Some familiarity with React should prove extremely helpful in using tui.el.  I recommend checking out the [[https://reactjs.org/docs/hello-world.html][introductory material]] on the React website. In particular- be sure to read the short primer on [[https://reactjs.org/docs/thinking-in-react.html][Thinking in React]] and the component [[https://reactjs.org/docs/state-and-lifecycle.html][lifecycle model]] ([[http://dbertella.github.io/react-lifecycle-svg/][diagram]]).
+
+*** Syntax
+:PROPERTIES:
+:pin:  0
+:ID:       e26942ae-3363-4020-91d7-53a051a2daa5
+:END:
+Tui offers an terse syntax for expressing content that roughly resembles the form of JSX.  For instance, an expander control consists of a header and some content that is hidden when collapsed by the user:
+
+#+BEGIN_EXAMPLE elisp
+(tui-expander
+  :heading "A label for the following collapsible lorem ipsum content"
+  "Curabitur lacinia pulvinar nibh. "
+  "Fusce suscipit, wisi nec facilisis facilisis, est dui fermentum leo, quis tempor ligula erat quis odio. "
+  "Sed id ligula quis est convallis tempor. ")
+#+END_EXAMPLE
+
+Inititial arguments as parsed key-value pairs and are passed as a [[https://www.emacswiki.org/emacs/AlistVsPlist][plist]] to an element.  A non-[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Symbol-Type.html][keyword-symbol]] following the property list and all following elements are treated as child elements.  They are implicitly passed with the preceding plist properties as a value for ~:children~.  This avoids unnecessary repetition in typing ~:children~.
+
+#+BEGIN_EXAMPLE elisp
+(COMPONENT-NAME
+  [[KEYWORD-PROP VALUE] ...]
+  [CHILD-1 CHILD-2 ...])
+#+END_EXAMPLE
+
+The verbose equivalent to this syntax explicitly expresses the ~:children~ property.  Note that multiple items must be enclosed by a single list or other element to follow the paired plist structure.  The resulting content tree is identical to the previous example.
+
+#+BEGIN_EXAMPLE elisp
+(tui-expander
+  :heading "A label for the following collapsible lorem ipsum content"
+  :children
+  (list
+    "Curabitur lacinia pulvinar nibh. "
+    "Fusce suscipit, wisi nec facilisis facilisis, est dui fermentum leo, quis tempor ligula erat quis odio. "
+    "Sed id ligula quis est convallis tempor. "))
+#+END_EXAMPLE
+
+*** Lists (and nil)
+:PROPERTIES:
+:ID:       627c7dde-7948-4ce6-80d7-2b728f8ee8d7
+:END:
+
+For convenience, lists may be used to arbitrarily group content.  All lists are converted to ~tui-element~ nodes when the content is mounted.  Null values may also be used arbitrarily.  They are ignored at render time, so conditional code may return ~nil~.  Content is inserted in-order without separation, so while ~(list "foo" "bar" "baz")~ and ~(list (list "foo") nil (list "bar" "baz"))~ result in different content trees, they both render ~"foobarbaz"~.  
+
+The various forms of improper lists are currently not supported and are reserved for future use.
+
+*** Text properties
+:PROPERTIES:
+:pin:  t
+:ID:       8a74a2f8-b56e-4947-9fcb-50e2feb2bca9
+:END:
+To simplify styling, text properties may be applied to elements using the keyword :text-props.  This property value should be a plist of text properties and their values.  For example:
+
+#+BEGIN_EXAMPLE elisp
+(tui-heading
+  :text-props '(help-echo "Yup! This is a heading")
+  "A heading!")
+#+END_EXAMPLE
+
+*** Comparison with React
+:PROPERTIES:
+:ID:       206d4692-e371-432b-8aee-c413b56ec6bc
+:END:
+
+**** ReactJS equivalents
+:PROPERTIES:
+:pin:  t
+:ID:       2a9d46b9-99d7-4955-9cee-34dfefe007c4
+:END:
+
+| ReactJS             | tui.el                            |
+|---------------------+------------------------------------|
+| React.Component     | tui-component                     |
+| React.PureComponent | TODO                               |
+| createElement()     | tui-create-element                |
+| createFactory()     | tui-define-component              |
+| cloneElement()      | TODO                               |
+| isValidElement()    | tui-valid-element-p               |
+| React.Children      | unnecessary (use tui-child-nodes) |
+
+** Components
+:PROPERTIES:
+:ID:       f0470d65-9cbd-4737-a43f-d5ab759e302a
+:pin:  t
+:END:
+
+*** HTML-like components
+:PROPERTIES:
+:ID:       0cbcd6e4-c0b7-46b0-96b1-1cf773a14854
+:END:
+| (tui-div &key children)     |
+| (tui-heading &key children) |
+| (tui-section &key children) |
+| (tui-span &key children)    |
+*** Other components
+:PROPERTIES:
+:ID:       c16cb7c3-5ef6-4a0a-8aff-b72079287d39
+:END:
+| (tui-link &key target children)                        |
+| (tui-icon &key icon-set icon-name)                     |
+| (tui-buffer &key buffer children)                      |
+| (tui-line &key children)                               |
+| (tui-fixed-width &key children)                        |
+| (tui-expander &key header initially-expanded children) |
+
+** Future Work
+:PROPERTIES:
+:ID:       1f235263-6406-48e7-8f11-97f197c5b046
+:END:
+
+Things I'm currently working on:
+
+ - [ ] Grid layout
+ - [ ] TUI Developer tools
+
+** Contributing
+:PROPERTIES:
+:pin:  -2
+:ID:       6a69022c-a3cd-49e5-bcea-b0ba6cf8c399
+:END:
+
+If you feel inspired by this little library, contact me on [[https://twitter.com/ebanders][Twitter]] and let me know!  The door is wide open for collaboration!  If you have ideas for components I'd love to hear them.
+
+*** Ideas
+:PROPERTIES:
+:ID:       bebe96a2-0e53-4d65-95d4-25e966f5a300
+:END:
+Here are a few things I have in mind in case you're looking for an excuse to explore Emacs' many features:
+
+**** org-agenda
+:PROPERTIES:
+:ID:       8cd1cff5-fb7d-4b52-92ac-ddba1eb43332
+:END:
+There are a lot of opportunities for customizing the org-mode agenda view that could be made possible with components designed for org-mode.  [[https://github.com/alphapapa/org-super-agenda][Org-super-agenda]] offers striking examples of grouping agenda content into meaningful elements.
+
+**** Structure editors
+:PROPERTIES:
+:ID:       beb31dcd-9119-4be3-97e0-54191021171b
+:END:
+[[https://en.wikipedia.org/wiki/Structure_editor][Structure editors]] are an exciting approach for editing source code and structured data.  Build a set of components for representing and interacting with a syntax conceivably eliminates syntax errors altogether!
+
+**** Charts and graphs
+:PROPERTIES:
+:ID:       d6690ba7-0f06-47c1-bad0-d81c4e126cff
+:END:
+It would be very handy to have a variety of charts and graphs to visualize data within Emacs itself.  Emacs already has a good start with the built-in ~chart.el~ for bar charts ([[http://francismurillo.github.io/2017-04-15-Exploring-Emacs-chart-Library/][examples]]).  This would be a good application for [[https://github.com/josuah/drawille][drawille.el]].  Fancy animated charts like [[https://github.com/yaronn/blessed-contrib][blessed-contrib]] anyone?
+
+**** Virtual windows
+:PROPERTIES:
+:ID:       fdeac707-5fdb-4df9-8eb7-261e825976b2
+:END:
+There are circumstances where it would be useful to create divisions within a buffer/window without the behavior associated with additional windows.  Imagine various tiled/floating window behavior demonstrated by [[https://github.com/chjj/blessed][blessed]] within a single buffer.
+
+**** Touch-based interfaces
+:PROPERTIES:
+:ID:       8d8ec6cc-76ef-4e91-b8eb-3766bf572a82
+:END:
+Why not give Emacs some big blocky buttons and sliders, so we can use our pervasive touchscreens with Emacs too?  Or even: design progressive Emacs apps?
+
+*** Running Tests
+:PROPERTIES:
+:ID:       51d57590-60fb-4e42-bdaa-cc4660331d5d
+:pin:      t
+:END:
+
+#+begin_src emacs-lisp
+cask exec buttercup -L
+#+end_src
+
+*** Feedback
+:PROPERTIES:
+:pin:  t
+:ID:       22794aed-d57f-40aa-89de-f035b07ce89b
+:END:
+
+*** Requesting components
+:PROPERTIES:
+:pin:  t
+:ID:       e96ffc7a-0bf4-4152-b602-a4a9b38bae97
+:END:
+**** Suggestions
+:PROPERTIES:
+:ID:       dec07d98-7bf4-431d-9156-8a1a8cd13d44
+:END:
+***** Button
+:PROPERTIES:
+:ID:       82a612fa-b2ab-4fbf-898d-60d2c32b7111
+:END:
+***** Calendar
+:PROPERTIES:
+:ID:       72767a59-cdc4-4cbe-8f87-2baaf4d3a437
+:END:
+***** Dropdown
+:PROPERTIES:
+:ID:       a10fbeab-f621-4344-8e91-24c33b62a405
+:END:
+***** GitHub-style punchcard
+:PROPERTIES:
+:ID:       953df8d3-f680-4639-81e9-0f8af83150ea
+:END:
+***** Graphs/charts
+:PROPERTIES:
+:ID:       d71ea581-9fbc-48d8-a1b0-aba7cc65888a
+:END:
+***** Sparkline
+:PROPERTIES:
+:ID:       5d2e5217-250a-4c00-b309-b436747d9959
+:END:
+***** Week
+:PROPERTIES:
+:ID:       55637943-2b72-4251-b07f-70f2ef06d4eb
+:END:
+** Related Projects
+:PROPERTIES:
+:pin:  -1
+:ID:       60d9ca3c-d01d-4d9c-97e8-7d0f4ede3066
+:END:
+ - *Emacs*
+   - shr.el / eww
+   - [[https://github.com/alezost/bui.el][bui.el: Buffer interface library for Emacs]]
+   - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Abstract-Display.html#Abstract-Display][ewoc: "Emacs's Widget for Object Collections"]]
+ - *Non-Emacs*
+   - [[https://en.wikipedia.org/wiki/Ncurses][ncurses]]
+   - A good list: [[https://appliedgo.net/tui/][Text-Based User Interfaces · Applied Go]]
+   - [[https://github.com/vadimdemedes/ink][vadimdemedes/ink: 🌈 React for interactive command-line apps]]
+   - [[https://github.com/JoelOtter/termloop][JoelOtter/termloop: Terminal-based game engine for Go, built on top ...]]
+   - [[https://github.com/VladimirMarkelov/clui][VladimirMarkelov/clui: Command Line User Interface (Console UI inspi...]]
+   - [[https://github.com/chjj/blessed][chjj/blessed: A high-level terminal interface library for node.js.]]
+   - [[https://github.com/cznic/wm][cznic/wm: Package wm is a terminal window manager.]]
+   - [[https://github.com/gizak/termui][gizak/termui: Golang terminal dashboard]]
+   - [[https://github.com/gyscos/Cursive][gyscos/Cursive: A Text User Interface library for rust]]
+   - [[https://github.com/jroimartin/gocui][jroimartin/gocui: Minimalist Go package aimed at creating Console Us...]]
+   - [[https://github.com/marcusolsson/tui-go][marcusolsson/tui-go: A UI library for terminal applications.]]
+   - [[https://github.com/ticki/termion][ticki/termion: A bindless library for controlling terminals/TTY.]]
+   - [[https://github.com/Yomguithereal/react-blessed][Yomguithereal/react-blessed: A react renderer for blessed.]]
+   - [[https://github.com/manaflair/mylittledom][manaflair/mylittledom: High-level DOM-like terminal interface library]]
+   - [[https://github.com/fdehau/tui-rs][fdehau/tui-rs: Build terminal user interfaces and dashboards using Rust]]
+   - [[https://github.com/jtdaugherty/brick/][brick]] - A declarative terminal UI programming library written in Haskell
+   - [[https://github.com/ceccopierangiolieugenio/pyTermTk][ceccopierangiolieugenio/pyTermTk: Python Terminal Toolkit]]
