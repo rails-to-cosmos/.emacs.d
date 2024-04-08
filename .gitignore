@@ -5,7 +5,6 @@
 /.mc-lists.el
 /anaconda-mode/
 /bookmarks
-/elpa/
 /eshell/
 /recentf
 /snippets/
@@ -22,3 +21,8 @@ flycheck_*
 /session.*
 /url/
 /tramp
+*.elc
+*.kbx
+*.gpg
+*.*~
+elpa/archives
