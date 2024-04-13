@@ -45,13 +45,13 @@
            (pipenv-with-flycheck t)
 
            ;; TODO avoid setting this globally
-           (python-interpreter "py")
-           (python-shell-interpreter "py")
-           (lsp-ruff-lsp-python-path "py")
-           (flycheck-python-flake8-executable "py")
-           (flycheck-python-pycompile-executable "py")
-           (flycheck-python-pylint-executable "py")
-           (flycheck-python-mypy-python-executable "py")
+           ;; (python-interpreter "py")
+           ;; (python-shell-interpreter "py")
+           ;; (lsp-ruff-lsp-python-path "py")
+           ;; (flycheck-python-flake8-executable "py")
+           ;; (flycheck-python-pycompile-executable "py")
+           ;; (flycheck-python-pylint-executable "py")
+           ;; (flycheck-python-mypy-python-executable "py")
 
            ;; (python-shell-interpreter-args "-i")
            ;; (lsp-semgrep-server-command '("run" "semgrep" "lsp"))
