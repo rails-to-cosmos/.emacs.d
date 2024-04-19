@@ -1860,7 +1860,7 @@ P is the point at which we run `syntax-ppss'"
 
 (eval-when-compile
   (defalias 'sp--syntax-class-to-char 'syntax-class-to-char)
-  (when t ;; (version< emacs-version "28.1")
+  (when (version< emacs-version "28.1")
     ;; Ripped from Emacs 27.0 subr.el.
     ;; See Github Issue#946 and Emacs bug#31692.
     (defun sp--syntax-class-to-char (syntax)

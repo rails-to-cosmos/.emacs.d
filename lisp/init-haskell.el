@@ -50,7 +50,7 @@
 
   :custom
   (gc-cons-threshold 100000000)
-  ;; (lsp-haskell-formatting-provider "floskell")
+  (lsp-haskell-formatting-provider "stylish-haskell")
   ;; (lsp-haskell-plugin-tactics-global-on nil)
   ;; (lsp-haskell-plugin-haddock-comments-global-on nil)
   ;; (lsp-haskell-plugin-stan-global-on nil)
