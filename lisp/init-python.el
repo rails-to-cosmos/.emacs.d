@@ -28,7 +28,7 @@
          ;; (python-mode . anaconda-mode)
 
          (python-mode . python-highlight-breakpoints)
-         (python-mode . pipenv-mode)
+         ;; (python-mode . pipenv-mode)
          (python-mode . company-quickhelp-mode)
          (python-mode . subword-mode)
 
@@ -41,8 +41,8 @@
               ("C-c C-c" . my-python-paragraph-eval)
               ("C-c C-k" . my-python-kill-comments))
 
-  :custom ((pipenv-with-projectile nil)
-           (pipenv-with-flycheck t)
+  :custom (;; (pipenv-with-projectile nil)
+           ;; (pipenv-with-flycheck t)
 
            ;; TODO avoid setting this globally
            ;; (python-interpreter "py")
@@ -70,7 +70,7 @@
   :ensure flycheck-mypy
   :ensure flycheck-pyflakes
   :ensure flymake-ruff
-  :ensure pipenv
+  ;; :ensure pipenv
   :ensure ruff-format)
 
 (defun my-python-highlight-structured-pattern-match-hook ()
