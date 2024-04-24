@@ -47,7 +47,10 @@
 ;;   :hook ((c-mode c++-mode objc-mode) . (lambda () (require 'ccls) (lsp-deferred))))
 
 (use-package cc-mode
-  :config (progn (require 'dap-cpptools))
+  :config (progn
+            (require 'dap-cpptools)
+
+            (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]build\\'"))
   :custom
   (lsp-prefer-flymake nil)
   (c-basic-offset 4)
@@ -56,10 +59,18 @@
   :bind (("C-x C-x" . ff-find-other-file))
   :ensure t)
 
-;; (with-eval-after-load 'lsp-mode
-;;   ;; (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-;;   (require 'dap-cpptools)
-;;   ;; (yas-global-mode)
-;;   )
+;; (use-package cc-mode
+;;   :config (progn
+;;             (require 'eglot))
+
+;;   :custom
+;;   (c-basic-offset 4)
+
+;;   :hook (((c-mode c++-mode objc-mode) . eglot-ensure)
+;;          ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
+
+;;   :bind (("C-x C-x" . ff-find-other-file))
+
+;;   :ensure t)
 
 (provide 'init-c)
