@@ -27,3 +27,4 @@ flycheck_*
 *.*~
 elpa/archives
 /image-dired/
+/.cache/
