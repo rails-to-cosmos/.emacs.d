@@ -1,0 +1,2 @@
+;; Generated package description from rbit.el  -*- no-byte-compile: t -*-
+(define-package "rbit" "0.1" "Red-black persistent interval trees" 'nil :commit "59da8b3219a9632e1ed4ce85f58a6f3c68b61684" :url "https://elpa.gnu.org/packages/rbit.html" :authors '(("Stefan Monnier" . "monnier@iro.umontreal.ca")) :maintainer '("Stefan Monnier" . "monnier@iro.umontreal.ca") :keywords '("data structures" "binary tree" "intervals"))

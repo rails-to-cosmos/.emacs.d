@@ -5,6 +5,8 @@
 (put 'narrow-to-page 'disabled nil)
 (put 'list-threads 'disabled nil)
 
+(global-set-key (kbd "C-M-o") #'occur)
+
 (use-package cask-mode
   :ensure t)
 
