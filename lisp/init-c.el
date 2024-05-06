@@ -2,8 +2,8 @@
 (require 'lsp-mode)
 (require 'dap-cpptools)
 
-(use-package clang-capf
-  :ensure t)
+;; (use-package clang-capf
+;;   :ensure t)
 
 (use-package doxy-graph-mode
   :ensure t)
