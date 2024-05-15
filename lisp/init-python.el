@@ -5,11 +5,11 @@
 
 (require 'python-override)
 
-(use-package lsp-pyright
-  :ensure t
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp-deferred))))
+;; (use-package lsp-pyright
+;;   :ensure t
+;;   :hook (python-mode . (lambda ()
+;;                          (require 'lsp-pyright)
+;;                          (lsp-deferred))))
 
 (use-package python-mode
   :init (progn
@@ -26,7 +26,7 @@
 
          ;; (python-mode . anaconda-eldoc-mode)
          ;; (python-mode . anaconda-mode)
-
+         (python-mode . eglot-ensure)
          (python-mode . python-highlight-breakpoints)
          ;; (python-mode . pipenv-mode)
          (python-mode . company-quickhelp-mode)
@@ -41,36 +41,14 @@
               ("C-c C-c" . my-python-paragraph-eval)
               ("C-c C-k" . my-python-kill-comments))
 
-  :custom (;; (pipenv-with-projectile nil)
-           ;; (pipenv-with-flycheck t)
-
-           ;; TODO avoid setting this globally
-           ;; (python-interpreter "py")
-           ;; (python-shell-interpreter "py")
-           ;; (lsp-ruff-lsp-python-path "py")
-           ;; (flycheck-python-flake8-executable "py")
-           ;; (flycheck-python-pycompile-executable "py")
-           ;; (flycheck-python-pylint-executable "py")
-           ;; (flycheck-python-mypy-python-executable "py")
-
-           ;; (python-shell-interpreter-args "-i")
-           ;; (lsp-semgrep-server-command '("run" "semgrep" "lsp"))
-           ;; (lsp-pyls-server-command '("run" "pylsp"))
-           ;; (lsp-pylsp-server-command '("run" "pylsp"))
-           ;; (lsp-ruff-lsp-server-command '("run" "ruff-lsp"))
-           )
-
-  :ensure lsp-mode
+  :ensure eglot
   :ensure company
-  ;; :ensure anaconda-mode
-  ;; :ensure company-anaconda
   :ensure pyimpsort
   :ensure py-autopep8
   :ensure flycheck
   :ensure flycheck-mypy
   :ensure flycheck-pyflakes
   :ensure flymake-ruff
-  ;; :ensure pipenv
   :ensure ruff-format)
 
 (defun my-python-highlight-structured-pattern-match-hook ()
@@ -116,29 +94,29 @@
       (substring-no-properties (thing-at-point thing))
     (error "")))
 
-(defun my-python-smart-complete ()
-  (when (and (string= major-mode "python-mode")
-             (looking-at "$")
-             (not (python-syntax-comment-or-string-p))
-             (eq this-command 'self-insert-command))
-    (let* ((line (my-get-thing-at-point 'line))
-           (ws (my-get-thing-at-point 'whitespace))
-           (words (s-split-words line))
-           (init-cmd (car words))
-           (last-cmd (car (last words))))
-      (when (or
-             ;; (and (string= init-cmd "from") (looking-back "\\." 1))
-             ;; (looking-back "[a-z]\\." 2)
-             (and (looking-back " " 1) ;; space completions
-                  (or                  ;; complete imports
-                   (string= last-cmd "import")
-                   (string= last-cmd "from")
-                   (string= last-cmd "with")
+;; (defun my-python-smart-complete ()
+;;   (when (and (string= major-mode "python-mode")
+;;              (looking-at "$")
+;;              (not (python-syntax-comment-or-string-p))
+;;              (eq this-command 'self-insert-command))
+;;     (let* ((line (my-get-thing-at-point 'line))
+;;            (ws (my-get-thing-at-point 'whitespace))
+;;            (words (s-split-words line))
+;;            (init-cmd (car words))
+;;            (last-cmd (car (last words))))
+;;       (when (or
+;;              ;; (and (string= init-cmd "from") (looking-back "\\." 1))
+;;              ;; (looking-back "[a-z]\\." 2)
+;;              (and (looking-back " " 1) ;; space completions
+;;                   (or                  ;; complete imports
+;;                    (string= last-cmd "import")
+;;                    (string= last-cmd "from")
+;;                    (string= last-cmd "with")
 
-                   (and (string= init-cmd "from") (looking-back ", " 1)))))
-        (my-lsp-complete)
-        ;; (anaconda-mode-complete)
-        ))))
+;;                    (and (string= init-cmd "from") (looking-back ", " 1)))))
+;;         (my-lsp-complete)
+;;         ;; (anaconda-mode-complete)
+;;         ))))
 
 ;; (defun anaconda-mode-complete-callback (result)
 ;;   "Start interactive completion on RESULT receiving."
