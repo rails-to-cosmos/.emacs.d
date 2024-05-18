@@ -93,7 +93,6 @@
             (require 'align)
 
             (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
-
             (add-to-list 'align-rules-list '(haskell-types (regexp . "\\(\\s-+\\)\\(::\\|∷\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
             (add-to-list 'align-rules-list '(haskell-assignment (regexp . "\\(\\s-+\\)=\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
             (add-to-list 'align-rules-list '(haskell-arrows (regexp . "\\(\\s-+\\)\\(->\\|→\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
@@ -104,6 +103,7 @@
          (haskell-mode . company-mode)
          (haskell-mode . smartparens-strict-mode)
          (haskell-mode . subword-mode)
+         (haskell-mode . (lambda () (setq company-backends '(company-ghci))))
          ;; (haskell-mode . (lambda () (call-interactively #'xref-etags-mode)))
          )
 

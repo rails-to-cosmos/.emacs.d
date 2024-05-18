@@ -1,3 +1,7 @@
+(require 'eglot-booster)
+(fset #'jsonrpc--log-event #'ignore)
+;; (fset #'eglot-events-buffer-size 0)
+
 (use-package company
   :bind (:map company-active-map
               ("C-n" . company-select-next)
