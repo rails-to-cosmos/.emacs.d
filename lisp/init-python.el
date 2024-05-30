@@ -41,6 +41,7 @@
               ("C-c C-c" . my-python-paragraph-eval)
               ("C-c C-k" . my-python-kill-comments))
 
+  :ensure poetry
   :ensure eglot
   :ensure company
   :ensure pyimpsort
