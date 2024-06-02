@@ -1,6 +1,51 @@
 (setenv "LSP_USE_PLISTS" "true")
 (setq read-process-output-max (* 3 1024 1024))
 
+(use-package haskell-mode
+  :config (progn
+            (require 'xref)
+            (require 'eglot)
+            (require 'align)
+
+            (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
+
+            (add-to-list 'align-rules-list '(haskell-types (regexp . "\\(\\s-+\\)\\(::\\|∷\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
+            (add-to-list 'align-rules-list '(haskell-assignment (regexp . "\\(\\s-+\\)=\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
+            (add-to-list 'align-rules-list '(haskell-arrows (regexp . "\\(\\s-+\\)\\(->\\|→\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
+            (add-to-list 'align-rules-list '(haskell-left-arrows (regexp . "\\(\\s-+\\)\\(<-\\|←\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode)))))
+
+  :hook ((haskell-mode . eglot-ensure)
+         (haskell-mode . yas-minor-mode)
+         (haskell-mode . company-mode)
+         (haskell-mode . smartparens-strict-mode)
+         (haskell-mode . subword-mode))
+
+  :custom
+
+  ;; from https://github.com/jimenezrick/emacs.d/blob/master/packages-haskell.el
+  (haskell-process-type 'cabal-repl)
+  (haskell-process-load-or-reload-prompt t)
+  (haskell-process-auto-import-loaded-modules t)
+  (haskell-process-log t)
+
+  (eglot-autoshutdown t) ;; shutdown language server after closing last file
+  (eglot-confirm-server-initiated-edits nil) ;; allow edits without confirmation
+  (eglot-extend-to-xref t)
+
+  :ensure t
+  :ensure align
+  :ensure smartparens
+  :ensure yasnippet
+  :ensure company
+  :ensure eglot)
+
+;; test ghci
+;; (require 'company-ghci)
+;; (push 'company-ghci company-backends)
+;; (add-hook 'haskell-mode-hook 'company-mode)
+;;; To get completions in the REPL
+;; (add-hook 'haskell-interactive-mode-hook 'company-mode)
+
 ;; (use-package haskell-mode
 ;;   :init (progn
 ;;           (require 'haskell)
@@ -85,39 +130,6 @@
 ;;   :ensure lsp-ui
 ;;   :ensure lsp-haskell
 ;;   :ensure which-key)
-
-(use-package haskell-mode
-  :config (progn
-            (require 'xref)
-            (require 'eglot)
-            (require 'align)
-
-            (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
-            (add-to-list 'align-rules-list '(haskell-types (regexp . "\\(\\s-+\\)\\(::\\|∷\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
-            (add-to-list 'align-rules-list '(haskell-assignment (regexp . "\\(\\s-+\\)=\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
-            (add-to-list 'align-rules-list '(haskell-arrows (regexp . "\\(\\s-+\\)\\(->\\|→\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
-            (add-to-list 'align-rules-list '(haskell-left-arrows (regexp . "\\(\\s-+\\)\\(<-\\|←\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode)))))
-
-  :hook ((haskell-mode . eglot-ensure)
-         (haskell-mode . yas-minor-mode)
-         (haskell-mode . company-mode)
-         (haskell-mode . smartparens-strict-mode)
-         (haskell-mode . subword-mode)
-         (haskell-mode . (lambda () (setq company-backends '(company-ghci))))
-         ;; (haskell-mode . (lambda () (call-interactively #'xref-etags-mode)))
-         )
-
-  :custom
-  (eglot-autoshutdown t) ;; shutdown language server after closing last file
-  (eglot-confirm-server-initiated-edits nil) ;; allow edits without confirmation
-  (eglot-extend-to-xref t)
-
-  :ensure t
-  :ensure align
-  :ensure smartparens
-  :ensure yasnippet
-  :ensure company
-  :ensure eglot)
 
 ;; (cl-defun citre-peek-jump-abort ()
 ;;   (interactive)
