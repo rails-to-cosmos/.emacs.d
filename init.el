@@ -47,6 +47,7 @@
   (diminish 'org-indent-mode))
 
 (require 'init-ui)
+(require 'init-tramp)
 (require 'init-scratch)
 
 (require 'init-darwin)
