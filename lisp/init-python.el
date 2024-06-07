@@ -21,18 +21,23 @@
          (python-mode . my-python-flycheck-setup)
          (python-mode . smartparens-strict-mode)
          (python-mode . my-python-highlight-structured-pattern-match-hook)
-         ;; (python-mode . lsp-deferred)
          (python-mode . yas-minor-mode)
 
+         ;; (python-mode . lsp-deferred)
          ;; (python-mode . anaconda-eldoc-mode)
          ;; (python-mode . anaconda-mode)
-         (python-mode . eglot-ensure)
-         (python-mode . python-highlight-breakpoints)
+         ;; (python-mode . eglot-ensure)
          ;; (python-mode . pipenv-mode)
+
+         (python-mode . python-highlight-breakpoints)
          (python-mode . company-quickhelp-mode)
          (python-mode . subword-mode)
 
-         (python-mode . (lambda () (setq-local company-backends '(company-files company-capf))))
+         (python-mode . (lambda ()
+                          ;; (setq-local company-backends '(company-files company-capf))
+                          (poetry-venv-workon)
+                          (eglot-ensure)))
+
          ;; (python-mode . (lambda () (add-hook 'post-command-hook #'my-python-smart-complete)))
 
          (inferior-python-mode . smartparens-strict-mode))
