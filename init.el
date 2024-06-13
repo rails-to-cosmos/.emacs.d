@@ -66,6 +66,7 @@
 (require 'init-lisp)
 (require 'init-haskell)
 (require 'init-python)
+(require 'init-bash)
 (require 'init-zig)
 (require 'init-scala)
 (require 'init-nim)
