@@ -12,8 +12,10 @@
 ;; (require 'reverse-im)
 ;; (reverse-im-activate "russian-computer")
 
+(unbind-key (kbd "C-t"))
+
 (use-package which-key
-    :config
+  :config
   (which-key-mode t)
   (which-key-setup-side-window-bottom)
   :ensure t)
