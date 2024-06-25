@@ -46,31 +46,31 @@
 ;;             (ccls-use-default-rainbow-sem-highlight))
 ;;   :hook ((c-mode c++-mode objc-mode) . (lambda () (require 'ccls) (lsp-deferred))))
 
-(use-package cc-mode
-  :config (progn
-            (require 'dap-cpptools)
-
-            (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]build\\'"))
-  :custom
-  (lsp-prefer-flymake nil)
-  (c-basic-offset 4)
-  :hook (((c-mode c++-mode objc-mode) . lsp-deferred)
-         ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
-  :bind (("C-x C-x" . ff-find-other-file))
-  :ensure t)
-
 ;; (use-package cc-mode
 ;;   :config (progn
-;;             (require 'eglot))
+;;             (require 'dap-cpptools)
 
+;;             (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]build\\'"))
 ;;   :custom
+;;   (lsp-prefer-flymake nil)
 ;;   (c-basic-offset 4)
-
-;;   :hook (((c-mode c++-mode objc-mode) . eglot-ensure)
+;;   :hook (((c-mode c++-mode objc-mode) . lsp-deferred)
 ;;          ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
-
 ;;   :bind (("C-x C-x" . ff-find-other-file))
-
 ;;   :ensure t)
+
+(use-package cc-mode
+  :config (progn
+            (require 'eglot))
+
+  :custom
+  (c-basic-offset 4)
+
+  :hook (((c-mode c++-mode objc-mode) . eglot-ensure)
+         ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
+
+  :bind (("C-x C-x" . ff-find-other-file))
+
+  :ensure t)
 
 (provide 'init-c)
