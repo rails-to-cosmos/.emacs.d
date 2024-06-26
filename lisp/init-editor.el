@@ -188,4 +188,8 @@
 
 (setq create-lockfiles nil)
 
+(use-package git-browse
+  :bind ("C-c g" . git-browse-current-line)
+  :load-path "~/sync/stuff/git-browse")
+
 (provide 'init-editor)
