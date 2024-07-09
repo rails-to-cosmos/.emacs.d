@@ -276,8 +276,10 @@
   (save-window-excursion
     (switch-to-buffer-other-window (python-shell-get-buffer))))
 
+;; (add-to-list 'hippie-expand-try-functions-list #'my-lsp-complete)
+
 (define-key python-mode-map (kbd "C-c C-l") #'my-python-send-buffer)
-(define-key python-mode-map (kbd "M-/") #'my-lsp-complete)
+(define-key python-mode-map (kbd "M-/") #'hippie-expand)
 
 ;; (defvar my-python-test-runner "pipenv run mypy .")
 
