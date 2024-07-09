@@ -23,7 +23,7 @@
   :custom
 
   ;; from https://github.com/jimenezrick/emacs.d/blob/master/packages-haskell.el
-  (haskell-process-type 'cabal-repl)
+  (haskell-process-type 'stack-ghci)
   (haskell-process-load-or-reload-prompt t)
   (haskell-process-auto-import-loaded-modules t)
   (haskell-process-log t)
