@@ -16,6 +16,14 @@
 (require 'use-package)
 (setq use-package-always-ensure nil)
 
+(use-package quelpa
+  :config (progn
+            (quelpa '(quelpa-use-package
+                      :fetcher git
+                      :url "https://github.com/quelpa/quelpa-use-package.git"))
+            (require 'quelpa-use-package))
+  :ensure t)
+
 (use-package diminish
   :ensure t)
 

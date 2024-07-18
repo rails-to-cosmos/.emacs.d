@@ -29,3 +29,4 @@ elpa/archives
 /image-dired/
 /.cache/
 *.signed
+/quelpa/

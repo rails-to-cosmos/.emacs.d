@@ -190,6 +190,6 @@
 
 (use-package git-browse
   :bind ("C-c g" . git-browse-current-line)
-  :load-path "~/sync/stuff/git-browse")
+  :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/git-browse"))
 
 (provide 'init-editor)
