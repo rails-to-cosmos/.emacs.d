@@ -153,11 +153,9 @@
 (setq grab-and-drag-pointer-shape nil)
 
 (use-package danneskjold-theme
-    :ensure t)
-
-(require 'danneskjold-light-theme)
-
-(enable-theme 'danneskjold)
+  :config (progn
+            (enable-theme 'danneskjold))
+  :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/git-browse"))
 
 (defun danneskjold-toggle-theme ()
   (interactive)
