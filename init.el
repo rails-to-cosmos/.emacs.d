@@ -21,7 +21,8 @@
             (quelpa '(quelpa-use-package
                       :fetcher git
                       :url "https://github.com/quelpa/quelpa-use-package.git"))
-            (require 'quelpa-use-package))
+            (require 'quelpa-use-package)
+            (setq use-package-ensure-function 'quelpa))
   :ensure t)
 
 (use-package diminish

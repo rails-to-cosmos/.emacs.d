@@ -1,5 +1,6 @@
 (use-package org-glance
   :load-path "~/sync/stuff/org-glance"
+  ;; :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/org-glance")
   :bind (("C-x j" . org-glance-form-action)
          :map org-mode-map
          ("@" . org-glance:@))

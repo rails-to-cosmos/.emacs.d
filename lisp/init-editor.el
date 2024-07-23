@@ -105,12 +105,12 @@
                   (enable-paredit-mode))))
   :ensure t)
 
+(require 'haskell-mode)
 (defun my-kill-line ()
   (interactive)
   (delete-horizontal-space)
   (cond ((bolp) (save-excursion
-                  (cond (interactive-haskell-mode t)
-                        (t (call-interactively #'indent-for-tab-command)))))
+                  (call-interactively #'indent-for-tab-command)))
         ((looking-at ")") t)
         (t (insert " "))))
 

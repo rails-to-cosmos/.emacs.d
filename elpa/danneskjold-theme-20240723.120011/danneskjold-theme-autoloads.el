@@ -9,15 +9,10 @@
 
 
 
-;;; Generated autoloads from danneskjold-light-theme.el
-
-(register-definition-prefixes "danneskjold-light-theme" '("danneskjold-light"))
-
-
 ;;; Generated autoloads from danneskjold-theme.el
 
 (when load-file-name (add-to-list 'custom-theme-load-path (file-name-as-directory (file-name-directory load-file-name))))
-(register-definition-prefixes "danneskjold-theme" '("danneskjold" "invert-color"))
+(register-definition-prefixes "danneskjold-theme" '("danneskjold"))
 
 ;;; End of scraped data
 
