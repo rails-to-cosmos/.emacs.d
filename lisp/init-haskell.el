@@ -18,7 +18,8 @@
          (haskell-mode . yas-minor-mode)
          (haskell-mode . company-mode)
          (haskell-mode . smartparens-strict-mode)
-         (haskell-mode . subword-mode))
+         (haskell-mode . subword-mode)
+         (haskell-mode . xref-etags-mode))
 
   :custom
 
