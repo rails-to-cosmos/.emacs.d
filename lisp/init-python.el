@@ -54,7 +54,6 @@
   :ensure py-autopep8
   :ensure flycheck
   :ensure flycheck-mypy
-  :ensure flycheck-pyflakes
   :ensure flymake-ruff
   :ensure ruff-format)
 
