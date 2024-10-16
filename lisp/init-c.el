@@ -67,6 +67,7 @@
   (c-basic-offset 4)
 
   :hook (((c-mode c++-mode objc-mode) . eglot-ensure)
+         ((c-mode c++-mode objc-mode) . company-mode)
          ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
 
   :bind (("C-x C-x" . ff-find-other-file))
