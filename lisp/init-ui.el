@@ -10,6 +10,13 @@
 (use-package highlight
   :ensure t)
 
+(use-package ace-window
+  :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
+                aw-scope 'frame)
+  :bind (("C-x C-o" . ace-window)
+         ("M-o" . ace-window))
+  :ensure t)
+
 (setq pos-tip-background-color "#2b4b6e")
 
 (defun my-limit-window-splitting (original-function &rest args)
