@@ -4,8 +4,10 @@
   :bind (("C-x j" . org-glance-form-action)
          :map org-mode-map
          ("@" . org-glance:@))
-  :config (setq org-glance-directory "~/sync/views"
-                org-glance-resource-directory "~/sync/resources")
+  :config (progn
+            (setq org-glance-directory "~/sync/views"
+                  org-glance-resource-directory "~/sync/resources")
+            (org-glance-init))
   :ensure aes
   :ensure load-relative)
 

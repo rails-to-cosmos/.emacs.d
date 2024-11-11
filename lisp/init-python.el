@@ -33,6 +33,7 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
          (python-mode . smartparens-strict-mode)
          (python-mode . my-python-highlight-structured-pattern-match-hook)
          (python-mode . yas-minor-mode)
+         ;; (python-mode . (lambda () (add-hook 'before-save-hook #'python-fix-imports nil t)))
 
          ;; (python-mode . lsp-deferred)
          ;; (python-mode . anaconda-eldoc-mode)
