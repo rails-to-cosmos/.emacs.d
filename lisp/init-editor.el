@@ -169,7 +169,7 @@
 (global-set-key (kbd "C-+") #'increment-number-at-point)
 (global-set-key (kbd "C--") #'decrement-number-at-point)
 (global-set-key (kbd "C-c p") 'duplicate-line)
-(define-key global-map (kbd "C-x k") #'kill-this-buffer)
+(define-key global-map (kbd "C-x k") #'kill-current-buffer)
 (define-key global-map (kbd "C-x y d c") #'desktop-clear)
 (define-key global-map (kbd "C-x y f f") #'toggle-frame-maximized)
 
