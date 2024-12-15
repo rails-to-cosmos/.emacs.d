@@ -1,0 +1,2 @@
+;; Generated package description from bluetooth.el  -*- no-byte-compile: t -*-
+(define-package "bluetooth" "0.4.1" "A mode for interacting with Bluetooth devices" '((emacs "26.1") (dash "2.18.1") (compat "30.0.0.0") (transient "0.5.0")) :commit "db880e306e00f51e5456b7388371ad6329452165" :authors '(("Raffael Stocker" . "r.stocker@mnet-mail.de") ("Etienne Prud homme" . "e.e.f.prudhomme@gmail.com")) :maintainer '("Raffael Stocker" . "r.stocker@mnet-mail.de") :keywords '("hardware") :url "https://codeberg.org/rstocker/emacs-bluetooth")

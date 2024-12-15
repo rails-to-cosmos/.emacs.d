@@ -11,17 +11,29 @@
 ;;                          (require 'lsp-pyright)
 ;;                          (lsp-deferred))))
 
-(use-package python-mode
+(defun read-dominating-file (filename)
+  "Search `default-directory` and its ancestors for `.python-version` file.
+If found, return its trimmed contents. If not found, raise a user-friendly error."
+  (let ((dir (locate-dominating-file default-directory filename)))
+    (if dir
+        (with-temp-buffer
+          (insert-file-contents (expand-file-name filename dir))
+          (string-trim (buffer-string)))
+      (error "No .python-version file found in %s or any parent directory" default-directory))))
+
+(use-package python-mode :defer
   :init (progn
-          (ob-add-language 'python (cons "python" "src python")))
+          (ob-add-language 'python (cons "python" "src python"))
+          (setenv "WORKON_HOME" "~/.pyenv/versions"))
 
   :hook ((python-mode . abbrev-mode)
-         (python-mode . company-mode)
-         (python-mode . flycheck-mode)
+         ;; (python-mode . company-mode)
+         ;; (python-mode . flycheck-mode)
          (python-mode . my-python-flycheck-setup)
          (python-mode . smartparens-strict-mode)
          (python-mode . my-python-highlight-structured-pattern-match-hook)
          (python-mode . yas-minor-mode)
+         ;; (python-mode . (lambda () (add-hook 'before-save-hook #'python-fix-imports nil t)))
 
          ;; (python-mode . lsp-deferred)
          ;; (python-mode . anaconda-eldoc-mode)
@@ -32,11 +44,16 @@
          (python-mode . python-highlight-breakpoints)
          (python-mode . company-quickhelp-mode)
          (python-mode . subword-mode)
+         ;; (python-mode . pyenv-mode)
 
          (python-mode . (lambda ()
-                          ;; (setq-local company-backends '(company-files company-capf))
-                          (poetry-venv-workon)
-                          (eglot-ensure)))
+                          (setq-local company-backends '(company-files company-capf))
+                          ;; (poetry-venv-workon)
+                          (pyenv-mode)
+                          (pyenv-mode-set (read-dominating-file ".python-version"))
+                          (eglot-ensure)
+                          (company-mode)
+                          (flycheck-mode)))
 
          ;; (python-mode . (lambda () (add-hook 'post-command-hook #'my-python-smart-complete)))
 
@@ -55,7 +72,9 @@
   :ensure flycheck
   :ensure flycheck-mypy
   :ensure flymake-ruff
-  :ensure ruff-format)
+  :ensure ruff-format
+  :ensure pyenv
+  :ensure lsp-pyright)
 
 (defun my-python-highlight-structured-pattern-match-hook ()
   (font-lock-add-keywords nil '(("\\<match\\>" . font-lock-keyword-face)

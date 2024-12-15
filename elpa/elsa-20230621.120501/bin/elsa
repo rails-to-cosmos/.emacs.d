@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+if [ -n "$INSIDE_EMACS" ]
+then
+    EMACS_BIN="emacs"
+else
+    EMACS_BIN="${EMACS:-emacs}"
+fi
+
+usage () {
+    cat <<EOF
+$0 [OPTIONS] FILE
+
+Options can include the options described below, as well as the
+standard Emacs options "--directory", "--funcall", "--load", "--eval",
+and "--execute". These Emacs options should be used to ensure that any
+Elisp files required for the analysis can be found in Emacs' load
+path.  For package analysis, "-L ." is commonly used. See "emacs
+--help" for more information on Emacs options.
+
+Elsa options:
+
+EOF
+}
+
+INHIBIT_ANSI="t"
+if [ -t 1 ] ; then
+    INHIBIT_ANSI="nil"
+fi
+
+EMACS_ARGS=()
+ELSA_ARGS=()
+
+while [[ "$#" -gt 0 ]]
+do
+    case "$1" in
+        "-h"|"--help")
+            usage
+            exit
+            ;;
+        "-L"|"--directory"|"-f"|"--funcall"|"-l"|"--load"|"--eval"|"--execute")
+            EMACS_ARGS+=("$1")
+            EMACS_ARGS+=("$2")
+            shift
+            shift
+            ;;
+        *)
+            ELSA_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# This starts Emacs in an environment free from any user-specific
+# configuration:
+exec "$EMACS_BIN" --batch --no-init-file --no-site-file --no-splash \
+     "${EMACS_ARGS[@]}" \
+     --eval "(setq enable-dir-local-variables nil eieio-backward-compatibility nil ansi-inhibit-ansi $INHIBIT_ANSI gc-cons-threshold 100000000 gc-cons-percentage 0.1)" \
+     --load=elsa --funcall=elsa-run "${ELSA_ARGS[@]}"

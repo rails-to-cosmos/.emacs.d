@@ -2,7 +2,7 @@
   :hook (;; (go-mode . lsp-deferred)
          ;; (go-mode . set-go-mode-hooks)
          ;; (go-mode . company-mode)
-         (haskell-mode . eglot-ensure)
+         (go-mode . eglot-ensure)
          (go-mode . (lambda ()
                       (setq-default company-backends '(company-capf company-files)
                                     ;; standard-indent 4
