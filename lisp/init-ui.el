@@ -72,16 +72,16 @@
   (let ((font-size (or font-size (face-attribute 'default :height)))
         (font-name (or font-name (face-attribute 'default :family)))
         (factor (cl-case system-type
-                  ('darwin 10)
-                  ('windows-nt 5)
+                  (darwin 10)
+                  (windows-nt 5)
                   (t 0))))
 
     (my/set-font 'default
-                  :slant 'normal
-                  :weight 'normal
-                  :height font-size
-                  :width 'normal
-                  :family font-name)
+                 :slant 'normal
+                 :weight 'normal
+                 :height font-size
+                 :width 'normal
+                 :family font-name)
 
     (set-fontset-font "fontset-default"
                       (cons (decode-char 'ucs #x0400)
