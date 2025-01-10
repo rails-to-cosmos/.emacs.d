@@ -32,9 +32,9 @@
 
 (use-package lsp-metals
     :config (progn
-              (lsp-metals-toggle-show-implicit-arguments)
+              ;; (lsp-metals-toggle-show-implicit-arguments)
               ;; (lsp-metals-toggle-show-implicit-conversions)
-              (lsp-metals-toggle-show-inferred-type)
+              ;; (lsp-metals-toggle-show-inferred-type)
               ;; (lsp-metals-toggle-show-super-method-lenses)
               )
     :ensure t)
