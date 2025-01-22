@@ -53,7 +53,8 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
                           (pyenv-mode-set (read-dominating-file ".python-version"))
                           (eglot-ensure)
                           (company-mode)
-                          (flycheck-mode)))
+                          (flycheck-mode)
+                          (flymake-mode)))
 
          ;; (python-mode . (lambda () (add-hook 'post-command-hook #'my-python-smart-complete)))
 
