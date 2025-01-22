@@ -47,7 +47,7 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
          ;; (python-mode . pyenv-mode)
 
          (python-mode . (lambda ()
-                          (setq-local company-backends '(company-files (company-capf :with company-yasnippet)))
+                          (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
                           ;; (poetry-venv-workon)
                           (pyenv-mode)
                           (pyenv-mode-set (read-dominating-file ".python-version"))
