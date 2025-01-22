@@ -61,7 +61,9 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
 
   :bind (:map python-mode-map
               ("C-c C-c" . my-python-paragraph-eval)
-              ("C-c C-k" . my-python-kill-comments))
+              ("C-c C-k" . my-python-kill-comments)
+              ("M-n" . flymake-goto-next-error)
+              ("M-p" . flymake-goto-prev-error))
 
   :ensure jinja2-mode
   :ensure poetry
