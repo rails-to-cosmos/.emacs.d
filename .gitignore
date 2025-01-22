@@ -30,3 +30,4 @@ elpa/archives
 /.cache/
 *.signed
 /quelpa/
+*.el#
