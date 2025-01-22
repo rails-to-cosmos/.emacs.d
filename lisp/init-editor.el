@@ -11,8 +11,7 @@
   :ensure t)
 
 (use-package envrc
-  :config (progn
-            (envrc-global-mode))
+  :config (envrc-global-mode)
   :ensure t)
 
 (use-package align
