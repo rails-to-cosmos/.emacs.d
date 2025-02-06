@@ -73,7 +73,6 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
   :ensure flycheck-mypy
   :ensure flymake-ruff
   :ensure ruff-format
-  :ensure pyenv
   :ensure lsp-pyright)
 
 (defun my-python-highlight-structured-pattern-match-hook ()

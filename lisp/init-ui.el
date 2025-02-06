@@ -161,7 +161,6 @@
 
 (use-package danneskjold-theme
   :config (enable-theme 'danneskjold)
-  :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/danneskjold-theme")
   :ensure t)
 
 (eval-after-load 'org-faces

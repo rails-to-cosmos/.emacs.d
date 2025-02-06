@@ -188,8 +188,8 @@
 
 (setq create-lockfiles nil)
 
-(use-package git-browse
-  :bind ("C-c g" . git-browse-current-line)
-  :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/git-browse"))
+;; (use-package git-browse
+;;   :bind ("C-c g" . git-browse-current-line)
+;;   :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/git-browse"))
 
 (provide 'init-editor)
