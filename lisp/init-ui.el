@@ -17,6 +17,14 @@
          ("M-o" . ace-window))
   :ensure t)
 
+(defun toggle-no-other-window ()
+  "Toggle the 'no-other-window' parameter for the current window."
+  (interactive)
+  (let* ((win (selected-window))
+         (current (window-parameter win 'no-other-window)))
+    (set-window-parameter win 'no-other-window (not current))
+    (message "Window is now %s for `other-window`" (if (not current) "SKIPPED" "SELECTABLE"))))
+
 (setq pos-tip-background-color "#2b4b6e")
 
 (defun my-limit-window-splitting (original-function &rest args)
