@@ -105,8 +105,19 @@
 ;;                               (completing-read "Item: " candidates)
 ;;                             (quit ""))))))
 
-(use-package vertico
-  :ensure t)
+(fido-vertical-mode)
+
+;; (use-package vertico
+;;   :config (progn
+;;             (require 'vertico-directory)
+;;             (vertico-mode)
+;;             ;; (vertico-posframe-mode)
+;;             (define-key vertico-map (kbd "RET") #'vertico-directory-enter)
+;;             (define-key vertico-map (kbd "DEL") #'vertico-directory-delete-char)
+;;             (define-key vertico-map (kbd "M-DEL") #'vertico-directory-delete-word)
+;;             ;; (rfn-eshadow-update-overlay . vertico-directory-tidy)
+;;             )
+;;   :ensure t)
 
 (use-package consult
   :init (progn
@@ -114,21 +125,18 @@
   :bind (("C-x i m" . #'consult-imenu))
   :ensure t)
 
-(use-package orderless
-  :ensure t)
+;; (use-package orderless
+;;   :ensure t)
 
-(use-package marginalia
-  :ensure t)
+;; (use-package marginalia
+;;   :config (progn
+;;             (marginalia-mode))
+;;   :ensure t)
 
 (use-package yasnippet
   :ensure t)
 
-(require 'vertico-directory)
-
-(vertico-mode)
-;; (vertico-posframe-mode)
 (recentf-mode)
-(marginalia-mode)
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (require 'savehist)
@@ -139,11 +147,6 @@
                    :cycle-threshold 3)
 (setq completion-in-region-function 'consult-completion-in-region
       orderless-smart-case t)
-
-(define-key vertico-map (kbd "RET") #'vertico-directory-enter)
-(define-key vertico-map (kbd "DEL") #'vertico-directory-delete-char)
-(define-key vertico-map (kbd "M-DEL") #'vertico-directory-delete-word)
-;; (rfn-eshadow-update-overlay . vertico-directory-tidy)
 
 (define-key global-map (kbd "C-x b") #'consult-buffer)
 (define-key global-map (kbd "M-g M-g") #'consult-goto-line)
