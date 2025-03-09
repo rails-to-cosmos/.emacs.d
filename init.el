@@ -34,6 +34,11 @@
 (use-package f
   :ensure t)
 
+(cl-defun overwrite-mode (&optional arg)
+  "Disable overwrite mode entirely."
+  (interactive)
+  (message "overwrite-mode is disabled"))
+
 (let ((paths '("lisp" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
 
