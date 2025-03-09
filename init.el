@@ -39,6 +39,8 @@
   (interactive)
   (message "overwrite-mode is disabled"))
 
+(remove-hook 'pre-command-hook 'overwrite-mode)
+
 (let ((paths '("lisp" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
 
