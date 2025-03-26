@@ -4,6 +4,8 @@
 
 (require 'grab-and-drag)
 
+(pixel-scroll-precision-mode)
+
 (use-package default-text-scale
   :ensure t)
 
