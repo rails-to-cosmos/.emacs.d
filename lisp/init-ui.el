@@ -27,7 +27,6 @@
     (set-window-parameter win 'no-other-window (not current))
     (message "Window is now %s for `other-window`" (if (not current) "SKIPPED" "SELECTABLE"))))
 
-(setq pos-tip-background-color "#2b4b6e")
 
 (defun my-limit-window-splitting (original-function &rest args)
   "Limit window splitting to two."
@@ -171,6 +170,7 @@
 
 (use-package danneskjold-theme
   :config (enable-theme 'danneskjold)
+  :bind (("C-x y t t" . #'danneskjold-toggle-theme))
   :ensure t)
 
 (eval-after-load 'org-faces
