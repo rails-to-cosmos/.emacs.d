@@ -68,11 +68,11 @@
               line-spacing 7
               initial-scratch-message "# I've always thought they were lighthouses\n\n")
 
-(defun my-apply-font ()
+(defun my/apply-font ()
   (set-frame-font my-font-name nil t)
   (add-to-list 'default-frame-alist (cons 'font my-font-name)))
 
-(add-hook 'after-init-hook #'my-apply-font)
+(add-hook 'after-init-hook #'my/apply-font)
 
 (defun what-face (pos)
   "Tell me what face used in POS."
