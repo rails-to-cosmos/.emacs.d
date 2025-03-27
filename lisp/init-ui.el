@@ -19,30 +19,29 @@
          ("M-o" . ace-window))
   :ensure t)
 
-(cl-defun my/codegen/current-font-settings ()
+(cl-defun my:codegen-current-frame-settings ()
   (interactive)
   (let* ((frame (selected-frame))
+         (frame-geometry (frame-geometry))
+         (frame-x (car frame-geometry))
+         (frame-y (cadr frame-geometry))
          (font (face-attribute 'default :font frame))
          (font-info (font-info font))
          (font-name (aref font-info 0))
-         (font-size (face-attribute 'default :height frame))
-         (font-settings (format "(set-frame-font \"%s\" nil t)" font-name)))
-    (insert font-settings)))
+         (font-size (face-attribute 'default :height frame)))
+    (cl-destructuring-bind (frame-x . frame-y) (cdar (frame-geometry))
+      (insert (s-join "\n"
+                      (list (format "(set-frame-font \"%s\" nil t)" font-name)
+                            (format "(set-frame-size (selected-frame) %d %d)" (frame-width) (frame-height))
+                            (format "(set-frame-position (selected-frame) %d %d)" frame-x frame-y)))))))
 
-(cl-defun toggle-no-other-window ()
+(cl-defun my:toggle-no-other-window ()
   "Toggle the 'no-other-window' parameter for the current window."
   (interactive)
   (let* ((win (selected-window))
          (current (window-parameter win 'no-other-window)))
     (set-window-parameter win 'no-other-window (not current))
     (message "Window is now %s for `other-window`" (if (not current) "SKIPPED" "SELECTABLE"))))
-
-;; (cl-defun my-limit-window-splitting (original-function &rest args)
-;;   "Limit window splitting to two."
-;;   (if (>= (length (window-list)) 2)
-;;       nil ; If there are already two or more windows, do not split further
-;;     (apply original-function args)))
-;; (advice-add 'split-window-sensibly :around #'my-limit-window-splitting)
 
 (set-frame-font "-JB-JetBrains Mono NL-regular-normal-normal-*-11-*-*-*-m-0-iso10646-1" t nil)
 
