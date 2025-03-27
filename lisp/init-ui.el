@@ -19,7 +19,7 @@
          ("M-o" . ace-window))
   :ensure t)
 
-(defun toggle-no-other-window ()
+(cl-defun toggle-no-other-window ()
   "Toggle the 'no-other-window' parameter for the current window."
   (interactive)
   (let* ((win (selected-window))
@@ -27,8 +27,7 @@
     (set-window-parameter win 'no-other-window (not current))
     (message "Window is now %s for `other-window`" (if (not current) "SKIPPED" "SELECTABLE"))))
 
-
-(defun my-limit-window-splitting (original-function &rest args)
+(cl-defun my-limit-window-splitting (original-function &rest args)
   "Limit window splitting to two."
   (if (>= (length (window-list)) 2)
       nil ; If there are already two or more windows, do not split further
@@ -68,6 +67,7 @@
               initial-scratch-message "# I've always thought they were lighthouses\n\n")
 
 (defun my/apply-font ()
+  (interactive)
   (set-frame-font my-font-name nil t)
   (add-to-list 'default-frame-alist (cons 'font my-font-name)))
 
@@ -80,43 +80,6 @@
                   (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
-(defun my/set-font (face &rest params)
-  (custom-set-faces (list face (list (list t params)))))
-
-(defun my/adapt-font (&optional font-size font-name)
-  (interactive)
-  (let ((font-size (or font-size (face-attribute 'default :height)))
-        (font-name (or font-name (face-attribute 'default :family)))
-        (factor (cl-case system-type
-                  (darwin 10)
-                  (windows-nt 5)
-                  (t 0))))
-
-    (my/set-font 'default
-                 :slant 'normal
-                 :weight 'normal
-                 :height font-size
-                 :width 'normal
-                 :family font-name)
-
-    (set-fontset-font "fontset-default"
-                      (cons (decode-char 'ucs #x0400)
-                            (decode-char 'ucs #x052F))
-                      (if (> factor 0)
-                          (font-spec :size (/ font-size factor) :name font-name :family font-name)
-                        (font-spec :name font-name :family font-name)))))
-
-(use-package default-text-scale
-    :ensure t)
-
-(define-key global-map (kbd "C-M-=") #'default-text-scale-increase)
-(define-key global-map (kbd "C-M--") #'default-text-scale-decrease)
-(default-text-scale-mode 1)
-(advice-add #'default-text-scale-increase :after #'my/adapt-font)
-(advice-add #'default-text-scale-decrease :after #'my/adapt-font)
-
-(add-hook 'org-mode-hook #'my/adapt-font)
-
 (defun split-window-next-buffer ()
   (interactive)
   (let ((window (split-window-right)))
@@ -125,8 +88,9 @@
                                unless (minibufferp buffer)
                                return buffer))))
 
-(global-unset-key (kbd "C-x 3"))
-(define-key global-map (kbd "C-x 3") (function split-window-next-buffer))
+(require 'keymap)
+(keymap-global-unset "C-x 3")
+(keymap-set global-map "C-x 3" #'split-window-next-buffer)
 
 (transient-mark-mode)
 
@@ -142,7 +106,6 @@
 
 ;; http://pragmaticemacs.com/emacs/make-emacs-a-bit-quieter/
 (advice-add #'display-startup-echo-area-message :override #'ignore)
-
 (fset 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (blink-cursor-mode 0)

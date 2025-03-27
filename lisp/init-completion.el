@@ -22,11 +22,6 @@
 ;;   :custom (lsp-completion-enable t)
 ;;   :ensure t)
 
-(condition-case nil
-    (minibuffer-keyboard-quit)
-  (error nil)
-  (quit 1))
-
 ;; (require 'lsp)
 
 ;; (defun my-lsp-complete (old)
@@ -105,7 +100,16 @@
 ;;                               (completing-read "Item: " candidates)
 ;;                             (quit ""))))))
 
-(fido-vertical-mode)
+(use-package icomplete
+  :after minibuffer
+  :config (progn
+            (fido-vertical-mode))
+  :bind (:map icomplete-minibuffer-map
+              ("C-j" . (lambda () (interactive)
+	        	 (if minibuffer--require-match
+	        	     (minibuffer-complete-and-exit)
+	        	   (exit-minibuffer)))))
+  :ensure t)
 
 ;; (use-package vertico
 ;;   :config (progn
