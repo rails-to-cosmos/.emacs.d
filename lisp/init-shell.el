@@ -77,6 +77,8 @@
   (let ((eshell-buffer-name (format "*eshell:%s*" (file-name-directory dir))))
     (eshell)
     (insert (format "cd %s" dir))
+    (eshell-send-input)
+    (insert "ls -la")
     (eshell-send-input)))
 
 (org-link-set-parameters

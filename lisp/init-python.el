@@ -23,7 +23,7 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
   :hook ((python-mode . abbrev-mode)
          (python-mode . company-quickhelp-mode)
          (python-mode . my-python-flycheck-setup)
-         (python-mode . my-python-highlight-structured-pattern-match-hook)
+         ;; (python-mode . my-python-highlight-structured-pattern-match-hook)
          (python-mode . python-highlight-breakpoints)
          (python-mode . smartparens-strict-mode)
          (python-mode . subword-mode)
@@ -57,9 +57,9 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
   :ensure ruff-format
   :ensure lsp-pyright)
 
-(defun my-python-highlight-structured-pattern-match-hook ()
-  (font-lock-add-keywords nil '(("\\<match\\>" . font-lock-keyword-face)
-                                ("\\<case\\>" . font-lock-keyword-face))))
+;; (defun my-python-highlight-structured-pattern-match-hook ()
+;;   (font-lock-add-keywords nil '(("\\<match\\>" . font-lock-keyword-face)
+;;                                 ("\\<case\\>" . font-lock-keyword-face))))
 
 (flycheck-define-checker python-pycodestyle
   "A Python syntax and style checker using pycodestyle (former pep8)."
