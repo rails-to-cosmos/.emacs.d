@@ -5,12 +5,6 @@
 
 (require 'python-override)
 
-;; (use-package lsp-pyright
-;;   :ensure t
-;;   :hook (python-mode . (lambda ()
-;;                          (require 'lsp-pyright)
-;;                          (lsp-deferred))))
-
 (defun read-dominating-file (filename)
   "Search `default-directory` and its ancestors for `.python-version` file.
 If found, return its trimmed contents. If not found, raise a user-friendly error."
@@ -21,42 +15,25 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
           (string-trim (buffer-string)))
       (error "No .python-version file found in %s or any parent directory" default-directory))))
 
-(use-package python-mode :defer
+(use-package python-mode
+  :defer
   :init (progn
-          (ob-add-language 'python (cons "python" "src python"))
-          (setenv "WORKON_HOME" "~/.pyenv/versions"))
+          (ob-add-language 'python (cons "python" "src python")))
 
   :hook ((python-mode . abbrev-mode)
-         ;; (python-mode . company-mode)
-         ;; (python-mode . flycheck-mode)
-         (python-mode . my-python-flycheck-setup)
-         (python-mode . smartparens-strict-mode)
-         (python-mode . my-python-highlight-structured-pattern-match-hook)
-         (python-mode . yas-minor-mode)
-         ;; (python-mode . (lambda () (add-hook 'before-save-hook #'python-fix-imports nil t)))
-
-         ;; (python-mode . lsp-deferred)
-         ;; (python-mode . anaconda-eldoc-mode)
-         ;; (python-mode . anaconda-mode)
-         ;; (python-mode . eglot-ensure)
-         ;; (python-mode . pipenv-mode)
-
-         (python-mode . python-highlight-breakpoints)
          (python-mode . company-quickhelp-mode)
+         (python-mode . my-python-flycheck-setup)
+         (python-mode . my-python-highlight-structured-pattern-match-hook)
+         (python-mode . python-highlight-breakpoints)
+         (python-mode . smartparens-strict-mode)
          (python-mode . subword-mode)
-         ;; (python-mode . pyenv-mode)
-
+         (python-mode . yas-minor-mode)
          (python-mode . (lambda ()
                           (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
-                          ;; (poetry-venv-workon)
-                          (pyenv-mode)
-                          (pyenv-mode-set (read-dominating-file ".python-version"))
                           (eglot-ensure)
                           (company-mode)
                           (flycheck-mode)
                           (flymake-mode)))
-
-         ;; (python-mode . (lambda () (add-hook 'post-command-hook #'my-python-smart-complete)))
 
          (inferior-python-mode . smartparens-strict-mode))
 
@@ -83,9 +60,6 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
 (defun my-python-highlight-structured-pattern-match-hook ()
   (font-lock-add-keywords nil '(("\\<match\\>" . font-lock-keyword-face)
                                 ("\\<case\\>" . font-lock-keyword-face))))
-
-;; (add-hook 'python-mode-hook #'flycheck-pycheckers-setup)
-;; (setq-default flycheck-pycheckers-checkers '(mypy3 bandit))
 
 (flycheck-define-checker python-pycodestyle
   "A Python syntax and style checker using pycodestyle (former pep8)."
