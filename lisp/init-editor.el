@@ -136,10 +136,7 @@
 (define-key global-map (kbd "C-x k") #'kill-current-buffer)
 (define-key global-map (kbd "C-x y d c") #'desktop-clear)
 (define-key global-map (kbd "C-x y f f") #'toggle-frame-maximized)
-
-(use-package restart-emacs
-  :bind (("C-x y d r" . restart-emacs))
-  :ensure t)
+(define-key global-map (kbd "C-x y d r") #'restart-emacs)
 
 (defun my-rc ()
   (interactive)
