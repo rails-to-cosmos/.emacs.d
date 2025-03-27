@@ -37,16 +37,16 @@
     (set-window-parameter win 'no-other-window (not current))
     (message "Window is now %s for `other-window`" (if (not current) "SKIPPED" "SELECTABLE"))))
 
-(cl-defun my-limit-window-splitting (original-function &rest args)
-  "Limit window splitting to two."
-  (if (>= (length (window-list)) 2)
-      nil ; If there are already two or more windows, do not split further
-    (apply original-function args)))
+;; (cl-defun my-limit-window-splitting (original-function &rest args)
+;;   "Limit window splitting to two."
+;;   (if (>= (length (window-list)) 2)
+;;       nil ; If there are already two or more windows, do not split further
+;;     (apply original-function args)))
+;; (advice-add 'split-window-sensibly :around #'my-limit-window-splitting)
 
-(advice-add 'split-window-sensibly :around #'my-limit-window-splitting)
+(set-frame-font "-JB-JetBrains Mono NL-regular-normal-normal-*-11-*-*-*-m-0-iso10646-1" t nil)
 
-(setq-default my-font-name "JetBrains Mono NL-11"
-              ring-bell-function 'ignore
+(setq-default ring-bell-function 'ignore
               use-dialog-box nil
               use-file-dialog nil
               visible-bell nil
@@ -75,13 +75,6 @@
               buffers-menu-max-size 30
               line-spacing 7
               initial-scratch-message "# I've always thought they were lighthouses\n\n")
-
-(defun my/apply-font ()
-  (interactive)
-  (set-frame-font my-font-name nil t)
-  (add-to-list 'default-frame-alist (cons 'font my-font-name)))
-
-(add-hook 'after-init-hook #'my/apply-font)
 
 (defun what-face (pos)
   "Tell me what face used in POS."

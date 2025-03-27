@@ -3,7 +3,7 @@
 (require 'init-org)
 (require 'init-completion)
 
-(require 'python-override)
+;; (require 'python-override)
 
 (defun read-dominating-file (filename)
   "Search `default-directory` and its ancestors for `.python-version` file.
