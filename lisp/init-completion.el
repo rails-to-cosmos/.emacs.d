@@ -18,40 +18,40 @@
   :ensure company-quickhelp
   :ensure yasnippet)
 
-(use-package icomplete
-  :after minibuffer
+;; (use-package icomplete
+;;   :after minibuffer
 
-  :bind (:map icomplete-minibuffer-map
-              ("C-n" . icomplete-forward-completions)
-              ("C-p" . icomplete-backward-completions)
-              ("RET" . icomplete-fido-ret)
-              ("C-k" . icomplete-fido-kill)
-              ("C-j" . (lambda () (interactive)
-	        	 (if minibuffer--require-match
-	        	     (minibuffer-complete-and-exit)
-	        	   (exit-minibuffer))))
-              ("DEL" . icomplete-fido-backward-updir))
+;;   :bind (:map icomplete-minibuffer-map
+;;               ("C-n" . icomplete-forward-completions)
+;;               ("C-p" . icomplete-backward-completions)
+;;               ("RET" . icomplete-fido-ret)
+;;               ("C-k" . icomplete-fido-kill)
+;;               ("C-j" . (lambda () (interactive)
+;; 	        	 (if minibuffer--require-match
+;; 	        	     (minibuffer-complete-and-exit)
+;; 	        	   (exit-minibuffer))))
+;;               ("DEL" . icomplete-fido-backward-updir))
 
-  :config (progn
-            (fido-vertical-mode +1)
-            (icomplete-mode +1))
-
-  :custom
-  (icomplete-show-matches-on-no-input t)
-
-  :ensure t)
-
-;; (use-package vertico
 ;;   :config (progn
-;;             (require 'vertico-directory)
-;;             (vertico-mode)
-;;             ;; (vertico-posframe-mode)
-;;             (define-key vertico-map (kbd "RET") #'vertico-directory-enter)
-;;             (define-key vertico-map (kbd "DEL") #'vertico-directory-delete-char)
-;;             (define-key vertico-map (kbd "M-DEL") #'vertico-directory-delete-word)
-;;             ;; (rfn-eshadow-update-overlay . vertico-directory-tidy)
-;;             )
+;;             (fido-vertical-mode +1)
+;;             (icomplete-mode +1))
+
+;;   :custom
+;;   (icomplete-show-matches-on-no-input t)
+
 ;;   :ensure t)
+
+(use-package vertico
+  :config (progn
+            (require 'vertico-directory)
+            (vertico-mode)
+            ;; (vertico-posframe-mode)
+            (define-key vertico-map (kbd "RET") #'vertico-directory-enter)
+            (define-key vertico-map (kbd "DEL") #'vertico-directory-delete-char)
+            (define-key vertico-map (kbd "M-DEL") #'vertico-directory-delete-word)
+            ;; (rfn-eshadow-update-overlay . vertico-directory-tidy)
+            )
+  :ensure t)
 
 (use-package consult
   :init (progn
@@ -60,18 +60,17 @@
   :ensure t)
 
 (use-package orderless
-  :after icomplete
-  :ensure t
   :custom
   (completion-styles '(orderless flex))
   (completion-category-defaults nil)
   (icomplete-completion-styles '(orderless flex))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  (completion-category-overrides '((file (styles basic partial-completion))))
 
-;; (use-package marginalia
-;;   :config (progn
-;;             (marginalia-mode))
-;;   :ensure t)
+  :ensure t)
+
+(use-package marginalia
+  :config (marginalia-mode)
+  :ensure t)
 
 (use-package yasnippet
   :ensure t)

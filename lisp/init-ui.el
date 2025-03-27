@@ -19,6 +19,16 @@
          ("M-o" . ace-window))
   :ensure t)
 
+(cl-defun my/codegen/current-font-settings ()
+  (interactive)
+  (let* ((frame (selected-frame))
+         (font (face-attribute 'default :font frame))
+         (font-info (font-info font))
+         (font-name (aref font-info 0))
+         (font-size (face-attribute 'default :height frame))
+         (font-settings (format "(set-frame-font \"%s\" nil t)" font-name)))
+    (insert font-settings)))
+
 (cl-defun toggle-no-other-window ()
   "Toggle the 'no-other-window' parameter for the current window."
   (interactive)

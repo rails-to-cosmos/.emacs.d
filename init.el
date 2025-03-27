@@ -16,15 +16,6 @@
 (require 'use-package)
 (setq use-package-always-ensure nil)
 
-;; (use-package quelpa
-;;   :config (progn
-;;             (quelpa '(quelpa-use-package
-;;                       :fetcher git
-;;                       :url "https://github.com/quelpa/quelpa-use-package.git"))
-;;             (require 'quelpa-use-package)
-;;             (setq use-package-ensure-function 'quelpa))
-;;   :ensure t)
-
 (use-package diminish
   :ensure t)
 
@@ -91,12 +82,12 @@
 (require 'init-nix)
 (require 'init-docker)
 
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-(load custom-file t)
+(load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
 
 (condition-case nil
     (load-file (f-join user-emacs-directory "init-local.el"))
   (file-missing nil))
 
-;;; init.el ends here
 (put 'set-goal-column 'disabled nil)
+
+;;; init.el ends here
