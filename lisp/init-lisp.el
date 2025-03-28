@@ -54,7 +54,11 @@
 
     (setq expanded-region (cons (region-beginning) (region-end)))
 
-    (unless (equal initial-region expanded-region)
+    (if (equal initial-region expanded-region)
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "C-c") #'(lambda () (interactive)))
+          (my/expand-region-outside-pairs-eval)
+          (set-transient-map map t))
       (unless (equal initial-region (car my/expand-region-last-bounds))
         (push initial-region my/expand-region-last-bounds)))))
 
@@ -71,7 +75,8 @@
   (unwind-protect
       (condition-case result
           (eval-region (region-beginning) (region-end) t)
-        (error (message "%s" result)))))
+        (error (message "%s" result)))
+    (my/expand-region-outside-pairs-quit)))
 
 (cl-defun my/expand-region-outside-pairs-quit ()
   (interactive)
@@ -103,7 +108,9 @@
 
     ;; evaluate
     (define-key map (kbd "C-e") #'my/expand-region-outside-pairs-eval)
+    (define-key map (kbd "C-j") #'my/expand-region-outside-pairs-eval)
     (define-key map (kbd "e") #'my/expand-region-outside-pairs-eval)
+    (define-key map (kbd "j") #'my/expand-region-outside-pairs-eval)
 
     ;; quit
     (define-key map (kbd "C-q") #'my/expand-region-outside-pairs-quit)
