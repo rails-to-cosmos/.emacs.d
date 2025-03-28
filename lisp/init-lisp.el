@@ -2,7 +2,6 @@
 
 (require 'rainbow-delimiters)
 (require 'paredit)
-(require 'expal)
 
 ;; (use-package elsa
 ;;   :ensure elsa-flycheck
