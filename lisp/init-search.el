@@ -33,7 +33,14 @@
 
 (defun my-fzf ()
   (interactive)
-  (let ((fd-command (or (getenv "FZF_DEFAULT_COMMAND") "fd --type f --strip-cwd-prefix")))
+
+  (let ((fzf/executable "fd")
+        (fd-command (or (getenv "FZF_DEFAULT_COMMAND") "fd --type f --strip-cwd-prefix")))
+
+    (unless (executable-find fzf/executable t)
+      (user-error "Can't find executable '%s'. Is it in your OS PATH?"
+                  fzf/executable))
+
     (find-file (completing-read "Find file: " (->> (save-window-excursion
                                                      (eshell-command fd-command)
                                                      (unwind-protect (with-current-buffer (get-buffer-create "*Eshell Command Output*")
