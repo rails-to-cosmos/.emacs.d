@@ -4,6 +4,9 @@
 
 (global-set-key (kbd "C-c o l") #'org-store-link)
 
+(setq org-confirm-elisp-link-function
+      (lambda (link) (not (string-prefix-p "(my-docker-eshell" link))))
+
 (setq org-element-use-cache nil
       org-adapt-indentation t
       org-attach-auto-tag nil
