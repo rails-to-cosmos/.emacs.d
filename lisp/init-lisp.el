@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (require 'rainbow-delimiters)
 (require 'paredit)
 (require 'expal)
@@ -29,23 +31,80 @@
 (add-hook 'emacs-lisp-mode-hook 'yas-minor-mode)
 (add-hook 'emacs-lisp-mode-hook 'company-mode)
 
-(define-key emacs-lisp-mode-map (kbd "C-c C-c") 'emacs-lisp-eval-expal)
+(define-key emacs-lisp-mode-map (kbd "C-c C-c") 'my/expand-region)
 
 ;; (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-completion-setup)
 ;; (cl-defun emacs-lisp-completion-setup ()
 ;;   (setq-local company-backends '(company-elisp company-files company-yasnippet)))
 
-(cl-defun emacs-lisp-eval-expal ()
+(require 'expand-region)
+
+(defvar my/expand-region-last-bounds nil
+  "Stores the previous region bounds for manual contraction.")
+
+(defvar my/expand-region-last-point nil
+  "Stores the previous cursor position.")
+
+(cl-defun my/expand-region-outside-pairs-expand ()
   (interactive)
-  (save-excursion
-    (let ((bounds (expal:bounds)))
-      (expal:highlight)
-      (goto-char (cdr bounds))
-      (eval-last-sexp nil)
-      (set-mark (car bounds))
-      (goto-char (cdr bounds))
-      (indent-for-tab-command)
-      (deactivate-mark))))
+
+  (let* ((initial-region (cons (region-beginning) (region-end)))
+         (expanded-region nil))
+
+    (er/mark-outside-pairs)
+
+    (setq expanded-region (cons (region-beginning) (region-end)))
+
+    (unless (or (equal initial-region expanded-region)
+                (equal expanded-region (car my/expand-region-last-bounds)))
+            (push expanded-region my/expand-region-last-bounds)))
+
+  (message "%s" my/expand-region-last-bounds))
+
+(cl-defun my/expand-region-outside-pairs-contract ()
+  (interactive)
+  (if my/expand-region-last-bounds
+      (cl-destructuring-bind (beg . end) (pop my/expand-region-last-bounds)
+        (set-mark beg)
+        (goto-char end))
+    (my/expand-region-outside-pairs-quit)))
+
+(cl-defun my/expand-region-outside-pairs-eval ()
+  (interactive)
+  (unwind-protect
+      (condition-case result
+          (eval-region (region-beginning) (region-end) t)
+        (error (message "%s" result)))))
+
+(cl-defun my/expand-region-outside-pairs-quit ()
+  (interactive)
+  (deactivate-mark)
+  (goto-char my/expand-region-last-point))
+
+(cl-defun my/expand-region ()
+  "Call `er/expand-region` and enable a temporary keymap with custom actions:
+- `C-c` expands the region further.
+- `C-e` evaluates the region.
+- `C-q` cancels expansion."
+  (interactive)
+
+  (setq my/expand-region-last-point (point)
+        my/expand-region-last-bounds (list))
+
+  (let ((map (make-sparse-keymap)))
+
+    (er/mark-outside-pairs)
+
+    (define-key map (kbd "C-c") #'my/expand-region-outside-pairs-expand)
+    (define-key map (kbd "c") #'my/expand-region-outside-pairs-expand)
+    (define-key map (kbd "C--") #'my/expand-region-outside-pairs-contract)
+    (define-key map (kbd "-") #'my/expand-region-outside-pairs-contract)
+    (define-key map (kbd "C-e") #'my/expand-region-outside-pairs-eval)
+    (define-key map (kbd "e") #'my/expand-region-outside-pairs-eval)
+    (define-key map (kbd "C-q") #'my/expand-region-outside-pairs-quit)
+    (define-key map (kbd "q") #'my/expand-region-outside-pairs-quit)
+
+    (set-transient-map map t)))
 
 ;; (use-package elsa
 ;;   :ensure flycheck-elsa

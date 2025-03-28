@@ -4,9 +4,6 @@
 
 (global-set-key (kbd "C-c o l") #'org-store-link)
 
-(setq org-confirm-elisp-link-function
-      (lambda (link) (not (string-prefix-p "(my-docker-eshell" link))))
-
 (setq org-element-use-cache nil
       org-adapt-indentation t
       org-attach-auto-tag nil
@@ -22,6 +19,7 @@
       org-clock-persist-query-resume nil
       org-clock-report-include-clocking-task t
       org-confirm-babel-evaluate nil
+      org-confirm-elisp-link-function (lambda (link) (not (string-prefix-p "(my-docker-eshell" link)))
       org-cycle-separator-lines 0
       org-deadline-warning-days 30
       org-edit-timestamp-down-means-later t

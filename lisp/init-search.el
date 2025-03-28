@@ -14,6 +14,7 @@
   :ensure t)
 
 (use-package fzf
+  :load-path "~/sync/stuff/fzf.el/"
   :config (progn
             (require 'fzf)
 
