@@ -1,5 +1,5 @@
 { pkgs, lib, config, inputs, ... }:
 
 {
-  packages = with pkgs; [fzf fd];
+  packages = with pkgs; [fd];
 }
