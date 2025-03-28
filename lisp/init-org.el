@@ -19,7 +19,6 @@
       org-clock-persist-query-resume nil
       org-clock-report-include-clocking-task t
       org-confirm-babel-evaluate nil
-      org-confirm-elisp-link-function (lambda (link) (not (string-prefix-p "(my-docker-eshell" link)))
       org-cycle-separator-lines 0
       org-deadline-warning-days 30
       org-edit-timestamp-down-means-later t
@@ -33,7 +32,7 @@
       org-highlight-latex-and-related '(latex entities)
       org-indirect-buffer-display 'other-window
       org-latex-inputenc-alist '(("utf8" . "utf8x"))
-      org-link-elisp-confirm-function 'yes-or-no-p
+      org-link-elisp-confirm-function #'(lambda (link) (not (string-prefix-p "(my-docker-eshell" link)))
       org-link-shell-confirm-function 'yes-or-no-p
       org-log-done 'time
       org-log-into-drawer t
