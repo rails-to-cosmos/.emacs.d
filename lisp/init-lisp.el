@@ -54,18 +54,16 @@
 
     (setq expanded-region (cons (region-beginning) (region-end)))
 
-    (unless (or (equal initial-region expanded-region)
-                (equal expanded-region (car my/expand-region-last-bounds)))
-            (push expanded-region my/expand-region-last-bounds)))
-
-  (message "%s" my/expand-region-last-bounds))
+    (unless (equal initial-region expanded-region)
+      (unless (equal initial-region (car my/expand-region-last-bounds))
+        (push initial-region my/expand-region-last-bounds)))))
 
 (cl-defun my/expand-region-outside-pairs-contract ()
   (interactive)
   (if my/expand-region-last-bounds
       (cl-destructuring-bind (beg . end) (pop my/expand-region-last-bounds)
-        (set-mark beg)
-        (goto-char end))
+        (set-mark end)
+        (goto-char beg))
     (my/expand-region-outside-pairs-quit)))
 
 (cl-defun my/expand-region-outside-pairs-eval ()
