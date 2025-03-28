@@ -45,10 +45,6 @@
   :ensure ruff-format
   :ensure lsp-pyright)
 
-;; (defun my-python-highlight-structured-pattern-match-hook ()
-;;   (font-lock-add-keywords nil '(("\\<match\\>" . font-lock-keyword-face)
-;;                                 ("\\<case\\>" . font-lock-keyword-face))))
-
 (flycheck-define-checker python-pycodestyle
   "A Python syntax and style checker using pycodestyle (former pep8)."
 
