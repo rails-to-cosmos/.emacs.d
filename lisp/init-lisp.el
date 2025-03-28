@@ -79,10 +79,7 @@
   (goto-char my/expand-region-last-point))
 
 (cl-defun my/expand-region ()
-  "Call `er/expand-region` and enable a temporary keymap with custom actions:
-- `C-c` expands the region further.
-- `C-e` evaluates the region.
-- `C-q` cancels expansion."
+  "Call `er/expand-region` and enable a temporary keymap with custom actions."
   (interactive)
 
   (setq my/expand-region-last-point (point)
@@ -92,14 +89,26 @@
 
     (er/mark-outside-pairs)
 
+    ;; expand
     (define-key map (kbd "C-c") #'my/expand-region-outside-pairs-expand)
     (define-key map (kbd "c") #'my/expand-region-outside-pairs-expand)
+    (define-key map (kbd "+") #'my/expand-region-outside-pairs-expand)
+    (define-key map (kbd "=") #'my/expand-region-outside-pairs-expand)
+    (define-key map (kbd "n") #'my/expand-region-outside-pairs-expand)
+
+    ;; shrink
     (define-key map (kbd "C--") #'my/expand-region-outside-pairs-contract)
     (define-key map (kbd "-") #'my/expand-region-outside-pairs-contract)
+    (define-key map (kbd "p") #'my/expand-region-outside-pairs-contract)
+
+    ;; evaluate
     (define-key map (kbd "C-e") #'my/expand-region-outside-pairs-eval)
     (define-key map (kbd "e") #'my/expand-region-outside-pairs-eval)
+
+    ;; quit
     (define-key map (kbd "C-q") #'my/expand-region-outside-pairs-quit)
     (define-key map (kbd "q") #'my/expand-region-outside-pairs-quit)
+    (define-key map (kbd "ESC") #'my/expand-region-outside-pairs-quit)
 
     (set-transient-map map t)))
 
