@@ -118,4 +118,54 @@ From https://www.reddit.com/r/emacs/comments/cgbpvl/opening_media_files_straight
 (add-hook 'dired-mode-hook 'dired-set-keys)
 (define-key global-map (kbd "C-x C-d") #'dired-switch-buffers)
 
+(require 'dash)
+
+(defun my/clean-file-name (name)
+  "Clean up NAME: lowercase, remove [hash], replace non-alphanumerics with dashes."
+  (->> name
+       (replace-regexp-in-string " \\[[^]]+\\]$" "") ; remove trailing [hash]
+       downcase
+       (replace-regexp-in-string "[^a-z0-9]+" "-")
+       (replace-regexp-in-string "-+" "-")
+       (replace-regexp-in-string "^-\\|-$" "")))
+
+(defun my/clean-file-path (path)
+  "Rename PATH based on cleaned-up name, preserving extension if file."
+  (let* ((parent (file-name-directory path))
+         (ext (if (file-directory-p path) "" (file-name-extension path t)))
+         (base (file-name-base path))
+         (new-name (concat (my/clean-file-name base) ext))
+         (new-path (expand-file-name new-name parent)))
+    (unless (string= path new-path)
+      (rename-file path new-path))
+    new-path))
+
+(defun my/dired-normalize-file-name ()
+  "Rename file or directory at point in Dired using cleaned format.
+If directory, apply recursively to all contents."
+  (interactive)
+  (let ((path (dired-get-filename)))
+    (if (file-directory-p path)
+        (let ((new-dir-path (my/clean-file-path path)))
+          (dolist (entry (directory-files new-dir-path t "^[^.]" t)) ; skip . and ..
+            (my/dired-clean-rename--recurse entry)))
+      (my/clean-file-path path)))
+  (revert-buffer))
+
+(defun my/dired-clean-rename--recurse (path)
+  "Helper to recursively rename PATH and its contents."
+  (let ((new-path (my/clean-file-path path)))
+    (when (file-directory-p new-path)
+      (dolist (entry (directory-files new-path t "^[^.]" t))
+        (my/dired-clean-rename--recurse entry)))))
+
+(defun my/dired-normalize-permissions ()
+  (interactive)
+  (shell-command "find . -type f -name '._*' -delete && find . -type f -exec chmod 644 {} + && find . -type d -exec chmod 755 {} +"))
+
+(defun my/dired-standardize-file ()
+  (interactive)
+  (my/dired-normalize-file-name)
+  (my/dired-normalize-permissions))
+
 (provide 'init-dired)
