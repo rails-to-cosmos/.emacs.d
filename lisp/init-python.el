@@ -3,18 +3,6 @@
 (require 'init-org)
 (require 'init-completion)
 
-;; (require 'python-override)
-
-(defun read-dominating-file (filename)
-  "Search `default-directory` and its ancestors for `.python-version` file.
-If found, return its trimmed contents. If not found, raise a user-friendly error."
-  (let ((dir (locate-dominating-file default-directory filename)))
-    (if dir
-        (with-temp-buffer
-          (insert-file-contents (expand-file-name filename dir))
-          (string-trim (buffer-string)))
-      (error "No .python-version file found in %s or any parent directory" default-directory))))
-
 (use-package python-mode
   :defer
   :init (progn
@@ -56,10 +44,6 @@ If found, return its trimmed contents. If not found, raise a user-friendly error
   :ensure flymake-ruff
   :ensure ruff-format
   :ensure lsp-pyright)
-
-;; (defun my-python-highlight-structured-pattern-match-hook ()
-;;   (font-lock-add-keywords nil '(("\\<match\\>" . font-lock-keyword-face)
-;;                                 ("\\<case\\>" . font-lock-keyword-face))))
 
 (flycheck-define-checker python-pycodestyle
   "A Python syntax and style checker using pycodestyle (former pep8)."

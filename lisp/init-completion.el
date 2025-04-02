@@ -166,7 +166,7 @@
 ;;   ;; (add-to-list 'completion-at-point-functions #'cape-line)
 ;;   )
 
-;; (defun my/corfu-commit-predicate ()
+;; (defun my-corfu-commit-predicate ()
 ;;   "Auto-commit candidates if:
 ;; 1. A '.' is typed, except after a SPACE.
 ;; 2. A selection was made, aside from entering SPACE.
@@ -188,6 +188,6 @@
 ;; 			(car corfu--candidates)))
 ;;      (seq-intersection (this-command-keys-vector) [?: ?. ?, ?\) ?\] ?\" ?' ? ]))))
 
-;; (setq corfu-commit-predicate #'my/corfu-commit-predicate)
+;; (setq corfu-commit-predicate #'my-corfu-commit-predicate)
 
 (provide 'init-completion)
