@@ -31,11 +31,22 @@
 ;;   :bind (("C-x f" . fzf-project))
 ;;   :ensure t)
 
+(defun find-file-upwards (filenames &optional dir)
+  "Recursively search for any of the FILENAMES from DIR (default: `default-directory`) upwards to `/`.
+Return the full directory path if any file is found, otherwise nil."
+  (let* ((dir (or dir default-directory))
+         (parent-dir (file-name-directory (directory-file-name dir))))
+    (cond ((seq-find (lambda (filename) (file-exists-p (expand-file-name filename dir)))
+                     filenames) dir)  ; Return directory if any file exists
+          ((or (not parent-dir) (string= dir "/")) nil)
+          (t (find-file-upwards filenames parent-dir)))))
+
 (defun my-fzf ()
   (interactive)
 
   (let ((fzf/executable "fd")
-        (fd-command (or (getenv "FZF_DEFAULT_COMMAND") "fd --type f --strip-cwd-prefix")))
+        (fd-command (or (getenv "FZF_DEFAULT_COMMAND") "fd --type f --strip-cwd-prefix"))
+        (default-directory (find-file-upwards '(".git"))))
 
     (unless (executable-find fzf/executable t)
       (user-error "Can't find executable '%s'. Is it in your OS PATH?"
