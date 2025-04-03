@@ -31,6 +31,7 @@
               ("M-n" . flymake-goto-next-error)
               ("M-p" . flymake-goto-prev-error))
 
+  :ensure pyvenv-auto
   :ensure yasnippet
   :ensure yasnippet-capf
   :ensure jinja2-mode
