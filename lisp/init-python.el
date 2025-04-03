@@ -11,7 +11,6 @@
   :hook ((python-mode . abbrev-mode)
          (python-mode . company-quickhelp-mode)
          (python-mode . my-python-flycheck-setup)
-         ;; (python-mode . my-python-highlight-structured-pattern-match-hook)
          (python-mode . python-highlight-breakpoints)
          (python-mode . smartparens-strict-mode)
          (python-mode . subword-mode)
