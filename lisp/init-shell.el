@@ -110,7 +110,9 @@
             (let ((cmd-output (with-current-buffer (get-buffer-create "*Eshell Command Output*")
                                 (eshell-command cmd)
                                 (buffer-substring-no-properties (point-min) (point-max))))
-                  (make-output-buffer (get-buffer-create "*Make Process Output*")))
+                  (make-output-buffer (let ((buffer-name "*Make Process Output*"))
+                                        (kill-buffer buffer-name)
+                                        (get-buffer-create buffer-name))))
               (with-current-buffer make-output-buffer
                 (read-only-mode -1)
                 (erase-buffer)
