@@ -111,7 +111,7 @@
                                        (when (get-buffer eshell-buffer-name)
                                          (kill-buffer eshell-buffer-name))
                                        (eshell))))
-            (switch-to-buffer make-output-buffer)
+            (switch-to-buffer-other-window make-output-buffer)
             (insert cmd)
             (eshell-send-input)))))))
 
