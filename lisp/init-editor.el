@@ -153,4 +153,25 @@
 ;;   :bind ("C-c g" . git-browse-current-line)
 ;;   :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/git-browse"))
 
+(defun my/join-region-into-one-line (beg end)
+  "Join lines in the active region into one line and add it to the kill ring."
+  (interactive "r")
+  (unless (use-region-p)
+    (user-error "This command requires an active region"))
+  (let ((text (buffer-substring-no-properties beg end)))
+    (let ((joined (replace-regexp-in-string "\n[ \t]*" " " text)))
+      (kill-new joined)
+      (deactivate-mark)
+      (message "Lines joined."))))
+
+(defun my/join-region-maybe (beg end &optional region)
+  "With prefix arg, join region into one line and add to kill ring.
+Otherwise, behave like `kill-ring-save`."
+  (interactive "r\nP")
+  (if current-prefix-arg
+      (my/join-region-into-one-line beg end)
+    (kill-ring-save beg end)))
+
+(global-set-key (kbd "M-w") #'my/join-region-maybe)
+
 (provide 'init-editor)
