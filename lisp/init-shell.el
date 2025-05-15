@@ -115,8 +115,9 @@
               (with-current-buffer make-output-buffer
                 (insert cmd)
                 (eshell-send-input))))))))
-  (switch-to-buffer-other-window "*Make Process Output*")
-  (other-window -1))
+  (unless (equal (current-buffer) (get-buffer-create "*Make Process Output*"))
+    (switch-to-buffer-other-window "*Make Process Output*")
+    (other-window -1)))
 
 (global-set-key (kbd "C-x y m") #'my-run-make-target-from-project)
 
