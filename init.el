@@ -92,4 +92,10 @@
 
 (put 'set-goal-column 'disabled nil)
 
+;; (eval-after-load 'init-ui
+;;   (progn
+;;     (set-frame-font "-JB-JetBrains Mono NL-regular-normal-normal-*-11-*-*-*-m-0-iso10646-1" nil t)
+;;     (set-frame-size (selected-frame) 310 82)
+;;     (set-frame-position (selected-frame) 1182 24)))
+
 ;;; init.el ends here
