@@ -81,7 +81,7 @@
 (require 'init-c)
 (require 'init-nix)
 (require 'init-docker)
-
+(require 'init-os)
 (require 'init-ab)
 
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
