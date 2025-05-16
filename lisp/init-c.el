@@ -5,6 +5,9 @@
 ;; (use-package clang-capf
 ;;   :ensure t)
 
+(use-package disaster
+  :ensure t)
+
 (use-package doxy-graph-mode
   :ensure t)
 
