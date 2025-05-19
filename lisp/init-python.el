@@ -5,12 +5,20 @@
 
 (use-package python-mode
   :defer
+
   :init (progn
           (ob-add-language 'python (cons "python" "src python")))
 
+  :config (progn
+            (setq-default flycheck-checkers '(python-flake8
+                                              python-pylint
+                                              python-pycompile
+                                              python-pyright
+                                              python-mypy
+                                              python-pycodestyle)))
+
   :hook ((python-mode . abbrev-mode)
          (python-mode . company-quickhelp-mode)
-         (python-mode . my-python-flycheck-setup)
          (python-mode . python-highlight-breakpoints)
          (python-mode . smartparens-strict-mode)
          (python-mode . subword-mode)
@@ -52,14 +60,6 @@
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ":" (message) line-end))
   :modes python-mode)
-
-(defun my-python-flycheck-setup ()
-  (setq-local flycheck-checkers '(python-flake8
-                                  python-pylint
-                                  python-pycompile
-                                  python-pyright
-                                  python-mypy
-                                  python-pycodestyle)))
 
 (defun python-highlight-breakpoints ()
   (interactive)
