@@ -69,10 +69,6 @@
   (highlight-phrase "TODO")
   (highlight-regexp "FIXME"))
 
-;; (define-abbrev-table 'python-mode-abbrev-table
-;;   '(("pdb" "import pdb; pdb.set_trace()" nil 0)
-;;     ("ipdb" "import ipdb; ipdb.set_trace()" nil 0)))
-
 ;; (add-to-list 'ob-languages '(python . t))
 ;; (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
 
