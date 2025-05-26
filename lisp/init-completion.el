@@ -101,7 +101,7 @@
       completion-category-defaults nil
       completion-category-overrides '((file (styles partial-completion))))
 
-(defmacro define-completion (name string &rest body)
+(defmacro my-define-completion (name string &rest body)
   (declare (doc-string 3) (indent 2))
   `(prog1
        (defun ,name nil

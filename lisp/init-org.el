@@ -97,7 +97,7 @@
             (ob-add-language 'mermaid (cons "mermaid" "src mermaid :file test.png")))
   :ensure t)
 
-(define-completion org-complete-structure "<"
+(my-define-completion org-complete-structure "<"
   "Complete org-structure template alist."
   (when (and (string= major-mode "org-mode")
              (not (org-in-src-block-p))
@@ -112,7 +112,7 @@
       (forward-line)
       t)))
 
-(define-completion org-complete-rarrow "->"
+(my-define-completion org-complete-rarrow "->"
   (when (and (string= major-mode "org-mode")
              (not (org-in-src-block-p)))
     (insert "→")
