@@ -65,9 +65,15 @@
   (interactive)
   (highlight-lines-matching-regexp "import ipdb")
   (highlight-lines-matching-regexp "import pdb")
-  (highlight-lines-matching-regexp "set_trace()")
+  (highlight-lines-matching-regexp "pdb.set_trace()")
+  (highlight-lines-matching-regexp "breakpoint()")
   (highlight-phrase "TODO")
   (highlight-regexp "FIXME"))
+
+(define-abbrev-table 'python-mode-abbrev-table
+  '(("pdb" "breakpoint()" nil 0)
+    ("cpdb" "context.pdb.set_trace()" nil 0)))
+
 
 ;; (add-to-list 'ob-languages '(python . t))
 ;; (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
