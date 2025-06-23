@@ -4,6 +4,10 @@
   ;; https://coredumped.dev/2025/06/18/making-tramp-go-brrrr./
   :config (progn
 
+            (with-eval-after-load 'tramp
+              (with-eval-after-load 'compile
+                (remove-hook 'compilation-mode-hook #'tramp-compile-disable-ssh-controlmaster-options)))
+
             (setq remote-file-name-inhibit-locks t
                   tramp-use-scp-direct-remote-copying t
                   remote-file-name-inhibit-auto-save-visited t
