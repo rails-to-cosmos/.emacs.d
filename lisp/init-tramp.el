@@ -1,6 +1,7 @@
 (require 'tramp)
 
 (use-package tramp
+  ;; https://coredumped.dev/2025/06/18/making-tramp-go-brrrr./
   :config (setq remote-file-name-inhibit-locks t
                 tramp-use-scp-direct-remote-copying t
                 remote-file-name-inhibit-auto-save-visited t
