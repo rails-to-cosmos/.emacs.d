@@ -10,10 +10,6 @@
 (use-package cask-mode
   :ensure t)
 
-(use-package envrc
-  :config (envrc-global-mode)
-  :ensure t)
-
 (use-package align
   :bind ("M-[" . align)
   :ensure t)

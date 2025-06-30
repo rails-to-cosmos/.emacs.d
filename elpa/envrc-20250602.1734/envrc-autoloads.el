@@ -28,8 +28,6 @@ evaluate the variable `envrc-mode'.
 The mode's hook is called both when the mode is enabled and when it is
 disabled.
 
-\\{envrc-mode-map}
-
 (fn &optional ARG)" t)
 (put 'envrc-global-mode 'globalized-minor-mode t)
 (defvar envrc-global-mode nil "\
