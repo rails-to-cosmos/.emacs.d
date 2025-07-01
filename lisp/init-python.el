@@ -17,13 +17,15 @@
                                               python-mypy
                                               python-pycodestyle)))
 
-  :hook ((python-mode . abbrev-mode)
+  :hook ((python-mode . mise-mode)
+         (python-mode . abbrev-mode)
          (python-mode . company-quickhelp-mode)
          (python-mode . python-highlight-breakpoints)
          (python-mode . smartparens-strict-mode)
          (python-mode . subword-mode)
          (python-mode . yas-minor-mode)
          (python-mode . (lambda ()
+                          (pyvenv-activate ".venv")
                           (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
                           (eglot-ensure)
                           (company-mode)
@@ -39,6 +41,7 @@
               ("M-p" . flymake-goto-prev-error))
 
   :ensure pyvenv-auto
+  :ensure mise
   :ensure yasnippet
   :ensure yasnippet-capf
   :ensure jinja2-mode

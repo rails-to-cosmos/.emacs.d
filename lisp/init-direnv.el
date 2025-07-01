@@ -1,6 +1,6 @@
 (use-package mise
-  ;; :config (progn
-  ;;           (global-mise-mode))
+  :config (progn
+            (global-mise-mode))
   :ensure t)
 
 (use-package envrc
