@@ -25,7 +25,7 @@
          (python-mode . subword-mode)
          (python-mode . yas-minor-mode)
          (python-mode . (lambda ()
-                          (pyvenv-activate ".venv")
+                          (pyvenv-activate (f-join (locate-dominating-file default-directory ".venv") ".venv"))
                           (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
                           (eglot-ensure)
                           (company-mode)
