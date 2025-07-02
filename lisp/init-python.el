@@ -40,7 +40,6 @@
               ("M-n" . flymake-goto-next-error)
               ("M-p" . flymake-goto-prev-error))
 
-  :ensure pyvenv-auto
   :ensure mise
   :ensure yasnippet
   :ensure yasnippet-capf
