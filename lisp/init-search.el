@@ -24,12 +24,8 @@
       (user-error "Can't find executable '%s'. Is it in your OS PATH?"
                   fzf/executable))
 
-    (->> (save-window-excursion
-           (eshell-command fd-command)
-           (unwind-protect
-               (with-current-buffer (get-buffer-create "*Eshell Command Output*")
-                 (buffer-substring-no-properties (point-min) (point-max)))
-             (bury-buffer "*Eshell Command Output*")))
+    (->> (shell-command-to-string fd-command)
+         (s-trim)
          (s-split "\n")
          (completing-read "Find file: ")
          (find-file))))
