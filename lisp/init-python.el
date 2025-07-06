@@ -18,8 +18,9 @@
                                               python-pycodestyle)))
 
   :hook ((python-mode . (lambda ()
-                          (mise-mode)
-                          (mise--update)
+                          ;; (mise-mode)
+                          (add-hook #'eglot-connect-hook #'mise--update 0 t)
+                          (pyvenv-mode)
                           (pyvenv-activate (f-join (locate-dominating-file default-directory ".venv") ".venv"))
                           (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
                           (company-mode)
@@ -30,7 +31,8 @@
                           (subword-mode)
                           (smartparens-strict-mode)
                           (python-highlight-breakpoints)
-                          (company-quickhelp-mode)))
+                          (company-quickhelp-mode)
+                          (abbrev-mode)))
 
          (inferior-python-mode . smartparens-strict-mode))
 
@@ -75,7 +77,6 @@
 (define-abbrev-table 'python-mode-abbrev-table
   '(("pdb" "breakpoint()" nil 0)
     ("cpdb" "context.pdb.set_trace()" nil 0)))
-
 
 ;; (add-to-list 'ob-languages '(python . t))
 ;; (org-babel-do-load-languages 'org-babel-load-languages ob-languages)
