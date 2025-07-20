@@ -2,6 +2,7 @@
   :hook (;; (go-mode . lsp-deferred)
          ;; (go-mode . set-go-mode-hooks)
          ;; (go-mode . company-mode)
+         ;; (go-mode . my-nix-flake-activate-for-buffer)
          (go-mode . eglot-ensure)
          (go-mode . (lambda ()
                       (setq-default company-backends '(company-capf company-files)

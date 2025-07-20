@@ -6,8 +6,7 @@
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
 (use-package exec-path-from-shell
-  :config (progn
-            (exec-path-from-shell-initialize))
+  :config (exec-path-from-shell-initialize)
   :ensure t)
 
 (use-package eshell-prompt-extras
