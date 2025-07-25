@@ -4,7 +4,8 @@
 
 (require 'grab-and-drag)
 
-(pixel-scroll-precision-mode)
+(when (> (read emacs-version) 30)
+  (pixel-scroll-precision-mode))
 
 (use-package default-text-scale
   :ensure t)
@@ -93,9 +94,8 @@
                                unless (minibufferp buffer)
                                return buffer))))
 
-(require 'keymap)
-(keymap-global-unset "C-x 3")
-(keymap-set global-map "C-x 3" #'split-window-next-buffer)
+(global-unset-key (kbd "C-x 3"))
+(global-set-key (kbd "C-x 3") #'split-window-next-buffer)
 
 (transient-mark-mode)
 

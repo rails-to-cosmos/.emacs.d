@@ -1,3 +1,4 @@
 [tools]
 fd = "latest"
 fzf = "latest"
+rg = "latest"
