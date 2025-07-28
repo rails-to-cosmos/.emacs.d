@@ -8,8 +8,6 @@
 ;;   :ensure t)
 
 (use-package eask
-  :config (progn
-            (require 'eask-mode))
   :ensure t
   :ensure eask-mode)
 

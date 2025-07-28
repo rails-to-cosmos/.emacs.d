@@ -4,7 +4,7 @@
 
 (require 'grab-and-drag)
 
-(when (> (read emacs-version) 30)
+(when (> (string-to-number emacs-version) 30)
   (pixel-scroll-precision-mode))
 
 (use-package default-text-scale

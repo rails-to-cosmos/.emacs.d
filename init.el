@@ -78,6 +78,7 @@
 (require 'init-scala)
 (require 'init-nim)
 (require 'init-go)
+(require 'init-java)
 (require 'init-c)
 (require 'init-nix)
 (require 'init-docker)
