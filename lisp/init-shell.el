@@ -5,6 +5,19 @@
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
+(defun my/eshell-apply-dir-locals ()
+  "Apply .dir-locals.el settings to the current buffer.
+Handles regular file buffers and Eshell buffers correctly."
+  (interactive)
+  (hack-dir-local-variables)
+  (cl-loop for (key . val) in file-local-variables-alist
+           do (insert (if (eq key 'eval)
+                          (prin1-to-string val)
+                        (format "(setq-local %s (quote %s))" key val)))
+           (eshell-send-input)))
+
+(add-hook 'eshell-mode-hook #'my/eshell-apply-dir-locals)
+
 (use-package exec-path-from-shell
   :config (exec-path-from-shell-initialize)
   :ensure t)
