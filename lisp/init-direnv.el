@@ -8,9 +8,11 @@
 
 (cl-defun my-direnv ()
   (interactive)
-  (or (-some->> (locate-dominating-file default-directory "mise.toml")
-        (mise-mode))
-      (-some->> (locate-dominating-file default-directory ".envrc")
-        (envrc-mode))))
+  (let ((direnv-file-mode-map '(("mise.toml" mise-mode)
+                                (".envrc" envrc-mode))))
+    (cl-loop for (mode-file mode-hook) in direnv-file-mode-map
+             when (-some->> (locate-dominating-file default-directory mode-file)
+                    (funcall mode-hook))
+             return (message "%s evaluated with my-direnv" mode-hook))))
 
 (provide 'init-direnv)
