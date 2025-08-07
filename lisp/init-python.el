@@ -19,7 +19,7 @@
 
   :hook ((python-mode . (lambda ()
                           ;; (mise-mode)
-                          (add-hook #'eglot-connect-hook #'mise--update 0 t)
+                          ;; (add-hook #'eglot-connect-hook #'mise--update 0 t)
                           (pyvenv-mode)
                           (pyvenv-activate (f-join (locate-dominating-file default-directory ".venv") ".venv"))
                           (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
