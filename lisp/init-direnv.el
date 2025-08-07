@@ -8,9 +8,9 @@
 
 (cl-defun my-direnv ()
   (interactive)
-  (or (-some->> (locate-dominating-file (buffer-file-name) "mise.toml")
+  (or (-some->> (locate-dominating-file default-directory "mise.toml")
         (mise-mode))
-      (-some->> (locate-dominating-file (buffer-file-name) ".envrc")
+      (-some->> (locate-dominating-file default-directory ".envrc")
         (envrc-mode))))
 
 (provide 'init-direnv)
