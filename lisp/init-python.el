@@ -18,21 +18,16 @@
                                               python-pycodestyle)))
 
   :hook ((python-mode . (lambda ()
-                          ;; (mise-mode)
-                          ;; (add-hook #'eglot-connect-hook #'mise--update 0 t)
-                          (pyvenv-mode)
-                          (pyvenv-activate (f-join (locate-dominating-file default-directory ".venv") ".venv"))
-                          (setq-local company-backends '(company-files (company-capf :with company-yasnippet) company-dabbrev-code))
-                          (company-mode)
-                          (eglot-ensure)
-                          (flycheck-mode)
-                          (flymake-mode)
-                          (yas-minor-mode)
-                          (subword-mode)
-                          (smartparens-strict-mode)
-                          (python-highlight-breakpoints)
-                          (company-quickhelp-mode)
-                          (abbrev-mode)))
+
+
+
+
+
+
+
+
+
+                          ))
 
          (inferior-python-mode . smartparens-strict-mode))
 

@@ -11,8 +11,7 @@
   (let ((direnv-file-mode-map '(("mise.toml" mise-mode)
                                 (".envrc" envrc-mode))))
     (cl-loop for (mode-file mode-hook) in direnv-file-mode-map
-             when (-some->> (locate-dominating-file default-directory mode-file)
-                    (funcall mode-hook))
-             return (message "%s evaluated with my-direnv" mode-hook))))
+             when (locate-dominating-file default-directory mode-file)
+             do (funcall mode-hook))))
 
 (provide 'init-direnv)
