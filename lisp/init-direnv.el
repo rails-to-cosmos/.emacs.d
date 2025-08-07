@@ -1,3 +1,5 @@
+(require 'files)
+
 (use-package mise
   :ensure t)
 
