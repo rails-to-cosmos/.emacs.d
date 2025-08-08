@@ -102,35 +102,4 @@ Handles regular file buffers and Eshell buffers correctly."
  ;; :store #'org-glance-link:store-link
  )
 
-(defun my-run-make-target-from-project ()
-  "Go to project root, scan Makefile, let user choose a make target, and run it in eshell."
-  (interactive)
-  (save-window-excursion
-    (when-let (project-root (locate-dominating-file default-directory "Makefile"))
-      (let ((makefile (expand-file-name "Makefile" project-root)))
-        (with-temp-buffer
-          (insert-file-contents makefile)
-          (let (targets)
-            (goto-char (point-min))
-            ;; Match lines like "target: deps"
-            (while (re-search-forward "^\\([^#[:space:]\n][^:[:space:]]*\\):" nil t)
-              (let ((target (match-string 1)))
-                (unless (string= target ".PHONY")
-                  (cl-pushnew target targets))))
-            (let* ((choice (completing-read "Choose make target: " (sort targets #'string<) nil t))
-                   (cmd (concat "make " choice))
-                   (default-directory project-root)
-                   (make-output-buffer (let ((eshell-buffer-name "*Make Process Output*"))
-                                         (when (get-buffer eshell-buffer-name)
-                                           (kill-buffer eshell-buffer-name))
-                                         (eshell))))
-              (with-current-buffer make-output-buffer
-                (insert cmd)
-                (eshell-send-input))))))))
-  (unless (equal (current-buffer) (get-buffer-create "*Make Process Output*"))
-    (switch-to-buffer-other-window "*Make Process Output*")
-    (other-window -1)))
-
-(global-set-key (kbd "C-x y m") #'my-run-make-target-from-project)
-
 (provide 'init-shell)
