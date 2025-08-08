@@ -11,9 +11,11 @@
 
 (cl-defun mise-enable ()
   (interactive)
-  (when (and (not (mise-trusted-p))
-             (yes-or-no-p "Mise config is untrusted. Trust it?"))
-    (message (with-output-to-string (mise--call standard-output "trust")))))
+  (if (mise-trusted-p)
+      (mise-mode)
+    (when (yes-or-no-p "Mise config is untrusted. Trust it?")
+      (message (with-output-to-string (mise--call standard-output "trust")))
+      (mise-mode))))
 
 (use-package envrc
   :ensure t)
