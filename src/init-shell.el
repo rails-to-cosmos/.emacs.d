@@ -117,7 +117,7 @@ Handles regular file buffers and Eshell buffers correctly."
               (let ((target (match-string 1)))
                 (unless (string= target ".PHONY")
                   (cl-pushnew target targets))))
-            (let* ((choice (completing-read "Choose make target: " (sort targets #'string<)))
+            (let* ((choice (completing-read "Choose make target: " (sort targets #'string<) nil t))
                    (cmd (concat "make " choice))
                    (default-directory project-root)
                    (make-output-buffer (let ((eshell-buffer-name "*Make Process Output*"))
