@@ -32,7 +32,7 @@
 
 (remove-hook 'pre-command-hook 'overwrite-mode)
 
-(let ((paths '("lisp" "packages")))
+(let ((paths '("src" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
 
 ;; lsp hack for svg support to not break sessions
