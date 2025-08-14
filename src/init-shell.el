@@ -1,6 +1,7 @@
 (require 'eshell)
 (require 'esh-mode)
 (require 'init-org)
+(require 'init-direnv)
 
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
@@ -17,6 +18,7 @@ Handles regular file buffers and Eshell buffers correctly."
            (eshell-send-input)))
 
 (add-hook 'eshell-mode-hook #'my/eshell-apply-dir-locals)
+(add-hook 'eshell-mode-hook #'my-direnv)
 
 (use-package exec-path-from-shell
   :config (exec-path-from-shell-initialize)
