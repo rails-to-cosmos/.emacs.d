@@ -1,6 +1,5 @@
 (require 'files)
 (require 'strings)
-(require 'pyvenv)
 
 (use-package mise
   :ensure t)
@@ -17,6 +16,9 @@
     (when (yes-or-no-p "Mise config is untrusted. Trust it?")
       (message (with-output-to-string (mise--call standard-output "trust")))
       (mise-mode))))
+
+(use-package pyvenv
+  :ensure t)
 
 (cl-defun pyenv-enable ()
   (when-let (venv (f-join (locate-dominating-file default-directory ".venv") ".venv"))
