@@ -3,33 +3,48 @@
 (require 'init-org)
 (require 'init-completion)
 
+(cl-defun my-python-mode-hook ()
+  (require 'pyvenv)
+  (require 'eglot)
+  (require 'company)
+  (require 'flycheck)
+  (require 'flymake)
+  (require 'yasnippet)
+  (require 'subword)
+  (require 'abbrev)
+  (require 'company-quickhelp)
+  (require 'smartparens)
+  (require 'init-direnv)
+
+  (my-direnv)
+  (eglot-ensure)
+  (company-mode)
+  (flycheck-mode)
+  (yas-minor-mode)
+  (subword-mode)
+  (smartparens-strict-mode)
+  (python-highlight-breakpoints)
+  (company-quickhelp-mode)
+  (abbrev-mode)
+  (flymake-mode)
+
+  (setq-local company-backends '(company-files
+                                 company-dabbrev-code
+                                 (company-capf :with company-yasnippet)))
+
+  (setq-local flycheck-checkers '(python-flake8
+                                  python-pylint
+                                  python-pycompile
+                                  python-pyright
+                                  python-mypy
+                                  python-pycodestyle)))
+
 (use-package python-mode
   :defer
-
-  :init (progn
-          (ob-add-language 'python (cons "python" "src python")))
-
-  :config (progn
-            (setq-default flycheck-checkers '(python-flake8
-                                              python-pylint
-                                              python-pycompile
-                                              python-pyright
-                                              python-mypy
-                                              python-pycodestyle)))
-
-  :hook ((python-mode . (lambda ()
-
-
-
-
-
-
-
-
-
-                          ))
-
-         (inferior-python-mode . smartparens-strict-mode))
+  :init (ob-add-language 'python (cons "python" "src python"))
+  :hook ((python-mode . my-python-mode-hook)
+         ;; (inferior-python-mode . my-python-mode-hook)
+         )
 
   :bind (:map python-mode-map
               ("C-c C-c" . my-python-paragraph-eval)
