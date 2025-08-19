@@ -11,11 +11,12 @@
 
 (cl-defun mise-enable ()
   (interactive)
-  (if (mise-trusted-p)
-      (mise-mode)
-    (when (yes-or-no-p "Mise config is untrusted. Trust it?")
-      (message (with-output-to-string (mise--call standard-output "trust")))
-      (mise-mode))))
+  (when (executable-find "mise")
+    (if (mise-trusted-p)
+        (mise-mode)
+      (when (yes-or-no-p "Mise config is untrusted. Trust it?")
+        (message (with-output-to-string (mise--call standard-output "trust")))
+        (mise-mode)))))
 
 (use-package pyvenv
   :ensure t)
