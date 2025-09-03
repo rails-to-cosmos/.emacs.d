@@ -3,6 +3,9 @@
 (scroll-bar-mode -1)
 
 (require 'grab-and-drag)
+(require 'frame)
+
+(global-set-key (kbd "C-x C-o") #'other-frame)
 
 (when (> (string-to-number emacs-version) 30)
   (pixel-scroll-precision-mode))
