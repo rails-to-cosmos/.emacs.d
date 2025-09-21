@@ -16,7 +16,7 @@
                  (target (completing-read "Choose make target: " targets nil t))
                  (project-name (file-name-base (directory-file-name default-directory))))
 
-            (setq output-buffer-name (format "*%s-make-%s*" project-name target))
+            (setq output-buffer-name (format "*make-%s-%s*" project-name target))
 
             (when (bufferp output-buffer-name)
               (kill-buffer output-buffer-name))
