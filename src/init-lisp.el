@@ -28,6 +28,20 @@
 (add-hook 'emacs-lisp-mode-hook 'yas-minor-mode)
 (add-hook 'emacs-lisp-mode-hook 'company-mode)
 
+(add-to-list 'auto-mode-alist '("/Eask\\'" . emacs-lisp-mode))
+
+(use-package company-eask
+  :ensure t)
+
+(use-package eldoc-eask
+  :ensure t)
+
+(use-package flymake-eask
+  :ensure t)
+
+(use-package flycheck-eask
+  :ensure t)
+
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'my-expand-region)
 
 ;; (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-completion-setup)

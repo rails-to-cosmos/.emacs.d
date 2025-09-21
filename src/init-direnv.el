@@ -34,7 +34,9 @@
                                 (".envrc" envrc-mode)
                                 (".venv" pyenv-enable))))
     (cl-loop for (mode-file mode-hook) in direnv-file-mode-map
-             when (locate-dominating-file default-directory mode-file)
-             do (funcall mode-hook))))
+             for work-directory = (locate-dominating-file default-directory mode-file)
+             when work-directory
+             do (message "Mode file %s found in %s, executing #'%s" mode-file work-directory mode-hook)
+                (funcall mode-hook))))
 
 (provide 'init-direnv)

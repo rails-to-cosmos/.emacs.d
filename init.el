@@ -84,6 +84,7 @@
 (require 'init-docker)
 (require 'init-os)
 (require 'init-ab)
+(require 'init-prog)
 
 (require 'make)
 
