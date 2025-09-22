@@ -1,4 +1,4 @@
-(require 'init-direnv)
+(require 'direnv)
 
 (use-package dired-narrow
   :ensure t)
@@ -71,7 +71,7 @@ From https://www.reddit.com/r/emacs/comments/cgbpvl/opening_media_files_straight
                       (seq bol ".." eol))))
 
 (add-hook 'dired-mode-hook 'dired-omit-mode)
-(add-hook 'dired-mode-hook 'my-direnv)
+(add-hook 'dired-mode-hook 'direnv)
 
 (defun dired-switch-buffers ()
   "Quickly switch between dired buffers."

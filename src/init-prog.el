@@ -1,7 +1,6 @@
 (require 'prog-mode)
+(require 'direnv)
 
-(require 'init-direnv)
-
-(add-hook 'prog-mode-hook #'my-direnv)
+(add-hook 'prog-mode-hook #'direnv)
 
 (provide 'init-prog)

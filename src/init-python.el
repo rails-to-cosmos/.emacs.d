@@ -14,9 +14,9 @@
   (require 'abbrev)
   (require 'company-quickhelp)
   (require 'smartparens)
-  (require 'init-direnv)
+  (require 'direnv)
 
-  (my-direnv)
+  (direnv)
   (eglot-ensure)
   (company-mode)
   (flycheck-mode)

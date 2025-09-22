@@ -65,7 +65,6 @@
 
 (require 'init-glance)
 (require 'init-dired)
-(require 'init-direnv)
 (require 'init-shell)
 (require 'init-search)
 
