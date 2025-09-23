@@ -9,21 +9,30 @@
        (string-contains-p "untrusted")
        (not)))
 
-(cl-defun mise-enable ()
+(cl-defun mise-trust ()
+  (when (yes-or-no-p "Mise config is untrusted. Trust it?")
+    (message (with-output-to-string (mise--call standard-output "trust")))
+    t))
+
+(cl-defun mise-enable (project-root)
   (interactive)
-  (when (executable-find "mise")
-    (if (mise-trusted-p)
-        (mise-mode)
-      (when (yes-or-no-p "Mise config is untrusted. Trust it?")
-        (message (with-output-to-string (mise--call standard-output "trust")))
-        (mise-mode)))))
+  (when (and (executable-find "mise")
+             (or (mise-trusted-p) (mise-trust)))
+    (mise-mode)))
+
+(cl-defun pyenv-enable (project-root)
+  (pyvenv-mode)
+  ;; (let* ((bin (file-truename (f-join project-root ".venv" "bin")))
+  ;;        (path (->> (or (getenv "PATH") "")
+  ;;                   (s-split ":")
+  ;;                   (append (list bin) exec-path)
+  ;;                   (seq-uniq))))
+  ;;   (setenv "PATH" (s-join ":" path))
+  ;;   (setq-local exec-path path))
+  )
 
 (use-package pyvenv
   :ensure t)
-
-(cl-defun pyenv-enable ()
-  (when-let (venv (f-join (locate-dominating-file default-directory ".venv") ".venv"))
-    (pyvenv-activate venv)))
 
 (use-package envrc
   :ensure t)
@@ -40,7 +49,7 @@
                when work-directory
                do (cl-pushnew (format "Mode file %s found in %s, executing #'%s" mode-file work-directory mode-hook)
                               report)
-                  (funcall mode-hook)
+                  (funcall mode-hook work-directory)
                   (setq project-directory work-directory)
                finally do
                   (message (s-join "\n" report))

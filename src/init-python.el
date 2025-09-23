@@ -1,5 +1,7 @@
 (require 'files)
 
+(require 'direnv)
+
 (require 'init-org)
 (require 'init-completion)
 
@@ -14,7 +16,6 @@
   (require 'abbrev)
   (require 'company-quickhelp)
   (require 'smartparens)
-  (require 'direnv)
 
   (direnv)
   (eglot-ensure)
