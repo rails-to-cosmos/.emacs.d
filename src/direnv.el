@@ -16,23 +16,17 @@
 
 (cl-defun mise-enable (project-root)
   (interactive)
-  (when (and (executable-find "mise")
-             (or (mise-trusted-p) (mise-trust)))
+  (when (and (executable-find "mise") (or (mise-trusted-p) (mise-trust)))
     (mise-mode)))
 
 (cl-defun pyenv-enable (project-root)
-  (pyvenv-mode)
-  ;; (let* ((bin (file-truename (f-join project-root ".venv" "bin")))
-  ;;        (path (->> (or (getenv "PATH") "")
-  ;;                   (s-split ":")
-  ;;                   (append (list bin) exec-path)
-  ;;                   (seq-uniq))))
-  ;;   (setenv "PATH" (s-join ":" path))
-  ;;   (setq-local exec-path path))
-  )
-
-(use-package pyvenv
-  :ensure t)
+  (let* ((bin (file-truename (f-join project-root ".venv" "bin")))
+         (path (->> (or (getenv "PATH") "")
+                    (s-split ":")
+                    (append (list bin) exec-path)
+                    (seq-uniq))))
+    (setenv "PATH" (s-join ":" path))
+    (setq-local exec-path path)))
 
 (use-package envrc
   :ensure t)
