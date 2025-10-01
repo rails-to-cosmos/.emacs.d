@@ -201,8 +201,9 @@ command arguments to `mise'"
   "Return a list of configs file path for mise in current directory."
   (when-let* ((output (with-output-to-string
                         (mise--call standard-output "config" "ls" "--json")))
-              (json-object-type 'hash-table))
-    (unless (string-prefix-p "[" (string-trim output))
+              (json-object-type 'hash-table)
+              (str (string-trim output)))
+    (unless (string-prefix-p "[" str)
       (with-temp-buffer
         (insert str)
         (goto-char (point-max))
