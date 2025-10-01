@@ -14,12 +14,13 @@
     (message (with-output-to-string (mise--call standard-output "trust")))
     t))
 
-(cl-defun mise-enable (project-root)
+(cl-defun mise-enable (&optional project-root)
   (interactive)
-  (when (and (executable-find "mise") (or (mise-trusted-p) (mise-trust)))
+  (when (and (executable-find "mise")
+             (or (mise-trusted-p) (mise-trust)))
     (mise-mode)))
 
-(cl-defun pyenv-enable (project-root)
+(cl-defun pyenv-enable (&optional project-root)
   (let* ((bin (file-truename (f-join project-root ".venv" "bin")))
          (path (->> (or (getenv "PATH") "")
                     (s-split ":")
