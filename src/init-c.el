@@ -64,7 +64,10 @@
 
 (use-package cc-mode
   :config (progn
-            (require 'eglot))
+            (require 'eglot)
+            (add-hook 'c-mode-common-hook (electric-indent-local-mode -1))
+            (keymap-set c-mode-map "<Return>" 'electric-newline-and-maybe-indent)
+            (keymap-set c++-mode-map "<Return>" 'electric-newline-and-maybe-indent))
 
   :custom
   (c-basic-offset 4)
@@ -75,6 +78,7 @@
 
   :bind (("C-x C-x" . ff-find-other-file))
 
-  :ensure t)
+  :ensure t
+  :ensure eglot)
 
 (provide 'init-c)
