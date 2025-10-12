@@ -170,4 +170,14 @@ Otherwise, behave like `kill-ring-save`."
 
 (global-set-key (kbd "M-w") #'my/join-region-maybe)
 
+(cl-defun my-remove-duplicate-lines-in-region (beg end)
+  "Remove duplicate lines in the region, keeping the first occurrence."
+  (interactive "r")
+  (let* ((text (buffer-substring-no-properties beg end))
+         (lines (split-string text "\n" t))
+         (unique-lines (seq-uniq lines))
+         (new-text (mapconcat #'identity unique-lines "\n")))
+    (delete-region beg end)
+    (insert new-text)))
+
 (provide 'init-editor)
