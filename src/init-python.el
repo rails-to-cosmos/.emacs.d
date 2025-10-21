@@ -10,12 +10,13 @@
   (require 'eglot)
   (require 'company)
   (require 'flycheck)
-  (require 'flymake)
   (require 'yasnippet)
   (require 'subword)
   (require 'abbrev)
   (require 'company-quickhelp)
   (require 'smartparens)
+
+  ;; (require 'flymake)
 
   (direnv)
   (eglot-ensure)
@@ -27,7 +28,8 @@
   (python-highlight-breakpoints)
   (company-quickhelp-mode)
   (abbrev-mode)
-  (flymake-mode)
+
+  ;; (flymake-mode)
 
   (setq-local company-backends '(company-files
                                  company-dabbrev-code
