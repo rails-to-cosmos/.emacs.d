@@ -5,6 +5,12 @@
 (require 'init-org)
 (require 'init-completion)
 
+(cl-defun my-python-imports ()
+  (interactive)
+  (save-excursion
+    (python-fix-imports)
+    (pyimpsort-buffer)))
+
 (cl-defun my-python-mode-hook ()
   (require 'pyvenv)
   (require 'eglot)
@@ -50,6 +56,7 @@
          )
 
   :bind (:map python-mode-map
+              ("C-c i" . my-python-imports)
               ("C-c C-c" . my-python-paragraph-eval)
               ("C-c C-k" . my-python-kill-comments)
               ("M-n" . flymake-goto-next-error)
