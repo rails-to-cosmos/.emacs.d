@@ -76,7 +76,8 @@
          ((c-mode c++-mode objc-mode) . company-mode)
          ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
 
-  :bind (("C-x C-x" . ff-find-other-file))
+  :bind (:map c-mode-map
+              ("C-x C-x" . ff-find-other-file))
 
   :ensure t
   :ensure eglot)
