@@ -104,4 +104,21 @@ Handles regular file buffers and Eshell buffers correctly."
  ;; :store #'org-glance-link:store-link
  )
 
-(provide 'init-shell)
+(use-package term
+  :ensure nil ;; Built-in package
+  :config (progn
+            ;; (setq explicit-shell-file-name (or (getenv "SHELL") "/bin/bash"))
+            (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")
+            (define-key term-raw-map (kbd "M-x") 'execute-extended-command)
+            (define-key term-raw-map (kbd "M-:") 'eval-expression)
+            (define-key term-raw-map (kbd "C-y") 'term-paste)
+            (define-key term-raw-map (kbd "C-x") nil)
+            (define-key term-raw-map (kbd "C-c C-j") 'term-line-mode)
+            (define-key term-mode-map (kbd "C-c C-j") 'term-char-mode))
+
+  :hook (term-mode . (lambda ()
+                       ;; (term-char-mode)
+                       ;; (display-line-numbers-mode 0)
+                       (setq-local term-buffer-maximum-size 10000))))
+
+(provide 'init-terminal)

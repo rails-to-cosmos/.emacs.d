@@ -65,7 +65,7 @@
 
 (require 'init-glance)
 (require 'init-dired)
-(require 'init-shell)
+(require 'init-terminal)
 (require 'init-search)
 
 (require 'init-git)
