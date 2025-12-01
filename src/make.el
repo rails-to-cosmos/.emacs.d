@@ -18,7 +18,7 @@
 
             (setq output-buffer-name (format "*make-%s-%s*" project-name target))
 
-            (when (bufferp output-buffer-name)
+            (when (buffer-live-p (get-buffer output-buffer-name))
               (kill-buffer output-buffer-name))
 
             (with-current-buffer (let ((eshell-buffer-name output-buffer-name)) (eshell))
