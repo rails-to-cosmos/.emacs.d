@@ -13,7 +13,7 @@
                                    unless (string= target ".PHONY")
                                    collect target into targets
                                    finally (return (sort targets #'string<))))
-                 (target (completing-read "Choose make target: " targets nil t))
+                 (target (completing-read "Make: " targets nil t))
                  (project-name (file-name-base (directory-file-name default-directory))))
 
             (setq output-buffer-name (format "*make-%s-%s*" project-name target))
