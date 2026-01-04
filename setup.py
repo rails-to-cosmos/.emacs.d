@@ -14,6 +14,10 @@ import fire
 from pathlib import Path
 
 class SystemSetup:
+    def all(self) -> None:
+        self.rofi()
+        self.keyboard()
+
     def rofi(self) -> None:
         rofi_conf = Path(os.path.expanduser("~/.config/rofi"))
         sxhkd_conf = Path(os.path.expanduser("~/.config/sxhkd/sxhkdrc"))
