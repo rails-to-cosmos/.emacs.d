@@ -14,9 +14,16 @@ import fire
 from pathlib import Path
 
 class SystemSetup:
-    def all(self) -> None:
-        self.rofi()
-        self.keyboard()
+    def _install(self, packages: list[str]) -> None:
+        managers = {
+            "pacman": ["pacman", "-S", "--noconfirm"],
+            "apt": ["apt-get", "install", "-y"],
+            "dnf": ["dnf", "install", "-y"],
+        }
+        for mgr, cmd in managers.items():
+            if shutil.which(mgr):
+                subprocess.run(["sudo"] + cmd + packages, check=True)
+                return
 
     def rofi(self) -> None:
         rofi_conf = Path(os.path.expanduser("~/.config/rofi"))
@@ -24,15 +31,7 @@ class SystemSetup:
         bind_cmd = "ctrl + alt + space\n    rofi -show combi\n"
 
         if not (shutil.which("rofi") and shutil.which("sxhkd")):
-            managers = {
-                "pacman": ["pacman", "-S", "--noconfirm", "rofi", "sxhkd"],
-                "apt": ["apt-get", "install", "-y", "rofi", "sxhkd"],
-                "dnf": ["dnf", "install", "-y", "rofi", "sxhkd"],
-            }
-            for mgr, args in managers.items():
-                if shutil.which(mgr):
-                    subprocess.run(["sudo"] + args, check=True)
-                    break
+            self._install(["rofi", "sxhkd"])
 
         rofi_conf.mkdir(parents=True, exist_ok=True)
         sxhkd_conf.parent.mkdir(parents=True, exist_ok=True)
@@ -70,6 +69,23 @@ class SystemSetup:
             print(f"X11 config applied: {ly_str} | {op_str}")
         except subprocess.CalledProcessError as e:
             print(f"X11 error: {e}")
+
+    def syncthing(self) -> None:
+        if not shutil.which("syncthing"):
+            self._install(["syncthing"])
+
+        try:
+            subprocess.run(["systemctl", "--user", "enable", "--now", "syncthing"], check=True)
+            print("Syncthing enabled (user service). UI: http://127.0.0.1:8384")
+        except subprocess.CalledProcessError as e:
+            print(f"Systemd error: {e}")
+
+    def all(self) -> None:
+        print("--- Running Full Setup ---")
+        self.rofi()
+        self.keyboard()
+        self.syncthing()
+        print("--- All Tasks Completed ---")
 
 if __name__ == "__main__":
     fire.Fire(SystemSetup)
