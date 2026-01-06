@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import fire
 from pathlib import Path
+import sys
 
 class SystemSetup:
     def _install(self, packages: list[str]) -> None:
@@ -81,11 +82,12 @@ class SystemSetup:
             print(f"Systemd error: {e}")
 
     def all(self) -> None:
-        print("--- Running Full Setup ---")
         self.rofi()
         self.keyboard()
         self.syncthing()
-        print("--- All Tasks Completed ---")
 
 if __name__ == "__main__":
-    fire.Fire(SystemSetup)
+    if len(sys.argv) == 1:
+        SystemSetup().all()
+    else:
+        fire.Fire(SystemSetup)
