@@ -46,14 +46,17 @@ class SystemSetup:
 
     def keyboard(
         self,
-        layouts: list[str] = ["us", "ru"],
-        options: list[str] = ["ctrl:nocaps", "grp:shifts_toggle"],
+        ly_str: str = "us, ru",
+        # Changed altwin:super_win -> altwin:alt_win
+        op_str: str = "ctrl:nocaps, grp:shifts_toggle, altwin:alt_win",
         delay: int = 170,
         rate: int = 60
     ) -> None:
-        ly_str, op_str = ",".join(layouts), ",".join(options)
+        layouts = [layout.strip() for layout in ly_str.split(",")]
+        options = [op.strip() for op in op_str.split(",")]
 
         if "cinnamon" in os.environ.get("XDG_CURRENT_DESKTOP", "").lower() and shutil.which("gsettings"):
+            # Note: The f-string nesting used here requires Python 3.12+
             src = f"[{', '.join(f"('xkb', '{l}')" for l in layouts)}]"
             opts = f"[{', '.join(f"'{o}'" for o in options)}]"
             try:
