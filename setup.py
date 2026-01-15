@@ -28,7 +28,10 @@ class SystemSetup:
     def rofi(self) -> None:
         rofi_conf = Path(os.path.expanduser("~/.config/rofi"))
         sxhkd_conf = Path(os.path.expanduser("~/.config/sxhkd/sxhkdrc"))
-        bind_cmd = "ctrl + alt + space\n    rofi -show combi\n"
+        bindings = [
+            ("ctrl + alt + space", "rofi -show combi"),
+            ("alt + tab", "rofi -show window -matching fuzzy -sort")
+        ]
 
         if not (shutil.which("rofi") and shutil.which("sxhkd")):
             self._install(["rofi", "sxhkd"])
@@ -36,13 +39,19 @@ class SystemSetup:
         rofi_conf.mkdir(parents=True, exist_ok=True)
         sxhkd_conf.parent.mkdir(parents=True, exist_ok=True)
 
-        if not sxhkd_conf.exists() or "rofi -show" not in sxhkd_conf.read_text():
-            with open(sxhkd_conf, "a+") as f:
-                f.write(f"\n# Rofi\n{bind_cmd}")
+        current_conf = sxhkd_conf.read_text() if sxhkd_conf.exists() else ""
 
+        with open(sxhkd_conf, "a+") as f:
+            for key, cmd in bindings:
+                # Проверяем наличие команды в файле, чтобы не дублировать
+                if cmd not in current_conf:
+                    f.write(f"\n# Rofi: {key}\n{key}\n    {cmd}\n")
+                    print(f"Added binding: {key} -> {cmd}")
+                else:
+                    print(f"Binding exists: {key}")
         subprocess.run(["pkill", "-USR1", "sxhkd"], check=False)
         subprocess.Popen(["sxhkd"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"Rofi setup complete. Bound to: {bind_cmd.strip()}")
+        print("Rofi and sxhkd setup complete.")
 
     def keyboard(
         self,
