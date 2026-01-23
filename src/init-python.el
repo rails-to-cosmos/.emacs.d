@@ -12,6 +12,7 @@
     (pyimpsort-buffer)))
 
 (cl-defun my-python-mode-hook ()
+  (setenv "VIRTUAL_ENV" nil)
   (require 'pyvenv)
   (require 'eglot)
   (require 'company)
