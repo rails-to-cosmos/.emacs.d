@@ -12,7 +12,7 @@
     (pyimpsort-buffer)))
 
 (cl-defun my-python-mode-hook ()
-  (setenv "VIRTUAL_ENV" nil)
+  (setenv "VIRTUAL_ENV" nil) ;; temporary fix that avoids uv scripts to set its temporary environmant for all projects
   (require 'pyvenv)
   (require 'eglot)
   (require 'company)
