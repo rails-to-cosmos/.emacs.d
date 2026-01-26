@@ -1,0 +1,12 @@
+;; -*- no-byte-compile: t; lexical-binding: nil -*-
+(define-package "company-eask" "20251231.1607"
+  "Company backend for Eask-file."
+  '((emacs   "26.1")
+    (company "0.8.0")
+    (eask    "0.1.0"))
+  :url "https://github.com/emacs-eask/company-eask"
+  :commit "8011dc5c6c931760a80189d1695147cad674e568"
+  :revdesc "8011dc5c6c93"
+  :keywords '("convenience")
+  :authors '(("Jen-Chieh" . "jcs090218@gmail.com"))
+  :maintainers '(("Jen-Chieh" . "jcs090218@gmail.com")))
