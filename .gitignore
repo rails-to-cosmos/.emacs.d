@@ -41,3 +41,4 @@ devenv.local.nix
 .pre-commit-config.yaml
 /org-persist/
 /share/
+last-frame-state.el
