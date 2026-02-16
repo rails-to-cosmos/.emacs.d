@@ -1,3 +1,10 @@
+;;; make.el --- Makefile target completion and execution  -*- lexical-binding: t -*-
+
+;;; Code:
+
+(declare-function eshell-send-input "esh-mode")
+(defvar eshell-buffer-name)
+
 (cl-defun make-completing-read ()
   "Search and scan dominating Makefile - choose a make target - run it in eshell."
   (interactive)
@@ -30,3 +37,5 @@
       (other-window -1))))
 
 (provide 'make)
+
+;;; make.el ends here
