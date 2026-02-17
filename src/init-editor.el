@@ -7,6 +7,9 @@
 
 (global-set-key (kbd "C-M-o") #'occur)
 
+(use-package whisper
+  :ensure t)
+
 (use-package cask-mode
   :ensure t)
 

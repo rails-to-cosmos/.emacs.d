@@ -6,6 +6,9 @@
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
+(use-package vterm
+  :ensure t)
+
 (defun my/eshell-apply-dir-locals ()
   "Apply .dir-locals.el settings to the current buffer.
 Handles regular file buffers and Eshell buffers correctly."
@@ -53,10 +56,10 @@ Handles regular file buffers and Eshell buffers correctly."
 (defun eshell-compl-back ()
   (interactive)
   (cond
-    ((or (equal (point-marker) eshell-last-input-start)
-         (looking-back "λ " 1))
-     (setq eshell-last-input-start (point-marker)))
-    (t (delete-backward-char 1))))
+   ((or (equal (point-marker) eshell-last-input-start)
+        (looking-back "λ " 1))
+    (setq eshell-last-input-start (point-marker)))
+   (t (delete-backward-char 1))))
 
 (with-eval-after-load 'em-alias
     ;;; TODO: This conflicts with `evil-define-key' during the initialization of
