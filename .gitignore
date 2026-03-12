@@ -1,0 +1,47 @@
+/history
+/auto-save-list/
+/undo-tree/
+/.dap-breakpoints
+/.mc-lists.el
+/anaconda-mode/
+/bookmarks
+/eshell/
+/recentf
+/snippets/
+/transient/
+/custom.el
+/init-local.el
+flycheck_*
+/.lsp-session-v1
+/projects
+/.cask/
+/company-statistics-cache.el
+/eln-cache/
+/session.*
+/url/
+/tramp
+*.elc
+*.kbx
+*.gpg
+*.*~
+elpa/archives
+/image-dired/
+/.cache/
+*.signed
+/quelpa/
+*.el#
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+/org-persist/
+/share/
+last-frame-state.el
+/.claude/llm-context-*
+/llm-history.org
+/xrandr-profiles/

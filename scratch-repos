@@ -1,0 +1,8 @@
+;; -*- lexical-binding: t; -*-
+;; Monitored git repositories for scratch dashboard.
+;; This file is auto-generated. Edit via + in *scratch*.
+
+(setq scratch-repos
+      '(("~/.emacs.d" . "git@github.com:rails-to-cosmos/.emacs.d.git")
+        ("~/.config/xmobar/" . "git@github.com:rails-to-cosmos/xmobar.git")
+        ("~/.config/xmonad/" . "git@github.com:rails-to-cosmos/xmonad.git")))

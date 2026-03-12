@@ -1,0 +1,36 @@
+Hi Framework team,
+
+I'm experiencing a keyboard matrix ghosting issue on my Framework Laptop 16 (ANSI keyboard module, Vendor:Product 32AC:0012).
+
+The problem: Caps Lock and S cannot be held simultaneously. The keyboard firmware releases Caps Lock before registering the S keypress, even when both keys are physically held down. This breaks the common Caps Lock -> Ctrl remapping for the Ctrl+S shortcut.
+
+Impact: Many users remap Caps Lock to Control (via XKB ctrl:nocaps, keyd, etc.). This ghosting makes Ctrl+S -- one of the most frequently used shortcuts across virtually all applications -- unusable with the remapped key.
+
+Reproduction:
+1. Run "sudo evtest /dev/input/eventN" (Framework keyboard device)
+2. Hold Caps Lock, then press S while still holding Caps Lock
+3. Observe that KEY_CAPSLOCK value 0 (release) arrives ~1ms before KEY_S value 1 (press)
+
+Raw evtest output:
+
+  KEY_CAPSLOCK value 1  (down)    at .402756
+  KEY_CAPSLOCK value 2  (repeat)  at .660130
+  KEY_CAPSLOCK value 0  (up)      at .704759   <-- released
+  KEY_S        value 1  (down)    at .705759   <-- 1ms after Caps Lock released
+
+For comparison, Caps Lock + C registers correctly -- both keys are held simultaneously:
+
+  KEY_CAPSLOCK value 1  (down)    at .213933
+  KEY_CAPSLOCK value 2  (repeat)  at .467135
+  KEY_C        value 1  (down)    at .815986   <-- while Caps Lock still held
+
+System info:
+- Framework Laptop 16, ANSI keyboard module
+- Keyboard firmware: FRAKDKEN0100000000
+- BIOS version: 04.03
+- OS: CachyOS (Arch Linux), kernel 6.18.9
+- Issue is hardware-level -- reproducible regardless of remapping method
+
+This appears to be a matrix layout conflict between the Caps Lock and S keys. A firmware update adjusting the scan matrix or adding anti-ghosting logic for this combination would resolve the issue.
+
+Thanks for looking into this.
