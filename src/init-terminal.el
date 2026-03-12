@@ -7,6 +7,7 @@
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
 (use-package vterm
+  :bind ("C-x y e" . vterm)
   :ensure t)
 
 (defun my/eshell-apply-dir-locals ()
@@ -79,7 +80,6 @@ Handles regular file buffers and Eshell buffers correctly."
   (eshell-write-aliases-list))
 
 (autoload 'epe-theme-lambda "eshell-prompt-extras")
-(define-key global-map (kbd "C-x y e") #'eshell)
 
 (defun eshell-set-keys ()
   (define-key eshell-mode-map (kbd "<SPC>") 'eshell-compl-space)
