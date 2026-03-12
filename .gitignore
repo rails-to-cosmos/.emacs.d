@@ -45,3 +45,4 @@ last-frame-state.el
 /.claude/llm-context-*
 /llm-history.org
 /xrandr-profiles/
+/.mypy_cache/

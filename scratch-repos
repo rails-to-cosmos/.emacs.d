@@ -4,5 +4,9 @@
 
 (setq scratch-repos
       '(("~/.emacs.d" . "git@github.com:rails-to-cosmos/.emacs.d.git")
-        ("~/.config/xmobar/" . "git@github.com:rails-to-cosmos/xmobar.git")
-        ("~/.config/xmonad/" . "git@github.com:rails-to-cosmos/xmonad.git")))
+        ("~/.config/xmobar/"
+         . "git@github.com:rails-to-cosmos/xmobar.git")
+        ("~/.config/xmonad/"
+         . "git@github.com:rails-to-cosmos/xmonad.git")
+        ("~/sync/stuff/ab/signal_trading_stats/"
+         . "git@gitlab.alberblanc.com:dmitrii.karmanov/signal_trading_stats.git")))
