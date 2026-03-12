@@ -6,8 +6,31 @@
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
+(defun my/vterm ()
+  "Open a vterm buffer named after `default-directory'.
+Appends <N> to resolve name collisions."
+  (interactive)
+  (let* ((dir (abbreviate-file-name default-directory))
+         (base (format "*vterm:%s*" dir))
+         (name (generate-new-buffer-name base)))
+    (vterm name)))
+
+(defun my/vterm-switch-buffer ()
+  "Switch between vterm buffers using `switch-to-buffer'."
+  (interactive)
+  (let ((vterm-bufs (cl-remove-if-not
+                     (lambda (b) (with-current-buffer b (derived-mode-p 'vterm-mode)))
+                     (buffer-list))))
+    (unless vterm-bufs
+      (user-error "No vterm buffers"))
+    (switch-to-buffer
+     (completing-read "Vterm buffer: "
+                      (mapcar #'buffer-name vterm-bufs)
+                      nil t))))
+
 (use-package vterm
-  :bind ("C-x y e" . vterm)
+  :bind (("C-x y e e" . my/vterm)
+         ("C-x y e b" . my/vterm-switch-buffer))
   :ensure t)
 
 (defun my/eshell-apply-dir-locals ()
