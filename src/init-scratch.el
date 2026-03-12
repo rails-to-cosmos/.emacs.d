@@ -105,16 +105,16 @@ Used to exclude them when saving to the primary file.")
     (with-temp-buffer
       (insert-file-contents file)
       (goto-char (point-min))
-      (condition-case nil
-          (let (repos)
+      (let (repos)
+        (condition-case nil
             (while t
               (let ((form (read (current-buffer))))
                 (when (and (listp form)
                            (eq (car form) 'setq)
                            (eq (cadr form) 'scratch-repos))
                   (setq repos (eval (caddr form) t)))))
-            repos)
-        (end-of-file repos)))))
+          (end-of-file nil))
+        repos))))
 
 (defun scratch--load-repos ()
   "Load `scratch-repos' from `scratch-repos-file' and extra files."
