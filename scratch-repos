@@ -3,7 +3,7 @@
 ;; This file is auto-generated. Edit via + in *scratch*.
 
 (setq scratch-repos
-      '(("~/.emacs.d" . "git@github.com:rails-to-cosmos/.emacs.d.git")
+      '(("~/.emacs.d/" . "git@github.com:rails-to-cosmos/.emacs.d.git")
         ("~/.config/xmobar/"
          . "git@github.com:rails-to-cosmos/xmobar.git")
         ("~/.config/xmonad/"
