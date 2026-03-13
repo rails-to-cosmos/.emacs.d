@@ -87,6 +87,7 @@
 (require 'init-prog)
 (require 'init-llm)
 (require 'xrandr)
+(require 'xmobarrc-mode)
 
 (require 'make)
 
