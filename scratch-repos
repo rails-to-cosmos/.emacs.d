@@ -7,4 +7,6 @@
         ("~/.config/xmobar/"
          . "git@github.com:rails-to-cosmos/xmobar.git")
         ("~/.config/xmonad/"
-         . "git@github.com:rails-to-cosmos/xmonad.git")))
+         . "git@github.com:rails-to-cosmos/xmonad.git")
+        ("~/.config/dunst/"
+         . "git@github.com:rails-to-cosmos/dunst.git")))
