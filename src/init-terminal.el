@@ -76,9 +76,10 @@ claude buffer with a fresh session (plain `claude')."
                       nil t))))
 
 (use-package vterm
-  :bind (("C-x y e e" . my/vterm)
+  :bind (("C-x y e v" . my/vterm)
          ("C-x y e b" . my/vterm-switch-buffer)
-         ("C-x y e c" . my/claude))
+         ("C-x y e c" . my/claude)
+         ("C-x y e e" . eshell))
   :ensure t)
 
 ;;; Claude vterm status indicator
