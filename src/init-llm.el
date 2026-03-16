@@ -4,6 +4,8 @@
 (require 'f)
 (require 'json)
 
+(require 'init-terminal)
+
 ;;; Variables — user settings (global)
 
 (defgroup llm nil
@@ -552,13 +554,16 @@ It is registered in the project state and deleted when the process exits."
                       r)
     file))
 
+(defun llm--send-to-claude (prompt)
+  "Switch to the claude vterm buffer and insert PROMPT."
+  (my/claude)
+  (vterm-insert prompt))
+
 ;;;###autoload
 (defun llm ()
   "Smart Claude CLI dispatcher.  Behavior depends on context:
 - C-u prefix: open multi-line prompt buffer
-- In `llm-output-mode': continue the current session
 - Active region: send region as context with a prompt
-- Existing session: continue the session
 - Otherwise: prompt at file+line (temp-file for non-file buffers)"
   (interactive)
   (let ((root (llm--current-root)))
@@ -571,14 +576,6 @@ It is registered in the project state and deleted when the process exits."
           (erase-buffer)
           (setq-local llm--prompt-project-root root))
         (pop-to-buffer buf)))
-     ;; In output buffer → continue session
-     ((derived-mode-p 'llm-output-mode)
-      (let ((session-id (llm--project-get :session-id root)))
-        (unless session-id
-          (user-error "No active session to continue"))
-        (let ((prompt (read-string "Continue: ")))
-          (llm--insert-prompt-header prompt root)
-          (llm--start-process prompt (list "--resume" session-id) t root))))
      ;; Active region → region context + prompt
      ((use-region-p)
       (let* ((start (region-beginning))
@@ -595,17 +592,8 @@ It is registered in the project state and deleted when the process exits."
              (full-prompt (format "Read the file %s for context (from %s lines %d-%d), then answer: %s"
                                   file file-name start-line end-line prompt)))
         (deactivate-mark)
-        (llm--insert-prompt-header
-         (format "%s\n[region: %s:%d-%d, %d chars]" prompt file-name start-line end-line (length context))
-         root)
-        (llm--start-process full-prompt (list "--allowedTools" "Read") nil root)))
-     ;; Existing session → continue by default
-     ((llm--project-get :session-id root)
-      (let* ((session-id (llm--project-get :session-id root))
-             (prompt (read-string "Continue: ")))
-        (llm--insert-prompt-header prompt root)
-        (llm--start-process prompt (list "--resume" session-id) t root)))
-     ;; No region, no session → prompt at file+line
+        (llm--send-to-claude full-prompt)))
+     ;; Default → prompt at file+line
      (t
       (let* ((prompt (read-string "Prompt: "))
              (file-name (or (buffer-file-name)
@@ -614,11 +602,7 @@ It is registered in the project state and deleted when the process exits."
                              root)))
              (line (line-number-at-pos (point)))
              (full-prompt (format "File \"%s\", line %d: %s." file-name line prompt)))
-        (llm--insert-output
-         (format "* %s File \"%s\", line %d:\n\n#+begin_quote\n%s\n#+end_quote\n\n"
-                 llm--prompt-keyword file-name line prompt)
-         root)
-        (llm--start-process full-prompt nil nil root))))))
+        (llm--send-to-claude full-prompt))))))
 
 ;;;###autoload
 (defun llm-select-model ()

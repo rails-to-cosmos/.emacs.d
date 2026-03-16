@@ -30,7 +30,7 @@ Appends <N> to resolve name collisions."
          (name (generate-new-buffer-name base)))
     (vterm name)))
 
-(defun my/claude ()
+(defun my/claude (&optional user-root)
   "Open Claude CLI in a vterm buffer named *claude:project*.
 Without prefix: reuse the existing *claude:project* buffer, or create one
 with `claude -c' if `.claude/' exists, plain `claude' otherwise.
@@ -40,7 +40,7 @@ With \\[universal-argument] \\[universal-argument]: open a new vterm
 claude buffer with a fresh session (plain `claude')."
   (interactive)
   (pcase-let* ((`(,label . ,root) (my/--project-label))
-               (default-directory (or root default-directory))
+               (default-directory (or user-root root default-directory))
                (base (format "*claude:%s*" label))
                (prefix (prefix-numeric-value current-prefix-arg)))
     (cond
