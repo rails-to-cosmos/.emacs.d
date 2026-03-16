@@ -382,7 +382,8 @@ When point is on or inside a level-2 headline, refresh only that repo.
 Otherwise refresh all monitored repositories."
   (interactive)
   (let ((path (save-excursion
-                (when (ignore-errors (org-back-to-heading t) t)
+                (when (and (derived-mode-p 'org-mode)
+                           (ignore-errors (org-back-to-heading t) t))
                   (scratch--heading-repo-path)))))
     (if path
         ;; Refresh single repo

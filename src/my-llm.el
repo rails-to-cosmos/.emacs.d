@@ -244,7 +244,8 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
                             (llm--write-context-file
                              (buffer-substring-no-properties (point-min) (point-max)))))
              (line (line-number-at-pos (point)))
-             (full-prompt (format "File \"%s\", line %d: %s." file-name line prompt)))
+             (suffix (if (string-match-p "[.!?]\\'" prompt) "" "."))
+             (full-prompt (format "File \"%s\", line %d: %s%s" file-name line prompt suffix)))
         (llm--send-to-claude full-prompt))))))
 
 ;;; Change Highlighting on Revert
