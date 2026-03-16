@@ -56,17 +56,17 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
      ((= prefix 1)
       (let ((existing (get-buffer base)))
         (if (and existing (buffer-live-p existing))
-            (switch-to-buffer existing)
+            (pop-to-buffer existing)
           (let ((vterm-shell (llm--claude-shell-command root)))
-            (vterm base)))))
+            (vterm-other-window base)))))
      ((= prefix 4)
       (let ((vterm-shell (llm--claude-shell-command root))
             (name (generate-new-buffer-name base)))
-        (vterm name)))
+        (vterm-other-window name)))
      ((>= prefix 16)
       (let ((vterm-shell "claude")
             (name (generate-new-buffer-name base)))
-        (vterm name))))))
+        (vterm-other-window name))))))
 
 ;;; Claude vterm status indicator
 
@@ -76,13 +76,17 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
 (defvar-local my/claude--status-timer nil
   "Debounce timer for status detection in claude vterm buffers.")
 
-(defface my/claude-status-input-face
+(defface my/claude-status-idle-face
   '((t :foreground "green3"))
-  "Face for claude status when waiting for user input.")
+  "Face for claude status when idle/waiting for user input.")
 
 (defface my/claude-status-busy-face
   '((t :foreground "dark orange"))
   "Face for claude status when thinking/working.")
+
+(defface my/claude-status-blocked-face
+  '((t :foreground "red"))
+  "Face for claude status when waiting for user approval.")
 
 (defface my/claude-status-exited-face
   '((t :foreground "gray50"))
@@ -93,12 +97,16 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
   (string-prefix-p "*claude:" (buffer-name (or buf (current-buffer)))))
 
 (defun my/claude--detect-status (buf)
-  "Update `my/claude-status' in BUF based on output activity."
+  "Update `my/claude-status' in BUF based on output activity.
+Preserves `blocked' status; otherwise sets `input' or `exited'."
   (when (buffer-live-p buf)
     (with-current-buffer buf
       (let* ((proc vterm--process)
              (alive (and proc (process-live-p proc))))
-        (setq my/claude-status (if alive 'input 'exited))
+        (setq my/claude-status
+              (cond ((not alive) 'exited)
+                    ((eq my/claude-status 'blocked) 'blocked)
+                    (t 'idle)))
         (force-mode-line-update)))))
 
 (defun my/claude--schedule-status-check ()
@@ -108,16 +116,25 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
   (setq my/claude--status-timer
         (run-with-timer 0.5 nil #'my/claude--detect-status (current-buffer))))
 
+(defvar my/claude--permission-pattern
+  "Allow\\|allow\\|permit\\|approve\\|Yes.*No\\|\\(y\\).*\\(n\\)"
+  "Regex matched against raw vterm output to detect permission prompts.")
+
 (defun my/claude--filter-advice (orig-fn process input)
-  "After vterm processes output, schedule a status check for claude buffers."
+  "After vterm processes output, schedule a status check for claude buffers.
+Detects permission prompts in raw output to set `blocked' status."
   (funcall orig-fn process input)
   (when-let ((buf (process-buffer process)))
     (when (buffer-live-p buf)
       (with-current-buffer buf
         (when (my/claude-buffer-p)
-          (unless (eq my/claude-status 'busy)
-            (setq my/claude-status 'busy)
-            (force-mode-line-update))
+          (if (string-match-p my/claude--permission-pattern input)
+              (progn
+                (setq my/claude-status 'blocked)
+                (force-mode-line-update))
+            (unless (eq my/claude-status 'busy)
+              (setq my/claude-status 'busy)
+              (force-mode-line-update)))
           (my/claude--schedule-status-check))))))
 
 (advice-add 'vterm--filter :around #'my/claude--filter-advice)
@@ -142,9 +159,10 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
 (defun my/claude--mode-line-status ()
   "Return a mode-line string showing claude buffer status."
   (pcase my/claude-status
-    ('input  (propertize " ● input" 'face 'my/claude-status-input-face))
-    ('busy   (propertize " ◉ busy" 'face 'my/claude-status-busy-face))
-    ('exited (propertize " ○ exited" 'face 'my/claude-status-exited-face))))
+    ('idle   (propertize " ● idle" 'face 'my/claude-status-idle-face))
+    ('busy    (propertize " ◉ busy" 'face 'my/claude-status-busy-face))
+    ('blocked (propertize " ⊘ blocked" 'face 'my/claude-status-blocked-face))
+    ('exited  (propertize " ○ exited" 'face 'my/claude-status-exited-face))))
 
 ;; Clean up stale timers in claude buffers on re-eval.
 (dolist (buf (buffer-list))
@@ -177,10 +195,32 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
 
 ;;; Interactive Commands
 
+(defvar llm--pending-prompt nil
+  "Cons of (BUFFER . PROMPT) waiting to be inserted when claude becomes idle.")
+
+(defun llm--send-when-idle (buf)
+  "Insert the pending prompt into BUF if it is idle."
+  (when (and llm--pending-prompt
+             (buffer-live-p buf)
+             (eq buf (car llm--pending-prompt)))
+    (with-current-buffer buf
+      (if (eq my/claude-status 'idle)
+          (progn
+            (vterm-insert (cdr llm--pending-prompt))
+            (setq llm--pending-prompt nil))
+        ;; Still not idle, retry after next status check.
+        (run-with-timer 0.5 nil #'llm--send-when-idle buf)))))
+
 (defun llm--send-to-claude (prompt)
-  "Switch to the claude vterm buffer and insert PROMPT."
+  "Switch to the claude vterm buffer and insert PROMPT.
+If the session is busy or blocked, queue the prompt and insert it
+once the session becomes idle."
   (my/claude)
-  (vterm-insert prompt))
+  (if (memq my/claude-status '(nil idle))
+      (vterm-insert prompt)
+    (setq llm--pending-prompt (cons (current-buffer) prompt))
+    (run-with-timer 0.5 nil #'llm--send-when-idle (current-buffer))
+    (message "Claude is %s — prompt queued, will send when idle" my/claude-status)))
 
 (defun llm--write-context-file (text)
   "Write TEXT to a temporary file and return its path."
@@ -325,10 +365,34 @@ Also cancels the auto-clear timer if one is pending."
 (add-hook 'before-revert-hook #'llm--before-revert-save)
 (add-hook 'after-revert-hook  #'llm--after-revert-highlight)
 
+;;;###autoload
+(defun my/claude-switch-buffer ()
+  "Switch between claude buffers, showing status in the menu."
+  (interactive)
+  (let ((bufs (cl-remove-if-not
+               (lambda (b) (and (with-current-buffer b (derived-mode-p 'vterm-mode))
+                                (my/claude-buffer-p b)))
+               (buffer-list))))
+    (unless bufs
+      (user-error "No claude buffers"))
+    (let* ((entries (mapcar (lambda (b)
+                              (let ((status (buffer-local-value 'my/claude-status b)))
+                                (cons (if status
+                                          (format "%s [%s]" (buffer-name b) status)
+                                        (buffer-name b))
+                                      b)))
+                            bufs))
+           (choice (completing-read "Claude buffer: "
+                                    (mapcar #'car entries)
+                                    nil t))
+           (buf (cdr (assoc choice entries))))
+      (pop-to-buffer buf))))
+
 ;;; Keybindings
 
 (global-set-key (kbd "C-x y e p") #'llm-prompt)
 (global-set-key (kbd "C-x y e c") #'my/claude)
+(global-set-key (kbd "C-x y e b") #'my/claude-switch-buffer)
 (global-set-key (kbd "C-x y e h") #'llm-change-highlight-clear)
 
 (provide 'my-llm)

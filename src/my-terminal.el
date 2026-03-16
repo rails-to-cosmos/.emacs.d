@@ -19,22 +19,8 @@ Appends <N> to resolve name collisions."
          (name (generate-new-buffer-name base)))
     (vterm name)))
 
-(defun my/vterm-switch-buffer ()
-  "Switch between vterm buffers using `switch-to-buffer'."
-  (interactive)
-  (let ((vterm-bufs (cl-remove-if-not
-                     (lambda (b) (with-current-buffer b (derived-mode-p 'vterm-mode)))
-                     (buffer-list))))
-    (unless vterm-bufs
-      (user-error "No vterm buffers"))
-    (switch-to-buffer
-     (completing-read "Vterm buffer: "
-                      (mapcar #'buffer-name vterm-bufs)
-                      nil t))))
-
 (use-package vterm
   :bind (("C-x y e v" . my/vterm)
-         ("C-x y e b" . my/vterm-switch-buffer)
          ("C-x y e e" . eshell))
   :ensure t)
 
