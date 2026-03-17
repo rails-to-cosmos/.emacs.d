@@ -26,13 +26,13 @@
 
 ;;; Claude vterm buffer management
 
-(defun llm--project-label ()
+(defun llm--project-label (directory)
   "Return (LABEL . ROOT) for the current project or directory."
-  (let* ((proj (project-current nil default-directory))
+  (let* ((proj (project-current nil directory))
          (root (when proj (project-root proj))))
     (cons (if root
               (file-name-nondirectory (directory-file-name root))
-            (abbreviate-file-name default-directory))
+            (abbreviate-file-name directory))
           root)))
 
 (defun llm--claude-shell-command (root)
@@ -48,8 +48,8 @@ Without prefix: reuse the existing buffer, or create one.
 With \\[universal-argument]: new buffer, continue session if possible.
 With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
   (interactive)
-  (pcase-let* ((default-directory (or user-root root default-directory))
-               (`(,label . ,root) (llm--project-label))
+  (pcase-let* ((`(,label . ,root) (llm--project-label (or user-root default-directory)))
+               (default-directory (or user-root root default-directory))
                (base (format "*claude:%s*" label))
                (prefix (prefix-numeric-value current-prefix-arg)))
     (cond
