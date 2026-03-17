@@ -195,21 +195,26 @@ Detects permission prompts in raw output to set `blocked' status."
 
 ;;; Interactive Commands
 
-(defvar llm--pending-prompt nil
-  "Cons of (BUFFER . PROMPT) waiting to be inserted when claude becomes idle.")
+(defvar llm--prompt-queue nil
+  "LIFO queue of (BUFFER . PROMPT) entries waiting to be sent when claude is idle.")
 
-(defun llm--send-when-idle (buf)
-  "Insert the pending prompt into BUF if it is idle."
-  (when (and llm--pending-prompt
-             (buffer-live-p buf)
-             (eq buf (car llm--pending-prompt)))
-    (with-current-buffer buf
-      (if (eq my/claude-status 'idle)
+(defun llm--drain-queue ()
+  "Pop the next prompt from `llm--prompt-queue' and send it when idle."
+  (when-let ((entry (car (last llm--prompt-queue))))
+    (let ((buf (car entry))
+          (prompt (cdr entry)))
+      (if (not (buffer-live-p buf))
           (progn
-            (vterm-insert (cdr llm--pending-prompt))
-            (setq llm--pending-prompt nil))
-        ;; Still not idle, retry after next status check.
-        (run-with-timer 0.5 nil #'llm--send-when-idle buf)))))
+            (setq llm--prompt-queue (butlast llm--prompt-queue))
+            (llm--drain-queue))
+        (with-current-buffer buf
+          (if (eq my/claude-status 'idle)
+              (progn
+                (setq llm--prompt-queue (butlast llm--prompt-queue))
+                (vterm-insert prompt)
+                (when llm--prompt-queue
+                  (run-with-timer 0.5 nil #'llm--drain-queue)))
+            (run-with-timer 0.5 nil #'llm--drain-queue)))))))
 
 (defun llm--send-to-claude (prompt)
   "Switch to the claude vterm buffer and insert PROMPT.
@@ -218,9 +223,12 @@ once the session becomes idle."
   (my/claude)
   (if (memq my/claude-status '(nil idle))
       (vterm-insert prompt)
-    (setq llm--pending-prompt (cons (current-buffer) prompt))
-    (run-with-timer 0.5 nil #'llm--send-when-idle (current-buffer))
-    (message "Claude is %s — prompt queued, will send when idle" my/claude-status)))
+    (let ((was-empty (null llm--prompt-queue)))
+      (push (cons (current-buffer) prompt) llm--prompt-queue)
+      (when was-empty
+        (run-with-timer 0.5 nil #'llm--drain-queue))
+      (message "Claude is %s — prompt queued (%d pending), will send when idle"
+               my/claude-status (length llm--prompt-queue)))))
 
 (defun llm--write-context-file (text)
   "Write TEXT to a temporary file and return its path."
