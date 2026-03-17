@@ -229,11 +229,12 @@ Detects busy indicator and ignores user input areas."
                   (run-with-timer 0.5 nil #'llm--drain-queue)))
             (run-with-timer 0.5 nil #'llm--drain-queue)))))))
 
-(defun llm--send-to-claude (prompt)
+(defun llm--send-to-claude (prompt &optional root)
   "Switch to the claude vterm buffer and insert PROMPT.
+If ROOT is provided, switch to the claude buffer for that project root.
 If the session is busy or blocked, queue the prompt and insert it
 once the session becomes idle."
-  (my/claude)
+  (my/claude root)
   (if (memq my/claude-status '(nil idle))
       (vterm-insert prompt)
     (let ((was-empty (null llm--prompt-queue)))
@@ -251,13 +252,16 @@ once the session becomes idle."
 
 ;;;###autoload
 (defun llm-prompt-send ()
-  "Send the contents of the prompt buffer to Claude."
+  "Send the contents of the prompt buffer to Claude.
+Sends to the Claude buffer corresponding to the project root where
+the prompt was opened."
   (interactive)
-  (let ((prompt (string-trim (buffer-string))))
+  (let ((prompt (string-trim (buffer-string)))
+        (root llm--prompt-project-root))
     (when (string-empty-p prompt)
       (user-error "Empty prompt"))
     (kill-buffer (current-buffer))
-    (llm--send-to-claude prompt)))
+    (llm--send-to-claude prompt root)))
 
 (defun llm-prompt-cancel ()
   "Cancel the prompt and close the prompt buffer."
@@ -272,7 +276,9 @@ Pre-populates context based on the current state:
 - Active region: inserts a file/region context prefix
 - Otherwise: inserts a file+line context prefix"
   (interactive)
-  (let* ((root (llm--current-root))
+  (let* ((proj (project-current nil default-directory))
+         (root (when proj (project-root proj)))
+         (root (or root (llm--project-root default-directory)))
          (file-name (buffer-file-name))
          (prefix (cond
                   ((use-region-p)
