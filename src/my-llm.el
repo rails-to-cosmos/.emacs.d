@@ -53,7 +53,8 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
                (base (format "*claude:%s*" label))
                (prefix (prefix-numeric-value current-prefix-arg)))
     (cond
-     ((= prefix 1)      (let ((existing (get-buffer base)))
+     ((= prefix 1)
+      (let ((existing (get-buffer base)))
         (if (and existing (buffer-live-p existing))
             (pop-to-buffer existing)
           (let ((vterm-shell (llm--claude-shell-command root)))
