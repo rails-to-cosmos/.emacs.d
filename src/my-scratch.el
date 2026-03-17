@@ -11,7 +11,8 @@
     (define-key map "a" #'beginning-of-line)
     (define-key map "n" #'org-next-visible-heading)
     (define-key map "p" #'org-previous-visible-heading)
-    (define-key map "f" #'forward-char)
+    (define-key map "f" #'scratch-pull-repo)
+    (define-key map "F" #'scratch-pull-all)
     (define-key map "b" #'backward-char)
     (define-key map "g" #'scratch-refresh)
     (define-key map "G" #'scratch-refresh-all)
@@ -306,6 +307,13 @@ Called after a successful git fetch."
     (when (string-match "\\` *\\(.*?\\)\\(?: on \\|$\\)" heading)
       (string-trim (match-string 1 heading)))))
 
+(defun scratch--repo-path-at-point ()
+  "Return the repo path at point, or nil if not on a repo headline."
+  (save-excursion
+    (when (and (derived-mode-p 'org-mode)
+               (ignore-errors (org-back-to-heading t) t))
+      (scratch--heading-repo-path))))
+
 (defun scratch-search (str)
   "Search for STR in the buffer starting from the beginning."
   (interactive "sSearch: ")
@@ -381,10 +389,7 @@ adds it to `scratch-repos', saves, and fetches its status."
 When point is on or inside a level-2 headline, refresh only that repo.
 Otherwise refresh all monitored repositories."
   (interactive)
-  (let ((path (save-excursion
-                (when (and (derived-mode-p 'org-mode)
-                           (ignore-errors (org-back-to-heading t) t))
-                  (scratch--heading-repo-path)))))
+  (let ((path (scratch--repo-path-at-point)))
     (if path
         ;; Refresh single repo
         (progn
@@ -400,6 +405,46 @@ Otherwise refresh all monitored repositories."
       (scratch--render)
       (dolist (entry scratch-repos)
         (scratch--fetch-repo (scratch--repo-path entry))))))
+
+(defun scratch--pull-repo (repo)
+  "Asynchronously pull changes for REPO.
+Assumes status hash and render are handled by the caller."
+  (let* ((path (scratch--abbrev-path repo))
+         (default-directory (scratch--repo-default-directory repo)))
+    (if (not (file-directory-p (expand-file-name ".git" default-directory)))
+        (progn
+          (puthash path (list :state 'error :error "Not a git repo") scratch--repo-statuses)
+          (scratch--render))
+      (let ((proc (start-process "scratch-git-pull" nil "git" "pull" "--quiet")))
+        (set-process-sentinel
+         proc
+         (lambda (process _event)
+           (if (not (eq (process-exit-status process) 0))
+               (progn
+                 (puthash path (list :state 'error :error "Pull failed") scratch--repo-statuses)
+                 (scratch--render))
+             (scratch--gather-status repo))))))))
+
+(defun scratch-pull-repo ()
+  "Pull changes for the repository at point."
+  (interactive)
+  (let ((path (scratch--repo-path-at-point)))
+    (unless path
+      (user-error "Not on a repo headline"))
+    (puthash path (list :state 'fetching) scratch--repo-statuses)
+    (scratch--render)
+    (scratch--pull-repo path)))
+
+(defun scratch-pull-all ()
+  "Pull changes for all monitored repositories."
+  (interactive)
+  (dolist (entry scratch-repos)
+    (puthash (scratch--abbrev-path (scratch--repo-path entry))
+             (list :state 'fetching)
+             scratch--repo-statuses))
+  (scratch--render)
+  (dolist (entry scratch-repos)
+    (scratch--pull-repo (scratch--repo-path entry))))
 
 (defun scratch-refresh-all ()
   "Refresh git status for all monitored repositories."
