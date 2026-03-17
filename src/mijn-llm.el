@@ -225,6 +225,7 @@ Detects busy indicator and ignores user input areas."
               (progn
                 (setq llm--prompt-queue (butlast llm--prompt-queue))
                 (vterm-insert prompt)
+                (vterm-send-return)
                 (when llm--prompt-queue
                   (run-with-timer 0.5 nil #'llm--drain-queue)))
             (run-with-timer 0.5 nil #'llm--drain-queue)))))))
