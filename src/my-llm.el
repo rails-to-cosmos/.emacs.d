@@ -48,13 +48,12 @@ Without prefix: reuse the existing buffer, or create one.
 With \\[universal-argument]: new buffer, continue session if possible.
 With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
   (interactive)
-  (pcase-let* ((`(,label . ,root) (llm--project-label))
-               (default-directory (or user-root root default-directory))
+  (pcase-let* ((default-directory (or user-root root default-directory))
+               (`(,label . ,root) (llm--project-label))
                (base (format "*claude:%s*" label))
                (prefix (prefix-numeric-value current-prefix-arg)))
     (cond
-     ((= prefix 1)
-      (let ((existing (get-buffer base)))
+     ((= prefix 1)      (let ((existing (get-buffer base)))
         (if (and existing (buffer-live-p existing))
             (pop-to-buffer existing)
           (let ((vterm-shell (llm--claude-shell-command root)))
