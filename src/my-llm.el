@@ -120,21 +120,34 @@ Preserves `blocked' status; otherwise sets `input' or `exited'."
   "Allow\\|allow\\|permit\\|approve\\|Yes.*No\\|\\(y\\).*\\(n\\)"
   "Regex matched against raw vterm output to detect permission prompts.")
 
+(defvar my/claude--busy-pattern
+  "press esc to interrupt"
+  "Regex to detect when Claude is actively working (busy).")
+
+(defvar my/claude--user-input-pattern
+  "^[^[:space:]].*[%$>#λ]\\s*$"
+  "Regex to detect shell prompts and user input areas.
+Excludes these from busy status detection.")
+
 (defun my/claude--filter-advice (orig-fn process input)
   "After vterm processes output, schedule a status check for claude buffers.
-Detects permission prompts in raw output to set `blocked' status."
+Detects permission prompts in raw output to set `blocked' status.
+Detects busy indicator and ignores user input areas."
   (funcall orig-fn process input)
   (when-let ((buf (process-buffer process)))
     (when (buffer-live-p buf)
       (with-current-buffer buf
         (when (my/claude-buffer-p)
-          (if (string-match-p my/claude--permission-pattern input)
-              (progn
-                (setq my/claude-status 'blocked)
-                (force-mode-line-update))
+          (cond
+           ((string-match-p my/claude--permission-pattern input)
+            (setq my/claude-status 'blocked))
+           ((string-match-p my/claude--busy-pattern input)
+            (setq my/claude-status 'busy))
+           ;; Only set busy if output is not just a shell prompt/input area
+           ((not (string-match-p my/claude--user-input-pattern input))
             (unless (eq my/claude-status 'busy)
-              (setq my/claude-status 'busy)
-              (force-mode-line-update)))
+              (setq my/claude-status 'busy))))
+          (force-mode-line-update)
           (my/claude--schedule-status-check))))))
 
 (advice-add 'vterm--filter :around #'my/claude--filter-advice)
@@ -254,47 +267,40 @@ once the session becomes idle."
 
 ;;;###autoload
 (defun llm-prompt ()
-  "Smart Claude CLI dispatcher.  Behavior depends on context:
-- C-u prefix: open multi-line prompt buffer
-- Active region: send region as context with a prompt
-- Otherwise: prompt at file+line (temp-file for non-file buffers)"
+  "Open a multi-line prompt buffer for Claude.
+Pre-populates context based on the current state:
+- Active region: inserts a file/region context prefix
+- Otherwise: inserts a file+line context prefix"
   (interactive)
-  (let ((root (llm--current-root)))
-    (cond
-     ;; C-u → multi-line prompt buffer
-     (current-prefix-arg
-      (let ((buf (get-buffer-create "*llm-prompt*")))
-        (with-current-buffer buf
-          (llm-prompt-mode)
-          (erase-buffer)
-          (setq-local llm--prompt-project-root root))
-        (pop-to-buffer buf)))
-     ;; Active region → region context + prompt
-     ((use-region-p)
-      (let* ((start (region-beginning))
-             (end (region-end))
-             (prompt (read-string "Prompt: "))
-             (file-name (or (buffer-file-name)
-                            (llm--write-context-file
-                             (buffer-substring-no-properties (point-min) (point-max)))))
-             (start-line (line-number-at-pos start))
-             (end-line (line-number-at-pos end))
-             (context (buffer-substring-no-properties start end))
-             (file (llm--write-context-file context))
-             (full-prompt (format "Read the file %s for context (from %s lines %d-%d), then answer: %s"
-                                  file file-name start-line end-line prompt)))
-        (deactivate-mark)
-        (llm--send-to-claude full-prompt)))
-     ;; Default → prompt at file+line
-     (t
-      (let* ((prompt (read-string "Prompt: "))
-             (file-name (or (buffer-file-name)
-                            (llm--write-context-file
-                             (buffer-substring-no-properties (point-min) (point-max)))))
-             (line (line-number-at-pos (point)))
-             (suffix (if (string-match-p "[.!?]\\'" prompt) "" "."))
-             (full-prompt (format "File \"%s\", line %d: %s%s" file-name line prompt suffix)))
-        (llm--send-to-claude full-prompt))))))
+  (let* ((root (llm--current-root))
+         (file-name (buffer-file-name))
+         (prefix (cond
+                  ((use-region-p)
+                   (let* ((start (region-beginning))
+                          (end (region-end))
+                          (context (buffer-substring-no-properties start end))
+                          (file (if file-name
+                                    file-name
+                                  (llm--write-context-file context))))
+                     (deactivate-mark)
+                     (if file-name
+                         (format "Context: %s from lines %d-%d\n\n"
+                                 file (line-number-at-pos start) (line-number-at-pos end))
+                       (format "Context: %s\n\n" file))))
+                  (t
+                   (let ((file (if file-name
+                                   file-name
+                                 (llm--write-context-file
+                                  (buffer-substring-no-properties (point-min) (point-max))))))
+                     (format "File \"%s\", line %d:\n\n"
+                             file (line-number-at-pos (point)))))))
+         (buf (get-buffer-create "*llm-prompt*")))
+    (with-current-buffer buf
+      (llm-prompt-mode)
+      (erase-buffer)
+      (insert prefix)
+      (setq-local llm--prompt-project-root root))
+    (pop-to-buffer buf)))
 
 ;;; Change Highlighting on Revert
 
