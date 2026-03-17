@@ -26,6 +26,62 @@
 
 ;;; Claude vterm buffer management
 
+(defvar llm--buffers (make-hash-table :test 'eq)
+  "Hash table mapping claude vterm buffers to their status.")
+
+(defun llm--register-buffer (buf)
+  "Register BUF as a claude buffer with initial status nil."
+  (puthash buf nil llm--buffers))
+
+(defun llm--unregister-buffer (buf)
+  "Unregister BUF from the claude buffer registry."
+  (remhash buf llm--buffers))
+
+(defun llm--get-buffers ()
+  "Return a list of all live claude buffers."
+  (cl-remove-if-not #'buffer-live-p (hash-table-keys llm--buffers)))
+
+;;; Status Detection Patterns and Logic
+
+(defvar llm--permission-pattern
+  "Allow\\|allow\\|permit\\|approve\\|Yes.*No\\|\\(y\\).*\\(n\\)"
+  "Regex matched against raw vterm output to detect permission prompts (→ blocked).")
+
+(defvar llm--busy-pattern
+  "esc to interrupt"
+  "Regex to detect when Claude is actively working (→ busy).")
+
+(defvar llm--user-input-pattern
+  "^[^[:space:]].*[%$>#λ]\\s*$"
+  "Regex to detect shell prompts and user input areas (ignored for status).")
+
+(defun llm--status-from-output (buf input current-status)
+  "Determine new status for BUF based on vterm OUTPUT.
+Rules (in order):
+1. If INPUT matches permission pattern → 'blocked'
+2. If INPUT matches busy pattern → 'busy'
+3. If INPUT is not a shell prompt and not 'busy' → 'busy'
+4. Otherwise → keep current-status"
+  (cond
+   ((string-match-p llm--permission-pattern input) 'blocked)
+   ((string-match-p llm--busy-pattern input) 'busy)
+   ((not (string-match-p llm--user-input-pattern input))
+    (unless (eq current-status 'busy) 'busy))
+   (t current-status)))
+
+(defun llm--status-from-process (buf)
+  "Determine new status for BUF based on process state.
+Rules:
+1. If process is dead → 'exited'
+2. If current status is 'blocked' → preserve 'blocked'
+3. Otherwise → 'idle'"
+  (let* ((proc vterm--process)
+         (alive (and proc (process-live-p proc)))
+         (current-status (gethash buf llm--buffers)))
+    (cond ((not alive) 'exited)
+          ((eq current-status 'blocked) 'blocked)
+          (t 'idle))))
+
 (defun llm--project-label (directory)
   "Return (LABEL . ROOT) for the current project or directory."
   (let* ((proj (project-current nil directory))
@@ -58,20 +114,20 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
         (if (and existing (buffer-live-p existing))
             (pop-to-buffer existing)
           (let ((vterm-shell (llm--claude-shell-command root)))
-            (vterm-other-window base)))))
+            (vterm-other-window base)
+            (llm--register-buffer (current-buffer))))))
      ((= prefix 4)
       (let ((vterm-shell (llm--claude-shell-command root))
             (name (generate-new-buffer-name base)))
-        (vterm-other-window name)))
+        (vterm-other-window name)
+        (llm--register-buffer (current-buffer))))
      ((>= prefix 16)
       (let ((vterm-shell "claude")
             (name (generate-new-buffer-name base)))
-        (vterm-other-window name))))))
+        (vterm-other-window name)
+        (llm--register-buffer (current-buffer)))))))
 
 ;;; Claude vterm status indicator
-
-(defvar-local llm-status nil
-  "Status of a claude vterm buffer: nil, `input', `busy', or `exited'.")
 
 (defvar-local llm--status-timer nil
   "Debounce timer for status detection in claude vterm buffers.")
@@ -97,16 +153,12 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
   (string-prefix-p "*claude:" (buffer-name (or buf (current-buffer)))))
 
 (defun llm--detect-status (buf)
-  "Update `llm-status' in BUF based on output activity.
-Preserves `blocked' status; otherwise sets `input' or `exited'."
+  "Update the status for BUF based on process state.
+Uses `llm--status-from-process' to determine new status."
   (when (buffer-live-p buf)
     (with-current-buffer buf
-      (let* ((proc vterm--process)
-             (alive (and proc (process-live-p proc))))
-        (setq llm-status
-              (cond ((not alive) 'exited)
-                    ((eq llm-status 'blocked) 'blocked)
-                    (t 'idle)))
+      (let ((new-status (llm--status-from-process buf)))
+        (puthash buf new-status llm--buffers)
         (force-mode-line-update)))))
 
 (defun llm--schedule-status-check ()
@@ -116,39 +168,20 @@ Preserves `blocked' status; otherwise sets `input' or `exited'."
   (setq llm--status-timer
         (run-with-timer 0.5 nil #'llm--detect-status (current-buffer))))
 
-(defvar llm--permission-pattern
-  "Allow\\|allow\\|permit\\|approve\\|Yes.*No\\|\\(y\\).*\\(n\\)"
-  "Regex matched against raw vterm output to detect permission prompts.")
-
-(defvar llm--busy-pattern
-  "press esc to interrupt"
-  "Regex to detect when Claude is actively working (busy).")
-
-(defvar llm--user-input-pattern
-  "^[^[:space:]].*[%$>#λ]\\s*$"
-  "Regex to detect shell prompts and user input areas.
-Excludes these from busy status detection.")
-
 (defun llm--filter-advice (orig-fn process input)
-  "After vterm processes output, schedule a status check for claude buffers.
-Detects permission prompts in raw output to set `blocked' status.
-Detects busy indicator and ignores user input areas."
+  "After vterm processes output, update buffer status.
+Uses `llm--status-from-output' to determine new status based on patterns."
   (funcall orig-fn process input)
   (when-let ((buf (process-buffer process)))
     (when (buffer-live-p buf)
       (with-current-buffer buf
         (when (llm-buffer-p)
-          (cond
-           ((string-match-p llm--permission-pattern input)
-            (setq llm-status 'blocked))
-           ((string-match-p llm--busy-pattern input)
-            (setq llm-status 'busy))
-           ;; Only set busy if output is not just a shell prompt/input area
-           ((not (string-match-p llm--user-input-pattern input))
-            (unless (eq llm-status 'busy)
-              (setq llm-status 'busy))))
-          (force-mode-line-update)
-          (llm--schedule-status-check))))))
+          (let ((current-status (gethash buf llm--buffers))
+                (new-status (llm--status-from-output buf input (gethash buf llm--buffers))))
+            (when new-status
+              (puthash buf new-status llm--buffers))
+            (force-mode-line-update)
+            (llm--schedule-status-check)))))))
 
 (advice-add 'vterm--filter :around #'llm--filter-advice)
 
@@ -164,26 +197,39 @@ Detects busy indicator and ignores user input areas."
             (when (timerp llm--status-timer)
               (cancel-timer llm--status-timer)
               (setq llm--status-timer nil))
-            (setq llm-status 'exited)
+            (puthash (current-buffer) 'exited llm--buffers)
             (force-mode-line-update)))))))
 
 (advice-add 'vterm--sentinel :around #'llm--sentinel-advice)
 
 (defun llm--mode-line-status ()
-  "Return a mode-line string showing claude buffer status."
-  (pcase llm-status
-    ('idle   (propertize " ● idle" 'face 'llm-status-idle-face))
-    ('busy    (propertize " ◉ busy" 'face 'llm-status-busy-face))
-    ('blocked (propertize " ⊘ blocked" 'face 'llm-status-blocked-face))
-    ('exited  (propertize " ○ exited" 'face 'llm-status-exited-face))))
+  "Return a mode-line string showing the current claude buffer status."
+  (let ((status (gethash (current-buffer) llm--buffers)))
+    (pcase status
+      ('idle   (propertize " ● idle" 'face 'llm-status-idle-face))
+      ('busy    (propertize " ◉ busy" 'face 'llm-status-busy-face))
+      ('blocked (propertize " ⊘ blocked" 'face 'llm-status-blocked-face))
+      ('exited  (propertize " ○ exited" 'face 'llm-status-exited-face))
+      (_ (propertize " ● idle" 'face 'llm-status-idle-face)))))
 
-;; Clean up stale timers in claude buffers on re-eval.
+;; Clean up stale timers and unregister dead buffers on re-eval.
+(when (hash-table-p llm--buffers)
+  (maphash (lambda (buf _status)
+             (unless (buffer-live-p buf)
+               (remhash buf llm--buffers)))
+           llm--buffers))
 (dolist (buf (buffer-list))
   (with-current-buffer buf
     (when (and (bound-and-true-p llm--status-timer)
                (timerp llm--status-timer))
       (cancel-timer llm--status-timer)
       (setq llm--status-timer nil))))
+
+(defun llm--cleanup-buffer ()
+  "Unregister the current buffer from the claude buffer list."
+  (llm--unregister-buffer (current-buffer)))
+
+(add-hook 'kill-buffer-hook #'llm--cleanup-buffer)
 
 (let ((entry '(:eval (llm--mode-line-status))))
   (setq-default mode-line-misc-info
@@ -221,14 +267,15 @@ Detects busy indicator and ignores user input areas."
             (setq llm--prompt-queue (butlast llm--prompt-queue))
             (llm--drain-queue))
         (with-current-buffer buf
-          (if (eq llm-status 'idle)
-              (progn
-                (setq llm--prompt-queue (butlast llm--prompt-queue))
-                (vterm-insert prompt)
-                (vterm-send-return)
-                (when llm--prompt-queue
-                  (run-with-timer 0.5 nil #'llm--drain-queue)))
-            (run-with-timer 0.5 nil #'llm--drain-queue)))))))
+          (let ((status (gethash buf llm--buffers)))
+            (if (eq status 'idle)
+                (progn
+                  (setq llm--prompt-queue (butlast llm--prompt-queue))
+                  (vterm-insert prompt)
+                  (vterm-send-return)
+                  (when llm--prompt-queue
+                    (run-with-timer 0.5 nil #'llm--drain-queue)))
+              (run-with-timer 0.5 nil #'llm--drain-queue))))))))
 
 (defun llm--send-to-claude (prompt &optional root)
   "Switch to the claude vterm buffer and insert PROMPT.
@@ -236,14 +283,16 @@ If ROOT is provided, switch to the claude buffer for that project root.
 If the session is busy or blocked, queue the prompt and insert it
 once the session becomes idle."
   (llm root)
-  (if (memq llm-status '(nil idle))
-      (vterm-insert prompt)
-    (let ((was-empty (null llm--prompt-queue)))
-      (push (cons (current-buffer) prompt) llm--prompt-queue)
-      (when was-empty
-        (run-with-timer 0.5 nil #'llm--drain-queue))
-      (message "Claude is %s — prompt queued (%d pending), will send when idle"
-               llm-status (length llm--prompt-queue)))))
+  (let ((status (gethash (current-buffer) llm--buffers)))
+    (if (memq status '(nil idle))
+        (progn (vterm-insert prompt)
+               (vterm-send-return))
+      (let ((was-empty (null llm--prompt-queue)))
+        (push (cons (current-buffer) prompt) llm--prompt-queue)
+        (when was-empty
+          (run-with-timer 0.5 nil #'llm--drain-queue))
+        (message "Claude is %s — prompt queued (%d pending), will send when idle"
+                 status (length llm--prompt-queue))))))
 
 (defun llm--write-context-file (text)
   "Write TEXT to a temporary file and return its path."
@@ -390,24 +439,21 @@ Also cancels the auto-clear timer if one is pending."
 (defun llm-switch-buffer ()
   "Switch between claude buffers, showing status in the menu."
   (interactive)
-  (let ((bufs (cl-remove-if-not
-               (lambda (b) (and (with-current-buffer b (derived-mode-p 'vterm-mode))
-                                (llm-buffer-p b)))
-               (buffer-list))))
+  (let ((bufs (llm--get-buffers)))
     (unless bufs
       (user-error "No claude buffers"))
-    (let* ((entries (mapcar (lambda (b)
-                              (let ((status (buffer-local-value 'llm-status b)))
-                                (cons (if status
-                                          (format "%s [%s]" (buffer-name b) status)
-                                        (buffer-name b))
-                                      b)))
-                            bufs))
-           (choice (completing-read "Claude buffer: "
-                                    (mapcar #'car entries)
-                                    nil t))
-           (buf (cdr (assoc choice entries))))
-      (pop-to-buffer buf))))
+    (let ((entries (cl-loop for buffer in bufs
+                            collect (let ((name (buffer-name buffer))
+                                          (status (gethash buffer llm--buffers)))
+                                      (cons (if status
+                                                (format "%s [%s]" name status)
+                                              name)
+                                            buffer)))))
+      (let* ((choice (completing-read "Claude buffer: "
+                                      (mapcar #'car entries)
+                                      nil t))
+             (buf (cdr (assoc choice entries))))
+        (pop-to-buffer buf)))))
 
 ;;; Keybindings
 
