@@ -202,6 +202,29 @@ Uses `llm--status-from-output' to determine new status based on patterns."
 
 (advice-add 'vterm--sentinel :around #'llm--sentinel-advice)
 
+(defun llm--stable-redraw-advice (orig-fn buffer)
+  "Preserve window scroll position for non-selected claude windows during redraw."
+  (if (not (and (buffer-live-p buffer)
+                (with-current-buffer buffer (llm-buffer-p))))
+      (funcall orig-fn buffer)
+    ;; Save window-start and window-point for all non-selected windows showing this buffer.
+    (let ((saved (cl-loop for win in (get-buffer-window-list buffer nil t)
+                          unless (eq win (selected-window))
+                          collect (list win
+                                        (window-start win)
+                                        (window-point win)))))
+      (funcall orig-fn buffer)
+      ;; Restore scroll position for non-selected windows.
+      (dolist (entry saved)
+        (let ((win (nth 0 entry))
+              (start (nth 1 entry))
+              (pt (nth 2 entry)))
+          (when (window-live-p win)
+            (set-window-start win start t)
+            (set-window-point win pt)))))))
+
+(advice-add 'vterm--delayed-redraw :around #'llm--stable-redraw-advice)
+
 (defun llm--mode-line-status ()
   "Return a mode-line string showing the current claude buffer status."
   (let ((status (gethash (current-buffer) llm--buffers)))
@@ -277,11 +300,22 @@ Uses `llm--status-from-output' to determine new status based on patterns."
                     (run-with-timer 0.5 nil #'llm--drain-queue)))
               (run-with-timer 0.5 nil #'llm--drain-queue))))))))
 
+(defun llm--save-prompt (prompt root)
+  "Save PROMPT to .project/prompts/ in ROOT as a timestamped file."
+  (let* ((r (or root (llm--current-root)))
+         (dir (expand-file-name ".project/prompts" r))
+         (file (expand-file-name
+                (format "%s.txt" (format-time-string "%Y%m%d-%H%M%S"))
+                dir)))
+    (make-directory dir t)
+    (with-temp-file file (insert prompt))))
+
 (defun llm--send-to-claude (prompt &optional root)
   "Switch to the claude vterm buffer and insert PROMPT.
 If ROOT is provided, switch to the claude buffer for that project root.
 If the session is busy or blocked, queue the prompt and insert it
 once the session becomes idle."
+  (llm--save-prompt prompt root)
   (llm root)
   (let ((status (gethash (current-buffer) llm--buffers)))
     (if (memq status '(nil idle))
@@ -488,12 +522,29 @@ Each entry is a plist (:file :line :text :time).")
     (with-temp-file file
       (pp entries (current-buffer)))))
 
+(defun llm--annotation-alive-p (entry kind)
+  "Return non-nil if ENTRY's KIND(llm) comment still exists in the file."
+  (let ((file (plist-get entry :file))
+        (text (plist-get entry :text)))
+    (and (file-readable-p file)
+         (with-temp-buffer
+           (insert-file-contents file)
+           (let ((needle (concat kind "(llm): " (car (split-string text "\n")))))
+             (search-forward needle nil t))))))
+
 (defun llm--annotation-entries (root kind)
-  "Return the list of KIND annotations for ROOT, loading if needed."
+  "Return the list of live KIND annotations for ROOT.
+Loads from disk if needed, then prunes entries whose comment
+has been removed from the source file."
   (let ((key (llm--annotation-key root kind)))
     (unless (gethash key llm--annotations)
       (llm--annotation-load root kind))
-    (gethash key llm--annotations)))
+    (let* ((entries (gethash key llm--annotations))
+           (live (cl-remove-if-not (lambda (e) (llm--annotation-alive-p e kind)) entries)))
+      (unless (= (length entries) (length live))
+        (puthash key live llm--annotations)
+        (llm--annotation-save root kind))
+      live)))
 
 (defun llm--annotation-comment (kind text)
   "Return a KIND comment for TEXT using the current mode's comment syntax."
