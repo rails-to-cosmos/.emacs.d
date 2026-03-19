@@ -202,28 +202,28 @@ Uses `llm--status-from-output' to determine new status based on patterns."
 
 (advice-add 'vterm--sentinel :around #'llm--sentinel-advice)
 
-(defun llm--stable-redraw-advice (orig-fn buffer)
-  "Preserve window scroll position for non-selected claude windows during redraw."
-  (if (not (and (buffer-live-p buffer)
-                (with-current-buffer buffer (llm-buffer-p))))
-      (funcall orig-fn buffer)
-    ;; Save window-start and window-point for all non-selected windows showing this buffer.
-    (let ((saved (cl-loop for win in (get-buffer-window-list buffer nil t)
-                          unless (eq win (selected-window))
-                          collect (list win
-                                        (window-start win)
-                                        (window-point win)))))
-      (funcall orig-fn buffer)
-      ;; Restore scroll position for non-selected windows.
-      (dolist (entry saved)
-        (let ((win (nth 0 entry))
-              (start (nth 1 entry))
-              (pt (nth 2 entry)))
-          (when (window-live-p win)
-            (set-window-start win start t)
-            (set-window-point win pt)))))))
+;; (defun llm--stable-redraw-advice (orig-fn buffer)
+;;   "Preserve window scroll position for non-selected claude windows during redraw."
+;;   (if (not (and (buffer-live-p buffer)
+;;                 (with-current-buffer buffer (llm-buffer-p))))
+;;       (funcall orig-fn buffer)
+;;     ;; Save window-start and window-point for all non-selected windows showing this buffer.
+;;     (let ((saved (cl-loop for win in (get-buffer-window-list buffer nil t)
+;;                           unless (eq win (selected-window))
+;;                           collect (list win
+;;                                         (window-start win)
+;;                                         (window-point win)))))
+;;       (funcall orig-fn buffer)
+;;       ;; Restore scroll position for non-selected windows.
+;;       (dolist (entry saved)
+;;         (let ((win (nth 0 entry))
+;;               (start (nth 1 entry))
+;;               (pt (nth 2 entry)))
+;;           (when (window-live-p win)
+;;             (set-window-start win start t)
+;;             (set-window-point win pt)))))))
 
-(advice-add 'vterm--delayed-redraw :around #'llm--stable-redraw-advice)
+;; (advice-add 'vterm--delayed-redraw :around #'llm--stable-redraw-advice)
 
 (defun llm--mode-line-status ()
   "Return a mode-line string showing the current claude buffer status."
@@ -377,18 +377,14 @@ Pre-populates context based on the current state:
                          (format "Context: %s from lines %d-%d\n\n"
                                  file (line-number-at-pos start) (line-number-at-pos end))
                        (format "Context: %s\n\n" file))))
-                  (t
-                   (let ((file (if file-name
-                                   file-name
-                                 (llm--write-context-file
-                                  (buffer-substring-no-properties (point-min) (point-max))))))
-                     (format "File \"%s\", line %d:\n\n"
-                             file (line-number-at-pos (point)))))))
+                  (file-name
+                   (format "File \"%s\", line %d:\n\n"
+                           file-name (line-number-at-pos (point))))))
          (buf (get-buffer-create "*llm-prompt*")))
     (with-current-buffer buf
       (llm-prompt-mode)
       (erase-buffer)
-      (insert prefix)
+      (when prefix (insert prefix))
       (setq-local llm--prompt-project-root root))
     (pop-to-buffer buf)))
 
