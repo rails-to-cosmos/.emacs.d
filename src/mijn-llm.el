@@ -455,12 +455,212 @@ Also cancels the auto-clear timer if one is pending."
              (buf (cdr (assoc choice entries))))
         (pop-to-buffer buf)))))
 
+;;; FIXME/TODO Annotation System
+
+(defvar llm--annotations (make-hash-table :test 'equal)
+  "Hash table mapping (ROOT . KIND) to list of annotation entries.
+KIND is a string like \"FIXME\" or \"TODO\".
+Each entry is a plist (:file :line :text :time).")
+
+(defun llm--annotation-file (root kind)
+  "Return the persistence file path for KIND annotations in ROOT."
+  (expand-file-name (format ".project/%s.el" (downcase kind)) root))
+
+(defun llm--annotation-key (root kind)
+  "Return the hash key for ROOT and KIND."
+  (cons root kind))
+
+(defun llm--annotation-load (root kind)
+  "Load annotations of KIND for ROOT from disk."
+  (let ((file (llm--annotation-file root kind)))
+    (puthash (llm--annotation-key root kind)
+             (when (file-readable-p file)
+               (with-temp-buffer
+                 (insert-file-contents file)
+                 (read (current-buffer))))
+             llm--annotations)))
+
+(defun llm--annotation-save (root kind)
+  "Save annotations of KIND for ROOT to disk."
+  (let ((file (llm--annotation-file root kind))
+        (entries (gethash (llm--annotation-key root kind) llm--annotations)))
+    (make-directory (file-name-directory file) t)
+    (with-temp-file file
+      (pp entries (current-buffer)))))
+
+(defun llm--annotation-entries (root kind)
+  "Return the list of KIND annotations for ROOT, loading if needed."
+  (let ((key (llm--annotation-key root kind)))
+    (unless (gethash key llm--annotations)
+      (llm--annotation-load root kind))
+    (gethash key llm--annotations)))
+
+(defun llm--annotation-comment (kind text)
+  "Return a KIND comment for TEXT using the current mode's comment syntax."
+  (let ((cs (string-trim-right (or comment-start "# ")))
+        (ce (let ((e (or comment-end ""))) (if (string-empty-p e) "" (concat " " e)))))
+    (mapconcat (lambda (line)
+                 (concat cs " " kind "(llm): " line ce))
+               (split-string text "\n")
+               "\n")))
+
+(defvar-local llm--annotation-kind nil
+  "The annotation kind (\"FIXME\" or \"TODO\") for the current prompt buffer.")
+(defvar-local llm--annotation-source-buf nil)
+(defvar-local llm--annotation-source-file nil)
+(defvar-local llm--annotation-source-line nil)
+
+(defun llm--annotation-send ()
+  "Insert the annotation comment at the source location and save."
+  (interactive)
+  (let ((text (string-trim (buffer-string)))
+        (kind llm--annotation-kind)
+        (root llm--prompt-project-root)
+        (source-buf llm--annotation-source-buf)
+        (source-file llm--annotation-source-file)
+        (source-line llm--annotation-source-line))
+    (when (string-empty-p text)
+      (user-error "Empty %s text" kind))
+    (kill-buffer (current-buffer))
+    (when (buffer-live-p source-buf)
+      (with-current-buffer source-buf
+        (save-excursion
+          (goto-char (point-min))
+          (forward-line (1- source-line))
+          (beginning-of-line)
+          (open-line 1)
+          (insert (llm--annotation-comment kind text))
+          (indent-region (line-beginning-position) (line-end-position)))))
+    (let* ((key (llm--annotation-key root kind))
+           (entries (llm--annotation-entries root kind)))
+      (push (list :file source-file :line source-line
+                  :text text :time (format-time-string "%Y-%m-%d %H:%M"))
+            entries)
+      (puthash key entries llm--annotations))
+    (llm--annotation-save root kind)
+    (message "%s added at %s:%d" kind source-file source-line)))
+
+(defun llm--add-annotation (kind)
+  "Open a prompt buffer to compose a KIND annotation."
+  (let* ((root (llm--current-root))
+         (source-buf (current-buffer))
+         (source-file (or (buffer-file-name) (buffer-name)))
+         (source-line (line-number-at-pos (point)))
+         (buf (get-buffer-create (format "*llm-%s*" (downcase kind)))))
+    (with-current-buffer buf
+      (llm-prompt-mode)
+      (erase-buffer)
+      (setq-local llm--prompt-project-root root)
+      (setq-local llm--annotation-kind kind)
+      (setq-local llm--annotation-source-buf source-buf)
+      (setq-local llm--annotation-source-file source-file)
+      (setq-local llm--annotation-source-line source-line)
+      (setq header-line-format
+            (format " %s  C-c C-c insert | C-c C-k cancel" kind))
+      (use-local-map (let ((map (make-sparse-keymap)))
+                        (set-keymap-parent map text-mode-map)
+                        (define-key map (kbd "C-c C-c") #'llm--annotation-send)
+                        (define-key map (kbd "C-c C-k") #'llm-prompt-cancel)
+                        map)))
+    (pop-to-buffer buf)))
+
+(defun llm--list-annotations (kind)
+  "List annotations of KIND for the current project with completion."
+  (let* ((root (llm--current-root))
+         (entries (llm--annotation-entries root kind)))
+    (unless entries
+      (user-error "No %ss in this project" kind))
+    (let* ((candidates
+            (mapcar (lambda (e)
+                      (cons (format "%s:%d — %s [%s]"
+                                    (file-relative-name (plist-get e :file) root)
+                                    (plist-get e :line)
+                                    (truncate-string-to-width (plist-get e :text) 60 nil nil "…")
+                                    (plist-get e :time))
+                            e))
+                    entries))
+           (choice (completing-read (format "%s: " kind)
+                                    (mapcar #'car candidates) nil t))
+           (entry (cdr (assoc choice candidates)))
+           (file (plist-get entry :file)))
+      (when (file-exists-p file)
+        (find-file file)
+        (goto-char (point-min))
+        (forward-line (1- (plist-get entry :line)))))))
+
+(defun llm--send-annotations (kind)
+  "Send all KIND annotations for the current project to Claude."
+  (let* ((root (llm--current-root))
+         (entries (llm--annotation-entries root kind)))
+    (unless entries
+      (user-error "No %ss in this project" kind))
+    (let ((prompt (mapconcat
+                   (lambda (e)
+                     (format "%s at %s:%d — %s"
+                             kind
+                             (plist-get e :file)
+                             (plist-get e :line)
+                             (plist-get e :text)))
+                   entries "\n")))
+      (llm--send-to-claude
+       (format "Resolve the following %ss in this project:\n\n%s" kind prompt)))))
+
+;;;###autoload
+(defun llm-add-fixme ()
+  "Add a FIXME annotation at point."
+  (interactive)
+  (llm--add-annotation "FIXME"))
+
+;;;###autoload
+(defun llm-add-todo ()
+  "Add a TODO annotation at point."
+  (interactive)
+  (llm--add-annotation "TODO"))
+
+;;;###autoload
+(defun llm-list-fixmes ()
+  "List all FIXMEs for the current project."
+  (interactive)
+  (llm--list-annotations "FIXME"))
+
+;;;###autoload
+(defun llm-list-todos ()
+  "List all TODOs for the current project."
+  (interactive)
+  (llm--list-annotations "TODO"))
+
+;;;###autoload
+(defun llm-send-fixmes ()
+  "Send all FIXMEs to Claude."
+  (interactive)
+  (llm--send-annotations "FIXME"))
+
+;;;###autoload
+(defun llm-send-todos ()
+  "Send all TODOs to Claude."
+  (interactive)
+  (llm--send-annotations "TODO"))
+
+;;;###autoload
+(defun llm-grep-annotations ()
+  "Grep all TODO/FIXME/HACK/XXX comments in the current project."
+  (interactive)
+  (let ((root (llm--current-root)))
+    (grep-find (format "grep -rnE '(TODO|FIXME|HACK|XXX):?' %s --include='*.*' -I"
+                       (shell-quote-argument (directory-file-name root))))))
+
 ;;; Keybindings
 
 (global-set-key (kbd "C-x y e p") #'llm-prompt)
 (global-set-key (kbd "C-x y e c") #'llm)
 (global-set-key (kbd "C-x y e b") #'llm-switch-buffer)
 (global-set-key (kbd "C-x y e h") #'llm-change-highlight-clear)
+(global-set-key (kbd "C-x y e f") #'llm-add-fixme)
+(global-set-key (kbd "C-x y e t") #'llm-add-todo)
+(global-set-key (kbd "C-x y e F") #'llm-list-fixmes)
+(global-set-key (kbd "C-x y e T") #'llm-list-todos)
+(global-set-key (kbd "C-x y e S") #'llm-send-fixmes)
+(global-set-key (kbd "C-x y e G") #'llm-grep-annotations)
 
 (provide 'mijn-llm)
 ;;; my-llm.el ends here

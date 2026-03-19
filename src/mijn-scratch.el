@@ -146,6 +146,37 @@ Each plist has keys: :branch :local :behind :error :state
   "Return the expanded default-directory for REPO."
   (file-name-as-directory (expand-file-name repo)))
 
+(defun scratch--format-repo-entry (path status)
+  "Return the org text for a single repo entry at PATH with STATUS plist."
+  (let* ((state (plist-get status :state))
+         (local-status (plist-get status :local))
+         (behind (plist-get status :behind))
+         (err (plist-get status :error))
+         (dirty (not (null local-status)))
+         (todo-kw (cond
+                   ((eq state 'missing) "MISSING")
+                   ((or (null state) (eq state 'checking)) "CHECKING")
+                   ((eq state 'fetching) "FETCHING")
+                   ((eq state 'error) "ERROR")
+                   ((and behind (> behind 0)) "BEHIND")
+                   (dirty "MODIFIED")
+                   (t "UP_TO_DATE"))))
+    (concat
+     (format "** %s %s\n" todo-kw path)
+     (cond
+      ((eq state 'missing)
+       "   - Directory not found. Press =c= to clone.\n")
+      ((eq state 'ready)
+       (concat
+        (when (and behind (> behind 0))
+          (format "   - %d commit%s behind upstream\n"
+                  behind (if (> behind 1) "s" "")))
+        (when dirty
+          (format "   - Uncommitted: %s\n"
+                  (replace-regexp-in-string "\n- " ", " local-status)))))
+      ((eq state 'error)
+       (format "   %s\n" (or err "unknown")))))))
+
 (defun scratch--render ()
   "Render the git status dashboard in the *scratch* buffer."
   (let ((buf (get-buffer "*scratch*")))
@@ -157,52 +188,42 @@ Each plist has keys: :branch :local :behind :error :state
               (point-was (point)))
           (erase-buffer)
           (insert scratch--header)
-          ;; Insert dashboard
           (insert "\n\n* Repository Status\n\n")
-          (let ((repos scratch-repos))
-            (dolist (entry repos)
-              (let* ((repo (scratch--repo-path entry))
-                     (path (scratch--abbrev-path repo))
-                     (status (gethash path scratch--repo-statuses))
-                     (state (plist-get status :state))
-                     (branch (plist-get status :branch))
-                     (local-status (plist-get status :local))
-                     (behind (plist-get status :behind))
-                     (err (plist-get status :error))
-                     (dirty (not (null local-status)))
-                     (todo-kw (cond
-                               ((eq state 'missing) "MISSING")
-                               ((or (null state) (eq state 'checking)) "CHECKING")
-                               ((eq state 'fetching) "FETCHING")
-                               ((eq state 'error) "ERROR")
-                               ((and behind (> behind 0)) "BEHIND")
-                               (dirty "MODIFIED")
-                               (t "UP_TO_DATE"))))
-                (cond
-                 ((eq state 'missing)
-                  (insert (format "** %s %s\n" todo-kw path))
-                  (insert "   - Directory not found. Press =c= to clone.\n"))
-                 ((or (null state) (eq state 'checking) (eq state 'fetching))
-                  (insert (format "** %s %s\n" todo-kw path)))
-                 ((eq state 'ready)
-                  (insert (format "** %s %s\n"
-                                  todo-kw path
-                                  ;; (if branch (format "  (on %s)" branch) "")
-                                  ))
-                  (when (and behind (> behind 0))
-                    (insert (format "   - %d commit%s behind upstream\n"
-                                    behind (if (> behind 1) "s" ""))))
-                  (when dirty
-                    (insert (format "   - Uncommitted: %s\n"
-                                    (replace-regexp-in-string "\n- " ", " local-status)))))
-                 ((eq state 'error)
-                  (insert (format "** %s %s\n   %s\n" todo-kw path (or err "unknown"))))))))
+          (dolist (entry scratch-repos)
+            (let* ((repo (scratch--repo-path entry))
+                   (path (scratch--abbrev-path repo))
+                   (status (gethash path scratch--repo-statuses)))
+              (insert (scratch--format-repo-entry path status))))
           ;; Simulate C-c C-c on #+TODO line to refresh local setup
           (goto-char (point-min))
           (re-search-forward "^#\\+")
           (org-ctrl-c-ctrl-c)
-          ;; Restore point
           (goto-char (min point-was (point-max))))))))
+
+(defun scratch--update-repo (path)
+  "Update the heading for PATH in-place in the *scratch* buffer."
+  (let ((buf (get-buffer "*scratch*")))
+    (when buf
+      (with-current-buffer buf
+        (let ((inhibit-read-only t)
+              (status (gethash path scratch--repo-statuses))
+              (new-text (scratch--format-repo-entry
+                         path (gethash path scratch--repo-statuses))))
+          (save-excursion
+            (goto-char (point-min))
+            (if (re-search-forward
+                 (format "^\\*\\* [A-Z_]+ %s$" (regexp-quote path)) nil t)
+                (let ((heading-start (line-beginning-position))
+                      (heading-end (or (save-excursion
+                                         (when (re-search-forward "^\\*\\* " nil t)
+                                           (line-beginning-position)))
+                                       (point-max))))
+                  (delete-region heading-start heading-end)
+                  (goto-char heading-start)
+                  (insert new-text))
+              ;; Heading not found — append before end of buffer
+              (goto-char (point-max))
+              (insert new-text))))))))
 
 (defun scratch--repo-entry (repo)
   "Find the `scratch-repos' entry for REPO path."
@@ -217,30 +238,25 @@ Each plist has keys: :branch :local :behind :error :state
     (if (not (file-directory-p default-directory))
         (let* ((entry (scratch--repo-entry repo))
                (remote (scratch--repo-remote entry)))
-          (if remote
-              (progn
-                (puthash path (list :state 'missing) scratch--repo-statuses)
-                (scratch--render))
-            (puthash path (list :state 'error :error "Directory not found (no remote configured)")
-                     scratch--repo-statuses)
-            (scratch--render)))
+          (puthash path (list :state (if remote 'missing 'error)
+                              :error (unless remote "Directory not found (no remote configured)"))
+                   scratch--repo-statuses)
+          (scratch--update-repo path))
       (if (not (file-directory-p (expand-file-name ".git" default-directory)))
           (progn
             (puthash path (list :state 'error :error "Not a git repo") scratch--repo-statuses)
-            (scratch--render))
-    (puthash path (list :state 'fetching) scratch--repo-statuses)
-    (scratch--render)
-    ;; Step 1: git fetch
-    (let ((proc (start-process "scratch-git-fetch" nil "git" "fetch" "--quiet")))
-      (set-process-sentinel
-       proc
-       (lambda (process _event)
-         (if (not (eq (process-exit-status process) 0))
-             (progn
-               (puthash path (list :state 'error :error "Fetch failed") scratch--repo-statuses)
-               (scratch--render))
-           ;; Step 2: gather branch, local status, and behind count
-           (scratch--gather-status repo)))))))))
+            (scratch--update-repo path))
+        (puthash path (list :state 'fetching) scratch--repo-statuses)
+        (scratch--update-repo path)
+        (let ((proc (start-process "scratch-git-fetch" nil "git" "fetch" "--quiet")))
+          (set-process-sentinel
+           proc
+           (lambda (process _event)
+             (if (not (eq (process-exit-status process) 0))
+                 (progn
+                   (puthash path (list :state 'error :error "Fetch failed") scratch--repo-statuses)
+                   (scratch--update-repo path))
+               (scratch--gather-status repo)))))))))
 
 (defun scratch--gather-status (repo)
   "Gather branch, local changes, and behind count for REPO.
@@ -253,7 +269,7 @@ Called after a successful git fetch."
                     (setq pending (1- pending))
                     (when (= pending 0)
                       (puthash path result scratch--repo-statuses)
-                      (scratch--render)))))
+                      (scratch--update-repo path)))))
     ;; Get current branch
     (let ((buf (generate-new-buffer " *scratch-branch*")))
       (set-process-sentinel
@@ -423,7 +439,7 @@ When `scratch-repos-extra-files' is set, prompts for which file to save to."
          (target (expand-file-name path)))
     (when (y-or-n-p (format "Clone %s to %s? " remote target))
       (puthash path (list :state 'checking) scratch--repo-statuses)
-      (scratch--render)
+      (scratch--update-repo path)
       (let ((proc (start-process "scratch-git-clone" "*scratch-clone*"
                                  "git" "clone" remote target)))
         (set-process-sentinel
@@ -435,7 +451,7 @@ When `scratch-repos-extra-files' is set, prompts for which file to save to."
                  (scratch--fetch-repo path))
              (puthash path (list :state 'error :error "Clone failed")
                       scratch--repo-statuses)
-             (scratch--render))))))))
+             (scratch--update-repo path))))))))
 
 (defun scratch-refresh ()
   "Refresh git status for the repo at point, or all repos if before first headline.
@@ -447,9 +463,9 @@ Otherwise refresh all monitored repositories."
         ;; Refresh single repo
         (progn
           (puthash path (list :state 'checking) scratch--repo-statuses)
-          (scratch--render)
+          (scratch--update-repo path)
           (scratch--fetch-repo path))
-      ;; Refresh all
+      ;; Refresh all — full re-render
       (clrhash scratch--repo-statuses)
       (dolist (entry scratch-repos)
         (puthash (scratch--abbrev-path (scratch--repo-path entry))
@@ -460,14 +476,13 @@ Otherwise refresh all monitored repositories."
         (scratch--fetch-repo (scratch--repo-path entry))))))
 
 (defun scratch--pull-repo (repo)
-  "Asynchronously pull changes for REPO.
-Assumes status hash and render are handled by the caller."
+  "Asynchronously pull changes for REPO."
   (let* ((path (scratch--abbrev-path repo))
          (default-directory (scratch--repo-default-directory repo)))
     (if (not (file-directory-p (expand-file-name ".git" default-directory)))
         (progn
           (puthash path (list :state 'error :error "Not a git repo") scratch--repo-statuses)
-          (scratch--render))
+          (scratch--update-repo path))
       (let ((proc (start-process "scratch-git-pull" nil "git" "pull" "--quiet")))
         (set-process-sentinel
          proc
@@ -475,7 +490,7 @@ Assumes status hash and render are handled by the caller."
            (if (not (eq (process-exit-status process) 0))
                (progn
                  (puthash path (list :state 'error :error "Pull failed") scratch--repo-statuses)
-                 (scratch--render))
+                 (scratch--update-repo path))
              (scratch--gather-status repo))))))))
 
 (defun scratch-pull-repo ()
@@ -485,17 +500,16 @@ Assumes status hash and render are handled by the caller."
     (unless path
       (user-error "Not on a repo headline"))
     (puthash path (list :state 'fetching) scratch--repo-statuses)
-    (scratch--render)
+    (scratch--update-repo path)
     (scratch--pull-repo path)))
 
 (defun scratch-pull-all ()
   "Pull changes for all monitored repositories."
   (interactive)
   (dolist (entry scratch-repos)
-    (puthash (scratch--abbrev-path (scratch--repo-path entry))
-             (list :state 'fetching)
-             scratch--repo-statuses))
-  (scratch--render)
+    (let ((path (scratch--abbrev-path (scratch--repo-path entry))))
+      (puthash path (list :state 'fetching) scratch--repo-statuses)
+      (scratch--update-repo path)))
   (dolist (entry scratch-repos)
     (scratch--pull-repo (scratch--repo-path entry))))
 
