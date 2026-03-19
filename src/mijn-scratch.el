@@ -87,6 +87,14 @@ Used to exclude them when saving to the primary file.")
 (defvar scratch-modified-files-limit 10
   "Maximum number of modified files to display per repository.")
 
+(defun scratch--write-repos-file (file repos)
+  "Write REPOS alist to FILE in the scratch-repos format."
+  (with-temp-file file
+    (insert ";; -*- lexical-binding: t; -*-\n")
+    (insert ";; Monitored git repositories for scratch dashboard.\n")
+    (insert ";; This file is auto-generated. Edit via + in *scratch*.\n\n")
+    (pp `(setq scratch-repos ',repos) (current-buffer))))
+
 (defun scratch--save-repos ()
   "Write `scratch-repos' to `scratch-repos-file', excluding extra repos."
   (let ((primary (seq-remove
@@ -94,11 +102,7 @@ Used to exclude them when saving to the primary file.")
                     (member (scratch--abbrev-path (scratch--repo-path e))
                             scratch--extra-repo-paths))
                   scratch-repos)))
-    (with-temp-file scratch-repos-file
-      (insert ";; -*- lexical-binding: t; -*-\n")
-      (insert ";; Monitored git repositories for scratch dashboard.\n")
-      (insert ";; This file is auto-generated. Edit via + in *scratch*.\n\n")
-      (pp `(setq scratch-repos ',primary) (current-buffer)))))
+    (scratch--write-repos-file scratch-repos-file primary)))
 
 (defun scratch--read-repos-from-file (file)
   "Read the repos alist from FILE without side effects on `scratch-repos'."
@@ -337,24 +341,73 @@ Called after a successful git fetch."
       (string-trim
        (shell-command-to-string "git remote get-url origin 2>/dev/null")))))
 
-(defun scratch-add-repo (dir)
-  "Add DIR to monitored repositories and persist via customize.
-Prompts for a directory, validates it contains a .git folder,
-adds it to `scratch-repos', saves, and fetches its status."
-  (interactive "DRepository: ")
+(defun scratch--find-git-repos (dir)
+  "Recursively find all git repositories under DIR.
+Returns a list of absolute directory paths containing a .git directory.
+Does not descend into .git directories or into nested repos."
+  (let ((dir (file-name-as-directory (expand-file-name dir)))
+        repos)
+    (if (file-directory-p (expand-file-name ".git" dir))
+        (list dir)
+      (dolist (entry (directory-files dir t "\\`[^.]" t))
+        (when (and (file-directory-p entry)
+                   (not (member (file-name-nondirectory entry) '(".git" "node_modules" ".cache"))))
+          (setq repos (nconc repos (scratch--find-git-repos entry)))))
+      repos)))
+
+(defun scratch--add-single-repo (dir)
+  "Add DIR as a monitored repo. Returns non-nil if added, nil if already present."
   (let ((path (scratch--abbrev-path dir)))
-    (when (seq-find (lambda (e) (equal (scratch--abbrev-path (scratch--repo-path e)) path))
-                    scratch-repos)
-      (user-error "%s is already monitored" path))
-    (unless (file-directory-p (expand-file-name ".git" (expand-file-name dir)))
-      (user-error "%s is not a git repository" path))
-    (let ((remote (scratch--detect-remote dir)))
-      (setq scratch-repos
-            (append scratch-repos
-                    (list (cons path (if (string-empty-p remote) nil remote))))))
-    (scratch--save-repos)
-    (scratch--fetch-repo path)
-    (message "Added %s" path)))
+    (unless (seq-find (lambda (e) (equal (scratch--abbrev-path (scratch--repo-path e)) path))
+                      scratch-repos)
+      (let ((remote (scratch--detect-remote dir)))
+        (setq scratch-repos
+              (append scratch-repos
+                      (list (cons path (if (string-empty-p remote) nil remote)))))
+        (scratch--fetch-repo path)
+        path))))
+
+(defun scratch--choose-repos-file ()
+  "Prompt the user to choose a repos file to save to.
+Returns `scratch-repos-file' if no extra files are configured,
+otherwise asks the user to pick from all available files."
+  (if (null scratch-repos-extra-files)
+      scratch-repos-file
+    (let* ((all-files (cons scratch-repos-file scratch-repos-extra-files))
+           (choices (mapcar #'abbreviate-file-name all-files))
+           (choice (completing-read "Save to repos file: " choices nil t)))
+      (expand-file-name choice))))
+
+(defun scratch--append-to-repos-file (file new-entries)
+  "Append NEW-ENTRIES to the repos already stored in FILE."
+  (let* ((existing (scratch--read-repos-from-file file))
+         (merged (append existing new-entries)))
+    (scratch--write-repos-file file merged)
+    ;; Update extra-repo-paths if this is an extra file.
+    (unless (equal file scratch-repos-file)
+      (dolist (e new-entries)
+        (push (scratch--abbrev-path (scratch--repo-path e))
+              scratch--extra-repo-paths)))))
+
+(defun scratch-add-repo (dir)
+  "Add DIR to monitored repositories and persist.
+If DIR is a git repository, add it directly.
+Otherwise, recursively find all git repos under DIR and add them.
+When `scratch-repos-extra-files' is set, prompts for which file to save to."
+  (interactive "DDirectory: ")
+  (let* ((repos (scratch--find-git-repos dir))
+         (added (cl-remove nil (mapcar #'scratch--add-single-repo repos))))
+    (unless repos
+      (user-error "No git repositories found in %s" (scratch--abbrev-path dir)))
+    (when added
+      (let* ((target (scratch--choose-repos-file))
+             (new-entries (mapcar (lambda (path)
+                                   (assoc path scratch-repos))
+                                 added)))
+        (if (equal target scratch-repos-file)
+            (scratch--save-repos)
+          (scratch--append-to-repos-file target new-entries)))
+      (message "Added %d repo%s" (length added) (if (= 1 (length added)) "" "s")))))
 
 (defun scratch-clone-repo ()
   "Clone the repository at point if it is missing locally."
