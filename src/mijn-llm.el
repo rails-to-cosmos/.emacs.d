@@ -291,7 +291,7 @@ Uses `llm--status-from-output' to determine new status based on patterns."
             (llm--drain-queue))
         (with-current-buffer buf
           (let ((status (gethash buf llm--buffers)))
-            (if (eq status 'idle)
+            (if (memq status '(idle busy))
                 (progn
                   (setq llm--prompt-queue (butlast llm--prompt-queue))
                   (vterm-insert prompt)
