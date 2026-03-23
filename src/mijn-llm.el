@@ -318,7 +318,7 @@ once the session becomes idle."
   (llm--save-prompt prompt root)
   (llm root)
   (let ((status (gethash (current-buffer) llm--buffers)))
-    (if (memq status '(nil idle))
+    (if (memq status '(nil idle busy))
         (progn (vterm-insert prompt)
                (vterm-send-return))
       (let ((was-empty (null llm--prompt-queue)))
