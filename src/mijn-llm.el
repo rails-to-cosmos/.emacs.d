@@ -69,17 +69,27 @@ Rules (in order):
     (unless (eq current-status 'busy) 'busy))
    (t current-status)))
 
+(defun llm--last-terminal-line (buf)
+  "Return the last non-empty line from the vterm terminal in BUF."
+  (with-current-buffer buf
+    (save-excursion
+      (goto-char (point-max))
+      (skip-chars-backward "\n\r\t ")
+      (buffer-substring-no-properties
+       (line-beginning-position) (line-end-position)))))
+
 (defun llm--status-from-process (buf)
-  "Determine new status for BUF based on process state.
+  "Determine new status for BUF based on process state and terminal content.
 Rules:
 1. If process is dead → 'exited'
-2. If current status is 'blocked' → preserve 'blocked'
+2. If terminal still shows a permission prompt → 'blocked'
 3. Otherwise → 'idle'"
   (let* ((proc vterm--process)
-         (alive (and proc (process-live-p proc)))
-         (current-status (gethash buf llm--buffers)))
+         (alive (and proc (process-live-p proc))))
     (cond ((not alive) 'exited)
-          ((eq current-status 'blocked) 'blocked)
+          ((string-match-p llm--permission-pattern
+                           (llm--last-terminal-line buf))
+           'blocked)
           (t 'idle))))
 
 (defun llm--project-label (directory)

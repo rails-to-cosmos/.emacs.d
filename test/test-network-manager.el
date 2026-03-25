@@ -254,6 +254,159 @@
       (should-not (eq first network-manager--timer))
       (network-manager--stop-timer))))
 
+;; ---------------------------------------------------------------------------
+;; network-manager--format-bytes
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-nm-format-bytes-gb ()
+  "Should format gigabytes."
+  (should (string= "1.5 GB" (network-manager--format-bytes (* 1536 1024 1024)))))
+
+(ert-deftest test-nm-format-bytes-mb ()
+  "Should format megabytes."
+  (should (string= "14.0 MB" (network-manager--format-bytes (* 14 1024 1024)))))
+
+(ert-deftest test-nm-format-bytes-kb ()
+  "Should format kilobytes."
+  (should (string= "512.0 KB" (network-manager--format-bytes (* 512 1024)))))
+
+(ert-deftest test-nm-format-bytes-b ()
+  "Should format small byte counts."
+  (should (string= "42 B" (network-manager--format-bytes 42))))
+
+;; ---------------------------------------------------------------------------
+;; Render: extended status fields
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-nm-render-ip-gateway-dns ()
+  "Render should show IP, gateway, and DNS when available."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "MyWifi"
+                :ip "192.168.1.100/24" :gateway "192.168.1.1"
+                :dns "8.8.8.8"))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (let ((text (buffer-string)))
+        (should (string-match-p "192.168.1.100/24" text))
+        (should (string-match-p "192.168.1.1" text))
+        (should (string-match-p "8.8.8.8" text))))))
+
+(ert-deftest test-nm-render-wifi-link-details ()
+  "Render should show signal, frequency, and link speed."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "MyWifi"
+                :signal 85 :freq "5220 MHz" :rate "1170 Mbit/s"))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (let ((text (buffer-string)))
+        (should (string-match-p "excellent" text))
+        (should (string-match-p "85%" text))
+        (should (string-match-p "5220 MHz" text))
+        (should (string-match-p "5 GHz" text))
+        (should (string-match-p "1170 Mbit/s" text))))))
+
+(ert-deftest test-nm-render-2ghz-band ()
+  "Render should show 2.4 GHz for lower frequencies."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "MyWifi"
+                :signal 60 :freq "2462 MHz" :rate "130 Mbit/s"))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (should (string-match-p "2.4 GHz" (buffer-string))))))
+
+(ert-deftest test-nm-render-traffic ()
+  "Render should show rx/tx traffic."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "MyWifi"
+                :rx (* 14 1024 1024) :tx (* 2 1024 1024)))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (let ((text (buffer-string)))
+        (should (string-match-p "rx 14.0 MB" text))
+        (should (string-match-p "tx 2.0 MB" text))))))
+
+(ert-deftest test-nm-render-vpn ()
+  "Render should show VPN connections."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "MyWifi"
+                :vpn '("wg0")))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (should (string-match-p "wg0" (buffer-string))))))
+
+(ert-deftest test-nm-render-no-vpn-when-absent ()
+  "Render should not show VPN line when no VPN active."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "MyWifi"))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (should-not (string-match-p "VPN" (buffer-string))))))
+
+;; ---------------------------------------------------------------------------
+;; Render: wifi list with band and rate
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-nm-render-wifi-band-info ()
+  "Wifi list should show band and rate columns."
+  (with-network-buffer
+    (setq network-manager--status
+          (list :connectivity "full" :device "wlan0" :type "wifi"
+                :state "connected" :connection "Net5G"))
+    (setq network-manager--wifi-networks
+          (list (list :ssid "Net5G" :signal 90 :security "WPA2"
+                      :freq "5220 MHz" :rate "1170 Mbit/s" :in-use t)
+                (list :ssid "Net2G" :signal 60 :security "WPA2"
+                      :freq "2462 MHz" :rate "130 Mbit/s" :in-use nil)))
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (let ((text (buffer-string)))
+        (should (string-match-p "5G" text))
+        (should (string-match-p "2\\.4G" text))
+        (should (string-match-p "1170 Mbit/s" text))
+        (should (string-match-p "130 Mbit/s" text))))))
+
+;; ---------------------------------------------------------------------------
+;; DNS commands
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-nm-dns-keybinding ()
+  "Key e should be bound to network-manager-set-dns."
+  (should (eq (lookup-key network-manager-mode-map "e") #'network-manager-set-dns)))
+
+(ert-deftest test-nm-set-dns-no-connection ()
+  "Should error when there is no active connection."
+  (let ((network-manager--status nil))
+    (should-error (network-manager-set-dns) :type 'user-error)))
+
+(ert-deftest test-nm-dns-presets-has-google ()
+  "DNS presets should include Google."
+  (should (assoc "Google" network-manager-dns-presets)))
+
+(ert-deftest test-nm-dns-presets-has-auto ()
+  "DNS presets should include Auto with nil value."
+  (let ((auto (assoc "Auto" network-manager-dns-presets)))
+    (should auto)
+    (should (null (cdr auto)))))
+
+(ert-deftest test-nm-render-dns-hint ()
+  "Render should show dns keybinding hint."
+  (with-network-buffer
+    (network-manager--render)
+    (with-current-buffer network-manager-buffer-name
+      (should (string-match-p "dns" (buffer-string))))))
+
 (provide 'test-network-manager)
 
 ;;; test-network-manager.el ends here
