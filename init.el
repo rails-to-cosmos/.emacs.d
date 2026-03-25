@@ -88,6 +88,7 @@
 (require 'mijn-llm)
 (require 'xrandr)
 (require 'xmobarrc-mode)
+(require 'network-manager)
 
 (require 'make)
 
