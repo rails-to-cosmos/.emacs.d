@@ -6,7 +6,7 @@
   (expand-file-name "src/parquet-mode/parquet-info.py" user-emacs-directory)
   "Path to the parquet-info Python script.")
 
-(defvar parquet-page-size 50
+(defvar parquet-page-size 10
   "Number of rows to load per page.")
 
 (defvar-local parquet--file nil
