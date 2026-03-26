@@ -2,7 +2,6 @@
 
 (require 'cl-lib)
 (require 'ol)
-(require 'magit)
 
 (declare-function magit-status "magit-status")
 

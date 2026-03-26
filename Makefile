@@ -8,10 +8,10 @@ EMACS_BATCH = $(EMACS) --batch \
   --eval "(require 'cl-lib)" \
   --eval "(let ((default-directory \"$(CURDIR)/elpa\")) (normal-top-level-add-subdirs-to-load-path))" \
   --eval "(let ((default-directory \"$(CURDIR)/packages\")) (normal-top-level-add-subdirs-to-load-path))" \
-  -L src
+  -L src -L src/repos -L src/network-manager
 
-# Find all test .el files
-TEST_FILES := $(shell find test -name 'test-*.el' | sort)
+# Find all test .el files (in test/ and src/ subdirs)
+TEST_FILES := $(shell find test src -name 'test-*.el' | sort)
 
 .PHONY: typecheck typecheck-strict clean-elc test
 
