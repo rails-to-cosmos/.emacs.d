@@ -441,9 +441,17 @@ nil means revert to automatic (DHCP-provided) DNS.")
           ;; New network
           (if has-security
               (network-manager--connect-with-password ssid)
+            ;; Open network — connect but disable autoconnect to prevent
+            ;; automatically joining untrusted hotspots in the future
             (network-manager--run-nmcli
              (format "Connecting to %s..." ssid)
-             "device" "wifi" "connect" ssid)))))))
+             "device" "wifi" "connect" ssid)
+            (run-at-time 2 nil
+                         (lambda ()
+                           (network-manager--run-nmcli
+                            "Disabling autoconnect for open network..."
+                            "connection" "modify" ssid
+                            "connection.autoconnect" "no"))))))))
 
 (defun network-manager-disconnect ()
   "Disconnect the current wifi connection."

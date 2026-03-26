@@ -536,13 +536,13 @@ Each entry is a plist (:file :line :text :time).")
       (pp entries (current-buffer)))))
 
 (defun llm--annotation-alive-p (entry kind)
-  "Return non-nil if ENTRY's KIND(llm) comment still exists in the file."
+  "Return non-nil if ENTRY's KIND comment still exists in the file."
   (let ((file (plist-get entry :file))
         (text (plist-get entry :text)))
     (and (file-readable-p file)
          (with-temp-buffer
            (insert-file-contents file)
-           (let ((needle (concat kind "(llm): " (car (split-string text "\n")))))
+           (let ((needle (concat kind ": " (car (split-string text "\n")))))
              (search-forward needle nil t))))))
 
 (defun llm--annotation-entries (root kind)
