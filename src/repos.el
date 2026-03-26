@@ -49,11 +49,11 @@
 ;;; Repository Configuration
 
 (defconst repos--header
-  "#+TODO: CHECKING FETCHING BEHIND MODIFIED MISSING ERROR | UP_TO_DATE UNTRACKED"
+  "#+TODO: CHECKING FETCHING BEHIND MODIFIED MISSING ERROR | UNTRACKED UP_TO_DATE"
   "Static header for the dashboard.")
 
 (defvar repos-file
-  (expand-file-name "scratch-repos" user-emacs-directory)
+  (expand-file-name "repos" user-emacs-directory)
   "File where `repos-list' is persisted.")
 
 (defvar repos-extra-files nil
@@ -66,9 +66,8 @@ Read-only — repos from these files are not written back on save.")
 (defvar repos--extra-paths nil
   "Set of abbreviated paths loaded from extra files.")
 
-;;; Backward compatibility — scratch-repos files set this variable
+;;; Backward compatibility — old files use scratch-repos variable
 (defvaralias 'scratch-repos 'repos-list)
-(defvaralias 'scratch-repos-file 'repos-file)
 (defvaralias 'scratch-repos-extra-files 'repos-extra-files)
 
 ;;; Accessors
@@ -95,9 +94,9 @@ Read-only — repos from these files are not written back on save.")
   "Write REPOS alist to FILE."
   (with-temp-file file
     (insert ";; -*- lexical-binding: t; -*-\n")
-    (insert ";; Monitored git repositories for scratch dashboard.\n")
+    (insert ";; Monitored git repositories.\n")
     (insert ";; This file is auto-generated. Edit via + in *repos*.\n\n")
-    (pp `(setq scratch-repos ',repos) (current-buffer))))
+    (pp `(setq repos-list ',repos) (current-buffer))))
 
 (defun repos--save ()
   "Write repos to file, excluding extra repos."
@@ -109,7 +108,8 @@ Read-only — repos from these files are not written back on save.")
     (repos--write-file repos-file primary)))
 
 (defun repos--read-from-file (file)
-  "Read the repos alist from FILE without side effects."
+  "Read the repos alist from FILE without side effects.
+Accepts files that set either `repos-list' or `scratch-repos'."
   (when (file-exists-p file)
     (with-temp-buffer
       (insert-file-contents file)
@@ -120,15 +120,23 @@ Read-only — repos from these files are not written back on save.")
               (let ((form (read (current-buffer))))
                 (when (and (listp form)
                            (eq (car form) 'setq)
-                           (eq (cadr form) 'scratch-repos))
+                           (memq (cadr form) '(repos-list scratch-repos)))
                   (setq repos (eval (caddr form) t)))))
           (end-of-file nil))
         repos))))
 
+(defvar repos--legacy-file
+  (expand-file-name "scratch-repos" user-emacs-directory)
+  "Old file path for backward compatibility.")
+
 (defun repos--load ()
-  "Load repos from primary file and extra files."
-  (when (file-exists-p repos-file)
-    (load repos-file nil t t))
+  "Load repos from primary file (or legacy fallback) and extra files."
+  (let ((file (if (file-exists-p repos-file)
+                  repos-file
+                repos--legacy-file)))
+    (when (file-exists-p file)
+      (setq repos-list (or (repos--read-from-file file)
+                           repos-list))))
   (setq repos--extra-paths nil)
   (dolist (file repos-extra-files)
     (let ((extra (repos--read-from-file file)))

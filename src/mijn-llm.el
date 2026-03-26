@@ -240,14 +240,17 @@ Only redraws when the status actually changes to avoid vterm jitter."
 ;; (advice-add 'vterm--delayed-redraw :around #'llm--stable-redraw-advice)
 
 (defun llm--mode-line-status ()
-  "Return a mode-line string showing the current claude buffer status."
-  (let ((status (gethash (current-buffer) llm--buffers)))
-    (pcase status
-      ('idle   (propertize " ● idle" 'face 'llm-status-idle-face))
-      ('busy    (propertize " ◉ busy" 'face 'llm-status-busy-face))
-      ('blocked (propertize " ⊘ blocked" 'face 'llm-status-blocked-face))
-      ('exited  (propertize " ○ exited" 'face 'llm-status-exited-face))
-      (_ (propertize " ● idle" 'face 'llm-status-idle-face)))))
+  "Return a mode-line string showing the current claude buffer status.
+Returns empty string for non-llm buffers."
+  (if (not (llm-buffer-p))
+      ""
+    (let ((status (gethash (current-buffer) llm--buffers)))
+      (pcase status
+        ('idle    (propertize " ● idle" 'face 'llm-status-idle-face))
+        ('busy    (propertize " ◉ busy" 'face 'llm-status-busy-face))
+        ('blocked (propertize " ⊘ blocked" 'face 'llm-status-blocked-face))
+        ('exited  (propertize " ○ exited" 'face 'llm-status-exited-face))
+        (_        (propertize " ● idle" 'face 'llm-status-idle-face))))))
 
 ;; Clean up stale timers and unregister dead buffers on re-eval.
 (when (hash-table-p llm--buffers)
