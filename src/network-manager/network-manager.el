@@ -393,12 +393,29 @@ nil means revert to automatic (DHCP-provided) DNS.")
      (network-manager--render)
      (message "Scan complete"))))
 
-(defun network-manager--connect-with-password (ssid)
-  "Prompt for password and connect to SSID using wifi connect."
+(defun network-manager--connect-with-password (ssid &optional saved-p)
+  "Prompt for password and connect to SSID.
+If SAVED-P is non-nil, update the saved connection's PSK first,
+then activate it.  Otherwise use `device wifi connect'."
   (let ((password (read-passwd (format "Password for %s: " ssid))))
-    (network-manager--run-nmcli
-     (format "Connecting to %s..." ssid)
-     "device" "wifi" "connect" ssid "password" password)))
+    (if saved-p
+        ;; Update stored password, then activate
+        (let ((buf (generate-new-buffer " *nm-modify-psk*")))
+          (set-process-sentinel
+           (start-process "nm-modify-psk" buf
+                          "nmcli" "connection" "modify" ssid
+                          "802-11-wireless-security.psk" password)
+           (lambda (proc _event)
+             (kill-buffer (process-buffer proc))
+             (if (eq (process-exit-status proc) 0)
+                 (network-manager--run-nmcli
+                  (format "Connecting to %s..." ssid)
+                  "connection" "up" ssid)
+               (message "Failed to update password for %s" ssid)))))
+      ;; New network — connect directly with password
+      (network-manager--run-nmcli
+       (format "Connecting to %s..." ssid)
+       "device" "wifi" "connect" ssid "password" password))))
 
 (defun network-manager--try-activate (ssid has-security)
   "Try `connection up SSID'. On secrets failure, prompt for password and retry."
@@ -417,7 +434,7 @@ nil means revert to automatic (DHCP-provided) DNS.")
                (run-at-time 1 nil #'network-manager-refresh))
            (if (and has-security
                     (string-match-p "\\(?:Secrets\\|secret\\|password\\|Password\\)" output))
-               (network-manager--connect-with-password ssid)
+               (network-manager--connect-with-password ssid t)
              (message "nmcli error: %s" output))))))))
 
 (defun network-manager-connect ()
@@ -443,15 +460,16 @@ nil means revert to automatic (DHCP-provided) DNS.")
               (network-manager--connect-with-password ssid)
             ;; Open network — connect but disable autoconnect to prevent
             ;; automatically joining untrusted hotspots in the future
-            (network-manager--run-nmcli
-             (format "Connecting to %s..." ssid)
-             "device" "wifi" "connect" ssid)
-            (run-at-time 2 nil
-                         (lambda ()
-                           (network-manager--run-nmcli
-                            "Disabling autoconnect for open network..."
-                            "connection" "modify" ssid
-                            "connection.autoconnect" "no"))))))))
+            (progn
+              (network-manager--run-nmcli
+               (format "Connecting to %s..." ssid)
+               "device" "wifi" "connect" ssid)
+              (run-at-time 2 nil
+                           (lambda ()
+                             (network-manager--run-nmcli
+                              "Disabling autoconnect for open network..."
+                              "connection" "modify" ssid
+                              "connection.autoconnect" "no"))))))))))
 
 (defun network-manager-disconnect ()
   "Disconnect the current wifi connection."
