@@ -2,6 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
+(add-to-list 'load-path (expand-file-name "src/parquet-mode" user-emacs-directory))
+
 (require 'custom)
 (require 'package)
 
@@ -86,6 +88,7 @@
 (require 'mijn-os)
 (require 'mijn-ab)
 (require 'mijn-prog)
+(require 'parquet-mode)
 (require 'mijn-llm)
 (require 'xrandr)
 (require 'xmobarrc-mode)
