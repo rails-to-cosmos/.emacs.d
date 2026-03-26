@@ -207,8 +207,10 @@ Accepts files that set either `repos-list' or `scratch-repos'."
     (if repos--sort-ascending sorted (nreverse sorted))))
 
 (defun repos--sort-label ()
-  "Return a string describing the current sort."
-  (format "%s %s" repos--current-sort (if repos--sort-ascending "asc" "desc")))
+  "Return a propertized string describing the current sort."
+  (concat (propertize (symbol-name repos--current-sort) 'face '(:foreground "#749AF7"))
+          " "
+          (propertize (if repos--sort-ascending "asc" "desc") 'face '(:foreground "#9ece6a"))))
 
 ;;;###autoload
 (defun repos-cycle-sort ()
