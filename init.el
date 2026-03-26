@@ -56,7 +56,7 @@
 (require 'mijn-ui)
 (require 'mijn-tramp)
 (require 'mijn-scratch)
-(require 'mijn-repos)
+(require 'repos)
 
 (require 'mijn-darwin)
 

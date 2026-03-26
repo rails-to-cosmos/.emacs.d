@@ -1,4 +1,4 @@
-;;; mijn-repos.el --- Git repository dashboard -*- lexical-binding: t; -*-
+;;; repos.el --- Git repository dashboard -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
 (require 'ol)
@@ -39,6 +39,7 @@
                 ("UP_TO_DATE" . (:foreground "green"))
                 ("BEHIND"     . (:foreground "#e67e22"))
                 ("MODIFIED"   . (:foreground "#749AF7"))
+                ("UNTRACKED"  . (:foreground "#565f89"))
                 ("MISSING"    . (:foreground "#9b59b6"))
                 ("ERROR"      . (:foreground "#c0392b"))))
   (setq buffer-read-only t))
@@ -46,7 +47,7 @@
 ;;; Repository Configuration
 
 (defconst repos--header
-  "#+TODO: CHECKING FETCHING | UP_TO_DATE BEHIND MODIFIED MISSING ERROR"
+  "#+TODO: CHECKING FETCHING BEHIND MODIFIED MISSING ERROR | UP_TO_DATE UNTRACKED"
   "Static header for the dashboard.")
 
 (defvar repos-file
@@ -146,6 +147,8 @@ Read-only — repos from these files are not written back on save.")
          (local-status (plist-get status :local))
          (behind (plist-get status :behind))
          (err (plist-get status :error))
+         (mod-count (or (plist-get status :modified) 0))
+         (untracked-count (or (plist-get status :untracked) 0))
          (dirty (not (null local-status)))
          (todo-kw (cond
                    ((eq state 'missing) "MISSING")
@@ -153,7 +156,8 @@ Read-only — repos from these files are not written back on save.")
                    ((eq state 'fetching) "FETCHING")
                    ((eq state 'error) "ERROR")
                    ((and behind (> behind 0)) "BEHIND")
-                   (dirty "MODIFIED")
+                   ((> mod-count 0) "MODIFIED")
+                   ((> untracked-count 0) "UNTRACKED")
                    (t "UP_TO_DATE"))))
     (concat
      (format "** %s %s\n" todo-kw path)
@@ -182,7 +186,7 @@ Read-only — repos from these files are not written back on save.")
               (point-was (point)))
           (erase-buffer)
           (insert repos--header)
-          (insert "\n\n* Repository Status\n\n")
+          (insert "\n\n* Repository Status [/]\n\n")
           (dolist (entry repos-list)
             (let* ((repo (repos--path entry))
                    (path (repos--abbrev repo))
@@ -214,7 +218,10 @@ Read-only — repos from these files are not written back on save.")
                   (goto-char heading-start)
                   (insert new-text))
               (goto-char (point-max))
-              (insert new-text))))))))
+              (insert new-text))
+            (goto-char (point-min))
+            (when (re-search-forward "^\\* Repository Status" nil t)
+              (org-update-statistics-cookies nil))))))))
 
 ;;; Async Git Operations
 
@@ -288,6 +295,8 @@ Read-only — repos from these files are not written back on save.")
                  (when (>= (length line) 3)
                    (push (substring line 3) files)))
                (plist-put result :files (nreverse files))
+               (plist-put result :modified modified)
+               (plist-put result :untracked untracked)
                (let ((parts nil))
                  (when (> untracked 0)
                    (push (format "Untracked %d files" untracked) parts))
@@ -563,6 +572,6 @@ Read-only — repos from these files are not written back on save.")
 
 (global-set-key (kbd "C-x y p") #'repos-dashboard)
 
-(provide 'mijn-repos)
+(provide 'repos)
 
-;;; mijn-repos.el ends here
+;;; repos.el ends here
