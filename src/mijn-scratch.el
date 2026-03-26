@@ -1,6 +1,7 @@
 ;;; mijn-scratch.el --- Scratch buffer setup -*- lexical-binding: t; -*-
 
-(setq-default initial-major-mode 'fundamental-mode)
+(setq-default initial-major-mode 'emacs-lisp-mode)
+(setq-default initial-scratch-message ";; I've always thought they were lighthouses...\n\n")
 
 (defun immortal-scratch ()
   (if (eq (current-buffer) (get-buffer "*scratch*"))
