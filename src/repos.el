@@ -27,6 +27,8 @@
     (define-key map "c" #'repos-clone-repo)
     (define-key map "C" #'repos-clone-all-missing)
     (define-key map (kbd "RET") #'repos-open-repo)
+    (define-key map "^" #'repos-cycle-sort)
+    (define-key map "~" #'repos-toggle-sort-direction)
     (define-key map "q" #'quit-window)
     map)
   "Keymap for `repos-dashboard-mode'.")
@@ -139,6 +141,90 @@ Read-only — repos from these files are not written back on save.")
 (defvar repos--statuses (make-hash-table :test 'equal)
   "Hash table mapping repo path to its status plist.")
 
+;;; Sorting
+
+(defvar repos--sort-methods '(status name path)
+  "Available sort methods for the dashboard.")
+
+(defvar repos--current-sort 'status
+  "Current sort method for the dashboard.")
+
+(defvar repos--sort-ascending t
+  "Non-nil for ascending sort, nil for descending.")
+
+(defconst repos--todo-order
+  '("CHECKING" "FETCHING" "BEHIND" "MODIFIED" "MISSING" "ERROR" "UP_TO_DATE" "UNTRACKED")
+  "Status keywords in #+TODO header order, used for sorting.")
+
+(defun repos--todo-kw-for-path (path)
+  "Return the TODO keyword string for the repo at PATH."
+  (let* ((status (gethash path repos--statuses))
+         (state (plist-get status :state))
+         (behind (or (plist-get status :behind) 0))
+         (mod (or (plist-get status :modified) 0))
+         (untracked (or (plist-get status :untracked) 0)))
+    (cond
+     ((eq state 'missing) "MISSING")
+     ((or (null state) (eq state 'checking)) "CHECKING")
+     ((eq state 'fetching) "FETCHING")
+     ((eq state 'error) "ERROR")
+     ((> behind 0) "BEHIND")
+     ((> mod 0) "MODIFIED")
+     ((> untracked 0) "UNTRACKED")
+     (t "UP_TO_DATE"))))
+
+(defun repos--status-priority (path)
+  "Return a numeric priority for the repo at PATH based on #+TODO order."
+  (let ((kw (repos--todo-kw-for-path path)))
+    (or (cl-position kw repos--todo-order :test #'equal)
+        (length repos--todo-order))))
+
+(defun repos--sorted-entries ()
+  "Return `repos-list' sorted by the current method and direction."
+  (let* ((entries (copy-sequence repos-list))
+         (sorted
+          (pcase repos--current-sort
+            ('name
+             (sort entries (lambda (a b)
+                             (string< (file-name-nondirectory
+                                       (directory-file-name (repos--path a)))
+                                      (file-name-nondirectory
+                                       (directory-file-name (repos--path b)))))))
+            ('path
+             (sort entries (lambda (a b) (string< (repos--path a) (repos--path b)))))
+            ('status
+             (sort entries (lambda (a b)
+                             (< (repos--status-priority (repos--abbrev (repos--path a)))
+                                (repos--status-priority (repos--abbrev (repos--path b)))))))
+            (_ entries))))
+    (if repos--sort-ascending sorted (nreverse sorted))))
+
+(defun repos--sort-label ()
+  "Return a string describing the current sort."
+  (format "%s %s" repos--current-sort (if repos--sort-ascending "asc" "desc")))
+
+;;;###autoload
+(defun repos-cycle-sort ()
+  "Cycle through sort methods. On the same method, toggle asc/desc."
+  (interactive)
+  (let* ((idx (cl-position repos--current-sort repos--sort-methods))
+         (next (nth (mod (1+ (or idx 0)) (length repos--sort-methods))
+                    repos--sort-methods)))
+    (if (eq next repos--current-sort)
+        (setq repos--sort-ascending (not repos--sort-ascending))
+      (setq repos--current-sort next
+            repos--sort-ascending t))
+    (repos--render)
+    (message "Sort: %s" (repos--sort-label))))
+
+;;;###autoload
+(defun repos-toggle-sort-direction ()
+  "Toggle ascending/descending for the current sort method."
+  (interactive)
+  (setq repos--sort-ascending (not repos--sort-ascending))
+  (repos--render)
+  (message "Sort: %s" (repos--sort-label)))
+
 ;;; Rendering
 
 (defun repos--format-entry (path status)
@@ -186,8 +272,9 @@ Read-only — repos from these files are not written back on save.")
               (point-was (point)))
           (erase-buffer)
           (insert repos--header)
-          (insert "\n\n* Repository Status [/]\n\n")
-          (dolist (entry repos-list)
+          (insert (format "\n\n* Repository Status [/]  (sort: %s)\n\n"
+                          (repos--sort-label)))
+          (dolist (entry (repos--sorted-entries))
             (let* ((repo (repos--path entry))
                    (path (repos--abbrev repo))
                    (status (gethash path repos--statuses)))
