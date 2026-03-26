@@ -393,6 +393,33 @@ nil means revert to automatic (DHCP-provided) DNS.")
      (network-manager--render)
      (message "Scan complete"))))
 
+(defun network-manager--connect-with-password (ssid)
+  "Prompt for password and connect to SSID using wifi connect."
+  (let ((password (read-passwd (format "Password for %s: " ssid))))
+    (network-manager--run-nmcli
+     (format "Connecting to %s..." ssid)
+     "device" "wifi" "connect" ssid "password" password)))
+
+(defun network-manager--try-activate (ssid has-security)
+  "Try `connection up SSID'. On secrets failure, prompt for password and retry."
+  (message "Connecting to %s..." ssid)
+  (let ((buf (generate-new-buffer " *nm-activate*")))
+    (set-process-sentinel
+     (start-process "nm-activate" buf "nmcli" "connection" "up" ssid)
+     (lambda (proc _event)
+       (let ((exit (process-exit-status proc))
+             (output (with-current-buffer (process-buffer proc)
+                       (string-trim (buffer-string)))))
+         (kill-buffer (process-buffer proc))
+         (if (eq exit 0)
+             (progn
+               (message "Connected to %s" ssid)
+               (run-at-time 1 nil #'network-manager-refresh))
+           (if (and has-security
+                    (string-match-p "\\(?:Secrets\\|secret\\|password\\|Password\\)" output))
+               (network-manager--connect-with-password ssid)
+             (message "nmcli error: %s" output))))))))
+
 (defun network-manager-connect ()
   "Connect to the wifi network at point, or prompt for one."
   (interactive)
@@ -406,20 +433,14 @@ nil means revert to automatic (DHCP-provided) DNS.")
                             network-manager--wifi-networks))
              (security (and net (plist-get net :security)))
              (has-security (and security (not (string-empty-p security))))
-             ;; Check if we have a saved connection for this SSID
              (saved (seq-find (lambda (c) (equal (plist-get c :name) ssid))
                               network-manager--saved-connections)))
         (if saved
-            ;; Already saved — just activate
-            (network-manager--run-nmcli
-             (format "Connecting to %s..." ssid)
-             "connection" "up" ssid)
+            ;; Saved — try activating, fall back to password prompt on secrets error
+            (network-manager--try-activate ssid has-security)
           ;; New network
           (if has-security
-              (let ((password (read-passwd (format "Password for %s: " ssid))))
-                (network-manager--run-nmcli
-                 (format "Connecting to %s..." ssid)
-                 "device" "wifi" "connect" ssid "password" password))
+              (network-manager--connect-with-password ssid)
             (network-manager--run-nmcli
              (format "Connecting to %s..." ssid)
              "device" "wifi" "connect" ssid)))))))
