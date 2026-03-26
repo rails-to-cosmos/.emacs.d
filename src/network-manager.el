@@ -45,6 +45,7 @@ nil means revert to automatic (DHCP-provided) DNS.")
     (define-key map "D"       #'network-manager-delete-connection)
     (define-key map "t"       #'network-manager-toggle-wifi)
     (define-key map "e"       #'network-manager-set-dns)
+    (define-key map "r"       #'network-manager-open-router)
     (define-key map "n"       #'next-line)
     (define-key map "p"       #'previous-line)
     (define-key map "q"       #'quit-window)
@@ -357,6 +358,7 @@ nil means revert to automatic (DHCP-provided) DNS.")
         (insert (propertize "d" 'face 'bold) (propertize "=disconnect " 'face 'shadow))
         (insert (propertize "D" 'face 'bold) (propertize "=forget " 'face 'shadow))
         (insert (propertize "e" 'face 'bold) (propertize "=dns " 'face 'shadow))
+        (insert (propertize "r" 'face 'bold) (propertize "=router " 'face 'shadow))
         (insert (propertize "t" 'face 'bold) (propertize "=toggle-wifi " 'face 'shadow))
         (insert (propertize "q" 'face 'bold) (propertize "=quit" 'face 'shadow))
         (insert "\n")
@@ -483,6 +485,15 @@ nil means revert to automatic (DHCP-provided) DNS.")
                        (network-manager--run-nmcli
                         "Reactivating connection..."
                         "connection" "up" conn)))))))
+
+(defun network-manager-open-router ()
+  "Open the default gateway (router admin page) in a browser."
+  (interactive)
+  (let ((gw (and network-manager--status
+                 (plist-get network-manager--status :gateway))))
+    (if (and gw (not (string-empty-p gw)))
+        (browse-url (format "http://%s" gw))
+      (user-error "No gateway detected"))))
 
 (defun network-manager-toggle-wifi ()
   "Toggle wifi on/off."
