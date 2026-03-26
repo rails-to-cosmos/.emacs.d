@@ -70,13 +70,13 @@ Rules (in order):
    (t current-status)))
 
 (defun llm--last-terminal-line (buf)
-  "Return the last non-empty line from the vterm terminal in BUF."
+  "Return the last non-empty line from the vterm terminal in BUF.
+Uses `with-selected-window' avoidance to prevent scroll interference."
   (with-current-buffer buf
-    (save-excursion
-      (goto-char (point-max))
-      (skip-chars-backward "\n\r\t ")
-      (buffer-substring-no-properties
-       (line-beginning-position) (line-end-position)))))
+    (let ((content (buffer-substring-no-properties (point-min) (point-max))))
+      (if (string-match "\\([^\n\r\t ][^\n]*\\)[\n\r\t ]*\\'" content)
+          (match-string 1 content)
+        ""))))
 
 (defun llm--status-from-process (buf)
   "Determine new status for BUF based on process state and terminal content.
@@ -164,12 +164,15 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
 
 (defun llm--detect-status (buf)
   "Update the status for BUF based on process state.
-Uses `llm--status-from-process' to determine new status."
+Uses `llm--status-from-process' to determine new status.
+Only triggers a mode-line redraw when the status actually changes."
   (when (buffer-live-p buf)
     (with-current-buffer buf
-      (let ((new-status (llm--status-from-process buf)))
-        (puthash buf new-status llm--buffers)
-        (force-mode-line-update)))))
+      (let ((old-status (gethash buf llm--buffers))
+            (new-status (llm--status-from-process buf)))
+        (unless (eq old-status new-status)
+          (puthash buf new-status llm--buffers)
+          (force-mode-line-update))))))
 
 (defun llm--schedule-status-check ()
   "Schedule a debounced status check for the current claude buffer."
@@ -180,17 +183,18 @@ Uses `llm--status-from-process' to determine new status."
 
 (defun llm--filter-advice (orig-fn process input)
   "After vterm processes output, update buffer status.
-Uses `llm--status-from-output' to determine new status based on patterns."
+Uses `llm--status-from-output' to determine new status based on patterns.
+Only redraws when the status actually changes to avoid vterm jitter."
   (funcall orig-fn process input)
   (when-let ((buf (process-buffer process)))
     (when (buffer-live-p buf)
       (with-current-buffer buf
         (when (llm-buffer-p)
-          (let ((current-status (gethash buf llm--buffers))
-                (new-status (llm--status-from-output buf input (gethash buf llm--buffers))))
-            (when new-status
-              (puthash buf new-status llm--buffers))
-            (force-mode-line-update)
+          (let* ((old-status (gethash buf llm--buffers))
+                 (new-status (llm--status-from-output buf input old-status)))
+            (when (and new-status (not (eq old-status new-status)))
+              (puthash buf new-status llm--buffers)
+              (force-mode-line-update))
             (llm--schedule-status-check)))))))
 
 (advice-add 'vterm--filter :around #'llm--filter-advice)

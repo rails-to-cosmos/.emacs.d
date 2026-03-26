@@ -554,6 +554,8 @@ nil means revert to automatic (DHCP-provided) DNS.")
     (network-manager--start-timer)
     (add-hook 'kill-buffer-hook #'network-manager--stop-timer nil t)))
 
+(global-set-key (kbd "C-x y n") #'network-manager)
+
 (provide 'network-manager)
 
 ;;; network-manager.el ends here
