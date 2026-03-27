@@ -56,6 +56,16 @@
       (org-table-align)
       (goto-char (org-table-end)))))
 
+(defun parquet--paginator-string ()
+  "Return a paginator string showing current page position."
+  (let* ((total (or parquet--total-rows 0))
+         (page-num (1+ (/ parquet--current-offset parquet-page-size)))
+         (total-pages (max 1 (ceiling total parquet-page-size)))
+         (row-start (1+ parquet--current-offset))
+         (row-end (min (+ parquet--current-offset parquet-page-size) total)))
+    (format "Page %d/%d (rows %d–%d of %d)  [C-S-p ◀ prev | next ▶ C-S-n]  [^ first | last $]"
+            page-num total-pages row-start row-end total)))
+
 (defun parquet--render-page ()
   "Render the current page into the buffer."
   (let ((output (parquet--run-script "page" parquet--file
@@ -63,6 +73,7 @@
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert parquet--info-text)
+      (insert (parquet--paginator-string) "\n\n")
       (insert output "\n")
       (parquet--align-tables))
     (parquet--update-header)
@@ -123,13 +134,14 @@
 (defun parquet-refresh ()
   "Re-read metadata and refresh the current page."
   (interactive)
-  (let ((info (parquet--run-script "info" parquet--file)))
-    (setq parquet--info-text info)
-    (with-temp-buffer
-      (insert info)
-      (goto-char (point-min))
-      (when (re-search-forward "^#\\+PROPERTY: rows \\([0-9]+\\)" nil t)
-        (setq parquet--total-rows (string-to-number (match-string 1))))))
+  (let* ((info (parquet--run-script "info" parquet--file))
+         (total (with-temp-buffer
+                  (insert info)
+                  (goto-char (point-min))
+                  (when (re-search-forward "^#\\+PROPERTY: rows \\([0-9]+\\)" nil t)
+                    (string-to-number (match-string 1))))))
+    (setq parquet--info-text info
+          parquet--total-rows total))
   (parquet--render-page)
   (message "Refreshed"))
 
@@ -146,16 +158,17 @@
          (buf-name (format "*parquet:%s*" (file-name-nondirectory file)))
          (buf (get-buffer-create buf-name)))
     (with-current-buffer buf
-      (let ((info (parquet--run-script "info" file)))
+      (let* ((info (parquet--run-script "info" file))
+             (total (with-temp-buffer
+                      (insert info)
+                      (goto-char (point-min))
+                      (when (re-search-forward "^#\\+PROPERTY: rows \\([0-9]+\\)" nil t)
+                        (string-to-number (match-string 1))))))
         (parquet-mode)
-        (setq parquet--file file)
-        (setq parquet--current-offset 0)
-        (setq parquet--info-text info)
-        (with-temp-buffer
-          (insert info)
-          (goto-char (point-min))
-          (when (re-search-forward "^#\\+PROPERTY: rows \\([0-9]+\\)" nil t)
-            (setq parquet--total-rows (string-to-number (match-string 1))))))
+        (setq parquet--file file
+              parquet--current-offset 0
+              parquet--info-text info
+              parquet--total-rows total))
       (parquet--render-page))
     (pop-to-buffer buf)))
 
@@ -172,6 +185,19 @@
   (let ((file buffer-file-name))
     (kill-buffer (current-buffer))
     (parquet-open file)))
+
+(defun parquet--file-p (file)
+  "Return non-nil if FILE is a parquet file."
+  (string-match-p "\\.parquet\\(?:\\.gz\\)?\\'" file))
+
+(defun parquet--dired-find-file-advice (orig-fn &rest args)
+  "Intercept dired-find-file to open parquet files with parquet-open."
+  (let ((file (dired-get-file-for-visit)))
+    (if (parquet--file-p file)
+        (parquet-open file)
+      (apply orig-fn args))))
+
+(advice-add 'dired-find-file :around #'parquet--dired-find-file-advice)
 
 (provide 'parquet-mode)
 ;;; parquet-mode.el ends here
