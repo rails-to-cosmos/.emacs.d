@@ -196,4 +196,24 @@ If KWD is a number, get the corresponding match group."
 
 ;; )
 
+(defun xmobar-toggle-theme ()
+  "Toggle between light and dark xmobar themes and sync danneskjold theme."
+  (interactive)
+  (let ((light-enabled (custom-theme-enabled-p 'danneskjold-light)))
+    (if light-enabled
+        (progn
+          (disable-theme 'danneskjold-light)
+          (enable-theme 'danneskjold)
+          (message "Switched to dark theme")
+          (start-process "xmobar-theme-sync" nil "bash"
+                         (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh") "dark"))
+      (progn
+        (disable-theme 'danneskjold)
+        (enable-theme 'danneskjold-light)
+        (message "Switched to light theme")
+        (start-process "xmobar-theme-sync" nil "bash"
+                       (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh") "light")))))
+
+(global-set-key (kbd "C-x y t x") #'xmobar-toggle-theme)
+
 (provide 'mijn-ui)
