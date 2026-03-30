@@ -48,7 +48,7 @@
 ;;; Repository Configuration
 
 (defconst repos--header
-  "#+TODO: CHECKING FETCHING BEHIND MODIFIED MISSING ERROR | UNTRACKED UP_TO_DATE"
+  "#+TODO: CHECKING FETCHING | BEHIND MODIFIED MISSING ERROR UNTRACKED UP_TO_DATE"
   "Static header for the dashboard.")
 
 (defvar repos-file
@@ -147,6 +147,10 @@ Accepts files that set either `repos-list' or `scratch-repos'."
 
 (defvar repos--statuses (make-hash-table :test 'equal)
   "Hash table mapping repo path to its status plist.")
+
+(defvar repos--pending 0
+  "Number of repos still in CHECKING or FETCHING state.
+When this reaches 0, a full sorted re-render is triggered.")
 
 ;;; Sorting
 
@@ -293,8 +297,65 @@ Accepts files that set either `repos-list' or `scratch-repos'."
           (org-ctrl-c-ctrl-c)
           (goto-char (min point-was (point-max))))))))
 
-(defun repos--update (path)
-  "Update the heading for PATH in-place."
+(defun repos--resolved-p (path)
+  "Return non-nil if PATH's status is resolved (not CHECKING/FETCHING)."
+  (let ((kw (repos--todo-kw-for-path path)))
+    (not (member kw '("CHECKING" "FETCHING")))))
+
+(defun repos--sort-key (path)
+  "Return a sort key for PATH under the current sort method."
+  (pcase repos--current-sort
+    ('name (downcase (file-name-nondirectory (directory-file-name path))))
+    ('path (downcase path))
+    ('status (repos--status-priority path))
+    (_ 0)))
+
+(defun repos--sort-before-p (path-a path-b)
+  "Return non-nil if PATH-A should appear before PATH-B in current sort."
+  (let ((ka (repos--sort-key path-a))
+        (kb (repos--sort-key path-b)))
+    (if repos--sort-ascending
+        (if (numberp ka) (< ka kb) (string< ka kb))
+      (if (numberp ka) (> ka kb) (string> ka kb)))))
+
+(defun repos--delete-heading (path)
+  "Delete the heading for PATH in the current buffer. Return non-nil if found."
+  (goto-char (point-min))
+  (when (re-search-forward
+         (format "^\\*\\* [A-Z_]+ %s$" (regexp-quote path)) nil t)
+    (let ((start (line-beginning-position))
+          (end (or (save-excursion
+                     (when (re-search-forward "^\\*\\* " nil t)
+                       (line-beginning-position)))
+                   (point-max))))
+      (delete-region start end)
+      t)))
+
+(defun repos--find-insert-position (path)
+  "Return buffer position where PATH's heading should be inserted."
+  (goto-char (point-min))
+  (if (not (re-search-forward "^\\*\\* " nil t))
+      (point-max)
+    (goto-char (line-beginning-position))
+    (let ((insert-pos (point))
+          (found nil))
+      (while (and (not found)
+                  (looking-at "^\\*\\* [A-Z_]+ \\(.*\\)$"))
+        (let ((other-path (string-trim (match-string 1))))
+          (if (repos--sort-before-p path other-path)
+              (progn
+                (setq insert-pos (point))
+                (setq found t))
+            (setq insert-pos
+                  (or (save-excursion
+                        (when (re-search-forward "^\\*\\* " nil t)
+                          (line-beginning-position)))
+                      (point-max)))
+            (goto-char insert-pos))))
+      insert-pos)))
+
+(defun repos--update-in-place (path)
+  "Replace the heading for PATH without changing its position."
   (let ((buf (get-buffer repos-dashboard-buffer-name)))
     (when buf
       (with-current-buffer buf
@@ -305,19 +366,31 @@ Accepts files that set either `repos-list' or `scratch-repos'."
             (goto-char (point-min))
             (if (re-search-forward
                  (format "^\\*\\* [A-Z_]+ %s$" (regexp-quote path)) nil t)
-                (let ((heading-start (line-beginning-position))
-                      (heading-end (or (save-excursion
-                                         (when (re-search-forward "^\\*\\* " nil t)
-                                           (line-beginning-position)))
-                                       (point-max))))
-                  (delete-region heading-start heading-end)
-                  (goto-char heading-start)
+                (let ((start (line-beginning-position))
+                      (end (or (save-excursion
+                                 (when (re-search-forward "^\\*\\* " nil t)
+                                   (line-beginning-position)))
+                               (point-max))))
+                  (delete-region start end)
+                  (goto-char start)
                   (insert new-text))
               (goto-char (point-max))
               (insert new-text))
             (goto-char (point-min))
             (when (re-search-forward "^\\* Repository Status" nil t)
               (org-update-statistics-cookies nil))))))))
+
+(defun repos--update (path)
+  "Update the heading for PATH.
+During a bulk refresh (pending > 0), updates in-place to avoid
+shuffling.  When the last repo resolves, triggers a full sorted
+re-render."
+  (repos--update-in-place path)
+  (when (and (> repos--pending 0)
+             (repos--resolved-p path))
+    (setq repos--pending (1- repos--pending))
+    (when (= repos--pending 0)
+      (repos--render))))
 
 ;;; Async Git Operations
 
@@ -585,33 +658,36 @@ Accepts files that set either `repos-list' or `scratch-repos'."
 
 ;;;###autoload
 (defun repos-refresh ()
-  "Refresh repo at point, or all repos."
+  "Refresh repo at point, or all repos.
+Updates in-place during refresh; sorts when all complete."
   (interactive)
   (let ((path (repos--path-at-point)))
     (if path
+        ;; Single repo — mark pending, update in-place, sort on completion
         (progn
+          (setq repos--pending (1+ repos--pending))
           (puthash path (list :state 'checking) repos--statuses)
-          (repos--update path)
+          (repos--update-in-place path)
           (repos--fetch path))
-      (clrhash repos--statuses)
+      ;; All repos
+      (setq repos--pending (length repos-list))
       (dolist (entry repos-list)
-        (puthash (repos--abbrev (repos--path entry))
-                 (list :state 'checking)
-                 repos--statuses))
-      (repos--render)
+        (let ((p (repos--abbrev (repos--path entry))))
+          (puthash p (list :state 'checking) repos--statuses)
+          (repos--update-in-place p)))
       (dolist (entry repos-list)
         (repos--fetch (repos--path entry))))))
 
 ;;;###autoload
 (defun repos-refresh-all ()
-  "Refresh all monitored repositories."
+  "Refresh all monitored repositories.
+Updates in-place during refresh; sorts when all complete."
   (interactive)
-  (clrhash repos--statuses)
+  (setq repos--pending (length repos-list))
   (dolist (entry repos-list)
-    (puthash (repos--abbrev (repos--path entry))
-             (list :state 'checking)
-             repos--statuses))
-  (repos--render)
+    (let ((path (repos--abbrev (repos--path entry))))
+      (puthash path (list :state 'checking) repos--statuses)
+      (repos--update-in-place path)))
   (dolist (entry repos-list)
     (repos--fetch (repos--path entry))))
 
