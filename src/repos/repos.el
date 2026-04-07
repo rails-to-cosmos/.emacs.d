@@ -722,9 +722,10 @@ Updates in-place during refresh; sorts when all complete."
     (repos--save)))
 
 (defun repos--startup ()
-  "Load repos on startup."
+  "Load repos on startup and render the dashboard."
   (repos--load)
-  (repos--migrate))
+  (repos--migrate)
+  (repos-dashboard))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook #'repos--startup)

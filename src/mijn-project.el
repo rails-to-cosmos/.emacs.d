@@ -12,10 +12,11 @@
 
 (cl-defmacro defproject (project &key dependencies &allow-other-keys)
   (declare (indent 1) (debug t))
-  (cl-loop
+  (let ((root-dir (file-name-directory (or (__FILE__) load-file-name buffer-file-name ""))))
+    (cl-loop
      with header = `(progn
                       (defvar ,project (my-project :name (quote ,project)
-                                                   :root (file-name-directory (__FILE__)))))
+                                                   :root ,root-dir)))
      for dependency across dependencies
      collect `(funcall (-orfn  ;; Tryouts
 
@@ -81,6 +82,6 @@
                           (warn "Package %s is unavailable" dependency)))
                        (quote ,dependency))
      into forms
-     finally (return (append header forms))))
+     finally (return (append header forms)))))
 
 (provide 'mijn-project)
