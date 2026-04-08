@@ -1,0 +1,24 @@
+cabal-version: 2.4
+name:          repos-backend
+version:       0.1.0.0
+synopsis:      Git repository status backend for Emacs repos-dashboard
+license:       MIT
+
+executable repos-backend
+  main-is:          Main.hs
+  other-modules:    Repos.Git
+                  , Repos.Discover
+                  , Repos.Types
+  hs-source-dirs:   app, src
+  build-depends:    base >= 4.14 && < 5
+                  , aeson >= 2.0
+                  , bytestring
+                  , directory
+                  , filepath
+                  , process
+                  , text
+  default-language: GHC2021
+  default-extensions: OverloadedStrings
+                    , DeriveGeneric
+                    , RecordWildCards
+  ghc-options:      -Wall -O2
