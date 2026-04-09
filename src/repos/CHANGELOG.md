@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-04-09
+
+- Added Haskell backend for git operations
+- Auto-build prompt: if backend binary is missing, offers to run `cabal build -O2`
+- Fixed first-open rendering: dashboard now seeds CHECKING state and renders header before async fetch
+- Stable ordering during refresh: repos update in-place, sorted re-render only after all resolve
+- Sort by status follows `#+TODO` header order instead of hardcoded priorities
+- BEHIND, MODIFIED, MISSING, ERROR are now resolved (done) statuses alongside UP_TO_DATE/UNTRACKED
+- Only CHECKING and FETCHING are in-progress statuses
+
+## 2026-03-30
+
+- Repos now move to correct sorted position on state change
+- Refresh-all updates in-place during fetch, sorts only when all complete
+- Added `repos--sort-before-p` for position-aware updates
+- Colored sort label in heading (method in blue, direction in green)
+
 ## 2026-03-26
 
 - Refactored from mijn-scratch.el into standalone repos.el package

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-04-09
+
+- Fixed saved networks with expired passwords: updates stored PSK via `connection modify` then activates
+- Open networks: auto-disables `connection.autoconnect` to prevent joining untrusted hotspots
+
 ## 2026-03-26
 
 - Fixed connect to saved networks with expired passwords (auto-retry with password prompt)
