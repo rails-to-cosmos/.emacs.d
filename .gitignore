@@ -47,3 +47,4 @@ last-frame-state.el
 /xrandr-profiles/
 /.mypy_cache/
 /.project/
+dist-newstyle

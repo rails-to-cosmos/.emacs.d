@@ -13,8 +13,27 @@
                     user-emacs-directory)
   "Path to the repos-backend Haskell binary.")
 
+(defvar repos--backend-source-dir
+  (expand-file-name "src/repos/backend" user-emacs-directory)
+  "Directory containing the repos-backend Haskell source.")
+
+(defun repos--ensure-backend ()
+  "Ensure the backend binary exists. Offer to build it if missing."
+  (unless (file-executable-p repos--backend)
+    (if (y-or-n-p "repos-backend binary not found. Build it? ")
+        (let ((default-directory repos--backend-source-dir))
+          (message "Building repos-backend...")
+          (let ((exit-code (call-process "cabal" nil "*repos-build*" nil
+                                         "build" "-O2" "--enable-executable-stripping")))
+            (if (= exit-code 0)
+                (message "repos-backend built successfully")
+              (pop-to-buffer "*repos-build*")
+              (error "repos-backend build failed (exit %d)" exit-code))))
+      (user-error "repos-backend is required"))))
+
 (defun repos--call-sync (command &rest args)
   "Call the backend synchronously with COMMAND and ARGS. Return parsed JSON."
+  (repos--ensure-backend)
   (with-temp-buffer
     (let ((exit-code (apply #'call-process repos--backend nil t nil command args)))
       (unless (= exit-code 0)
@@ -24,6 +43,7 @@
 
 (defun repos--call-async (command args callback)
   "Call the backend asynchronously. CALLBACK receives parsed JSON on completion."
+  (repos--ensure-backend)
   (let ((buf (generate-new-buffer " *repos-backend*")))
     (set-process-sentinel
      (apply #'start-process "repos-backend" buf repos--backend command args)
@@ -531,6 +551,12 @@
     (pop-to-buffer buf)
     (unless (derived-mode-p 'repos-dashboard-mode)
       (repos-dashboard-mode))
+    ;; Seed all repos as CHECKING so the initial render has headings
+    (dolist (entry repos-list)
+      (let ((path (repos--abbrev (repos--path entry))))
+        (unless (gethash path repos--statuses)
+          (puthash path (list :state 'checking) repos--statuses))))
+    (repos--render)
     (repos-refresh)))
 
 (global-set-key (kbd "C-x y p") #'repos-dashboard)
