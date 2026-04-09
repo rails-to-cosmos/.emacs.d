@@ -1,10 +1,10 @@
 cabal-version: 2.4
-name:          repos-backend
+name:          repos
 version:       0.1.0.0
 synopsis:      Git repository status backend for Emacs repos-dashboard
 license:       MIT
 
-executable repos-backend
+executable repos
   main-is:          Main.hs
   other-modules:    Repos.Git
                   , Repos.Discover

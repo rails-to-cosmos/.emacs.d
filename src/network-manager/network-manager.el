@@ -395,24 +395,19 @@ nil means revert to automatic (DHCP-provided) DNS.")
 
 (defun network-manager--connect-with-password (ssid &optional saved-p)
   "Prompt for password and connect to SSID.
-If SAVED-P is non-nil, update the saved connection's PSK first,
-then activate it.  Otherwise use `device wifi connect'."
+If SAVED-P, deletes stale saved connection first, then uses
+`device wifi connect' which creates a fresh profile with the password."
   (let ((password (read-passwd (format "Password for %s: " ssid))))
     (if saved-p
-        ;; Update stored password, then activate
-        (let ((buf (generate-new-buffer " *nm-modify-psk*")))
+        ;; Delete stale profile, then connect fresh
+        (let ((buf (generate-new-buffer " *nm-delete-stale*")))
           (set-process-sentinel
-           (start-process "nm-modify-psk" buf
-                          "nmcli" "connection" "modify" ssid
-                          "802-11-wireless-security.psk" password)
+           (start-process "nm-delete-stale" buf "nmcli" "connection" "delete" ssid)
            (lambda (proc _event)
              (kill-buffer (process-buffer proc))
-             (if (eq (process-exit-status proc) 0)
-                 (network-manager--run-nmcli
-                  (format "Connecting to %s..." ssid)
-                  "connection" "up" ssid)
-               (message "Failed to update password for %s" ssid)))))
-      ;; New network — connect directly with password
+             (network-manager--run-nmcli
+              (format "Connecting to %s..." ssid)
+              "device" "wifi" "connect" ssid "password" password))))
       (network-manager--run-nmcli
        (format "Connecting to %s..." ssid)
        "device" "wifi" "connect" ssid "password" password))))
@@ -432,8 +427,7 @@ then activate it.  Otherwise use `device wifi connect'."
              (progn
                (message "Connected to %s" ssid)
                (run-at-time 1 nil #'network-manager-refresh))
-           (if (and has-security
-                    (string-match-p "\\(?:Secrets\\|secret\\|password\\|Password\\)" output))
+           (if (string-match-p "\\(?:Secrets\\|secret\\|password\\|Password\\|WPS\\)" output)
                (network-manager--connect-with-password ssid t)
              (message "nmcli error: %s" output))))))))
 

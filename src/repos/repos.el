@@ -9,27 +9,27 @@
 ;;; Backend
 
 (defvar repos--backend
-  (expand-file-name "src/repos/backend/dist-newstyle/build/x86_64-linux/ghc-9.6.7/repos-backend-0.1.0.0/x/repos-backend/build/repos-backend/repos-backend"
+  (expand-file-name "src/repos/dist-newstyle/build/x86_64-linux/ghc-9.6.7/repos-0.1.0.0/x/repos/opt/build/repos/repos"
                     user-emacs-directory)
-  "Path to the repos-backend Haskell binary.")
+  "Path to the repos Haskell binary.")
 
 (defvar repos--backend-source-dir
-  (expand-file-name "src/repos/backend" user-emacs-directory)
+  (expand-file-name "src/repos" user-emacs-directory)
   "Directory containing the repos-backend Haskell source.")
 
 (defun repos--ensure-backend ()
   "Ensure the backend binary exists. Offer to build it if missing."
   (unless (file-executable-p repos--backend)
-    (if (y-or-n-p "repos-backend binary not found. Build it? ")
+    (if (y-or-n-p "repos binary not found. Build it? ")
         (let ((default-directory repos--backend-source-dir))
-          (message "Building repos-backend...")
+          (message "Building repos...")
           (let ((exit-code (call-process "cabal" nil "*repos-build*" nil
                                          "build" "-O2" "--enable-executable-stripping")))
             (if (= exit-code 0)
-                (message "repos-backend built successfully")
+                (message "repos built successfully")
               (pop-to-buffer "*repos-build*")
-              (error "repos-backend build failed (exit %d)" exit-code))))
-      (user-error "repos-backend is required"))))
+              (error "repos build failed (exit %d)" exit-code))))
+      (user-error "repos is required"))))
 
 (defun repos--call-sync (command &rest args)
   "Call the backend synchronously with COMMAND and ARGS. Return parsed JSON."
@@ -37,20 +37,20 @@
   (with-temp-buffer
     (let ((exit-code (apply #'call-process repos--backend nil t nil command args)))
       (unless (= exit-code 0)
-        (error "repos-backend %s failed (exit %d): %s" command exit-code (buffer-string)))
+        (error "repos %s failed (exit %d): %s" command exit-code (buffer-string)))
       (goto-char (point-min))
       (json-read))))
 
 (defun repos--call-async (command args callback)
   "Call the backend asynchronously. CALLBACK receives parsed JSON on completion."
   (repos--ensure-backend)
-  (let ((buf (generate-new-buffer " *repos-backend*")))
+  (let ((buf (generate-new-buffer " *repos*")))
     (set-process-sentinel
-     (apply #'start-process "repos-backend" buf repos--backend command args)
+     (apply #'start-process "repos" buf repos--backend command args)
      (lambda (process _event)
        (if (not (eq (process-exit-status process) 0))
            (progn
-             (message "repos-backend %s failed" command)
+             (message "repos %s failed" command)
              (kill-buffer (process-buffer process)))
          (let ((json (with-current-buffer (process-buffer process)
                        (goto-char (point-min))
