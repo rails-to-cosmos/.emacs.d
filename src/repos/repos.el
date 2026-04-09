@@ -8,14 +8,13 @@
 
 ;;; Backend
 
-(defvar repos--backend
-  (expand-file-name "src/repos/dist-newstyle/build/x86_64-linux/ghc-9.6.7/repos-0.1.0.0/x/repos/opt/build/repos/repos"
-                    user-emacs-directory)
-  "Path to the repos Haskell binary.")
-
 (defvar repos--backend-source-dir
   (expand-file-name "src/repos" user-emacs-directory)
-  "Directory containing the repos-backend Haskell source.")
+  "Directory containing the repos Haskell source.")
+
+(defvar repos--backend
+  (expand-file-name "repos" repos--backend-source-dir)
+  "Path to the repos Haskell binary.")
 
 (defun repos--ensure-backend ()
   "Ensure the backend binary exists. Offer to build it if missing."
@@ -24,7 +23,11 @@
         (let ((default-directory repos--backend-source-dir))
           (message "Building repos...")
           (let ((exit-code (call-process "cabal" nil "*repos-build*" nil
-                                         "build" "-O2" "--enable-executable-stripping")))
+                                         "install" "-O2"
+                                         "--enable-executable-stripping"
+                                         "--install-method=copy"
+                                         (concat "--installdir=" repos--backend-source-dir)
+                                         "--overwrite-policy=always")))
             (if (= exit-code 0)
                 (message "repos built successfully")
               (pop-to-buffer "*repos-build*")
@@ -415,11 +418,16 @@
 ;;; Interactive Commands
 
 ;;;###autoload
-(defun repos-search (str)
-  "Search for STR in the dashboard."
-  (interactive "sSearch: ")
-  (goto-char (point-min))
-  (unless (search-forward str nil t) (message "Not found: %s" str)))
+(defun repos-search ()
+  "Jump to a repository headline via completing-read."
+  (interactive)
+  (let* ((paths (mapcar (lambda (e) (repos--abbrev (repos--path e))) repos-list))
+         (choice (completing-read "Repo: " paths nil t)))
+    (goto-char (point-min))
+    (unless (re-search-forward
+             (format "^\\*\\* [A-Z_]+ %s$" (regexp-quote choice)) nil t)
+      (message "Not found: %s" choice))
+    (beginning-of-line)))
 
 ;;;###autoload
 (defun repos-open-repo ()
