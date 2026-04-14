@@ -465,6 +465,63 @@ If SAVED-P, deletes stale saved connection first, then uses
                               "connection" "modify" ssid
                               "connection.autoconnect" "no"))))))))))
 
+(defun network-manager--connect-ssid (ssid)
+  "Connect to SSID using the right strategy (saved vs new, secured vs open)."
+  (let* ((net (seq-find (lambda (n) (equal (plist-get n :ssid) ssid))
+                        network-manager--wifi-networks))
+         (security (and net (plist-get net :security)))
+         (has-security (and security (not (string-empty-p security))))
+         (saved (seq-find (lambda (c) (equal (plist-get c :name) ssid))
+                          network-manager--saved-connections)))
+    (cond
+     (saved (network-manager--try-activate ssid has-security))
+     (has-security (network-manager--connect-with-password ssid))
+     (t
+      (network-manager--run-nmcli (format "Connecting to %s..." ssid)
+                                  "device" "wifi" "connect" ssid)
+      (run-at-time 2 nil
+                   (lambda ()
+                     (network-manager--run-nmcli
+                      "Disabling autoconnect for open network..."
+                      "connection" "modify" ssid
+                      "connection.autoconnect" "no")))))))
+
+(defun network-manager--ssid-candidates ()
+  "Return list of SSID display strings with signal and security annotations."
+  (cons
+   "[Refresh]"
+   (mapcar (lambda (n)
+             (format "%-32s %3d%%  %s"
+                     (plist-get n :ssid)
+                     (plist-get n :signal)
+                     (let ((sec (plist-get n :security)))
+                       (if (string-empty-p sec) "open" sec))))
+           network-manager--wifi-networks)))
+
+(defun network-manager--quick-connect-prompt ()
+  "Show completing-read with current wifi list.  Handle selection."
+  (let* ((candidates (network-manager--ssid-candidates))
+         (choice (completing-read "WiFi: " candidates nil t)))
+    (cond
+     ((or (null choice) (string-empty-p choice)) nil)
+     ((equal choice "[Refresh]")
+      (network-manager-quick-connect))
+     (t (network-manager--connect-ssid
+         (car (split-string choice "  *")))))))
+
+;;;###autoload
+(defun network-manager-quick-connect ()
+  "Async scan wifi, then connect via completing-read.
+Pick \"[Refresh]\" to rescan without exit."
+  (interactive)
+  (message "Scanning wifi...")
+  (network-manager--scan-wifi
+   (lambda (_nets)
+     (network-manager--get-saved-connections
+      (lambda (_conns)
+        (message "Scanning wifi... done")
+        (network-manager--quick-connect-prompt))))))
+
 (defun network-manager-disconnect ()
   "Disconnect the current wifi connection."
   (interactive)
@@ -607,6 +664,7 @@ If SAVED-P, deletes stale saved connection first, then uses
     (add-hook 'kill-buffer-hook #'network-manager--stop-timer nil t)))
 
 (global-set-key (kbd "C-x y n") #'network-manager)
+(global-set-key (kbd "C-x y w") #'network-manager-quick-connect)
 
 (provide 'network-manager)
 
