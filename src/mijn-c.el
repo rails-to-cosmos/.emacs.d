@@ -1,85 +1,61 @@
-(require 'lsp)
-(require 'lsp-mode)
-(require 'dap-cpptools)
+;;; mijn-c.el --- C/C++ development setup -*- lexical-binding: t; -*-
 
-;; (use-package clang-capf
-;;   :ensure t)
+;; Source navigation strategy:
+;;   clangd (eglot, M-.)  — declarations, headers, in-project definitions
+;;   ggtags (GNU Global)  — implementations across library sources
+;;
+;; For a project, run init.sh to:
+;;   - fetch library sources into .sources/
+;;   - build GTAGS databases per library
+;; Then wire GTAGSLIBPATH (in .envrc or .dir-locals.el) so ggtags spans them.
 
 (use-package disaster
   :ensure t)
 
-(use-package doxy-graph-mode
-  :ensure t)
-
 (use-package highlight-doxygen
-  :ensure t)
+  :ensure t
+  :hook ((c-mode . highlight-doxygen-mode)
+         (c++-mode . highlight-doxygen-mode)))
 
 (use-package cmake-mode
-  :hook ((cmake-mode . lsp-deferred))
-  :ensure t)
+  :ensure t
+  :hook (cmake-mode . eglot-ensure))
 
 (use-package cmake-font-lock
   :ensure t)
 
-(use-package cmake-ide
-  :ensure t)
-
-(defun !lsp-tramp-connection ()
-  (set-process-coding-system proc 'binary 'utf-8-unix))
-
-(use-package lsp-mode
-  :commands lsp
-  :config (progn
-            (advice-add #'lsp-tramp-connection :override #'!lsp-tramp-connection)
-
-            (setq inhibit-eol-conversion t))
-  :ensure t)
-
-(use-package lsp-ui
-  :commands lsp-ui-mode
-  :ensure t)
-
-;; (use-package ccls
-;;   :ensure t
-;;   :config (progn
-;;             (setq ccls-executable "ccls")
-;;             (setq lsp-prefer-flymake nil)
-;;             (setq c-basic-offset 4)
-;;             (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc))
-;;             (ccls-use-default-rainbow-sem-highlight))
-;;   :hook ((c-mode c++-mode objc-mode) . (lambda () (require 'ccls) (lsp-deferred))))
-
-;; (use-package cc-mode
-;;   :config (progn
-;;             (require 'dap-cpptools)
-
-;;             (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]build\\'"))
-;;   :custom
-;;   (lsp-prefer-flymake nil)
-;;   (c-basic-offset 4)
-;;   :hook (((c-mode c++-mode objc-mode) . lsp-deferred)
-;;          ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
-;;   :bind (("C-x C-x" . ff-find-other-file))
-;;   :ensure t)
+;; GNU Global — cross-project source navigation (M-. into library implementations).
+;; Set GTAGSLIBPATH in .envrc or .dir-locals.el to also search library sources:
+;;   (setenv "GTAGSLIBPATH" "/path/to/project/.sources/raylib:/usr/src/glibc/glibc-2.40")
+(use-package ggtags
+  :ensure t
+  :hook ((c-mode   . ggtags-mode)
+         (c++-mode . ggtags-mode)
+         (asm-mode . ggtags-mode)))
 
 (use-package cc-mode
-  :config (progn
-            (require 'eglot)
-            (add-hook 'c-mode-common-hook (electric-indent-local-mode -1))
-            (keymap-set c-mode-map "<Return>" 'electric-newline-and-maybe-indent)
-            (keymap-set c++-mode-map "<Return>" 'electric-newline-and-maybe-indent))
+  :config
+  (add-hook 'c-mode-common-hook (lambda () (electric-indent-local-mode -1)))
+  (keymap-set c-mode-map "<Return>" #'electric-newline-and-maybe-indent)
+  (keymap-set c++-mode-map "<Return>" #'electric-newline-and-maybe-indent)
 
   :custom
   (c-basic-offset 4)
 
   :hook (((c-mode c++-mode objc-mode) . eglot-ensure)
          ((c-mode c++-mode objc-mode) . company-mode)
-         ((c-mode c++-mode objc-mode) . smartparens-strict-mode))
+         ((c-mode c++-mode objc-mode) . smartparens-strict-mode)
+         ((c-mode c++-mode objc-mode) . yas-minor-mode))
 
   :bind (:map c-mode-map
+              ("C-x C-x" . ff-find-other-file)
+         :map c++-mode-map
               ("C-x C-x" . ff-find-other-file))
 
   :ensure t
-  :ensure eglot)
+  :ensure eglot
+  :ensure company
+  :ensure yasnippet)
 
 (provide 'mijn-c)
+;;; mijn-c.el ends here
