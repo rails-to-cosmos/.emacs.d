@@ -53,7 +53,8 @@ as-is — caller is responsible for the result compiling."
       (save-excursion
         (my-python--skip-module-header)
         (dolist (imp (nreverse imports))
-          (insert imp)))))
+          (insert imp))
+        (insert "\n"))))
   (pyimpsort-buffer))
 
 (cl-defun my-python-mode-hook ()
@@ -103,6 +104,7 @@ as-is — caller is responsible for the result compiling."
 
   :bind (:map python-mode-map
               ("C-c i" . my-python-imports)
+              ("C-c I" . my-python-hoist-imports)
               ("C-c C-c" . my-python-paragraph-eval)
               ("C-c C-k" . my-python-kill-comments)
               ("M-n" . flymake-goto-next-error)
