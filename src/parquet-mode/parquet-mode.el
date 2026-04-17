@@ -21,14 +21,21 @@
 (defvar-local parquet--info-text nil
   "Cached metadata/schema text for the file.")
 
+(defvar-local parquet--sort-column nil
+  "Column name to sort by, or nil for natural order.")
+
+(defvar-local parquet--sort-desc nil
+  "Non-nil for descending sort.")
+
 (defvar parquet-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "n" #'next-line)
     (define-key map "p" #'previous-line)
     (define-key map (kbd "C-S-n") #'parquet-next-page)
     (define-key map (kbd "C-S-p") #'parquet-prev-page)
-    (define-key map "$" #'parquet-last-page)
-    (define-key map "^" #'parquet-first-page)
+    (define-key map ">" #'parquet-last-page)
+    (define-key map "<" #'parquet-first-page)
+    (define-key map "^" #'parquet-sort-by-column)
     (define-key map "g" #'parquet-refresh)
     (define-key map "?" #'parquet-help)
     (define-key map "q" #'quit-window)
@@ -40,13 +47,15 @@
   (setq buffer-read-only t))
 
 (defun parquet--run-script (command file &rest args)
-  "Run the parquet-info script with COMMAND, FILE, and ARGS. Return stdout."
+  "Run the parquet-info script with COMMAND, FILE, and ARGS. Return stdout.
+ARGS are converted to strings. Use strings directly for keyword arguments."
   (with-temp-buffer
-    (let ((exit-code (apply #'call-process parquet--script nil t nil
-                            command file (mapcar #'number-to-string args))))
-      (unless (= exit-code 0)
-        (error "parquet-info %s failed (exit %d): %s" command exit-code (buffer-string)))
-      (buffer-string))))
+    (let ((str-args (mapcar (lambda (a) (if (stringp a) a (number-to-string a))) args)))
+      (let ((exit-code (apply #'call-process parquet--script nil t nil
+                              command file str-args)))
+        (unless (= exit-code 0)
+          (error "parquet-info %s failed (exit %d): %s" command exit-code (buffer-string)))
+        (buffer-string)))))
 
 (defun parquet--align-tables ()
   "Align all org tables in the buffer."
@@ -62,14 +71,24 @@
          (page-num (1+ (/ parquet--current-offset parquet-page-size)))
          (total-pages (max 1 (ceiling total parquet-page-size)))
          (row-start (1+ parquet--current-offset))
-         (row-end (min (+ parquet--current-offset parquet-page-size) total)))
-    (format "Page %d/%d (rows %d–%d of %d)  [C-S-p ◀ prev | next ▶ C-S-n]  [^ first | last $]"
-            page-num total-pages row-start row-end total)))
+         (row-end (min (+ parquet--current-offset parquet-page-size) total))
+         (sort-info (if parquet--sort-column
+                        (format "  sorted by: %s %s"
+                                parquet--sort-column
+                                (if parquet--sort-desc "▼" "▲"))
+                      "")))
+    (format "Page %d/%d (rows %d–%d of %d)%s  [C-S-p ◀ | ▶ C-S-n]  [< first | last >]  [^ sort]"
+            page-num total-pages row-start row-end total sort-info)))
 
 (defun parquet--render-page ()
   "Render the current page into the buffer."
-  (let ((output (parquet--run-script "page" parquet--file
-                                     parquet--current-offset parquet-page-size)))
+  (let ((output (apply #'parquet--run-script "page" parquet--file
+                       parquet--current-offset parquet-page-size
+                       (append
+                        (when parquet--sort-column
+                          (list "--sort_by" parquet--sort-column))
+                        (when parquet--sort-desc
+                          (list "--sort_desc"))))))
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert parquet--info-text)
@@ -130,6 +149,40 @@
       (setq parquet--current-offset last-offset)
       (parquet--render-page))))
 
+(defun parquet--column-at-point ()
+  "Return the column name at point if inside an org table in the Data section."
+  (when (and (org-at-table-p)
+             (save-excursion
+               (re-search-backward "^\\* Data" nil t)))
+    (let ((col-idx (org-table-current-column)))
+      (save-excursion
+        (goto-char (org-table-begin))
+        (org-table-goto-column col-idx)
+        (when (looking-at "\\s-*\\([^ |]+\\)")
+          (string-trim (match-string 1)))))))
+
+(defun parquet-sort-by-column ()
+  "Sort the data by the column at point. Toggle asc/desc on repeated press."
+  (interactive)
+  (let ((col (parquet--column-at-point)))
+    (unless col
+      (user-error "Not on a data table column"))
+    (if (equal col parquet--sort-column)
+        (if parquet--sort-desc
+            ;; Already desc — clear sort
+            (setq parquet--sort-column nil
+                  parquet--sort-desc nil)
+          ;; Was asc — switch to desc
+          (setq parquet--sort-desc t))
+      ;; New column — sort ascending
+      (setq parquet--sort-column col
+            parquet--sort-desc nil))
+    (setq parquet--current-offset 0)
+    (parquet--render-page)
+    (if parquet--sort-column
+        (message "Sort: %s %s" parquet--sort-column (if parquet--sort-desc "desc" "asc"))
+      (message "Sort cleared"))))
+
 ;;;###autoload
 (defun parquet-refresh ()
   "Re-read metadata and refresh the current page."
@@ -148,7 +201,7 @@
 (defun parquet-help ()
   "Show parquet-mode keybindings."
   (interactive)
-  (message "n/p: line  C-S-n/C-S-p: page  ^/$: first/last  g: refresh  q: quit"))
+  (message "n/p: line  C-S-n/C-S-p: page  </>: first/last  ^: sort column  g: refresh  q: quit"))
 
 ;;;###autoload
 (defun parquet-open (file)
