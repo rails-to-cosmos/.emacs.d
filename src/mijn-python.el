@@ -11,6 +11,51 @@
     (python-fix-imports)
     (pyimpsort-buffer)))
 
+(defun my-python--dedent (text)
+  "Strip leading whitespace from each line of TEXT."
+  (replace-regexp-in-string "^[ \t]+" "" text))
+
+(defun my-python--skip-module-header ()
+  "Move point past shebang, coding decl, module docstring, and existing
+top-level imports — where hoisted imports should be inserted."
+  (goto-char (point-min))
+  (when (looking-at "#!") (forward-line 1))
+  (when (looking-at "^[ \t]*#.*coding[:=]") (forward-line 1))
+  (while (looking-at "^[ \t]*$") (forward-line 1))
+  (when (looking-at "^[ \t]*[ur]?[\"']")
+    (ignore-errors (forward-sexp 1))
+    (when (eolp) (forward-line 1)))
+  (while (or (looking-at "^[ \t]*$")
+             (looking-at "^\\(import\\|from\\)[ \t]"))
+    (forward-line 1)))
+
+(defun my-python-hoist-imports ()
+  "Move every indented (inline) import statement to the top of the buffer,
+then call `pyimpsort-buffer' to dedupe and sort.
+
+Handles multi-line imports via `python-nav-end-of-statement'. Leaves any
+surrounding context (e.g. `if TYPE_CHECKING:' guards, empty function bodies)
+as-is — caller is responsible for the result compiling."
+  (interactive)
+  (let ((imports '())
+        (case-fold-search nil))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^[ \t]+\\(import\\|from[ \t]\\)" nil t)
+        (beginning-of-line)
+        (let ((start (point)))
+          (python-nav-end-of-statement)
+          (forward-line 1)
+          (let ((text (buffer-substring-no-properties start (point))))
+            (push (my-python--dedent text) imports)
+            (delete-region start (point))))))
+    (when imports
+      (save-excursion
+        (my-python--skip-module-header)
+        (dolist (imp (nreverse imports))
+          (insert imp)))))
+  (pyimpsort-buffer))
+
 (cl-defun my-python-mode-hook ()
   (setenv "VIRTUAL_ENV" nil) ;; temporary fix that avoids uv scripts to set its temporary environmant for all projects
   (require 'pyvenv)
