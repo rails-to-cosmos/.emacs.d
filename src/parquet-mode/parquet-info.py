@@ -32,9 +32,12 @@ class ParquetInfo:
         print("* Data")
         print()
 
-    def page(self, path: str, offset: int = 0, limit: int = 50) -> None:
+    def page(self, path: str, offset: int = 0, limit: int = 50,
+             sort_by: str = "", sort_desc: bool = False) -> None:
         """Print a page of rows as an org table."""
         lf = pl.scan_parquet(path)
+        if sort_by:
+            lf = lf.sort(sort_by, descending=sort_desc)
         df = lf.slice(offset, limit).collect()
 
         if df.is_empty():
