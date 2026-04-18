@@ -1,0 +1,23 @@
+[package]
+name = "parquet-mod"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "parquet_mod"
+crate-type = ["cdylib"]
+
+[dependencies]
+emacs = "0.19"
+polars = { version = "0.41", default-features = false, features = [
+    "lazy",
+    "parquet",
+    "dtype-full",
+    "strings",
+    "temporal",
+] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

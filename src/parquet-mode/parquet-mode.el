@@ -4,7 +4,27 @@
 
 (defvar parquet--script
   (expand-file-name "src/parquet-mode/parquet-info.py" user-emacs-directory)
-  "Path to the parquet-info Python script.")
+  "Path to the parquet-info Python script (fallback when native module is unavailable).")
+
+(defvar parquet--native-module
+  (expand-file-name
+   (format "src/parquet-mode/rust/target/release/libparquet_mod.%s"
+           (if (eq system-type 'darwin) "dylib" "so"))
+   user-emacs-directory)
+  "Path to the compiled Rust/polars dynamic module.")
+
+(defvar parquet--native-loaded nil
+  "Non-nil if the native parquet-mod module has been successfully loaded.")
+
+(defun parquet--try-load-native ()
+  "Attempt to load the native module once. Return non-nil on success."
+  (or parquet--native-loaded
+      (setq parquet--native-loaded
+            (and (fboundp 'module-load)
+                 (file-exists-p parquet--native-module)
+                 (ignore-errors
+                   (module-load parquet--native-module)
+                   t)))))
 
 (defvar parquet-page-size 10
   "Number of rows to load per page.")
@@ -40,13 +60,18 @@
   (setq buffer-read-only t))
 
 (defun parquet--run-script (command file &rest args)
-  "Run the parquet-info script with COMMAND, FILE, and ARGS. Return stdout."
-  (with-temp-buffer
-    (let ((exit-code (apply #'call-process parquet--script nil t nil
-                            command file (mapcar #'number-to-string args))))
-      (unless (= exit-code 0)
-        (error "parquet-info %s failed (exit %d): %s" command exit-code (buffer-string)))
-      (buffer-string))))
+  "Execute COMMAND (\"info\" or \"page\") for FILE with ARGS. Return output text.
+Prefers the native Rust/polars module when available; falls back to the
+Python `parquet-info.py' script otherwise."
+  (if (and (parquet--try-load-native)
+           (fboundp (intern (format "parquet-mod-%s" command))))
+      (apply (intern (format "parquet-mod-%s" command)) file args)
+    (with-temp-buffer
+      (let ((exit-code (apply #'call-process parquet--script nil t nil
+                              command file (mapcar #'number-to-string args))))
+        (unless (= exit-code 0)
+          (error "parquet-info %s failed (exit %d): %s" command exit-code (buffer-string)))
+        (buffer-string)))))
 
 (defun parquet--align-tables ()
   "Align all org tables in the buffer."
