@@ -3,7 +3,29 @@
 ;;; Code:
 
 (declare-function eshell-send-input "esh-mode")
+(declare-function vterm-send-string "vterm")
+(declare-function vterm-send-return "vterm")
 (defvar eshell-buffer-name)
+
+(defun make--send-command (buffer-name command)
+  "Send COMMAND to BUFFER-NAME using vterm or fall back to eshell."
+  (if (fboundp 'vterm)
+      (condition-case err
+          (progn
+            (vterm buffer-name)
+            (vterm-send-string command)
+            (vterm-send-return))
+        (error
+         (message "Warning: vterm failed, falling back to eshell")
+         (make--send-to-eshell buffer-name command)))
+    (message "Warning: vterm is not available, falling back to eshell")
+    (make--send-to-eshell buffer-name command)))
+
+(defun make--send-to-eshell (buffer-name command)
+  "Send COMMAND to BUFFER-NAME using eshell."
+  (with-current-buffer (let ((eshell-buffer-name buffer-name)) (eshell))
+    (insert command)
+    (eshell-send-input)))
 
 (cl-defun make-completing-read ()
   "Search and scan dominating Makefile - choose a make target - run it in eshell."
@@ -28,9 +50,7 @@
             (when (buffer-live-p (get-buffer output-buffer-name))
               (kill-buffer output-buffer-name))
 
-            (with-current-buffer (let ((eshell-buffer-name output-buffer-name)) (eshell))
-              (insert (format "make %s" target))
-              (eshell-send-input))))))
+            (make--send-command output-buffer-name (format "make %s" target))))))
 
     (unless (equal (current-buffer) (get-buffer output-buffer-name))
       (switch-to-buffer-other-window output-buffer-name)
