@@ -351,6 +351,120 @@ once the session becomes idle."
     (with-temp-file file (insert text))
     file))
 
+;;; Prompt child-frame ("thinking bubble")
+
+(defface llm-prompt-frame-face
+  '((((background dark))
+     :background "#2a2a3a" :foreground "#e6e6ee")
+    (t :background "#fff8e6" :foreground "#1a1a1a"))
+  "Face for the prompt child frame's default text and background."
+  :group 'llm)
+
+(defface llm-prompt-frame-border-face
+  '((((background dark)) :background "#7aa2f7")
+    (t :background "#5c7cfa"))
+  "Face whose :background colors the prompt child frame's border."
+  :group 'llm)
+
+(defvar llm--prompt-frame nil
+  "Currently visible prompt child frame, or nil.")
+
+(defvar-local llm--prompt-face-cookie nil
+  "Cookie from `face-remap-add-relative' used inside the prompt buffer.")
+
+(defvar llm-prompt-frame-size '(80 . 14)
+  "Target (COLS . ROWS) of the prompt child frame.")
+
+(defvar llm-prompt-bubble-steps 8
+  "Number of animation frames from point to full prompt size.")
+
+(defvar llm-prompt-bubble-interval 0.018
+  "Seconds between animation steps.")
+
+(defvar llm-prompt-frame-parameters
+  '((minibuffer . nil)
+    (undecorated . t)
+    (internal-border-width . 2)
+    (child-frame-border-width . 1)
+    (left-fringe . 8) (right-fringe . 8)
+    (vertical-scroll-bars . nil) (horizontal-scroll-bars . nil)
+    (menu-bar-lines . 0) (tool-bar-lines . 0) (tab-bar-lines . 0)
+    (no-accept-focus . nil)
+    (unsplittable . t)
+    (no-other-frame . t)
+    (cursor-type . box)
+    (visibility . nil)))
+
+(defun llm--prompt-anchor-xy ()
+  "Return pixel (X . Y) at point in the selected window's frame."
+  (let* ((edges (window-inside-pixel-edges))
+         (posn (posn-at-point))
+         (xy (and posn (posn-x-y posn))))
+    (if xy
+        (cons (+ (nth 0 edges) (car xy))
+              (+ (nth 1 edges) (cdr xy) (default-line-height)))
+      (cons (nth 0 edges) (nth 1 edges)))))
+
+(defun llm--prompt-apply-styles (frame buf)
+  "Apply `llm-prompt-frame-face' + border face to FRAME and BUF."
+  (let ((bg  (face-attribute 'llm-prompt-frame-face :background nil 'default))
+        (fg  (face-attribute 'llm-prompt-frame-face :foreground nil 'default))
+        (bd  (face-attribute 'llm-prompt-frame-border-face :background nil 'default)))
+    (when (stringp bg) (set-frame-parameter frame 'background-color bg))
+    (when (stringp fg) (set-frame-parameter frame 'foreground-color fg))
+    (dolist (face '(internal-border child-frame-border))
+      (when (facep face)
+        (set-face-background face (if (stringp bd) bd 'unspecified) frame)))
+    (with-current-buffer buf
+      (when llm--prompt-face-cookie
+        (face-remap-remove-relative llm--prompt-face-cookie))
+      (setq llm--prompt-face-cookie
+            (face-remap-add-relative 'default 'llm-prompt-frame-face)))))
+
+(defun llm--prompt-make-frame (buf anchor)
+  "Create the prompt child frame showing BUF, anchored at ANCHOR (X . Y) pixels."
+  (let* ((parent (selected-frame))
+         (params (append `((parent-frame . ,parent)
+                           (left . ,(car anchor))
+                           (top  . ,(cdr anchor))
+                           (width . 1) (height . 1))
+                         llm-prompt-frame-parameters))
+         (frame (make-frame params))
+         (win (frame-selected-window frame)))
+    (set-window-buffer win buf)
+    (set-window-dedicated-p win t)
+    (set-window-parameter win 'no-other-window t)
+    (llm--prompt-apply-styles frame buf)
+    (make-frame-visible frame)
+    frame))
+
+(defun llm--animate-prompt-frame (frame target-w target-h)
+  "Grow FRAME from 1x1 to TARGET-W x TARGET-H over `llm-prompt-bubble-steps'."
+  (let* ((i 0) (steps llm-prompt-bubble-steps) timer)
+    (setq timer
+          (run-with-timer
+           0 llm-prompt-bubble-interval
+           (lambda ()
+             (cl-incf i)
+             (cond
+              ((not (frame-live-p frame))
+               (cancel-timer timer))
+              ((>= i steps)
+               (set-frame-size frame target-w target-h)
+               (select-frame-set-input-focus frame)
+               (cancel-timer timer))
+              (t
+               (let ((k (/ (float i) steps)))
+                 (set-frame-size frame
+                                 (max 1 (round (* target-w k)))
+                                 (max 1 (round (* target-h k))))))))))))
+
+(defun llm--close-prompt-frame ()
+  "Delete the prompt child frame if it's live."
+  (when (and llm--prompt-frame (frame-live-p llm--prompt-frame))
+    (delete-frame llm--prompt-frame t))
+  (setq llm--prompt-frame nil))
+
 ;;;###autoload
 (defun llm-prompt-send ()
   "Send the contents of the prompt buffer to Claude.
@@ -358,17 +472,21 @@ Sends to the Claude buffer corresponding to the project root where
 the prompt was opened."
   (interactive)
   (let ((prompt (string-trim (buffer-string)))
-        (root llm--prompt-project-root))
+        (root llm--prompt-project-root)
+        (buf (current-buffer)))
     (when (string-empty-p prompt)
       (user-error "Empty prompt"))
-    (kill-buffer (current-buffer))
+    (llm--close-prompt-frame)
+    (kill-buffer buf)
     (llm--send-to-claude prompt root)))
 
 (defun llm-prompt-cancel ()
   "Cancel the prompt and close the prompt buffer."
   (interactive)
-  (kill-buffer (current-buffer))
-  (message "Prompt cancelled"))
+  (let ((buf (current-buffer)))
+    (llm--close-prompt-frame)
+    (kill-buffer buf)
+    (message "Prompt cancelled")))
 
 ;;;###autoload
 (defun llm-prompt ()
@@ -403,7 +521,15 @@ Pre-populates context based on the current state:
       (erase-buffer)
       (when prefix (insert prefix))
       (setq-local llm--prompt-project-root root))
-    (pop-to-buffer buf)))
+    (llm--close-prompt-frame)
+    (if (display-graphic-p)
+        (let* ((anchor (llm--prompt-anchor-xy))
+               (frame (llm--prompt-make-frame buf anchor)))
+          (setq llm--prompt-frame frame)
+          (llm--animate-prompt-frame frame
+                                     (car llm-prompt-frame-size)
+                                     (cdr llm-prompt-frame-size)))
+      (pop-to-buffer buf))))
 
 ;;; Change Highlighting on Revert
 
