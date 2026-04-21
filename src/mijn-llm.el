@@ -1,8 +1,15 @@
-;;; my-llm.el --- Claude CLI integration for Emacs -*- lexical-binding: t; -*-
+;;; mijn-llm.el --- Claude CLI integration for Emacs -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
 
 (defvar vterm-shell)
+(defvar vterm--process)
+(defvar llm--prompt-queue)
+
+(declare-function vterm-insert "vterm")
+(declare-function vterm-send-return "vterm")
+(declare-function vterm-other-window "vterm")
+(declare-function face-remap-remove-relative "face-remap")
 
 ;;; Project Root Detection
 
@@ -44,8 +51,16 @@
 ;;; Status Detection Patterns and Logic
 
 (defvar llm--permission-pattern
-  "Allow\\|allow\\|permit\\|approve\\|Yes.*No\\|\\(y\\).*\\(n\\)"
-  "Regex matched against raw vterm output to detect permission prompts (→ blocked).")
+  (rx (or "Do you want to proceed"
+          "❯ 1. Yes"
+          "❯ 2. Yes"
+          "[y/N]"
+          "[Y/n]"
+          (seq "(y" (0+ space) "/" (0+ space) "n)")
+          (seq "(Y" (0+ space) "/" (0+ space) "n)")))
+  "Regex matching Claude CLI permission prompts (→ blocked).
+Anchored on distinctive UI markers rather than generic words like
+\"allow\" or \"yes\" so it doesn't false-positive on prose.")
 
 (defvar llm--busy-pattern
   "esc to interrupt"
@@ -55,13 +70,13 @@
   "^[^[:space:]].*[%$>#λ]\\s*$"
   "Regex to detect shell prompts and user input areas (ignored for status).")
 
-(defun llm--status-from-output (buf input current-status)
-  "Determine new status for BUF based on vterm OUTPUT.
+(defun llm--status-from-output (input current-status)
+  "Determine new status based on vterm INPUT chunk and CURRENT-STATUS.
 Rules (in order):
-1. If INPUT matches permission pattern → 'blocked'
-2. If INPUT matches busy pattern → 'busy'
-3. If INPUT is not a shell prompt and not 'busy' → 'busy'
-4. Otherwise → keep current-status"
+1. INPUT matches permission pattern → \\='blocked
+2. INPUT matches busy pattern → \\='busy
+3. INPUT is not a shell prompt and current isn't already busy → \\='busy
+4. Otherwise → keep CURRENT-STATUS."
   (cond
    ((string-match-p llm--permission-pattern input) 'blocked)
    ((string-match-p llm--busy-pattern input) 'busy)
@@ -69,11 +84,17 @@ Rules (in order):
     (unless (eq current-status 'busy) 'busy))
    (t current-status)))
 
+(defconst llm--terminal-tail-bytes 4096
+  "Bytes of trailing vterm content to scan for status detection.
+Enough to cover any realistic permission prompt while keeping
+regex time O(1) regardless of session length.")
+
 (defun llm--last-terminal-line (buf)
-  "Return the last non-empty line from the vterm terminal in BUF.
-Uses `with-selected-window' avoidance to prevent scroll interference."
+  "Return the last non-empty line from the vterm terminal in BUF."
   (with-current-buffer buf
-    (let ((content (buffer-substring-no-properties (point-min) (point-max))))
+    (let* ((end (point-max))
+           (beg (max (point-min) (- end llm--terminal-tail-bytes)))
+           (content (buffer-substring-no-properties beg end)))
       (if (string-match "\\([^\n\r\t ][^\n]*\\)[\n\r\t ]*\\'" content)
           (match-string 1 content)
         ""))))
@@ -81,9 +102,9 @@ Uses `with-selected-window' avoidance to prevent scroll interference."
 (defun llm--status-from-process (buf)
   "Determine new status for BUF based on process state and terminal content.
 Rules:
-1. If process is dead → 'exited'
-2. If terminal still shows a permission prompt → 'blocked'
-3. Otherwise → 'idle'"
+1. If process is dead → \\='exited
+2. If terminal still shows a permission prompt → \\='blocked
+3. Otherwise → \\='idle"
   (let* ((proc vterm--process)
          (alive (and proc (process-live-p proc))))
     (cond ((not alive) 'exited)
@@ -165,14 +186,18 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
 (defun llm--detect-status (buf)
   "Update the status for BUF based on process state.
 Uses `llm--status-from-process' to determine new status.
-Only triggers a mode-line redraw when the status actually changes."
+Only triggers a mode-line redraw when the status actually changes.
+Drains the prompt queue on transitions to idle/busy."
   (when (buffer-live-p buf)
     (with-current-buffer buf
       (let ((old-status (gethash buf llm--buffers))
             (new-status (llm--status-from-process buf)))
         (unless (eq old-status new-status)
           (puthash buf new-status llm--buffers)
-          (force-mode-line-update))))))
+          (force-mode-line-update)
+          (when (and llm--prompt-queue
+                     (memq new-status '(idle busy)))
+            (llm--drain-queue)))))))
 
 (defun llm--schedule-status-check ()
   "Schedule a debounced status check for the current claude buffer."
@@ -191,10 +216,13 @@ Only redraws when the status actually changes to avoid vterm jitter."
       (with-current-buffer buf
         (when (llm-buffer-p)
           (let* ((old-status (gethash buf llm--buffers))
-                 (new-status (llm--status-from-output buf input old-status)))
+                 (new-status (llm--status-from-output input old-status)))
             (when (and new-status (not (eq old-status new-status)))
               (puthash buf new-status llm--buffers)
-              (force-mode-line-update))
+              (force-mode-line-update)
+              (when (and llm--prompt-queue
+                         (memq new-status '(idle busy)))
+                (llm--drain-queue)))
             (llm--schedule-status-check)))))))
 
 (advice-add 'vterm--filter :around #'llm--filter-advice)
@@ -215,29 +243,6 @@ Only redraws when the status actually changes to avoid vterm jitter."
             (force-mode-line-update)))))))
 
 (advice-add 'vterm--sentinel :around #'llm--sentinel-advice)
-
-;; (defun llm--stable-redraw-advice (orig-fn buffer)
-;;   "Preserve window scroll position for non-selected claude windows during redraw."
-;;   (if (not (and (buffer-live-p buffer)
-;;                 (with-current-buffer buffer (llm-buffer-p))))
-;;       (funcall orig-fn buffer)
-;;     ;; Save window-start and window-point for all non-selected windows showing this buffer.
-;;     (let ((saved (cl-loop for win in (get-buffer-window-list buffer nil t)
-;;                           unless (eq win (selected-window))
-;;                           collect (list win
-;;                                         (window-start win)
-;;                                         (window-point win)))))
-;;       (funcall orig-fn buffer)
-;;       ;; Restore scroll position for non-selected windows.
-;;       (dolist (entry saved)
-;;         (let ((win (nth 0 entry))
-;;               (start (nth 1 entry))
-;;               (pt (nth 2 entry)))
-;;           (when (window-live-p win)
-;;             (set-window-start win start t)
-;;             (set-window-point win pt)))))))
-
-;; (advice-add 'vterm--delayed-redraw :around #'llm--stable-redraw-advice)
 
 (defun llm--mode-line-status ()
   "Return a mode-line string showing the current claude buffer status.
@@ -279,18 +284,13 @@ Returns empty string for non-llm buffers."
 
 ;;; Prompt Mode
 
-(defvar llm-prompt-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map text-mode-map)
-    (define-key map (kbd "C-c C-c") #'llm-prompt-send)
-    (define-key map (kbd "C-c C-k") #'llm-prompt-cancel)
-    map)
-  "Keymap for `llm-prompt-mode'.")
-
 (define-derived-mode llm-prompt-mode text-mode "LLM-Prompt"
   "Major mode for composing multi-line Claude prompts.
-\\[llm-prompt-send] to send, \\[llm-prompt-cancel] to cancel."
+\\<llm-prompt-mode-map>\\[llm-prompt-send] to send, \\[llm-prompt-cancel] to cancel."
   (setq header-line-format " Claude  C-c C-c send | C-c C-k cancel"))
+
+(define-key llm-prompt-mode-map (kbd "C-c C-c") #'llm-prompt-send)
+(define-key llm-prompt-mode-map (kbd "C-c C-k") #'llm-prompt-cancel)
 
 ;;; Interactive Commands
 
@@ -298,24 +298,21 @@ Returns empty string for non-llm buffers."
   "LIFO queue of (BUFFER . PROMPT) entries waiting to be sent when claude is idle.")
 
 (defun llm--drain-queue ()
-  "Pop the next prompt from `llm--prompt-queue' and send it when idle."
+  "Flush the next prompt from `llm--prompt-queue' if its buffer is ready.
+Called from status transitions in `llm--filter-advice' /
+`llm--detect-status'; does nothing if the target is busy/blocked."
+  (while-let ((entry (car (last llm--prompt-queue)))
+              (buf (car entry))
+              ((not (buffer-live-p buf))))
+    (setq llm--prompt-queue (butlast llm--prompt-queue)))
   (when-let ((entry (car (last llm--prompt-queue))))
     (let ((buf (car entry))
           (prompt (cdr entry)))
-      (if (not (buffer-live-p buf))
-          (progn
-            (setq llm--prompt-queue (butlast llm--prompt-queue))
-            (llm--drain-queue))
-        (with-current-buffer buf
-          (let ((status (gethash buf llm--buffers)))
-            (if (memq status '(idle busy))
-                (progn
-                  (setq llm--prompt-queue (butlast llm--prompt-queue))
-                  (vterm-insert prompt)
-                  (vterm-send-return)
-                  (when llm--prompt-queue
-                    (run-with-timer 0.5 nil #'llm--drain-queue)))
-              (run-with-timer 0.5 nil #'llm--drain-queue))))))))
+      (with-current-buffer buf
+        (when (memq (gethash buf llm--buffers) '(idle busy))
+          (setq llm--prompt-queue (butlast llm--prompt-queue))
+          (vterm-insert prompt)
+          (vterm-send-return))))))
 
 (defun llm--save-prompt (prompt root)
   "Save PROMPT to .project/prompts/ in ROOT as a timestamped file."
@@ -338,12 +335,9 @@ once the session becomes idle."
     (if (memq status '(nil idle busy))
         (progn (vterm-insert prompt)
                (vterm-send-return))
-      (let ((was-empty (null llm--prompt-queue)))
-        (push (cons (current-buffer) prompt) llm--prompt-queue)
-        (when was-empty
-          (run-with-timer 0.5 nil #'llm--drain-queue))
-        (message "Claude is %s — prompt queued (%d pending), will send when idle"
-                 status (length llm--prompt-queue))))))
+      (push (cons (current-buffer) prompt) llm--prompt-queue)
+      (message "Claude is %s — prompt queued (%d pending), will send when idle"
+               status (length llm--prompt-queue)))))
 
 (defun llm--write-context-file (text)
   "Write TEXT to a temporary file and return its path."
@@ -853,4 +847,4 @@ has been removed from the source file."
 (global-set-key (kbd "C-x y e G") #'llm-grep-annotations)
 
 (provide 'mijn-llm)
-;;; my-llm.el ends here
+;;; mijn-llm.el ends here
