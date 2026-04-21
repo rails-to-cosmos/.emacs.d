@@ -1,6 +1,9 @@
 ;;; mijn-llm.el --- Claude CLI integration for Emacs -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
+(require 'subr-x)
+(require 'project)
+(require 'transient)
 
 (defvar vterm-shell)
 (defvar vterm--process)
@@ -11,14 +14,23 @@
 (declare-function vterm-other-window "vterm")
 (declare-function face-remap-remove-relative "face-remap")
 
+;;; Customization
+
+(defgroup llm nil
+  "Claude CLI integration for Emacs."
+  :group 'tools
+  :prefix "llm-")
+
 ;;; Project Root Detection
 
-(defvar llm--project-root-markers '(".git" ".claude" "CLAUDE.md")
-  "Files/dirs that indicate a project root.")
+(defcustom llm-project-root-markers '(".git" ".claude" "CLAUDE.md")
+  "Files/dirs that indicate a project root."
+  :type '(repeat string)
+  :group 'llm)
 
 (cl-defun llm--project-root (&optional (dir default-directory))
   "Find project root starting from DIR by looking for marker files."
-  (or (cl-loop for marker in llm--project-root-markers
+  (or (cl-loop for marker in llm-project-root-markers
                for root = (locate-dominating-file dir marker)
                when root return (file-name-as-directory root))
       (file-name-as-directory dir)))
@@ -284,10 +296,32 @@ Returns empty string for non-llm buffers."
 
 ;;; Prompt Mode
 
+(defun llm--prompt-capf ()
+  "Completion-at-point for @file references in the prompt buffer.
+Offers project-relative file paths when the point follows `@'."
+  (save-excursion
+    (let ((end (point)))
+      (when (re-search-backward "@\\([^ \t\n]*\\)" (line-beginning-position) t)
+        (let* ((at-start (match-beginning 0))
+               (start    (1+ at-start))
+               (prefix   (buffer-substring-no-properties start end))
+               (root     (or llm--prompt-project-root (llm--current-root))))
+          (when (and root (eq (char-before (1+ at-start)) ?@))
+            (ignore prefix)
+            (list start end
+                  (completion-table-dynamic
+                   (lambda (_)
+                     (when-let ((proj (project-current nil root)))
+                       (mapcar (lambda (f) (file-relative-name f root))
+                               (project-files proj)))))
+                  :exclusive 'no
+                  :annotation-function (lambda (_) " file"))))))))
+
 (define-derived-mode llm-prompt-mode text-mode "LLM-Prompt"
   "Major mode for composing multi-line Claude prompts.
 \\<llm-prompt-mode-map>\\[llm-prompt-send] to send, \\[llm-prompt-cancel] to cancel."
-  (setq header-line-format " Claude  C-c C-c send | C-c C-k cancel"))
+  (setq header-line-format " Claude  C-c C-c send | C-c C-k cancel")
+  (add-hook 'completion-at-point-functions #'llm--prompt-capf nil t))
 
 (define-key llm-prompt-mode-map (kbd "C-c C-c") #'llm-prompt-send)
 (define-key llm-prompt-mode-map (kbd "C-c C-k") #'llm-prompt-cancel)
@@ -312,7 +346,33 @@ Called from status transitions in `llm--filter-advice' /
         (when (memq (gethash buf llm--buffers) '(idle busy))
           (setq llm--prompt-queue (butlast llm--prompt-queue))
           (vterm-insert prompt)
-          (vterm-send-return))))))
+          (vterm-send-return)
+          (let ((remaining (length llm--prompt-queue)))
+            (if (zerop remaining)
+                (message "Queued prompt sent to %s" (buffer-name buf))
+              (message "Queued prompt sent to %s (%d still pending)"
+                       (buffer-name buf) remaining))))))))
+
+(defun llm--ensure-ignored (root)
+  "Append `.project/' to ROOT's .gitignore if missing. No-op without .git."
+  (when (and root (file-directory-p (expand-file-name ".git" root)))
+    (let* ((gitignore (expand-file-name ".gitignore" root))
+           (existing (when (file-readable-p gitignore)
+                       (with-temp-buffer
+                         (insert-file-contents gitignore)
+                         (buffer-string)))))
+      (unless (and existing
+                   (string-match-p (rx line-start
+                                       (? "/")
+                                       ".project/"
+                                       (? line-end))
+                                   existing))
+        (with-temp-buffer
+          (when existing (insert existing))
+          (unless (or (null existing) (string-suffix-p "\n" existing))
+            (insert "\n"))
+          (insert ".project/\n")
+          (write-region (point-min) (point-max) gitignore))))))
 
 (defun llm--save-prompt (prompt root)
   "Save PROMPT to .project/prompts/ in ROOT as a timestamped file."
@@ -322,6 +382,7 @@ Called from status transitions in `llm--filter-advice' /
                 (format "%s.txt" (format-time-string "%Y%m%d-%H%M%S"))
                 dir)))
     (make-directory dir t)
+    (llm--ensure-ignored r)
     (with-temp-file file (insert prompt))))
 
 (defun llm--send-to-claude (prompt &optional root)
@@ -366,14 +427,20 @@ once the session becomes idle."
 (defvar-local llm--prompt-face-cookie nil
   "Cookie from `face-remap-add-relative' used inside the prompt buffer.")
 
-(defvar llm-prompt-frame-size '(80 . 14)
-  "Target (COLS . ROWS) of the prompt child frame.")
+(defcustom llm-prompt-frame-size '(80 . 14)
+  "Target (COLS . ROWS) of the prompt child frame."
+  :type '(cons integer integer)
+  :group 'llm)
 
-(defvar llm-prompt-bubble-steps 8
-  "Number of animation frames from point to full prompt size.")
+(defcustom llm-prompt-bubble-steps 8
+  "Number of animation frames from point to full prompt size."
+  :type 'integer
+  :group 'llm)
 
-(defvar llm-prompt-bubble-interval 0.018
-  "Seconds between animation steps.")
+(defcustom llm-prompt-bubble-interval 0.018
+  "Seconds between animation steps."
+  :type 'number
+  :group 'llm)
 
 (defvar llm-prompt-frame-parameters
   '((minibuffer . nil)
@@ -525,6 +592,78 @@ Pre-populates context based on the current state:
                                      (cdr llm-prompt-frame-size)))
       (pop-to-buffer buf))))
 
+;;; Prompt History
+
+(defun llm--prompts-dir (&optional root)
+  "Absolute path to the prompts directory for ROOT."
+  (expand-file-name ".project/prompts" (or root (llm--current-root))))
+
+(defun llm--prompt-history-files (&optional root)
+  "Return ROOT's saved prompt files, newest first."
+  (let ((dir (llm--prompts-dir root)))
+    (when (file-directory-p dir)
+      (sort (directory-files dir t "\\.txt\\'") #'string>))))
+
+(defun llm--prompt-preview (file)
+  "Return a one-line preview string for FILE."
+  (with-temp-buffer
+    (insert-file-contents file nil 0 200)
+    (replace-regexp-in-string "[\n\t]+" " " (buffer-string))))
+
+(defun llm--open-prompt-in-bubble (text root)
+  "Show TEXT in the prompt bubble, tagged for ROOT."
+  (let ((buf (get-buffer-create "*llm-prompt*")))
+    (with-current-buffer buf
+      (llm-prompt-mode)
+      (erase-buffer)
+      (insert text)
+      (setq-local llm--prompt-project-root root))
+    (llm--close-prompt-frame)
+    (if (display-graphic-p)
+        (let* ((anchor (llm--prompt-anchor-xy))
+               (frame (llm--prompt-make-frame buf anchor)))
+          (setq llm--prompt-frame frame)
+          (llm--animate-prompt-frame frame
+                                     (car llm-prompt-frame-size)
+                                     (cdr llm-prompt-frame-size)))
+      (pop-to-buffer buf))))
+
+;;;###autoload
+(defun llm-prompt-history ()
+  "Browse saved prompts for the current project.
+Picks a prompt via `completing-read' and opens it in the bubble
+for editing and re-sending."
+  (interactive)
+  (let* ((root  (llm--current-root))
+         (files (llm--prompt-history-files root)))
+    (unless files (user-error "No saved prompts for this project"))
+    (let* ((cands (mapcar (lambda (f)
+                            (cons (format "%s  %s"
+                                          (file-name-base f)
+                                          (truncate-string-to-width
+                                           (llm--prompt-preview f)
+                                           80 nil nil "…"))
+                                  f))
+                          files))
+           (choice (completing-read "Prompt: " (mapcar #'car cands) nil t))
+           (file   (cdr (assoc choice cands)))
+           (text   (with-temp-buffer
+                     (insert-file-contents file)
+                     (buffer-string))))
+      (llm--open-prompt-in-bubble text root))))
+
+;;;###autoload
+(defun llm-prompt-resume ()
+  "Re-open the most recent saved prompt for this project in the bubble."
+  (interactive)
+  (let* ((root  (llm--current-root))
+         (files (llm--prompt-history-files root)))
+    (unless files (user-error "No saved prompts for this project"))
+    (let ((text (with-temp-buffer
+                  (insert-file-contents (car files))
+                  (buffer-string))))
+      (llm--open-prompt-in-bubble text root))))
+
 ;;; Change Highlighting on Revert
 
 (defface llm-change-highlight-face
@@ -578,26 +717,29 @@ Also cancels the auto-clear timer if one is pending."
             (run-with-timer 60 nil #'llm-change-highlight-clear buf)))))
 
 (defun llm--diff-added-lines (old new)
-  "Return a sorted list of 1-based line numbers added/changed in NEW vs OLD."
-  (let ((old-file (make-temp-file "llm-diff-a"))
-        (new-file (make-temp-file "llm-diff-b"))
-        lines)
-    (unwind-protect
-        (progn
-          (with-temp-file old-file (insert old))
-          (with-temp-file new-file (insert new))
-          (with-temp-buffer
-            (call-process "diff" nil t nil
-                          "--new-line-format=%dn\n"
-                          "--old-line-format="
-                          "--unchanged-line-format="
-                          old-file new-file)
-            (goto-char (point-min))
-            (while (re-search-forward "^\\([0-9]+\\)$" nil t)
-              (push (string-to-number (match-string 1)) lines))))
-      (ignore-errors (delete-file old-file))
-      (ignore-errors (delete-file new-file)))
-    (nreverse lines)))
+  "Return a sorted list of 1-based line numbers added/changed in NEW vs OLD.
+Returns nil immediately when OLD equals NEW (frequent auto-revert case
+where the timer fires but nothing actually changed on disk)."
+  (unless (string= old new)
+    (let ((old-file (make-temp-file "llm-diff-a"))
+          (new-file (make-temp-file "llm-diff-b"))
+          lines)
+      (unwind-protect
+          (progn
+            (with-temp-file old-file (insert old))
+            (with-temp-file new-file (insert new))
+            (with-temp-buffer
+              (call-process "diff" nil t nil
+                            "--new-line-format=%dn\n"
+                            "--old-line-format="
+                            "--unchanged-line-format="
+                            old-file new-file)
+              (goto-char (point-min))
+              (while (re-search-forward "^\\([0-9]+\\)$" nil t)
+                (push (string-to-number (match-string 1)) lines))))
+        (ignore-errors (delete-file old-file))
+        (ignore-errors (delete-file new-file)))
+      (nreverse lines))))
 
 (add-hook 'before-revert-hook #'llm--before-revert-save)
 (add-hook 'after-revert-hook  #'llm--after-revert-highlight)
@@ -652,6 +794,7 @@ Each entry is a plist (:file :line :text :time).")
   (let ((file (llm--annotation-file root kind))
         (entries (gethash (llm--annotation-key root kind) llm--annotations)))
     (make-directory (file-name-directory file) t)
+    (llm--ensure-ignored root)
     (with-temp-file file
       (pp entries (current-buffer)))))
 
@@ -748,29 +891,93 @@ has been removed from the source file."
                         map)))
     (pop-to-buffer buf)))
 
+(defvar-local llm--annotation-list-kind nil
+  "The annotation kind being displayed in the current list buffer.")
+
+(defvar-local llm--annotation-list-root nil
+  "The project root whose annotations are displayed in the current list buffer.")
+
+(defun llm--annotation-list-refresh ()
+  "Rebuild `tabulated-list-entries' from live annotations."
+  (let ((entries (llm--annotation-entries llm--annotation-list-root
+                                          llm--annotation-list-kind)))
+    (setq tabulated-list-entries
+          (mapcar (lambda (e)
+                    (list e
+                          (vector (file-relative-name (plist-get e :file)
+                                                      llm--annotation-list-root)
+                                  (number-to-string (plist-get e :line))
+                                  (or (plist-get e :time) "")
+                                  (truncate-string-to-width
+                                   (replace-regexp-in-string "\n" " ⏎ "
+                                                             (plist-get e :text))
+                                   80 nil nil "…"))))
+                  entries))
+    (tabulated-list-print t)))
+
+(defun llm-annotation-list-visit ()
+  "Jump to the source location of the annotation at point."
+  (interactive)
+  (let* ((entry (tabulated-list-get-id))
+         (file  (plist-get entry :file))
+         (line  (plist-get entry :line)))
+    (unless entry (user-error "No annotation at point"))
+    (unless (file-exists-p file) (user-error "File gone: %s" file))
+    (find-file-other-window file)
+    (goto-char (point-min))
+    (forward-line (1- line))))
+
+(defun llm-annotation-list-delete ()
+  "Delete the annotation at point from persistence.
+Source-file comment is left untouched — remove it manually if desired."
+  (interactive)
+  (let* ((entry (tabulated-list-get-id))
+         (kind  llm--annotation-list-kind)
+         (root  llm--annotation-list-root)
+         (key   (llm--annotation-key root kind)))
+    (unless entry (user-error "No annotation at point"))
+    (puthash key
+             (cl-remove entry (gethash key llm--annotations) :test #'equal)
+             llm--annotations)
+    (llm--annotation-save root kind)
+    (llm--annotation-list-refresh)))
+
+(defvar llm-annotation-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'llm-annotation-list-visit)
+    (define-key map (kbd "o")   #'llm-annotation-list-visit)
+    (define-key map (kbd "d")   #'llm-annotation-list-delete)
+    (define-key map (kbd "x")   #'llm-annotation-list-delete)
+    (define-key map (kbd "g")   #'llm--annotation-list-refresh)
+    map)
+  "Keymap for `llm-annotation-list-mode'.")
+
+(define-derived-mode llm-annotation-list-mode tabulated-list-mode "LLM-Annotations"
+  "Tabulated view of project annotations.
+\\<llm-annotation-list-mode-map>\
+\\[llm-annotation-list-visit] visit, \\[llm-annotation-list-delete] delete, \
+\\[llm--annotation-list-refresh] refresh."
+  (setq tabulated-list-format
+        [("File" 40 t) ("Line" 6 t) ("Time" 17 t) ("Text" 0 nil)])
+  (setq tabulated-list-sort-key '("File"))
+  (tabulated-list-init-header))
+
 (defun llm--list-annotations (kind)
-  "List annotations of KIND for the current project with completion."
+  "Open a tabulated list of KIND annotations for the current project."
   (let* ((root (llm--current-root))
          (entries (llm--annotation-entries root kind)))
     (unless entries
       (user-error "No %ss in this project" kind))
-    (let* ((candidates
-            (mapcar (lambda (e)
-                      (cons (format "%s:%d — %s [%s]"
-                                    (file-relative-name (plist-get e :file) root)
-                                    (plist-get e :line)
-                                    (truncate-string-to-width (plist-get e :text) 60 nil nil "…")
-                                    (plist-get e :time))
-                            e))
-                    entries))
-           (choice (completing-read (format "%s: " kind)
-                                    (mapcar #'car candidates) nil t))
-           (entry (cdr (assoc choice candidates)))
-           (file (plist-get entry :file)))
-      (when (file-exists-p file)
-        (find-file file)
-        (goto-char (point-min))
-        (forward-line (1- (plist-get entry :line)))))))
+    (let ((buf (get-buffer-create (format "*llm-%ss: %s*"
+                                          (downcase kind)
+                                          (file-name-nondirectory
+                                           (directory-file-name root))))))
+      (with-current-buffer buf
+        (llm-annotation-list-mode)
+        (setq llm--annotation-list-kind kind
+              llm--annotation-list-root root)
+        (llm--annotation-list-refresh))
+      (pop-to-buffer buf))))
 
 (defun llm--send-annotations (kind)
   "Send all KIND annotations for the current project to Claude."
@@ -833,6 +1040,26 @@ has been removed from the source file."
     (grep-find (format "grep -rnE '(TODO|FIXME|HACK|XXX):?' %s --include='*.*' -I"
                        (shell-quote-argument (directory-file-name root))))))
 
+;;; Transient Menu
+
+(transient-define-prefix llm-menu ()
+  "Claude CLI commands."
+  [["Session"
+    ("c" "Open in project"    llm)
+    ("b" "Switch buffer"      llm-switch-buffer)
+    ("p" "Prompt"             llm-prompt)
+    ("r" "Resume last prompt" llm-prompt-resume)
+    ("H" "Prompt history"     llm-prompt-history)]
+   ["Annotations"
+    ("f" "Add FIXME"          llm-add-fixme)
+    ("t" "Add TODO"           llm-add-todo)
+    ("F" "List FIXMEs"        llm-list-fixmes)
+    ("T" "List TODOs"         llm-list-todos)
+    ("S" "Send FIXMEs"        llm-send-fixmes)
+    ("G" "Grep annotations"   llm-grep-annotations)]
+   ["Highlights"
+    ("h" "Clear revert highlights" llm-change-highlight-clear)]])
+
 ;;; Keybindings
 
 (global-set-key (kbd "C-x y e p") #'llm-prompt)
@@ -845,6 +1072,9 @@ has been removed from the source file."
 (global-set-key (kbd "C-x y e T") #'llm-list-todos)
 (global-set-key (kbd "C-x y e S") #'llm-send-fixmes)
 (global-set-key (kbd "C-x y e G") #'llm-grep-annotations)
+(global-set-key (kbd "C-x y e m") #'llm-menu)
+(global-set-key (kbd "C-x y e r") #'llm-prompt-resume)
+(global-set-key (kbd "C-x y e H") #'llm-prompt-history)
 
 (provide 'mijn-llm)
 ;;; mijn-llm.el ends here
