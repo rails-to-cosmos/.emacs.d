@@ -43,6 +43,54 @@
   (or llm--prompt-project-root
       (llm--project-root)))
 
+;;; Persistence Location
+
+(defcustom llm-persistence-strategy 'project
+  "Where to store prompt history and annotations.
+
+- `project': per-project, inside the repo at `.project/'.
+  Committable across machines; `.gitignore' auto-appended to avoid
+  dirtying `git status'.
+- `user': per-user, per-machine, at `~/.cache/mijn-llm/<repo-id>/'.
+  Never touches the repo; each checkout starts empty."
+  :type '(choice (const :tag "Per-project (.project/ in repo)" project)
+                 (const :tag "Per-user (~/.cache/mijn-llm/)"    user))
+  :group 'llm)
+
+(defcustom llm-user-cache-dir
+  (expand-file-name "mijn-llm"
+                    (or (getenv "XDG_CACHE_HOME")
+                        (expand-file-name ".cache"
+                                          (or (getenv "HOME") "~"))))
+  "Root directory for per-user persistence when `llm-persistence-strategy'
+is `user'."
+  :type 'directory
+  :group 'llm)
+
+(defun llm--project-cache-subdir (root)
+  "Human-readable directory name for ROOT under `llm-user-cache-dir'.
+Uses the abbreviated absolute path with `/' replaced by `!'."
+  (let ((abbrev (abbreviate-file-name (directory-file-name (expand-file-name root)))))
+    (replace-regexp-in-string "/" "!" abbrev)))
+
+(defun llm--persistence-dir (root subpath)
+  "Return the absolute path of SUBPATH under ROOT, per `llm-persistence-strategy'.
+SUBPATH is relative (e.g. \"prompts\" or \"fixme.el\")."
+  (pcase llm-persistence-strategy
+    ('user
+     (expand-file-name
+      subpath
+      (expand-file-name (llm--project-cache-subdir root)
+                        llm-user-cache-dir)))
+    (_
+     (expand-file-name (concat ".project/" subpath) root))))
+
+(defun llm--legacy-project-path (root subpath)
+  "Return the `.project/SUBPATH' path under ROOT.
+Used as a read-side fallback when `llm-persistence-strategy' is `user'
+so existing in-repo annotations remain visible after switching."
+  (expand-file-name (concat ".project/" subpath) root))
+
 ;;; Claude vterm buffer management
 
 (defvar llm--buffers (make-hash-table :test 'eq)
@@ -169,6 +217,23 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
             (name (generate-new-buffer-name base)))
         (vterm-other-window name)
         (llm--register-buffer (current-buffer)))))))
+
+;;;###autoload
+(defun llm-vterm (&optional user-root)
+  "Open a plain vterm buffer named *vterm:PROJECT* in the current project.
+Without prefix: reuse the existing buffer, or create one.
+With \\[universal-argument]: always create a new buffer."
+  (interactive)
+  (pcase-let* ((`(,label . ,root) (llm--project-label (or user-root default-directory)))
+               (default-directory (or user-root root default-directory))
+               (base (format "*vterm:%s*" label))
+               (prefix (prefix-numeric-value current-prefix-arg)))
+    (if (= prefix 1)
+        (let ((existing (get-buffer base)))
+          (if (and existing (buffer-live-p existing))
+              (pop-to-buffer existing)
+            (vterm-other-window base)))
+      (vterm-other-window (generate-new-buffer-name base)))))
 
 ;;; Claude vterm status indicator
 
@@ -354,8 +419,11 @@ Called from status transitions in `llm--filter-advice' /
                        (buffer-name buf) remaining))))))))
 
 (defun llm--ensure-ignored (root)
-  "Append `.project/' to ROOT's .gitignore if missing. No-op without .git."
-  (when (and root (file-directory-p (expand-file-name ".git" root)))
+  "Append `.project/' to ROOT's .gitignore if missing.
+No-op unless `llm-persistence-strategy' is `project' and ROOT is a git repo."
+  (when (and (eq llm-persistence-strategy 'project)
+             root
+             (file-directory-p (expand-file-name ".git" root)))
     (let* ((gitignore (expand-file-name ".gitignore" root))
            (existing (when (file-readable-p gitignore)
                        (with-temp-buffer
@@ -375,9 +443,9 @@ Called from status transitions in `llm--filter-advice' /
           (write-region (point-min) (point-max) gitignore))))))
 
 (defun llm--save-prompt (prompt root)
-  "Save PROMPT to .project/prompts/ in ROOT as a timestamped file."
+  "Save PROMPT under the persistence location for ROOT as a timestamped file."
   (let* ((r (or root (llm--current-root)))
-         (dir (expand-file-name ".project/prompts" r))
+         (dir (llm--persistence-dir r "prompts"))
          (file (expand-file-name
                 (format "%s.txt" (format-time-string "%Y%m%d-%H%M%S"))
                 dir)))
@@ -595,8 +663,9 @@ Pre-populates context based on the current state:
 ;;; Prompt History
 
 (defun llm--prompts-dir (&optional root)
-  "Absolute path to the prompts directory for ROOT."
-  (expand-file-name ".project/prompts" (or root (llm--current-root))))
+  "Absolute path to the prompts directory for ROOT.
+Honors `llm-persistence-strategy'."
+  (llm--persistence-dir (or root (llm--current-root)) "prompts"))
 
 (defun llm--prompt-history-files (&optional root)
   "Return ROOT's saved prompt files, newest first."
@@ -772,16 +841,29 @@ KIND is a string like \"FIXME\" or \"TODO\".
 Each entry is a plist (:file :line :text :time).")
 
 (defun llm--annotation-file (root kind)
-  "Return the persistence file path for KIND annotations in ROOT."
-  (expand-file-name (format ".project/%s.el" (downcase kind)) root))
+  "Return the persistence file path for KIND annotations in ROOT.
+Honors `llm-persistence-strategy'."
+  (llm--persistence-dir root (format "%s.el" (downcase kind))))
+
+(defun llm--annotation-file-for-read (root kind)
+  "Like `llm--annotation-file', but falls back to the legacy `.project/' path
+if the primary path doesn't exist. Lets existing in-repo annotations stay
+visible after the user switches `llm-persistence-strategy' to `user'."
+  (let ((primary (llm--annotation-file root kind))
+        (legacy  (llm--legacy-project-path root (format "%s.el" (downcase kind)))))
+    (if (file-readable-p primary)
+        primary
+      (if (file-readable-p legacy) legacy primary))))
 
 (defun llm--annotation-key (root kind)
   "Return the hash key for ROOT and KIND."
   (cons root kind))
 
 (defun llm--annotation-load (root kind)
-  "Load annotations of KIND for ROOT from disk."
-  (let ((file (llm--annotation-file root kind)))
+  "Load annotations of KIND for ROOT from disk.
+Reads from `llm--annotation-file-for-read' so legacy `.project/' data
+stays visible after switching `llm-persistence-strategy' to `user'."
+  (let ((file (llm--annotation-file-for-read root kind)))
     (puthash (llm--annotation-key root kind)
              (when (file-readable-p file)
                (with-temp-buffer
@@ -1045,11 +1127,12 @@ Source-file comment is left untouched — remove it manually if desired."
 (transient-define-prefix llm-menu ()
   "Claude CLI commands."
   [["Session"
-    ("c" "Open in project"    llm)
-    ("b" "Switch buffer"      llm-switch-buffer)
-    ("p" "Prompt"             llm-prompt)
-    ("r" "Resume last prompt" llm-prompt-resume)
-    ("H" "Prompt history"     llm-prompt-history)]
+    ("c" "Open Claude in project" llm)
+    ("v" "Vterm in project"       llm-vterm)
+    ("b" "Switch buffer"          llm-switch-buffer)
+    ("p" "Prompt"                 llm-prompt)
+    ("r" "Resume last prompt"     llm-prompt-resume)
+    ("H" "Prompt history"         llm-prompt-history)]
    ["Annotations"
     ("f" "Add FIXME"          llm-add-fixme)
     ("t" "Add TODO"           llm-add-todo)
