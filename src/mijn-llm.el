@@ -1062,19 +1062,7 @@ Source-file comment is left untouched — remove it manually if desired."
 
 ;;; Keybindings
 
-(global-set-key (kbd "C-x y e p") #'llm-prompt)
-(global-set-key (kbd "C-x y e c") #'llm)
-(global-set-key (kbd "C-x y e b") #'llm-switch-buffer)
-(global-set-key (kbd "C-x y e h") #'llm-change-highlight-clear)
-(global-set-key (kbd "C-x y e f") #'llm-add-fixme)
-(global-set-key (kbd "C-x y e t") #'llm-add-todo)
-(global-set-key (kbd "C-x y e F") #'llm-list-fixmes)
-(global-set-key (kbd "C-x y e T") #'llm-list-todos)
-(global-set-key (kbd "C-x y e S") #'llm-send-fixmes)
-(global-set-key (kbd "C-x y e G") #'llm-grep-annotations)
-(global-set-key (kbd "C-x y e m") #'llm-menu)
-(global-set-key (kbd "C-x y e r") #'llm-prompt-resume)
-(global-set-key (kbd "C-x y e H") #'llm-prompt-history)
+(global-set-key (kbd "C-x y e") #'llm-menu)
 
 (provide 'mijn-llm)
 ;;; mijn-llm.el ends here
