@@ -729,10 +729,35 @@ changes like ESC ] ... BEL) and stray CR are removed by hand."
          (no-osc (replace-regexp-in-string "\e\\][^\a]*\\(?:\a\\|\e\\\\\\)" "" no-cr)))
     (ansi-color-apply no-osc)))
 
+(defun llm--btw-permission-prompt-p ()
+  "Return non-nil if the buffer's tail looks like a claude permission prompt.
+Checks the last ~512 chars against `llm--permission-pattern'."
+  (save-excursion
+    (let* ((tail-start (max (point-min) (- (point-max) 512)))
+           (tail (buffer-substring-no-properties tail-start (point-max))))
+      (string-match-p llm--permission-pattern tail))))
+
+(defun llm--btw-enter-waiting-state ()
+  "Transition the bubble into `claude is waiting for a reply' mode.
+Inserts the user turn marker, parks an input-start marker, updates the
+header. Called from the filter when a permission prompt is detected in
+the streamed output."
+  (let ((inhibit-read-only t))
+    (goto-char (point-max))
+    (unless (bolp) (insert "\n"))
+    (insert "\n" (propertize "— " 'face 'llm-btw-user-face))
+    (setq-local llm--btw-input-start (copy-marker (point) nil))
+    (setq header-line-format
+          (propertize
+           " Claude awaits your reply  C-c C-c send · C-c C-k cancel"
+           'face 'llm-btw-header-face))))
+
 (defun llm--btw-filter (proc chunk)
   "Process filter: clean CHUNK and append to PROC's buffer.
 On the first chunk, replaces the `thinking' indicator with the
-claude turn marker so the streamed text starts right after `— '."
+claude turn marker. After appending, if the buffer tail matches a
+claude permission prompt and we're not already waiting, transitions
+into the waiting state so the user can answer via `C-c C-c'."
   (when (buffer-live-p (process-buffer proc))
     (with-current-buffer (process-buffer proc)
       (let ((inhibit-read-only t)
@@ -748,7 +773,10 @@ claude turn marker so the streamed text starts right after `— '."
           (goto-char (point-max))
           (insert cleaned))
         (when (or first-chunk was-at-end)
-          (goto-char (point-max)))))))
+          (goto-char (point-max)))
+        (when (and (not (markerp llm--btw-input-start))
+                   (llm--btw-permission-prompt-p))
+          (llm--btw-enter-waiting-state))))))
 
 (defun llm--btw-sentinel (proc _event)
   "Process sentinel: append a fresh input prompt and hand control back."
@@ -811,13 +839,42 @@ directly bindable / transient-invokable without universal-argument."
     (call-interactively #'llm-prompt)))
 
 (defun llm-prompt-btw-send ()
-  "Send the current input turn; first send opens a session, follow-ups continue it.
+  "Send the current input turn.
 
-The popup acts as a running conversation. On the first send the whole
-buffer is taken as the prompt and a fresh `claude -p' session is spawned.
-On subsequent sends the text after `llm--btw-input-start' is taken as
-the new turn and `claude -c -p' continues the same session, preserving
-context end-to-end inside this bubble."
+Dispatches on the state of the bubble's claude subprocess:
+- idle → spawn a new turn (first send or post-response follow-up);
+- running + awaiting a reply (permission prompt detected in output) →
+  pipe the answer to the live process's stdin without respawning;
+- running + still streaming → refuse, with a hint."
+  (cond
+   ((and (process-live-p llm--btw-process)
+         (markerp llm--btw-input-start))
+    (llm--btw-send-answer))
+   ((process-live-p llm--btw-process)
+    (user-error "Claude is still responding — wait, or C-c C-k to cancel"))
+   (t
+    (llm--btw-spawn-turn))))
+
+(defun llm--btw-send-answer ()
+  "Pipe the text after `llm--btw-input-start' to the live claude process."
+  (let* ((answer (string-trim
+                  (buffer-substring-no-properties
+                   llm--btw-input-start (point-max))))
+         (proc llm--btw-process))
+    (when (string-empty-p answer) (user-error "Empty answer"))
+    (let ((inhibit-read-only t))
+      (delete-region llm--btw-input-start (point-max))
+      (goto-char (point-max))
+      (insert answer "\n\n"))
+    (setq-local llm--btw-input-start nil)
+    (llm--btw-start-thinking (current-buffer))
+    (setq header-line-format
+          (propertize " Claude  (running — C-c C-k cancel)"
+                      'face 'llm-btw-header-face))
+    (process-send-string proc (concat answer "\n"))))
+
+(defun llm--btw-spawn-turn ()
+  "Start a new claude turn (first send or follow-up after completion)."
   (let* ((has-history (markerp llm--btw-input-start))
          (prompt (string-trim
                   (if has-history

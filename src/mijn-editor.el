@@ -210,4 +210,17 @@ Uses `abbreviate-file-name' so `$HOME' is shown as `~'."
 (global-set-key (kbd "C-c w")   #'my-copy-file-location)
 (global-set-key (kbd "C-c M-w") #'my-copy-file-location)
 
+(defun my-other-window-forward ()
+  "Switch focus to the next window (like `other-window' with arg 1)."
+  (interactive)
+  (other-window 1))
+
+(defun my-other-window-backward ()
+  "Switch focus to the previous window (like `other-window' with arg -1)."
+  (interactive)
+  (other-window -1))
+
+(global-set-key (kbd "C-S-M-j") #'my-other-window-forward)
+(global-set-key (kbd "C-S-M-k") #'my-other-window-backward)
+
 (provide 'mijn-editor)
