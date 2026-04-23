@@ -981,9 +981,7 @@ untouched."
                            (format "Context: %s from lines %d-%d\n\n"
                                    file (line-number-at-pos start) (line-number-at-pos end))
                          (format "Context: %s\n\n" file))))
-                    (file-name
-                     (format "File \"%s\", line %d:\n\n"
-                             file-name (line-number-at-pos (point)))))))
+                    (file-name (format "%s:%d\n\n" file-name (line-number-at-pos (point)))))))
          (buf (if btw
                   (generate-new-buffer "*llm-btw*")
                 (get-buffer-create "*llm-prompt*"))))
