@@ -825,7 +825,8 @@ all prior turns regardless of what else is happening in the directory."
     (llm--close-prompt-frame)
     (kill-buffer bubble)
     (let ((default-directory dir)
-          (vterm-shell (format "claude --resume %s" sid)))
+          (vterm-shell (format "claude --resume %s"
+                               (shell-quote-argument sid))))
       (vterm-other-window name)
       (llm--register-buffer (current-buffer)))))
 
