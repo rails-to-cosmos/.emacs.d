@@ -978,7 +978,7 @@ untouched."
                                     (llm--write-context-file context))))
                        (deactivate-mark)
                        (if file-name
-                           (format "Context: %s from lines %d-%d\n\n"
+                           (format "Read file %s lines %d-%d\n\n"
                                    file (line-number-at-pos start) (line-number-at-pos end))
                          (format "Context: %s\n\n" file))))
                     (file-name (format "%s:%d\n\n" file-name (line-number-at-pos (point)))))))
