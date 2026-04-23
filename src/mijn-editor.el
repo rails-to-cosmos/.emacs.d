@@ -183,4 +183,31 @@ Otherwise, behave like `kill-ring-save`."
     (delete-region beg end)
     (insert new-text)))
 
+(defun my-copy-file-location (&optional arg)
+  "Copy the current file path and line number to the kill ring.
+
+Default format: `PATH:LINE', e.g. `~/.emacs.d/init.el:42'.
+With \\[universal-argument] ARG, include the column: `PATH:LINE:COL'.
+
+Works in file-visiting buffers and in `dired' (uses the file at point).
+Uses `abbreviate-file-name' so `$HOME' is shown as `~'."
+  (interactive "P")
+  (let ((file (cond
+               ((buffer-file-name))
+               ((derived-mode-p 'dired-mode)
+                (ignore-errors (dired-get-file-for-visit))))))
+    (unless file
+      (user-error "Current buffer isn't visiting a file"))
+    (let* ((path (abbreviate-file-name file))
+           (line (line-number-at-pos))
+           (col  (current-column))
+           (link (if arg
+                     (format "%s:%d:%d" path line col)
+                   (format "%s:%d" path line))))
+      (kill-new link)
+      (message "Copied: %s" link))))
+
+(global-set-key (kbd "C-c w")   #'my-copy-file-location)
+(global-set-key (kbd "C-c M-w") #'my-copy-file-location)
+
 (provide 'mijn-editor)
