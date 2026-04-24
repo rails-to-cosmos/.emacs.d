@@ -29,6 +29,17 @@
   :type '(repeat string)
   :group 'llm)
 
+(defcustom llm-dangerously-skip-permissions nil
+  "When non-nil, pass `--dangerously-skip-permissions' to claude.
+Applies to the main `*claude:PROJECT*' vterm and to the inline /btw
+bubble (captured once at bubble creation as buffer-local state).
+
+Normally toggled per-invocation via the `-d' switch in `llm-menu'
+rather than set directly. Beware: with this flag Claude skips all
+tool-use confirmation prompts."
+  :type 'boolean
+  :group 'llm)
+
 (cl-defun llm--project-root (&optional (dir default-directory))
   "Find project root starting from DIR by looking for marker files."
   (or (cl-loop for marker in llm-project-root-markers
@@ -189,10 +200,15 @@ Rules:
           root)))
 
 (defun llm--claude-shell-command (root)
-  "Return the claude shell command, using `-c' if ROOT has a `.claude/' dir."
-  (if (and root (file-directory-p (expand-file-name ".claude" root)))
-      "claude -c"
-    "claude"))
+  "Return the claude shell command, using `-c' if ROOT has a `.claude/' dir.
+Appends `--dangerously-skip-permissions' when `llm-dangerously-skip-permissions'
+is non-nil."
+  (let ((base (if (and root (file-directory-p (expand-file-name ".claude" root)))
+                  "claude -c"
+                "claude")))
+    (if llm-dangerously-skip-permissions
+        (concat base " --dangerously-skip-permissions")
+      base)))
 
 ;;;###autoload
 (defun llm (&optional user-root)
@@ -656,6 +672,11 @@ Generated lazily on bubble creation; used with `--session-id' on every
 `claude -p' invocation and with `--resume' when promoting to a
 full `*claude:PROJECT*' vterm.")
 
+(defvar-local llm--btw-dangerous nil
+  "Buffer-local copy of `llm-dangerously-skip-permissions' at bubble creation.
+Frozen at bubble open so toggling the transient mid-conversation
+doesn't retroactively change the session's permission posture.")
+
 (defvar-local llm--btw-thinking-overlay nil
   "Overlay showing the animated `...' indicator while Claude is thinking.")
 
@@ -717,9 +738,13 @@ full `*claude:PROJECT*' vterm.")
   "Build the `claude' argv for PROMPT on this bubble's pinned session.
 Every turn uses `--session-id' with the same UUID, so claude treats all
 popup turns as one conversation regardless of what else is happening in
-the project directory. Prepends `llm-btw-prompt-prefix' to PROMPT."
+the project directory. Prepends `llm-btw-prompt-prefix' to PROMPT and,
+if `llm--btw-dangerous' is set for this bubble, passes
+`--dangerously-skip-permissions'."
   (let ((text (concat llm-btw-prompt-prefix prompt)))
-    (list "claude" "--session-id" llm--btw-session-id "-p" text)))
+    (append (list "claude" "--session-id" llm--btw-session-id)
+            (when llm--btw-dangerous '("--dangerously-skip-permissions"))
+            (list "-p" text))))
 
 (defun llm--btw-clean-chunk (chunk)
   "Strip CR, ANSI CSI sequences, and OSC sequences from CHUNK.
@@ -815,18 +840,22 @@ all prior turns regardless of what else is happening in the directory."
     (user-error "No session id recorded for this bubble"))
   (when (process-live-p llm--btw-process)
     (user-error "Claude is still responding — wait, or C-c C-k to cancel first"))
-  (let* ((root   llm--prompt-project-root)
-         (dir    (or root default-directory))
-         (label  (car (llm--project-label dir)))
-         (base   (format "*claude:%s*" label))
-         (name   (generate-new-buffer-name base))
-         (sid    llm--btw-session-id)
-         (bubble (current-buffer)))
+  (let* ((root      llm--prompt-project-root)
+         (dir       (or root default-directory))
+         (label     (car (llm--project-label dir)))
+         (base      (format "*claude:%s*" label))
+         (name      (generate-new-buffer-name base))
+         (sid       llm--btw-session-id)
+         (dangerous llm--btw-dangerous)
+         (bubble    (current-buffer)))
     (llm--close-prompt-frame)
     (kill-buffer bubble)
     (let ((default-directory dir)
-          (vterm-shell (format "claude --resume %s"
-                               (shell-quote-argument sid))))
+          (vterm-shell (format "claude --resume %s%s"
+                               (shell-quote-argument sid)
+                               (if dangerous
+                                   " --dangerously-skip-permissions"
+                                 ""))))
       (vterm-other-window name)
       (llm--register-buffer (current-buffer)))))
 
@@ -994,6 +1023,7 @@ untouched."
       (setq-local llm--prompt-btw btw)
       (when btw
         (setq-local llm--btw-session-id (llm--generate-uuid))
+        (setq-local llm--btw-dangerous llm-dangerously-skip-permissions)
         (goto-char (point-max))
         (insert (propertize "— " 'face 'llm-btw-user-face))
         (setq-local llm--btw-input-start (copy-marker (point) nil))
@@ -1474,26 +1504,40 @@ Source-file comment is left untouched — remove it manually if desired."
 
 ;;; Transient Menu
 
+(defun llm--menu-dangerous-p ()
+  "Return non-nil if the menu's `-d' switch is active for this invocation."
+  (member "--dangerously-skip-permissions" (transient-args 'llm-menu)))
+
 (transient-define-suffix llm--menu-prompt-btw ()
-  "Launch the inline-conversation bubble; honors the menu's `--btw' toggle.
-When `--btw' is on, every turn is sent with a literal `/btw ' slash-
-command prefix (needs a matching custom slash command in Claude).
-When off (default), turns are sent verbatim via `claude -p' / `claude -c -p'
-so the conversation works in any environment."
+  "Launch the inline-conversation bubble; honors the menu's switches.
+- `--btw' prepends the `/btw ' slash-command prefix to every turn.
+- `--dangerously-skip-permissions' is captured into the bubble and
+  passed to every `claude -p' turn as well as the promote vterm."
   :description "Prompt inline (conversation)"
   (interactive)
   (let ((llm-btw-prompt-prefix
          (if (member "--btw" (transient-args 'llm-menu))
              "/btw "
-           "")))
+           ""))
+        (llm-dangerously-skip-permissions
+         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p))))
     (llm-prompt-btw)))
+
+(transient-define-suffix llm--menu-open-claude ()
+  "Open the main *claude:PROJECT* vterm; honors the `-d' switch."
+  :description "Open Claude in project"
+  (interactive)
+  (let ((llm-dangerously-skip-permissions
+         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p))))
+    (call-interactively #'llm)))
 
 (transient-define-prefix llm-menu ()
   "Claude CLI commands."
   ["Options"
-   ("-b" "Prepend /btw slash-command to inline prompts" "--btw")]
+   ("-b" "Prepend /btw slash-command to inline prompts" "--btw")
+   ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")]
   [["Session"
-    ("c" "Open Claude in project" llm)
+    ("c" llm--menu-open-claude)
     ("v" "Vterm in project"       llm-vterm)
     ("b" "Switch buffer"          llm-switch-buffer)
     ("p" "Prompt"                 llm-prompt)
