@@ -220,7 +220,4 @@ Uses `abbreviate-file-name' so `$HOME' is shown as `~'."
   (interactive)
   (other-window -1))
 
-(global-set-key (kbd "C-S-j") #'my-other-window-forward)
-(global-set-key (kbd "C-S-k") #'my-other-window-backward)
-
 (provide 'mijn-editor)

@@ -1163,6 +1163,31 @@ where the timer fires but nothing actually changed on disk)."
              (buf (cdr (assoc choice entries))))
         (pop-to-buffer buf)))))
 
+(defun llm--cycle-buffer (direction)
+  "Switch current window to the next/previous claude buffer.
+DIRECTION is +1 (forward) or -1 (backward). Cycle order is by
+buffer name so it's stable across calls."
+  (let ((bufs (sort (llm--get-buffers)
+                    (lambda (a b) (string< (buffer-name a) (buffer-name b))))))
+    (unless bufs (user-error "No claude buffers"))
+    (let* ((pos (cl-position (current-buffer) bufs))
+           (next (if pos
+                     (nth (mod (+ pos direction) (length bufs)) bufs)
+                   (car bufs))))
+      (switch-to-buffer next))))
+
+;;;###autoload
+(defun llm-next-buffer ()
+  "Switch current window to the next claude buffer."
+  (interactive)
+  (llm--cycle-buffer +1))
+
+;;;###autoload
+(defun llm-previous-buffer ()
+  "Switch current window to the previous claude buffer."
+  (interactive)
+  (llm--cycle-buffer -1))
+
 ;;; FIXME/TODO Annotation System
 
 (defvar llm--annotations (make-hash-table :test 'equal)
@@ -1507,6 +1532,8 @@ Source-file comment is left untouched — remove it manually if desired."
 ;;; Keybindings
 
 (global-set-key (kbd "C-x y e") #'llm-menu)
+(global-set-key (kbd "C-S-j")   #'llm-next-buffer)
+(global-set-key (kbd "C-S-k")   #'llm-previous-buffer)
 
 (provide 'mijn-llm)
 ;;; mijn-llm.el ends here
