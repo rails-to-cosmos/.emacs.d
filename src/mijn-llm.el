@@ -31,7 +31,7 @@
 
 (defcustom llm-dangerously-skip-permissions nil
   "When non-nil, pass `--dangerously-skip-permissions' to claude.
-Applies to the main `*claude:PROJECT*' vterm and to the inline /btw
+Applies to the main `*claude:PROJECT*' vterm and to the inline
 bubble (captured once at bubble creation as buffer-local state).
 
 Normally toggled per-invocation via the `-d' switch in `llm-menu'
@@ -412,7 +412,7 @@ Offers project-relative file paths when the point follows `@'."
 
 (define-key llm-prompt-mode-map (kbd "C-c C-c") #'llm-prompt-send)
 (define-key llm-prompt-mode-map (kbd "C-c C-k") #'llm-prompt-cancel)
-(define-key llm-prompt-mode-map (kbd "C-c C-m") #'llm--btw-promote)
+(define-key llm-prompt-mode-map (kbd "C-c C-m") #'llm--bubble-promote)
 
 ;;; Interactive Commands
 
@@ -617,17 +617,17 @@ once the session becomes idle."
     (delete-frame llm--prompt-frame t))
   (setq llm--prompt-frame nil))
 
-;;; /btw inline-response mode
+;;; Bubble (inline-response) mode
 
-(defcustom llm-btw-frame-size '(100 . 24)
-  "Target (COLS . ROWS) for the /btw bubble.
+(defcustom llm-bubble-frame-size '(100 . 24)
+  "Target (COLS . ROWS) for the bubble.
 Bigger than `llm-prompt-frame-size' because the bubble ends up
 displaying Claude's reply, not just the prompt."
   :type '(cons integer integer)
   :group 'llm)
 
-(defcustom llm-btw-prompt-prefix ""
-  "String prepended to the user's text when sending in /btw mode.
+(defcustom llm-bubble-prompt-prefix ""
+  "String prepended to the user's text when sending in bubble mode.
 Empty by default — the bubble sends your prompt verbatim through
 `claude -p', which works in any environment.
 
@@ -638,92 +638,92 @@ e.g. \"By the way, briefly: \" as a plain-text framing preamble."
   :type 'string
   :group 'llm)
 
-(defface llm-btw-header-face
+(defface llm-bubble-header-face
   '((t :inherit header-line :slant italic))
-  "Face for the /btw bubble header line.")
+  "Face for the bubble header line.")
 
-(defface llm-btw-user-face
+(defface llm-bubble-user-face
   '((((background dark))  :foreground "#7aa2f7" :weight bold)
     (((background light)) :foreground "#5c7cfa" :weight bold))
   "Face for the \"▸\" turn marker in front of user messages.")
 
-(defface llm-btw-thinking-face
+(defface llm-bubble-thinking-face
   '((t :inherit shadow :slant italic))
   "Face for the animated `Thinking…' indicator.")
 
-(defvar-local llm--prompt-btw nil
-  "Non-nil when this prompt buffer is in /btw inline-response mode.")
+(defvar-local llm--prompt-bubble nil
+  "Non-nil when this prompt buffer is in bubble (inline-response) mode.")
 
-(defvar-local llm--btw-process nil
-  "Async `claude -p' process for a /btw bubble, if running.")
+(defvar-local llm--bubble-process nil
+  "Async `claude -p' process for a bubble, if running.")
 
-(defvar-local llm--btw-last-prompt nil
+(defvar-local llm--bubble-last-prompt nil
   "The most recent user prompt sent in this bubble.
-Used by `llm--btw-promote' to forward it to the main claude session.")
+Used by `llm--bubble-promote' to forward it to the main claude session.")
 
-(defvar-local llm--btw-input-start nil
+(defvar-local llm--bubble-input-start nil
   "Marker at the start of the user's current input region.
 Nil on the very first send (no conversation history yet); a live marker
 once the first reply has settled and subsequent turns are being typed.")
 
-(defvar-local llm--btw-session-id nil
+(defvar-local llm--bubble-session-id nil
   "UUID pinning every turn of this bubble to the same claude session.
 Generated lazily on bubble creation; used with `--session-id' on every
 `claude -p' invocation and with `--resume' when promoting to a
 full `*claude:PROJECT*' vterm.")
 
-(defvar-local llm--btw-dangerous nil
+(defvar-local llm--bubble-dangerous nil
   "Buffer-local copy of `llm-dangerously-skip-permissions' at bubble creation.
 Frozen at bubble open so toggling the transient mid-conversation
 doesn't retroactively change the session's permission posture.")
 
-(defvar-local llm--btw-thinking-overlay nil
+(defvar-local llm--bubble-thinking-overlay nil
   "Overlay showing the animated `...' indicator while Claude is thinking.")
 
-(defvar-local llm--btw-thinking-timer nil
-  "Buffer-local timer animating `llm--btw-thinking-overlay'.")
+(defvar-local llm--bubble-thinking-timer nil
+  "Buffer-local timer animating `llm--bubble-thinking-overlay'.")
 
-(defvar-local llm--btw-thinking-tick 0
+(defvar-local llm--bubble-thinking-tick 0
   "Counter driving the thinking-dots animation.")
 
-(defun llm--btw-thinking-string (tick)
+(defun llm--bubble-thinking-string (tick)
   "Return the animated dots string for TICK (1–3 dots)."
   (propertize (make-string (1+ (mod tick 3)) ?.)
-              'face 'llm-btw-thinking-face))
+              'face 'llm-bubble-thinking-face))
 
-(defun llm--btw-thinking-tick-fn (buf)
+(defun llm--bubble-thinking-tick-fn (buf)
   "Tick BUF's thinking animation one frame forward."
   (when (and (buffer-live-p buf)
-             (overlayp (buffer-local-value 'llm--btw-thinking-overlay buf)))
+             (overlayp (buffer-local-value 'llm--bubble-thinking-overlay buf)))
     (with-current-buffer buf
-      (cl-incf llm--btw-thinking-tick)
-      (overlay-put llm--btw-thinking-overlay
+      (cl-incf llm--bubble-thinking-tick)
+      (overlay-put llm--bubble-thinking-overlay
                    'after-string
-                   (llm--btw-thinking-string llm--btw-thinking-tick)))))
+                   (llm--bubble-thinking-string llm--bubble-thinking-tick)))))
 
-(defun llm--btw-start-thinking (buf)
+(defun llm--bubble-start-thinking (buf)
   "Begin the `thinking' animation in BUF at current `point-max'."
   (with-current-buffer buf
-    (llm--btw-stop-thinking buf)
+    (llm--bubble-stop-thinking buf)
     (let* ((pos (point-max))
            (ov  (make-overlay pos pos buf t nil)))
-      (overlay-put ov 'after-string (llm--btw-thinking-string 0))
-      (setq-local llm--btw-thinking-overlay ov)
-      (setq-local llm--btw-thinking-tick 0)
-      (setq-local llm--btw-thinking-timer
+      (overlay-put ov 'after-string (llm--bubble-thinking-string 0))
+      (setq-local llm--bubble-thinking-overlay ov)
+      (setq-local llm--bubble-thinking-tick 0)
+      (setq-local llm--bubble-thinking-timer
                   (run-with-timer 0.4 0.4
-                                  #'llm--btw-thinking-tick-fn buf)))))
+                                  #'llm--bubble-thinking-tick-fn buf)))))
 
-(defun llm--btw-stop-thinking (buf)
+(defun llm--bubble-stop-thinking (buf)
   "Cancel BUF's thinking animation and remove its indicator."
   (when (buffer-live-p buf)
     (with-current-buffer buf
-      (when (timerp llm--btw-thinking-timer)
-        (cancel-timer llm--btw-thinking-timer))
-      (setq-local llm--btw-thinking-timer nil)
-      (when (overlayp llm--btw-thinking-overlay)
-        (delete-overlay llm--btw-thinking-overlay))
-      (setq-local llm--btw-thinking-overlay nil))))
+      (when (timerp llm--bubble-thinking-timer)
+        (cancel-timer llm--bubble-thinking-timer))
+      (setq-local llm--bubble-thinking-timer nil)
+      (when (overlayp llm--bubble-thinking-overlay)
+        (delete-overlay llm--bubble-thinking-overlay))
+      (setq-local llm--bubble-thinking-overlay nil))))
 
 (defun llm--generate-uuid ()
   "Return a v4-style UUID string."
@@ -734,19 +734,19 @@ doesn't retroactively change the session's permission posture.")
           (logior #x8000 (logand (random 65536) #x3fff))
           (random 65536) (random 65536) (random 65536)))
 
-(defun llm--btw-command (prompt)
+(defun llm--bubble-command (prompt)
   "Build the `claude' argv for PROMPT on this bubble's pinned session.
 Every turn uses `--session-id' with the same UUID, so claude treats all
 popup turns as one conversation regardless of what else is happening in
-the project directory. Prepends `llm-btw-prompt-prefix' to PROMPT and,
-if `llm--btw-dangerous' is set for this bubble, passes
+the project directory. Prepends `llm-bubble-prompt-prefix' to PROMPT and,
+if `llm--bubble-dangerous' is set for this bubble, passes
 `--dangerously-skip-permissions'."
-  (let ((text (concat llm-btw-prompt-prefix prompt)))
-    (append (list "claude" "--session-id" llm--btw-session-id)
-            (when llm--btw-dangerous '("--dangerously-skip-permissions"))
+  (let ((text (concat llm-bubble-prompt-prefix prompt)))
+    (append (list "claude" "--session-id" llm--bubble-session-id)
+            (when llm--bubble-dangerous '("--dangerously-skip-permissions"))
             (list "-p" text))))
 
-(defun llm--btw-clean-chunk (chunk)
+(defun llm--bubble-clean-chunk (chunk)
   "Strip CR, ANSI CSI sequences, and OSC sequences from CHUNK.
 `ansi-color-apply' handles CSI (colors, cursor); OSC (e.g. title
 changes like ESC ] ... BEL) and stray CR are removed by hand."
@@ -754,51 +754,51 @@ changes like ESC ] ... BEL) and stray CR are removed by hand."
          (no-osc (replace-regexp-in-string "\e\\][^\a]*\\(?:\a\\|\e\\\\\\)" "" no-cr)))
     (ansi-color-apply no-osc)))
 
-(defun llm--btw-filter (proc chunk)
+(defun llm--bubble-filter (proc chunk)
   "Process filter: clean CHUNK and append to PROC's buffer.
 On the first chunk, replaces the `thinking' indicator with the
 claude turn marker."
   (when (buffer-live-p (process-buffer proc))
     (with-current-buffer (process-buffer proc)
       (let ((inhibit-read-only t)
-            (first-chunk (overlayp llm--btw-thinking-overlay))
+            (first-chunk (overlayp llm--bubble-thinking-overlay))
             (was-at-end (= (point) (point-max)))
-            (cleaned (llm--btw-clean-chunk chunk)))
+            (cleaned (llm--bubble-clean-chunk chunk)))
         (when first-chunk
-          (llm--btw-stop-thinking (current-buffer))
+          (llm--bubble-stop-thinking (current-buffer))
           (save-excursion
             (goto-char (point-max))
-            (insert (propertize "— " 'face 'llm-btw-user-face))))
+            (insert (propertize "— " 'face 'llm-bubble-user-face))))
         (save-excursion
           (goto-char (point-max))
           (insert cleaned))
         (when (or first-chunk was-at-end)
           (goto-char (point-max)))))))
 
-(defun llm--btw-sentinel (proc _event)
+(defun llm--bubble-sentinel (proc _event)
   "Process sentinel: append a fresh input prompt and hand control back."
   (when (buffer-live-p (process-buffer proc))
     (with-current-buffer (process-buffer proc)
-      (llm--btw-stop-thinking (current-buffer))
-      (setq-local llm--btw-process nil)
+      (llm--bubble-stop-thinking (current-buffer))
+      (setq-local llm--bubble-process nil)
       (let ((status (process-status proc))
             (inhibit-read-only t))
         (pcase status
           ('exit
            (goto-char (point-max))
-           (insert "\n\n" (propertize "— " 'face 'llm-btw-user-face))
-           (setq-local llm--btw-input-start (copy-marker (point) nil))
+           (insert "\n\n" (propertize "— " 'face 'llm-bubble-user-face))
+           (setq-local llm--bubble-input-start (copy-marker (point) nil))
            (setq header-line-format
                  (propertize
                   " Claude  C-c C-c send · C-c C-k close · C-c C-m →claude"
-                  'face 'llm-btw-header-face)))
+                  'face 'llm-bubble-header-face)))
           ('signal
            (setq header-line-format
                  (propertize " Claude  (cancelled — C-c C-k close)"
-                             'face 'llm-btw-header-face))))))))
+                             'face 'llm-bubble-header-face))))))))
 
-(defun llm--btw-promote ()
-  "Close the /btw bubble and open a new *claude:PROJECT* vterm
+(defun llm--bubble-promote ()
+  "Close the bubble and open a new *claude:PROJECT* vterm
 continuing the same session the popup has been driving.
 
 Every popup turn runs with `--session-id <UUID>', so the conversation
@@ -806,19 +806,19 @@ is pinned to one specific claude session. Promote spawns a fresh
 interactive claude with `--resume <UUID>' on the same UUID, loading
 all prior turns regardless of what else is happening in the directory."
   (interactive)
-  (unless llm--btw-last-prompt
+  (unless llm--bubble-last-prompt
     (user-error "Nothing to promote yet — send a turn first"))
-  (unless llm--btw-session-id
+  (unless llm--bubble-session-id
     (user-error "No session id recorded for this bubble"))
-  (when (process-live-p llm--btw-process)
+  (when (process-live-p llm--bubble-process)
     (user-error "Claude is still responding — wait, or C-c C-k to cancel first"))
   (let* ((root      llm--prompt-project-root)
          (dir       (or root default-directory))
          (label     (car (llm--project-label dir)))
          (base      (format "*claude:%s*" label))
          (name      (generate-new-buffer-name base))
-         (sid       llm--btw-session-id)
-         (dangerous llm--btw-dangerous)
+         (sid       llm--bubble-session-id)
+         (dangerous llm--bubble-dangerous)
          (bubble    (current-buffer)))
     (llm--close-prompt-frame)
     (kill-buffer bubble)
@@ -832,8 +832,8 @@ all prior turns regardless of what else is happening in the directory."
       (llm--register-buffer (current-buffer)))))
 
 ;;;###autoload
-(defun llm-prompt-btw ()
-  "Open a /btw bubble: throwaway prompt that streams the reply inline.
+(defun llm-prompt-bubble ()
+  "Open a bubble: throwaway prompt that streams the reply inline.
 Thin wrapper around `llm-prompt' with the prefix-arg preset, so it's
 directly bindable / transient-invokable without universal-argument.
 
@@ -846,57 +846,57 @@ that resumes the same session."
   (let ((current-prefix-arg '(4)))
     (call-interactively #'llm-prompt)))
 
-(defun llm-prompt-btw-send ()
+(defun llm-prompt-bubble-send ()
   "Spawn a new bubble turn (first send or post-response follow-up).
 Refuses while a turn is already running."
-  (if (process-live-p llm--btw-process)
+  (if (process-live-p llm--bubble-process)
       (user-error "Claude is still responding — wait, or C-c C-k to cancel")
-    (llm--btw-spawn-turn)))
+    (llm--bubble-spawn-turn)))
 
-(defun llm--btw-spawn-turn ()
+(defun llm--bubble-spawn-turn ()
   "Start a new claude turn (first send or follow-up after completion)."
-  (let* ((has-history (markerp llm--btw-input-start))
+  (let* ((has-history (markerp llm--bubble-input-start))
          (prompt (string-trim
                   (if has-history
                       (buffer-substring-no-properties
-                       llm--btw-input-start (point-max))
+                       llm--bubble-input-start (point-max))
                     (buffer-string))))
          (root   llm--prompt-project-root)
          (default-directory (or root default-directory)))
     (when (string-empty-p prompt) (user-error "Empty prompt"))
-    (setq-local llm--btw-last-prompt prompt)
+    (setq-local llm--bubble-last-prompt prompt)
     (let ((inhibit-read-only t)
-          (dash (propertize "— " 'face 'llm-btw-user-face)))
+          (dash (propertize "— " 'face 'llm-bubble-user-face)))
       (if has-history
           (progn
-            (delete-region llm--btw-input-start (point-max))
+            (delete-region llm--bubble-input-start (point-max))
             (goto-char (point-max))
             (insert prompt "\n\n"))
         (erase-buffer)
         (insert dash prompt "\n\n"))
-      (setq-local llm--btw-input-start nil)
-      (llm--btw-start-thinking (current-buffer))
+      (setq-local llm--bubble-input-start nil)
+      (llm--bubble-start-thinking (current-buffer))
       (setq header-line-format
             (propertize " Claude  (running — C-c C-k cancel)"
-                        'face 'llm-btw-header-face)))
-    (let* ((args (llm--btw-command prompt))
+                        'face 'llm-bubble-header-face)))
+    (let* ((args (llm--bubble-command prompt))
            (process-environment
             (append '("NO_COLOR=1" "CLICOLOR=0" "TERM=dumb")
                     process-environment))
-           (proc (apply #'start-process "llm-btw" (current-buffer) args)))
-      (setq-local llm--btw-process proc)
-      (set-process-filter   proc #'llm--btw-filter)
-      (set-process-sentinel proc #'llm--btw-sentinel))))
+           (proc (apply #'start-process "llm-bubble" (current-buffer) args)))
+      (setq-local llm--bubble-process proc)
+      (set-process-filter   proc #'llm--bubble-filter)
+      (set-process-sentinel proc #'llm--bubble-sentinel))))
 
 ;;;###autoload
 (defun llm-prompt-send ()
   "Send the contents of the prompt buffer to Claude.
-In /btw mode: run `claude -p' as a subprocess and stream the reply
+In bubble mode: run `claude -p' as a subprocess and stream the reply
 into the same bubble. Otherwise: hand off to the project's claude
 vterm session (queues if busy)."
   (interactive)
-  (if llm--prompt-btw
-      (llm-prompt-btw-send)
+  (if llm--prompt-bubble
+      (llm-prompt-bubble-send)
     (let* ((prompt (string-trim (buffer-string)))
            (ctx    llm--prompt-context-prefix)
            (root   llm--prompt-project-root)
@@ -909,20 +909,20 @@ vterm session (queues if busy)."
 
 (defun llm-prompt-cancel ()
   "Cancel the prompt or response.
-If a /btw subprocess is running, kill it and keep the bubble open.
+If a bubble subprocess is running, kill it and keep the bubble open.
 Otherwise close the bubble and kill its buffer."
   (interactive)
   (cond
-   ((and llm--prompt-btw (process-live-p llm--btw-process))
-    (kill-process llm--btw-process)
-    (setq-local llm--btw-process nil)
-    (llm--btw-stop-thinking (current-buffer))
+   ((and llm--prompt-bubble (process-live-p llm--bubble-process))
+    (kill-process llm--bubble-process)
+    (setq-local llm--bubble-process nil)
+    (llm--bubble-stop-thinking (current-buffer))
     (let ((inhibit-read-only t))
       (goto-char (point-max))
       (insert "\n\n[cancelled]\n"))
     (setq header-line-format
-          (propertize " Claude /btw  (cancelled — q close)"
-                      'face 'llm-btw-header-face)))
+          (propertize " Claude bubble  (cancelled — q close)"
+                      'face 'llm-bubble-header-face)))
    (t
     (let ((buf (current-buffer)))
       (llm--close-prompt-frame)
@@ -936,18 +936,18 @@ Pre-populates context based on the current state:
 - Active region: inserts a file/region context prefix
 - Otherwise: inserts a file+line context prefix
 
-With \\[universal-argument] ARG: /btw mode.  Opens a fresh throwaway
-bubble with no file-context prefix; on send, runs `claude -p /btw
-<prompt>' as a subprocess and streams the reply into the same bubble.
+With \\[universal-argument] ARG: bubble mode.  Opens a fresh throwaway
+bubble with no file-context prefix; on send, runs `claude -p <prompt>'
+as a subprocess and streams the reply into the same bubble.
 Nothing is saved to prompt history and the main claude vterm is
 untouched."
   (interactive "P")
-  (let* ((btw (consp arg))
+  (let* ((bubble (consp arg))
          (proj (project-current nil default-directory))
          (root (when proj (project-root proj)))
          (root (or root (llm--project-root default-directory)))
          (file-name (buffer-file-name))
-         (prefix (unless btw
+         (prefix (unless bubble
                    (cond
                     ((use-region-p)
                      (let* ((start (region-beginning))
@@ -962,28 +962,28 @@ untouched."
                                    file (line-number-at-pos start) (line-number-at-pos end))
                          (format "Context: %s\n\n" file))))
                     (file-name (format "%s:%d\n\n" file-name (line-number-at-pos (point)))))))
-         (buf (if btw
-                  (generate-new-buffer "*llm-btw*")
+         (buf (if bubble
+                  (generate-new-buffer "*llm-bubble*")
                 (get-buffer-create "*llm-prompt*"))))
     (with-current-buffer buf
       (llm-prompt-mode)
       (erase-buffer)
       (setq-local llm--prompt-context-prefix prefix)
       (setq-local llm--prompt-project-root root)
-      (setq-local llm--prompt-btw btw)
-      (when btw
-        (setq-local llm--btw-session-id (llm--generate-uuid))
-        (setq-local llm--btw-dangerous llm-dangerously-skip-permissions)
+      (setq-local llm--prompt-bubble bubble)
+      (when bubble
+        (setq-local llm--bubble-session-id (llm--generate-uuid))
+        (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions)
         (goto-char (point-max))
-        (insert (propertize "— " 'face 'llm-btw-user-face))
-        (setq-local llm--btw-input-start (copy-marker (point) nil))
+        (insert (propertize "— " 'face 'llm-bubble-user-face))
+        (setq-local llm--bubble-input-start (copy-marker (point) nil))
         (setq header-line-format
               (propertize
                " Claude  C-c C-c send · C-c C-k close · C-c C-m →claude"
-               'face 'llm-btw-header-face))))
+               'face 'llm-bubble-header-face))))
     (llm--close-prompt-frame)
     (if (display-graphic-p)
-        (let* ((size (if btw llm-btw-frame-size llm-prompt-frame-size))
+        (let* ((size (if bubble llm-bubble-frame-size llm-prompt-frame-size))
                (anchor (llm--prompt-anchor-xy))
                (frame (llm--prompt-make-frame buf anchor)))
           (setq llm--prompt-frame frame)
@@ -1458,20 +1458,20 @@ Source-file comment is left untouched — remove it manually if desired."
   "Return non-nil if the menu's `-d' switch is active for this invocation."
   (member "--dangerously-skip-permissions" (transient-args 'llm-menu)))
 
-(transient-define-suffix llm--menu-prompt-btw ()
+(transient-define-suffix llm--menu-prompt-bubble ()
   "Launch the inline-conversation bubble; honors the menu's switches.
 - `--btw' prepends the `/btw ' slash-command prefix to every turn.
 - `--dangerously-skip-permissions' is captured into the bubble and
   passed to every `claude -p' turn as well as the promote vterm."
   :description "Prompt inline (conversation)"
   (interactive)
-  (let ((llm-btw-prompt-prefix
+  (let ((llm-bubble-prompt-prefix
          (if (member "--btw" (transient-args 'llm-menu))
              "/btw "
            ""))
         (llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p))))
-    (llm-prompt-btw)))
+    (llm-prompt-bubble)))
 
 (transient-define-suffix llm--menu-open-claude ()
   "Open the main *claude:PROJECT* vterm; honors the `-d' switch."
@@ -1491,7 +1491,7 @@ Source-file comment is left untouched — remove it manually if desired."
     ("v" "Vterm in project"       llm-vterm)
     ("b" "Switch buffer"          llm-switch-buffer)
     ("p" "Prompt"                 llm-prompt)
-    ("P" llm--menu-prompt-btw)
+    ("P" llm--menu-prompt-bubble)
     ("r" "Resume last prompt"     llm-prompt-resume)
     ("H" "Prompt history"         llm-prompt-history)]
    ["Annotations"
