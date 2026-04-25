@@ -10,10 +10,14 @@
 (defvar vterm--process)
 (defvar llm--prompt-queue)
 
+(declare-function vterm "vterm")
 (declare-function vterm-insert "vterm")
 (declare-function vterm-send-return "vterm")
 (declare-function vterm-other-window "vterm")
 (declare-function face-remap-remove-relative "face-remap")
+
+(use-package vterm
+  :ensure t)
 
 ;;; Customization
 
@@ -256,6 +260,24 @@ With \\[universal-argument]: always create a new buffer."
               (pop-to-buffer existing)
             (vterm-other-window base)))
       (vterm-other-window (generate-new-buffer-name base)))))
+
+;;;###autoload
+(defun llm-vterm-here ()
+  "Open or switch to a vterm buffer in the current window.
+Without prefix: switch to the last *vterm:LABEL* buffer for the project,
+or create one if none exist.
+With prefix: always create a new vterm buffer."
+  (interactive)
+  (pcase-let* ((`(,label . ,_) (llm--project-label default-directory))
+               (base (format "*vterm:%s*" label)))
+    (if current-prefix-arg
+        (vterm (generate-new-buffer-name base))
+      (let ((vterm-bufs (cl-remove-if-not
+                         (lambda (b) (string-prefix-p base (buffer-name b)))
+                         (buffer-list))))
+        (if vterm-bufs
+            (switch-to-buffer (car vterm-bufs))
+          (vterm base))))))
 
 ;;; Claude vterm status indicator
 
@@ -1529,11 +1551,37 @@ Source-file comment is left untouched — remove it manually if desired."
    ["Highlights"
     ("h" "Clear revert highlights" llm-change-highlight-clear)]])
 
+;;;###autoload
+(defun llm-toggle-vterm-claude ()
+  "Toggle current window between `*vterm:PROJECT*' and `*claude:PROJECT*'.
+Switches to the counterpart of the current buffer, creating it in the
+current window if missing.  Errors if the current buffer is neither."
+  (interactive)
+  (let ((name (buffer-name)))
+    (unless (string-match "\\`\\*\\(vterm\\|claude\\):\\(.*\\)\\*\\'" name)
+      (user-error "Not in a *vterm:…* or *claude:…* buffer"))
+    (let* ((kind   (match-string 1 name))
+           (label  (match-string 2 name))
+           (target (format (if (equal kind "vterm") "*claude:%s*" "*vterm:%s*")
+                           label))
+           (existing (get-buffer target)))
+      (if (buffer-live-p existing)
+          (switch-to-buffer existing)
+        (pcase-let* ((`(,_ . ,root) (llm--project-label default-directory))
+                     (default-directory (or root default-directory)))
+          (if (equal kind "vterm")
+              (let ((vterm-shell (llm--claude-shell-command root)))
+                (vterm target)
+                (llm--register-buffer (current-buffer)))
+            (vterm target)))))))
+
 ;;; Keybindings
 
 (global-set-key (kbd "C-x y e") #'llm-menu)
 (global-set-key (kbd "C-S-j")   #'llm-next-buffer)
 (global-set-key (kbd "C-S-k")   #'llm-previous-buffer)
+(global-set-key (kbd "C-x C-x") #'llm-toggle-vterm-claude)
+(global-set-key (kbd "C-x y e v") #'llm-vterm-here)
 
 (provide 'mijn-llm)
 ;;; mijn-llm.el ends here

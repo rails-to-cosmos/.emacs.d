@@ -6,44 +6,6 @@
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
-(defun my/vterm ()
-  "Open or switch to a vterm buffer.
-Without prefix: switch to the last vterm buffer, or create one if none exist.
-With prefix: create a new vterm buffer named after the project or directory."
-  (interactive)
-  (let* ((proj (project-current nil default-directory))
-         (root (when proj (project-root proj)))
-         (label (if root
-                    (file-name-nondirectory (directory-file-name root))
-                  (abbreviate-file-name default-directory)))
-         (base (format "*vterm:%s*" label))
-         (name (generate-new-buffer-name base)))
-    (if current-prefix-arg
-        ;; With prefix: create new vterm
-        (vterm name)
-
-      ;; Without prefix: reuse or create
-      (let ((vterm-bufs (cl-remove-if-not
-                         (lambda (b) (string-prefix-p (format "*vterm:%s*" label) (buffer-name b)))
-                         (buffer-list))))
-        (if vterm-bufs
-            (switch-to-buffer (car vterm-bufs))
-          ;; No vterm buffers exist, create one
-          (let* ((proj (project-current nil default-directory))
-                 (root (when proj (project-root proj)))
-                 (label (if root
-                            (file-name-nondirectory (directory-file-name root))
-                          (abbreviate-file-name default-directory)))
-                 (base (format "*vterm:%s*" label))
-                 (name (generate-new-buffer-name base)))
-            (vterm name))))))
-  )
-
-(use-package vterm
-  :bind (("C-x y e v" . my/vterm)
-         ("C-x y e e" . eshell))
-  :ensure t)
-
 (defun my/eshell-apply-dir-locals ()
   "Apply .dir-locals.el settings to the current buffer.
 Handles regular file buffers and Eshell buffers correctly."
