@@ -245,23 +245,6 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
         (llm--register-buffer (current-buffer)))))))
 
 ;;;###autoload
-(defun llm-vterm (&optional user-root)
-  "Open a plain vterm buffer named *vterm:PROJECT* in the current project.
-Without prefix: reuse the existing buffer, or create one.
-With \\[universal-argument]: always create a new buffer."
-  (interactive)
-  (pcase-let* ((`(,label . ,root) (llm--project-label (or user-root default-directory)))
-               (default-directory (or user-root root default-directory))
-               (base (format "*vterm:%s*" label))
-               (prefix (prefix-numeric-value current-prefix-arg)))
-    (if (= prefix 1)
-        (let ((existing (get-buffer base)))
-          (if (and existing (buffer-live-p existing))
-              (pop-to-buffer existing)
-            (vterm-other-window base)))
-      (vterm-other-window (generate-new-buffer-name base)))))
-
-;;;###autoload
 (defun llm-vterm-here ()
   "Open or switch to a vterm buffer in the current window.
 Without prefix: switch to the last *vterm:LABEL* buffer for the project,
@@ -875,27 +858,34 @@ Refuses while a turn is already running."
       (user-error "Claude is still responding — wait, or C-c C-k to cancel")
     (llm--bubble-spawn-turn)))
 
-(defun llm--bubble-spawn-turn ()
-  "Start a new claude turn (first send or follow-up after completion)."
+(defun llm--bubble-spawn-turn (&optional explicit-prompt)
+  "Start a new claude turn (first send or follow-up after completion).
+With EXPLICIT-PROMPT, use it as the prompt instead of reading the
+buffer's input region, and skip echoing the user turn into the buffer
+so only the response is rendered."
   (let* ((has-history (markerp llm--bubble-input-start))
-         (prompt (string-trim
-                  (if has-history
-                      (buffer-substring-no-properties
-                       llm--bubble-input-start (point-max))
-                    (buffer-string))))
+         (prompt (or explicit-prompt
+                     (string-trim
+                      (if has-history
+                          (buffer-substring-no-properties
+                           llm--bubble-input-start (point-max))
+                        (buffer-string)))))
          (root   llm--prompt-project-root)
          (default-directory (or root default-directory)))
     (when (string-empty-p prompt) (user-error "Empty prompt"))
     (setq-local llm--bubble-last-prompt prompt)
     (let ((inhibit-read-only t)
           (dash (propertize "— " 'face 'llm-bubble-user-face)))
-      (if has-history
-          (progn
-            (delete-region llm--bubble-input-start (point-max))
-            (goto-char (point-max))
-            (insert prompt "\n\n"))
+      (cond
+       (explicit-prompt
+        (erase-buffer))
+       (has-history
+        (delete-region llm--bubble-input-start (point-max))
+        (goto-char (point-max))
+        (insert prompt "\n\n"))
+       (t
         (erase-buffer)
-        (insert dash prompt "\n\n"))
+        (insert dash prompt "\n\n")))
       (setq-local llm--bubble-input-start nil)
       (llm--bubble-start-thinking (current-buffer))
       (setq header-line-format
@@ -1535,12 +1525,13 @@ Source-file comment is left untouched — remove it manually if desired."
    ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")]
   [["Session"
     ("c" llm--menu-open-claude)
-    ("v" "Vterm in project"       llm-vterm)
+    ("v" "Vterm in project"       llm-vterm-here)
     ("b" "Switch buffer"          llm-switch-buffer)
     ("p" "Prompt"                 llm-prompt)
     ("P" llm--menu-prompt-bubble)
     ("r" "Resume last prompt"     llm-prompt-resume)
-    ("H" "Prompt history"         llm-prompt-history)]
+    ("H" "Prompt history"         llm-prompt-history)
+    ("?" "Describe at point"      llm-describe-at-point)]
    ["Annotations"
     ("f" "Add FIXME"          llm-add-fixme)
     ("t" "Add TODO"           llm-add-todo)
@@ -1575,13 +1566,60 @@ current window if missing.  Errors if the current buffer is neither."
                 (llm--register-buffer (current-buffer)))
             (vterm target)))))))
 
+;;;###autoload
+(defun llm-describe-at-point ()
+  "Ask Claude to describe the symbol at point or the active region.
+Spawns a bubble seeded with a prompt referencing the visiting file and
+line(s), and auto-sends.  If the buffer isn't visiting a file, the
+buffer name is used as context instead."
+  (interactive)
+  (let* ((region-p (use-region-p))
+         (rb (and region-p (region-beginning)))
+         (re (and region-p (region-end)))
+         (thing (cond
+                 (region-p (string-trim (buffer-substring-no-properties rb re)))
+                 ((thing-at-point 'symbol t))
+                 (t (user-error "No symbol at point and no active region"))))
+         (file-name (buffer-file-name))
+         (loc (cond
+               (region-p (format "lines %d-%d"
+                                 (line-number-at-pos rb)
+                                 (line-number-at-pos re)))
+               (t        (format "line %d" (line-number-at-pos (point))))))
+         (where (if file-name
+                    (format "%s (%s)" file-name loc)
+                  (format "buffer %s (%s)" (buffer-name) loc)))
+         (text (if (string-match-p "\n" thing)
+                   (format "Describe the following snippet in the context of %s:\n\n```\n%s\n```"
+                           where thing)
+                 (format "Describe `%s` in the context of %s." thing where)))
+         (root (llm--current-root))
+         (buf (generate-new-buffer "*llm-bubble*")))
+    (when region-p (deactivate-mark))
+    (with-current-buffer buf
+      (llm-prompt-mode)
+      (erase-buffer)
+      (setq-local llm--prompt-project-root root)
+      (setq-local llm--prompt-bubble t)
+      (setq-local llm--bubble-session-id (llm--generate-uuid))
+      (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions))
+    (llm--close-prompt-frame)
+    (if (display-graphic-p)
+        (let* ((size llm-bubble-frame-size)
+               (anchor (llm--prompt-anchor-xy))
+               (frame (llm--prompt-make-frame buf anchor)))
+          (setq llm--prompt-frame frame)
+          (llm--animate-prompt-frame frame (car size) (cdr size)))
+      (pop-to-buffer buf))
+    (with-current-buffer buf
+      (llm--bubble-spawn-turn text))))
+
 ;;; Keybindings
 
 (global-set-key (kbd "C-x y e") #'llm-menu)
 (global-set-key (kbd "C-S-j")   #'llm-next-buffer)
 (global-set-key (kbd "C-S-k")   #'llm-previous-buffer)
 (global-set-key (kbd "C-x C-x") #'llm-toggle-vterm-claude)
-(global-set-key (kbd "C-x y e v") #'llm-vterm-here)
 
 (provide 'mijn-llm)
 ;;; mijn-llm.el ends here
