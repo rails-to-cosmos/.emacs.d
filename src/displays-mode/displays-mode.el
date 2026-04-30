@@ -83,6 +83,10 @@ Each function is called with the output name."
   '((t :inherit font-lock-string-face))
   "Face for the resolution string.")
 
+(defface displays-selected
+  '((t :inherit highlight :weight bold :extend t))
+  "Face applied to the line of the currently-selected display.")
+
 ;;; Data model
 
 (cl-defstruct displays-output
@@ -210,7 +214,9 @@ Each function is called with the output name."
 (defun displays--render ()
   "Render `displays--state' into the layout buffer."
   (with-current-buffer (get-buffer-create displays-buffer-name)
-    (displays-mode)
+    (unless (derived-mode-p 'displays-mode)
+      (displays-mode))
+    (displays--ensure-selected)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert (propertize "Displays" 'face 'bold)
@@ -227,7 +233,7 @@ Each function is called with the output name."
                        "  •  P primary  d disable  e enable\n"
                        "C-c C-c apply  •  C-c C-s save  •  C-c C-l load  •  g refresh  •  ? help\n")
                'face 'shadow)))
-    (goto-char (point-min))))
+    (displays--goto-selected)))
 
 (defun displays--render-output (out)
   "Render a single OUTPUT struct as a labeled row."
@@ -240,7 +246,8 @@ Each function is called with the output name."
          (mode     (displays-output-current-mode out))
          (rate     (displays-output-current-rate out))
          (rot      (displays-output-rotation out))
-         (geom     (displays-output-geometry out)))
+         (geom     (displays-output-geometry out))
+         (start    (point)))
     (insert sigil)
     (insert (propertize name 'face
                         (cond ((not conn) 'displays-disabled)
@@ -263,8 +270,12 @@ Each function is called with the output name."
       (when primary
         (insert "  ")
         (insert (propertize "★ primary" 'face 'displays-primary)))))
-    (put-text-property (line-beginning-position) (line-end-position)
-                       'displays-output name)))
+    (put-text-property start (line-end-position) 'displays-output name)
+    (when selected
+      ;; Extend through the trailing newline so the highlight spans the
+      ;; whole row, not just the printed glyphs.
+      (add-face-text-property start (min (point-max) (1+ (line-end-position)))
+                              'displays-selected))))
 
 ;;; Selection
 
@@ -277,23 +288,40 @@ Each function is called with the output name."
   (mapcar #'displays-output-name
           (cl-remove-if-not #'displays-output-connected displays--state)))
 
+(defun displays--all-names ()
+  (mapcar #'displays-output-name displays--state))
+
 (defun displays--ensure-selected ()
   (unless (and displays--selected (displays--find displays--selected))
-    (setq displays--selected (car (displays--connected-names)))))
+    (setq displays--selected
+          (or (car (displays--connected-names))
+              (car (displays--all-names))))))
+
+(defun displays--goto-selected ()
+  "Move point onto the line of the currently-selected output."
+  (goto-char (point-min))
+  (let ((found
+         (catch 'found
+           (while (not (eobp))
+             (when (equal (get-text-property (point) 'displays-output)
+                          displays--selected)
+               (throw 'found t))
+             (forward-line 1)))))
+    (unless found (goto-char (point-min)))))
 
 (defun displays-next ()
-  "Select next connected display."
+  "Select the next display (wraps; cycles through all outputs)."
   (interactive)
-  (let* ((names (displays--connected-names))
+  (let* ((names (displays--all-names))
          (idx (cl-position displays--selected names :test #'string=)))
     (setq displays--selected
           (nth (mod (1+ (or idx -1)) (length names)) names))
     (displays--render)))
 
 (defun displays-prev ()
-  "Select previous connected display."
+  "Select the previous display (wraps; cycles through all outputs)."
   (interactive)
-  (let* ((names (displays--connected-names))
+  (let* ((names (displays--all-names))
          (idx (cl-position displays--selected names :test #'string=)))
     (setq displays--selected
           (nth (mod (1- (or idx 1)) (length names)) names))
@@ -494,8 +522,8 @@ Fires `displays-on-connect-hook' / `displays-on-disconnect-hook'."
 (defun displays-show ()
   "Open the displays layout buffer."
   (interactive)
-  (displays-refresh)
-  (pop-to-buffer displays-buffer-name))
+  (pop-to-buffer (get-buffer-create displays-buffer-name))
+  (displays-refresh))
 
 (defun displays-help ()
   (interactive)
