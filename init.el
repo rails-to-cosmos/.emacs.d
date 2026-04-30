@@ -3,6 +3,7 @@
 ;;; Code:
 
 (add-to-list 'load-path (expand-file-name "src/parquet-mode" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "src/displays-mode" user-emacs-directory))
 
 (require 'custom)
 (require 'package)
@@ -90,6 +91,7 @@
 (require 'mijn-ab)
 (require 'mijn-prog)
 (require 'parquet-mode)
+(require 'displays-mode)
 (require 'mijn-llm)
 (require 'xrandr)
 (require 'xmobarrc-mode)

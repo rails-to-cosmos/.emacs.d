@@ -97,6 +97,14 @@
 (global-unset-key (kbd "C-x 3"))
 (global-set-key (kbd "C-x 3") #'split-window-next-buffer)
 
+;; Cap automatic popups (display-buffer) at two windows: when there are
+;; already 2+, return nil so display-buffer reuses an existing window
+;; instead of carving out a third. Manual C-x 2 / C-x 3 still work.
+(setq split-window-preferred-function
+      (lambda (window)
+        (when (< (length (window-list)) 2)
+          (split-window-sensibly window))))
+
 (transient-mark-mode)
 
 (setq comint-prompt-read-only t)
