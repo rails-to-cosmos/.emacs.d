@@ -465,6 +465,27 @@
       (message "Added %d repo%s" (length added) (if (= 1 (length added)) "" "s")))))
 
 ;;;###autoload
+(defun repos-add-current-repo ()
+  "Add the current buffer's git repository to monitored repos.
+Prompts for which file to save to when `repos-extra-files' is set."
+  (interactive)
+  (let* ((root (or (locate-dominating-file default-directory ".git")
+                   (user-error "Not inside a git repository")))
+         (path (repos--abbrev root)))
+    (when (seq-find (lambda (e) (equal (repos--abbrev (repos--path e)) path))
+                    repos-list)
+      (user-error "Already monitored: %s" path))
+    (let* ((remote (repos--call-sync "remote" (expand-file-name root)))
+           (entry (cons path (and remote (not (equal remote :json-false)) remote)))
+           (target (repos--choose-file)))
+      (setq repos-list (append repos-list (list entry)))
+      (if (equal target repos-file)
+          (repos--save)
+        (repos--append-to-file target (list entry)))
+      (repos--fetch path)
+      (message "Added %s" path))))
+
+;;;###autoload
 (defun repos-clone-repo ()
   "Clone the repository at point."
   (interactive)
@@ -531,25 +552,6 @@
   (interactive)
   (dolist (entry repos-list)
     (repos--pull (repos--path entry))))
-
-;;; Startup
-
-(defun repos--migrate ()
-  (when (and repos-list (stringp (car repos-list)))
-    (setq repos-list (mapcar (lambda (path) (cons path nil)) repos-list))
-    (repos--save)))
-
-(defun repos--startup ()
-  "Load repos and open the dashboard."
-  (repos--load)
-  (repos--migrate)
-  (repos-dashboard))
-
-(if (daemonp)
-    (add-hook 'server-after-make-frame-hook #'repos--startup)
-  (add-hook 'emacs-startup-hook #'repos--startup))
-
-;;; Entry Point
 
 ;;;###autoload
 (defun repos-dashboard ()
