@@ -1175,12 +1175,24 @@ where the timer fires but nothing actually changed on disk)."
              (buf (cdr (assoc choice entries))))
         (pop-to-buffer buf)))))
 
+(defun llm--buffer-visible-elsewhere-p (buf)
+  "Non-nil if BUF is shown in any visible window other than the selected one."
+  (cl-some (lambda (w) (not (eq w (selected-window))))
+           (get-buffer-window-list buf nil 'visible)))
+
 (defun llm--cycle-buffer (direction)
   "Switch current window to the next/previous claude buffer.
-DIRECTION is +1 (forward) or -1 (backward). Cycle order is by
-buffer name so it's stable across calls."
+DIRECTION is +1 (forward) or -1 (backward). Buffers already visible
+in another window are deprioritized (sorted to the back), so cycling
+prefers ones not yet on screen."
   (let ((bufs (sort (llm--get-buffers)
-                    (lambda (a b) (string< (buffer-name a) (buffer-name b))))))
+                    (lambda (a b)
+                      (let ((va (llm--buffer-visible-elsewhere-p a))
+                            (vb (llm--buffer-visible-elsewhere-p b)))
+                        (cond
+                         ((and va (not vb)) nil)
+                         ((and (not va) vb) t)
+                         (t (string< (buffer-name a) (buffer-name b)))))))))
     (unless bufs (user-error "No claude buffers"))
     (let* ((pos (cl-position (current-buffer) bufs))
            (next (if pos
