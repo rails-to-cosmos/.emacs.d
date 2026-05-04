@@ -14,6 +14,10 @@
 (declare-function vterm-insert "vterm")
 (declare-function vterm-send-return "vterm")
 (declare-function vterm-other-window "vterm")
+(declare-function vterm-copy-mode "vterm" (&optional arg))
+(defvar vterm-copy-mode)
+(defvar vterm-mode-map)
+(defvar vterm-copy-mode-hook)
 (declare-function face-remap-remove-relative "face-remap")
 
 (use-package vterm
@@ -1627,6 +1631,35 @@ buffer name is used as context instead."
       (pop-to-buffer buf))
     (with-current-buffer buf
       (llm--bubble-spawn-turn text))))
+
+;;; Vterm copy helper (for TUIs that redraw and stomp on selections)
+
+(defvar-local llm--vterm-copy-resume nil
+  "Non-nil when leaving `vterm-copy-mode' should resume a process this
+buffer suspended via `llm-vterm-copy'.")
+
+(defun llm--vterm-copy-resume-on-exit ()
+  "Send `fg' when copy-mode is disabled in a buffer flagged for resume."
+  (when (and llm--vterm-copy-resume (not vterm-copy-mode))
+    (process-send-string vterm--process "fg\n")
+    (setq-local llm--vterm-copy-resume nil)))
+
+(defun llm-vterm-copy ()
+  "Suspend the foreground vterm process and enter `vterm-copy-mode'.
+Resumes the process automatically when copy-mode is exited (q / C-c C-t).
+
+Useful for copying from TUIs (e.g. interactive `claude') that
+continuously redraw and overwrite selections.  No-op outside vterm."
+  (interactive)
+  (unless (derived-mode-p 'vterm-mode)
+    (user-error "Not a vterm buffer"))
+  (process-send-string vterm--process "\C-z")
+  (setq-local llm--vterm-copy-resume t)
+  (vterm-copy-mode 1))
+
+(with-eval-after-load 'vterm
+  (add-hook 'vterm-copy-mode-hook #'llm--vterm-copy-resume-on-exit)
+  (define-key vterm-mode-map (kbd "C-c C-y") #'llm-vterm-copy))
 
 ;;; Keybindings
 
