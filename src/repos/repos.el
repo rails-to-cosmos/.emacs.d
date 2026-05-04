@@ -415,6 +415,22 @@
       (dolist (e new-entries)
         (push (repos--abbrev (repos--path e)) repos--extra-paths)))))
 
+;;; Startup
+
+(defun repos--migrate ()
+  (when (and repos-list (stringp (car repos-list)))
+    (setq repos-list (mapcar (lambda (path) (cons path nil)) repos-list))
+    (repos--save)))
+
+(defun repos--startup ()
+  "Load repos and open the dashboard."
+  (repos--load)
+  (repos--migrate))
+
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook #'repos--startup)
+  (add-hook 'emacs-startup-hook #'repos--startup))
+
 ;;; Interactive Commands
 
 ;;;###autoload
