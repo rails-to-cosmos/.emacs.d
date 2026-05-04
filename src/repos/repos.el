@@ -251,6 +251,7 @@
 (defun repos-cycle-sort ()
   "Cycle sort methods."
   (interactive)
+  (repos--ensure-loaded)
   (let* ((idx (cl-position repos--current-sort repos--sort-methods))
          (next (nth (mod (1+ (or idx 0)) (length repos--sort-methods)) repos--sort-methods)))
     (if (eq next repos--current-sort)
@@ -263,6 +264,7 @@
 (defun repos-toggle-sort-direction ()
   "Toggle sort direction."
   (interactive)
+  (repos--ensure-loaded)
   (setq repos--sort-ascending (not repos--sort-ascending))
   (repos--render)
   (message "Sort: %s" (repos--sort-label)))
@@ -422,14 +424,17 @@
     (setq repos-list (mapcar (lambda (path) (cons path nil)) repos-list))
     (repos--save)))
 
-(defun repos--startup ()
-  "Load repos and open the dashboard."
-  (repos--load)
-  (repos--migrate))
+(defvar repos--loaded nil
+  "Non-nil once `repos-list' has been populated from disk.")
 
-(if (daemonp)
-    (add-hook 'server-after-make-frame-hook #'repos--startup)
-  (add-hook 'emacs-startup-hook #'repos--startup))
+(defun repos--ensure-loaded ()
+  "Load repos and run the one-time migration on first call.
+Idempotent — safe to call from every public entry point so the heavy
+work happens lazily, on first user interaction, instead of at startup."
+  (unless repos--loaded
+    (repos--load)
+    (repos--migrate)
+    (setq repos--loaded t)))
 
 ;;; Interactive Commands
 
@@ -437,6 +442,7 @@
 (defun repos-search ()
   "Jump to a repository headline via completing-read."
   (interactive)
+  (repos--ensure-loaded)
   (let* ((paths (mapcar (lambda (e) (repos--abbrev (repos--path e))) repos-list))
          (choice (completing-read "Repo: " paths nil t)))
     (goto-char (point-min))
@@ -449,6 +455,7 @@
 (defun repos-open-repo ()
   "Open magit-status for the repository at point."
   (interactive)
+  (repos--ensure-loaded)
   (let ((path (repos--heading-path)))
     (unless path (user-error "Not on a repo headline"))
     (let ((default-directory (file-name-as-directory (expand-file-name path))))
@@ -458,6 +465,7 @@
 (defun repos-add-repo (dir)
   "Add DIR to monitored repositories."
   (interactive "DDirectory: ")
+  (repos--ensure-loaded)
   (let* ((found (repos--call-sync "discover" (expand-file-name dir)))
          (added (cl-remove nil
                            (mapcar (lambda (d)
@@ -485,6 +493,7 @@
   "Add the current buffer's git repository to monitored repos.
 Prompts for which file to save to when `repos-extra-files' is set."
   (interactive)
+  (repos--ensure-loaded)
   (let* ((root (or (locate-dominating-file default-directory ".git")
                    (user-error "Not inside a git repository")))
          (path (repos--abbrev root)))
@@ -505,6 +514,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-clone-repo ()
   "Clone the repository at point."
   (interactive)
+  (repos--ensure-loaded)
   (let* ((path (repos--heading-path))
          (_ (unless path (user-error "Not on a repo headline")))
          (status (gethash path repos--statuses))
@@ -521,6 +531,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-clone-all-missing ()
   "Clone all missing repositories."
   (interactive)
+  (repos--ensure-loaded)
   (let ((missing (cl-loop for entry in repos-list
                            for path = (repos--abbrev (repos--path entry))
                            for status = (gethash path repos--statuses)
@@ -537,6 +548,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-refresh ()
   "Refresh repo at point, or all repos."
   (interactive)
+  (repos--ensure-loaded)
   (let ((path (repos--path-at-point)))
     (if path
         (progn
@@ -550,6 +562,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-refresh-all ()
   "Refresh all repos."
   (interactive)
+  (repos--ensure-loaded)
   (setq repos--pending (length repos-list))
   (dolist (entry repos-list)
     (repos--fetch (repos--path entry))))
@@ -558,6 +571,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-pull-repo ()
   "Pull the repository at point."
   (interactive)
+  (repos--ensure-loaded)
   (let ((path (repos--path-at-point)))
     (unless path (user-error "Not on a repo headline"))
     (repos--pull path)))
@@ -566,6 +580,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-pull-all ()
   "Pull all repositories."
   (interactive)
+  (repos--ensure-loaded)
   (dolist (entry repos-list)
     (repos--pull (repos--path entry))))
 
@@ -573,6 +588,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
 (defun repos-dashboard ()
   "Open the repository dashboard."
   (interactive)
+  (repos--ensure-loaded)
   (let ((buf (get-buffer-create repos-dashboard-buffer-name)))
     (pop-to-buffer buf)
     (unless (derived-mode-p 'repos-dashboard-mode)
