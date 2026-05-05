@@ -49,10 +49,22 @@ tool-use confirmation prompts."
   :group 'llm)
 
 (cl-defun llm--project-root (&optional (dir default-directory))
-  "Find project root starting from DIR by looking for marker files."
-  (or (cl-loop for marker in llm-project-root-markers
-               for root = (locate-dominating-file dir marker)
-               when root return (file-name-as-directory root))
+  "Find the nearest ancestor of DIR (inclusive) containing any marker
+in `llm-project-root-markers'.  Falls back to DIR if none found.
+
+Walks up directory-by-directory, asking \"does any marker exist
+here?\" at each level.  This is intentionally different from looping
+over markers: looping would let an early marker (e.g. `.git') in a far
+ancestor win over a later marker (e.g. `CLAUDE.md') in a much closer
+ancestor."
+  (or (when-let ((root (locate-dominating-file
+                        dir
+                        (lambda (parent)
+                          (cl-some (lambda (marker)
+                                     (file-exists-p
+                                      (expand-file-name marker parent)))
+                                   llm-project-root-markers)))))
+        (file-name-as-directory root))
       (file-name-as-directory dir)))
 
 (defvar-local llm--prompt-project-root nil
