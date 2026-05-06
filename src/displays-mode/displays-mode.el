@@ -540,33 +540,44 @@ No-op when there's nothing enabled with geometry."
   (message "%s" (string-trim
                  (displays--call displays-autorandr-command "--list"))))
 
-(defun displays-save-profile (name)
-  "Save current layout as autorandr profile NAME."
-  (interactive "sProfile name: ")
-  (displays--call displays-autorandr-command "--save" name "--force")
-  (message "Saved profile: %s" name))
+(defun displays--profile-list ()
+  "Return the list of existing autorandr profile names."
+  (split-string
+   (string-trim
+    (condition-case _ (displays--call displays-autorandr-command "--list")
+      (error "")))
+   "\n" t))
 
-(defun displays--read-profile (prompt)
-  "Prompt with PROMPT for an existing autorandr profile name."
-  (completing-read
-   prompt
-   (split-string
-    (string-trim
-     (condition-case _ (displays--call displays-autorandr-command "--list")
-       (error "")))
-    "\n" t)
-   nil t))
+(defun displays--read-profile (prompt &optional require-match)
+  "Prompt with PROMPT for an autorandr profile name.
+If REQUIRE-MATCH is non-nil, only existing profiles are accepted;
+otherwise the user may type a new name (used by save for overwrite UX)."
+  (completing-read prompt (displays--profile-list) nil require-match))
+
+(defun displays-save-profile (name)
+  "Save current layout as autorandr profile NAME.
+Completes against existing profiles so overwriting is easy; you may
+also type a new name.  Confirms before overwriting."
+  (interactive (list (displays--read-profile "Save profile: ")))
+  (when (string-empty-p name)
+    (user-error "No profile name given"))
+  (let ((existing (member name (displays--profile-list))))
+    (when (and existing
+               (not (y-or-n-p (format "Overwrite existing profile %S? " name))))
+      (user-error "Cancelled"))
+    (displays--call displays-autorandr-command "--save" name "--force")
+    (message "%s profile: %s" (if existing "Overwrote" "Saved") name)))
 
 (defun displays-load-profile (name)
   "Load autorandr profile NAME."
-  (interactive (list (displays--read-profile "Profile: ")))
+  (interactive (list (displays--read-profile "Profile: " t)))
   (displays--call displays-autorandr-command "--load" name)
   (displays-refresh)
   (message "Loaded profile: %s" name))
 
 (defun displays-delete-profile (name)
   "Delete autorandr profile NAME (asks for confirmation)."
-  (interactive (list (displays--read-profile "Delete profile: ")))
+  (interactive (list (displays--read-profile "Delete profile: " t)))
   (when (string-empty-p name)
     (user-error "No profile selected"))
   (when (y-or-n-p (format "Delete autorandr profile %S? " name))
