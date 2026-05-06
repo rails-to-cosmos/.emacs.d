@@ -28,6 +28,7 @@
 ;;   C-c C-c   apply with xrandr
 ;;   C-c C-s   save current as autorandr profile
 ;;   C-c C-l   load autorandr profile
+;;   C-c C-d   delete saved autorandr profile
 ;;   g         refresh from xrandr
 
 ;;; Code:
@@ -51,6 +52,10 @@
 (defcustom displays-buffer-name "*Displays*"
   "Name of the displays layout buffer."
   :type 'string)
+
+(defcustom displays-canvas-width 60
+  "Width (in characters) of the layout minimap drawn above the rows."
+  :type 'integer)
 
 (defcustom displays-on-connect-hook nil
   "Hook run when a new display is connected.
@@ -198,6 +203,7 @@ Each function is called with the output name."
     (define-key m (kbd "C-c C-c") #'displays-apply)
     (define-key m (kbd "C-c C-s") #'displays-save-profile)
     (define-key m (kbd "C-c C-l") #'displays-load-profile)
+    (define-key m (kbd "C-c C-d") #'displays-delete-profile)
     (define-key m "?" #'displays-help)
     m)
   "Keymap for `displays-mode'.")
@@ -210,6 +216,79 @@ Each function is called with the output name."
 
 (defvar-local displays--selected nil
   "Name of currently selected output in the buffer.")
+
+(defun displays--render-minimap ()
+  "Insert a scaled 2D minimap of enabled displays' relative positions.
+Selected display's box is highlighted; others share the regular name face.
+No-op when there's nothing enabled with geometry."
+  (let ((enabled (cl-remove-if-not
+                  (lambda (o) (and (displays-output-enabled o)
+                                   (displays-output-geometry o)))
+                  displays--state)))
+    (when enabled
+      (let* ((geoms (mapcar #'displays-output-geometry enabled))
+             (min-x (apply #'min (mapcar (lambda (g) (nth 0 g)) geoms)))
+             (min-y (apply #'min (mapcar (lambda (g) (nth 1 g)) geoms)))
+             (max-x (apply #'max (mapcar (lambda (g) (+ (nth 0 g) (nth 2 g))) geoms)))
+             (max-y (apply #'max (mapcar (lambda (g) (+ (nth 1 g) (nth 3 g))) geoms)))
+             (canvas-w (max 16 displays-canvas-width))
+             ;; Char cells are roughly 2:1 (h:w); scale Y by 0.5 so the
+             ;; rendered aspect ratio matches the physical one.
+             (scale (/ (float canvas-w) (max 1 (- max-x min-x))))
+             (canvas-h (max 3 (ceiling (* (- max-y min-y) scale 0.5))))
+             (grid (apply #'vector
+                          (cl-loop repeat canvas-h
+                                   collect (make-vector canvas-w ?\s))))
+             (rects nil))
+        (cl-flet ((put-c (x y c)
+                         (when (and (<= 0 x) (< x canvas-w)
+                                    (<= 0 y) (< y canvas-h))
+                           (aset (aref grid y) x c))))
+          (dolist (out enabled)
+            (let* ((g (displays-output-geometry out))
+                   (gx (nth 0 g)) (gy (nth 1 g))
+                   (gw (nth 2 g)) (gh (nth 3 g))
+                   (x0 (round (* (- gx min-x) scale)))
+                   (y0 (round (* (- gy min-y) scale 0.5)))
+                   (x1 (1- (max (+ x0 2)
+                                (round (* (- (+ gx gw) min-x) scale)))))
+                   (y1 (1- (max (+ y0 2)
+                                (round (* (- (+ gy gh) min-y) scale 0.5))))))
+              (setq x0 (max 0 (min (1- canvas-w) x0))
+                    y0 (max 0 (min (1- canvas-h) y0))
+                    x1 (max x0 (min (1- canvas-w) x1))
+                    y1 (max y0 (min (1- canvas-h) y1)))
+              (push (list out x0 y0 x1 y1) rects)
+              (cl-loop for x from x0 to x1 do
+                       (put-c x y0 ?─) (put-c x y1 ?─))
+              (cl-loop for y from y0 to y1 do
+                       (put-c x0 y ?│) (put-c x1 y ?│))
+              (put-c x0 y0 ?┌) (put-c x1 y0 ?┐)
+              (put-c x0 y1 ?└) (put-c x1 y1 ?┘)
+              (let* ((label (displays-output-name out))
+                     (mid-y (/ (+ y0 y1) 2))
+                     (avail (max 0 (1- (- x1 x0))))
+                     (lab (substring label 0 (min (length label) avail)))
+                     (lab-x (max (1+ x0)
+                                 (- (/ (+ x0 x1 1) 2) (/ (length lab) 2)))))
+                (cl-loop for i from 0 below (length lab) do
+                         (put-c (+ lab-x i) mid-y (aref lab i)))))))
+        (let ((canvas-start (point)))
+          (cl-loop for row across grid do
+                   (insert (apply #'string (append row nil)) "\n"))
+          (dolist (entry rects)
+            (cl-destructuring-bind (out x0 y0 x1 y1) entry
+              (let ((face (if (string= (displays-output-name out)
+                                       displays--selected)
+                              'displays-selected
+                            'displays-name)))
+                (cl-loop for row from y0 to y1 do
+                         (let* ((line-bol (+ canvas-start
+                                             (* row (1+ canvas-w))))
+                                (a (+ line-bol x0))
+                                (b (+ line-bol (1+ x1))))
+                           (add-face-text-property a b face)))))))
+        (insert "\n")))))
 
 (defun displays--render ()
   "Render `displays--state' into the layout buffer."
@@ -224,6 +303,7 @@ Each function is called with the output name."
                   (propertize "  [unapplied]" 'face 'warning)
                 "")
               "\n\n")
+      (displays--render-minimap)
       (dolist (out displays--state)
         (displays--render-output out)
         (insert "\n"))
@@ -231,7 +311,7 @@ Each function is called with the output name."
               (propertize
                (concat "n/p select  •  hjkl move  •  R res  F rate  r rotate"
                        "  •  P primary  d disable  e enable\n"
-                       "C-c C-c apply  •  C-c C-s save  •  C-c C-l load  •  g refresh  •  ? help\n")
+                       "C-c C-c apply  •  C-c C-s save  •  C-c C-l load  •  C-c C-d delete  •  g refresh  •  ? help\n")
                'face 'shadow)))
     (displays--goto-selected)))
 
@@ -466,19 +546,32 @@ Each function is called with the output name."
   (displays--call displays-autorandr-command "--save" name "--force")
   (message "Saved profile: %s" name))
 
+(defun displays--read-profile (prompt)
+  "Prompt with PROMPT for an existing autorandr profile name."
+  (completing-read
+   prompt
+   (split-string
+    (string-trim
+     (condition-case _ (displays--call displays-autorandr-command "--list")
+       (error "")))
+    "\n" t)
+   nil t))
+
 (defun displays-load-profile (name)
   "Load autorandr profile NAME."
-  (interactive
-   (list (completing-read
-          "Profile: "
-          (split-string
-           (string-trim
-            (condition-case _ (displays--call displays-autorandr-command "--list")
-              (error "")))
-           "\n" t))))
+  (interactive (list (displays--read-profile "Profile: ")))
   (displays--call displays-autorandr-command "--load" name)
   (displays-refresh)
   (message "Loaded profile: %s" name))
+
+(defun displays-delete-profile (name)
+  "Delete autorandr profile NAME (asks for confirmation)."
+  (interactive (list (displays--read-profile "Delete profile: ")))
+  (when (string-empty-p name)
+    (user-error "No profile selected"))
+  (when (y-or-n-p (format "Delete autorandr profile %S? " name))
+    (displays--call displays-autorandr-command "--remove" name)
+    (message "Deleted profile: %s" name)))
 
 ;;; Hot-plug watcher
 
