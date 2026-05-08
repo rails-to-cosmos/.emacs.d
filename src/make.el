@@ -26,6 +26,9 @@
 (defvar-local make--target nil
   "Make target running in this buffer.")
 
+(defvar-local make--project nil
+  "Project name (basename of the directory containing the Makefile).")
+
 (defvar-local make--status 'running
   "Buffer-local status: `running', `ok', or (fail . EXIT-CODE).")
 
@@ -132,9 +135,10 @@ Nil disables blinking (running entries stay solid)."
     m))
 
 (defun make--mode-line-entry (buf)
-  "Propertized mode-line string for BUF."
+  "Propertized mode-line string for BUF, formatted as PROJECT/TARGET[STATUS]."
   (with-current-buffer buf
-    (propertize (format "%s%s"
+    (propertize (format "%s%s%s"
+                        (if make--project (concat make--project "/") "")
                         (or make--target "?")
                         (make--status-glyph make--status))
                 'mouse-face 'mode-line-highlight
@@ -202,8 +206,9 @@ finished entry disappears from the mode line after
 
 ;;; Spawn
 
-(defun make--spawn-vterm (buffer-name target)
-  "Spawn `make TARGET' as the vterm shell in BUFFER-NAME, tracked."
+(defun make--spawn-vterm (buffer-name target project)
+  "Spawn `make TARGET' as the vterm shell in BUFFER-NAME, tracked.
+PROJECT is the directory basename, surfaced in the mode-line entry."
   (let ((vterm-shell (format "make %s" target))
         ;; Keep the buffer alive after make exits so the user can scroll
         ;; back to read failures via mouse-1 from the mode line.
@@ -213,6 +218,7 @@ finished entry disappears from the mode line after
       (with-current-buffer buffer-name
         (setq-local vterm-kill-buffer-on-exit nil)
         (setq-local make--target target)
+        (setq-local make--project project)
         (setq-local make--status 'running)
         (setq-local make--start-time (current-time))
         (add-hook 'kill-buffer-hook #'make--unregister nil t)
@@ -223,25 +229,26 @@ finished entry disappears from the mode line after
   (when (get-buffer buffer-name)
     (bury-buffer buffer-name)))
 
-(defun make--spawn-eshell (buffer-name target)
+(defun make--spawn-eshell (buffer-name target _project)
   "Fallback when vterm isn't available — no status tracking on this path."
   (with-current-buffer (let ((eshell-buffer-name buffer-name)) (eshell))
     (insert (format "make %s" target))
     (eshell-send-input)))
 
-(defun make--spawn (buffer-name target)
-  "Run `make TARGET' in BUFFER-NAME; prefer vterm-with-tracking."
+(defun make--spawn (buffer-name target project)
+  "Run `make TARGET' in BUFFER-NAME; prefer vterm-with-tracking.
+PROJECT is shown in the mode-line entry."
   (when (buffer-live-p (get-buffer buffer-name))
     (kill-buffer buffer-name))
   (if (fboundp 'vterm)
       (condition-case err
-          (make--spawn-vterm buffer-name target)
+          (make--spawn-vterm buffer-name target project)
         (error
          (message "Warning: vterm failed (%s), falling back to eshell"
                   (error-message-string err))
-         (make--spawn-eshell buffer-name target)))
+         (make--spawn-eshell buffer-name target project)))
     (message "Warning: vterm not available, falling back to eshell")
-    (make--spawn-eshell buffer-name target)))
+    (make--spawn-eshell buffer-name target project)))
 
 ;;; Entry point
 
@@ -267,7 +274,7 @@ the global mode line."
          (target (completing-read "Make: " targets nil t))
          (project (file-name-base (directory-file-name dir)))
          (buf-name (format "*make-%s-%s*" project target)))
-    (make--spawn buf-name target)
+    (make--spawn buf-name target project)
     (message "Started: make %s  (status in mode line; mouse-1 to visit)"
              target)))
 
