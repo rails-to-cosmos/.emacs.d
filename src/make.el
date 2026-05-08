@@ -53,8 +53,7 @@
             (make--send-command output-buffer-name (format "make %s" target))))))
 
     (unless (equal (current-buffer) (get-buffer output-buffer-name))
-      (switch-to-buffer-other-window output-buffer-name)
-      (other-window -1))))
+      (bury-buffer output-buffer-name))))
 
 (provide 'make)
 
