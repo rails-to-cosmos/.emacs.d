@@ -48,6 +48,28 @@ tool-use confirmation prompts."
   :type 'boolean
   :group 'llm)
 
+(defconst llm-model-choices
+  '("claude-opus-4-7"
+    "claude-opus-4-6"
+    "claude-sonnet-4-6"
+    "claude-haiku-4-5")
+  "Claude models offered by `llm-menu' under the `-m' switch.
+The CLI accepts these full names as well as aliases like \"opus\",
+\"sonnet\", \"haiku\".  Edit this list to add new models as they ship.")
+
+(defcustom llm-model nil
+  "Model passed to claude as `--model'.
+Nil means use claude's default (whatever its config picks).  A string
+is passed through verbatim — full names like \"claude-opus-4-7\" or
+aliases like \"opus\" both work.
+
+Normally toggled per-invocation via the `-m' switch in `llm-menu'
+rather than set directly.  Applies to the main `*claude:PROJECT*'
+vterm and to the inline bubble (captured once at bubble creation)."
+  :type '(choice (const :tag "Default (claude picks)" nil)
+                 (string :tag "Model name"))
+  :group 'llm)
+
 (cl-defun llm--project-root (&optional (dir default-directory))
   "Find the nearest ancestor of DIR (inclusive) containing any marker
 in `llm-project-root-markers'.  Falls back to DIR if none found.
@@ -221,14 +243,19 @@ Rules:
 
 (defun llm--claude-shell-command (root)
   "Return the claude shell command, using `-c' if ROOT has a `.claude/' dir.
-Appends `--dangerously-skip-permissions' when `llm-dangerously-skip-permissions'
+Appends `--model' when `llm-model' is set, and
+`--dangerously-skip-permissions' when `llm-dangerously-skip-permissions'
 is non-nil."
-  (let ((base (if (and root (file-directory-p (expand-file-name ".claude" root)))
-                  "claude -c"
-                "claude")))
+  (let* ((base (if (and root (file-directory-p (expand-file-name ".claude" root)))
+                   "claude -c"
+                 "claude"))
+         (with-model (if llm-model
+                         (concat base " --model "
+                                 (shell-quote-argument llm-model))
+                       base)))
     (if llm-dangerously-skip-permissions
-        (concat base " --dangerously-skip-permissions")
-      base)))
+        (concat with-model " --dangerously-skip-permissions")
+      with-model)))
 
 ;;;###autoload
 (defun llm (&optional user-root)
@@ -693,6 +720,11 @@ Generated lazily on bubble creation; used with `--session-id' on every
 `claude -p' invocation and with `--resume' when promoting to a
 full `*claude:PROJECT*' vterm.")
 
+(defvar-local llm--bubble-model nil
+  "Buffer-local copy of `llm-model' captured at bubble creation.
+Frozen at bubble open so toggling the menu's `-m' switch mid-conversation
+doesn't retroactively change which model the session uses.")
+
 (defvar-local llm--bubble-dangerous nil
   "Buffer-local copy of `llm-dangerously-skip-permissions' at bubble creation.
 Frozen at bubble open so toggling the transient mid-conversation
@@ -759,11 +791,12 @@ doesn't retroactively change the session's permission posture.")
   "Build the `claude' argv for PROMPT on this bubble's pinned session.
 Every turn uses `--session-id' with the same UUID, so claude treats all
 popup turns as one conversation regardless of what else is happening in
-the project directory. Prepends `llm-bubble-prompt-prefix' to PROMPT and,
-if `llm--bubble-dangerous' is set for this bubble, passes
-`--dangerously-skip-permissions'."
+the project directory. Prepends `llm-bubble-prompt-prefix' to PROMPT;
+passes `--model' from `llm--bubble-model' when set, and
+`--dangerously-skip-permissions' when `llm--bubble-dangerous' is set."
   (let ((text (concat llm-bubble-prompt-prefix prompt)))
     (append (list "claude" "--session-id" llm--bubble-session-id)
+            (when llm--bubble-model    (list "--model" llm--bubble-model))
             (when llm--bubble-dangerous '("--dangerously-skip-permissions"))
             (list "-p" text))))
 
@@ -840,12 +873,17 @@ all prior turns regardless of what else is happening in the directory."
          (name      (generate-new-buffer-name base))
          (sid       llm--bubble-session-id)
          (dangerous llm--bubble-dangerous)
+         (model     llm--bubble-model)
          (bubble    (current-buffer)))
     (llm--close-prompt-frame)
     (kill-buffer bubble)
     (let ((default-directory dir)
-          (vterm-shell (format "claude --resume %s%s"
+          (vterm-shell (format "claude --resume %s%s%s"
                                (shell-quote-argument sid)
+                               (if model
+                                   (format " --model %s"
+                                           (shell-quote-argument model))
+                                 "")
                                (if dangerous
                                    " --dangerously-skip-permissions"
                                  ""))))
@@ -1002,6 +1040,7 @@ untouched."
       (when bubble
         (setq-local llm--bubble-session-id (llm--generate-uuid))
         (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions)
+        (setq-local llm--bubble-model llm-model)
         (goto-char (point-max))
         (insert (propertize "— " 'face 'llm-bubble-user-face))
         (setq-local llm--bubble-input-start (copy-marker (point) nil))
@@ -1523,11 +1562,20 @@ Source-file comment is left untouched — remove it manually if desired."
   "Return non-nil if the menu's `-d' switch is active for this invocation."
   (member "--dangerously-skip-permissions" (transient-args 'llm-menu)))
 
+(defun llm--menu-model ()
+  "Return the menu's `-m' value as a model string, or nil if not set."
+  (cl-some (lambda (a)
+             (and (stringp a)
+                  (string-prefix-p "--model=" a)
+                  (substring a (length "--model="))))
+           (transient-args 'llm-menu)))
+
 (transient-define-suffix llm--menu-prompt-bubble ()
   "Launch the inline-conversation bubble; honors the menu's switches.
 - `--btw' prepends the `/btw ' slash-command prefix to every turn.
 - `--dangerously-skip-permissions' is captured into the bubble and
-  passed to every `claude -p' turn as well as the promote vterm."
+  passed to every `claude -p' turn as well as the promote vterm.
+- `--model=NAME' is captured into the bubble and passed to every turn."
   :description "Prompt inline (conversation)"
   (interactive)
   (let ((llm-bubble-prompt-prefix
@@ -1535,22 +1583,26 @@ Source-file comment is left untouched — remove it manually if desired."
              "/btw "
            ""))
         (llm-dangerously-skip-permissions
-         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p))))
+         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
+        (llm-model (or (llm--menu-model) llm-model)))
     (llm-prompt-bubble)))
 
 (transient-define-suffix llm--menu-open-claude ()
-  "Open the main *claude:PROJECT* vterm; honors the `-d' switch."
+  "Open the main *claude:PROJECT* vterm; honors the `-d' and `-m' switches."
   :description "Open Claude in project"
   (interactive)
   (let ((llm-dangerously-skip-permissions
-         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p))))
+         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
+        (llm-model (or (llm--menu-model) llm-model)))
     (call-interactively #'llm)))
 
 (transient-define-prefix llm-menu ()
   "Claude CLI commands."
   ["Options"
    ("-b" "Prepend /btw slash-command to inline prompts" "--btw")
-   ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")]
+   ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")
+   ("-m" "Model"                                        "--model="
+    :choices llm-model-choices)]
   [["Session"
     ("c" llm--menu-open-claude)
     ("v" "Vterm in project"       llm-vterm-here)
@@ -1632,7 +1684,8 @@ buffer name is used as context instead."
       (setq-local llm--prompt-project-root root)
       (setq-local llm--prompt-bubble t)
       (setq-local llm--bubble-session-id (llm--generate-uuid))
-      (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions))
+      (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions)
+      (setq-local llm--bubble-model llm-model))
     (llm--close-prompt-frame)
     (if (display-graphic-p)
         (let* ((size llm-bubble-frame-size)
