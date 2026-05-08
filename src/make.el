@@ -95,9 +95,9 @@ Nil disables auto-cleanup."
 (defun make--mode-line-entry (buf)
   "Propertized mode-line string for BUF."
   (with-current-buffer buf
-    (propertize (format "%s %s"
-                        (make--status-glyph make--status)
-                        (or make--target "?"))
+    (propertize (format "%s%s"
+                        (or make--target "?")
+                        (make--status-glyph make--status))
                 'mouse-face 'mode-line-highlight
                 'help-echo (make--entry-help buf)
                 'local-map (make--entry-keymap buf))))
