@@ -1570,6 +1570,10 @@ Source-file comment is left untouched — remove it manually if desired."
                   (substring a (length "--model="))))
            (transient-args 'llm-menu)))
 
+(defun llm--model-choices ()
+  "Return `llm-model-choices' (transient `:choices' wants a function)."
+  llm-model-choices)
+
 (transient-define-suffix llm--menu-prompt-bubble ()
   "Launch the inline-conversation bubble; honors the menu's switches.
 - `--btw' prepends the `/btw ' slash-command prefix to every turn.
@@ -1602,7 +1606,7 @@ Source-file comment is left untouched — remove it manually if desired."
    ("-b" "Prepend /btw slash-command to inline prompts" "--btw")
    ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")
    ("-m" "Model"                                        "--model="
-    :choices llm-model-choices)]
+    :choices llm--model-choices)]
   [["Session"
     ("c" llm--menu-open-claude)
     ("v" "Vterm in project"       llm-vterm-here)
