@@ -1574,6 +1574,24 @@ Source-file comment is left untouched — remove it manually if desired."
   "Return `llm-model-choices' (transient `:choices' wants a function)."
   llm-model-choices)
 
+;;;###autoload
+(defun llm-set-default-model (model)
+  "Set MODEL as the default for new claude sessions and persist it.
+Empty input clears the default (claude will pick).  The value is saved
+via `customize-save-variable', so it survives Emacs restarts.
+
+Per-invocation overrides via the menu's `-m' switch are unaffected."
+  (interactive
+   (list (completing-read
+          (format "Default model (current: %s, empty = claude picks): "
+                  (or llm-model "none"))
+          llm-model-choices nil nil nil nil llm-model)))
+  (let ((value (if (string-empty-p (or model "")) nil model)))
+    (customize-save-variable 'llm-model value)
+    (message "Default model %s"
+             (if value (format "set to %s (saved)" value)
+               "cleared (claude picks)"))))
+
 (transient-define-suffix llm--menu-prompt-bubble ()
   "Launch the inline-conversation bubble; honors the menu's switches.
 - `--btw' prepends the `/btw ' slash-command prefix to every turn.
@@ -1615,6 +1633,7 @@ Source-file comment is left untouched — remove it manually if desired."
     ("P" llm--menu-prompt-bubble)
     ("r" "Resume last prompt"     llm-prompt-resume)
     ("H" "Prompt history"         llm-prompt-history)
+    ("M" "Set default model"      llm-set-default-model)
     ("?" "Describe at point"      llm-describe-at-point)]
    ["Annotations"
     ("f" "Add FIXME"          llm-add-fixme)

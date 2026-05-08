@@ -57,10 +57,49 @@ Nil disables auto-cleanup."
                  (const :tag "Never" nil))
   :group 'make)
 
+(defcustom make-blink-interval 0.6
+  "Seconds between mode-line blink phases for running makes.
+Nil disables blinking (running entries stay solid)."
+  :type '(choice (number :tag "Seconds")
+                 (const :tag "Disabled" nil))
+  :group 'make)
+
+(defvar make--blink-phase t
+  "Toggled by `make--blink-tick' to drive the running-entry pulse.")
+
+(defvar make--blink-timer nil
+  "Active mode-line blink timer, or nil while no make is running.")
+
+(defun make--blink-tick ()
+  "Toggle `make--blink-phase' and refresh; cancel timer when nothing runs."
+  (setq make--blink-phase (not make--blink-phase))
+  (force-mode-line-update t)
+  (unless (cl-some (lambda (b)
+                     (and (buffer-live-p b)
+                          (eq (buffer-local-value 'make--status b) 'running)))
+                   make--buffers)
+    (when (timerp make--blink-timer)
+      (cancel-timer make--blink-timer))
+    (setq make--blink-timer nil
+          make--blink-phase t)))
+
+(defun make--ensure-blink-timer ()
+  "Start the mode-line blink timer if it isn't already running."
+  (when (and make-blink-interval
+             (not (timerp make--blink-timer)))
+    (setq make--blink-timer
+          (run-with-timer make-blink-interval make-blink-interval
+                          #'make--blink-tick))))
+
 (defun make--status-glyph (status)
-  "Mode-line label + face for STATUS."
+  "Mode-line label + face for STATUS.  Running entries pulse via
+`make--blink-phase' between the bright running face and `shadow'."
   (pcase status
-    ('running     (propertize "[RUN]"  'face 'make-status-running-face))
+    ('running     (propertize "[RUN]"
+                              'face (if (or (null make-blink-interval)
+                                            make--blink-phase)
+                                        'make-status-running-face
+                                      'shadow)))
     ('ok          (propertize "[OK]"   'face 'make-status-ok-face))
     (`(fail . ,n) (propertize (format "[FAIL %d]" n)
                               'face 'make-status-fail-face))
@@ -127,6 +166,7 @@ Nil disables auto-cleanup."
         (cons buf (cl-remove buf make--buffers
                              :test (lambda (a b)
                                      (equal (buffer-name a) (buffer-name b))))))
+  (make--ensure-blink-timer)
   (force-mode-line-update t))
 
 (defun make--unregister ()
