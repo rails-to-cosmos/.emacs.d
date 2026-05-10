@@ -91,11 +91,16 @@
 (require 'mijn-prog)
 (require 'parquet-mode)
 
-(unless (package-installed-p 'darr)
-  (package-vc-install "https://github.com/rails-to-cosmos/darr.git"))
-(require 'darr)
-
 (require 'mijn-llm)
+
+(use-package darr
+  :vc (:url "https://github.com/rails-to-cosmos/darr.git")
+  :bind ("C-x y d" . darr))
+
+(use-package agnostic-translate
+  :vc (:url "https://github.com/rails-to-cosmos/agnostic-translate.git")
+  :bind ("C-x y t r" . agnostic-translate-menu))
+
 (require 'xrandr)
 (require 'xmobarrc-mode)
 (require 'network-manager)
@@ -119,7 +124,10 @@
 ;;     (set-frame-size (selected-frame) 310 82)
 ;;     (set-frame-position (selected-frame) 1182 24)))
 
+(add-hook 'after-init-hook #'package-vc-upgrade-all)
+
 ;;; init.el ends here
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -128,6 +136,7 @@
  '(package-vc-selected-packages
    '((darr :vc-backend Git :url
            "https://github.com/rails-to-cosmos/darr.git"))))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
