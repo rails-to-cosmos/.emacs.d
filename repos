@@ -1,0 +1,14 @@
+;; -*- lexical-binding: t; -*-
+;; Monitored git repositories.
+
+(setq repos-list
+      '(("~/.emacs.d/" . "git@github.com:rails-to-cosmos/.emacs.d.git")
+        ("~/.config/xmobar/"
+         . "git@github.com:rails-to-cosmos/xmobar.git")
+        ("~/.config/xmonad/"
+         . "git@github.com:rails-to-cosmos/xmonad.git")
+        ("~/.config/dunst/"
+         . "git@github.com:rails-to-cosmos/dunst.git")
+        ("~/sync/stuff/cv/" . "git@gitlab.com:rails-to-cosmos/cv.git")
+        ("~/sync/stuff/poms/"
+         . "git@gitlab.com:rails-to-cosmos/poms.git")))
