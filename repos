@@ -11,4 +11,6 @@
          . "git@github.com:rails-to-cosmos/dunst.git")
         ("~/sync/stuff/cv/" . "git@gitlab.com:rails-to-cosmos/cv.git")
         ("~/sync/stuff/poms/"
-         . "git@gitlab.com:rails-to-cosmos/poms.git")))
+         . "git@gitlab.com:rails-to-cosmos/poms.git")
+        ("~/sync/stuff/agnostic-translate/"
+         . "git@github.com:rails-to-cosmos/agnostic-translate.git")))
