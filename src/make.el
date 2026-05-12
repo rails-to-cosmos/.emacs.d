@@ -105,7 +105,7 @@ Nil keeps it open.  Failed builds always stay open."
   :type 'number
   :group 'make)
 
-(defcustom make-frame-margin '(20 . 8)
+(defcustom make-frame-margin '(32 . 8)
   "Pixel margin (RIGHT . TOP) from the parent frame edges."
   :type '(cons integer integer)
   :group 'make)
