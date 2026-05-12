@@ -136,12 +136,13 @@ Nil keeps it open.  Failed builds always stay open."
 
 (defun make--anchor-xy ()
   "Return pixel (X . Y) for the top-right corner with margin."
-  (let* ((margin 20)
+  (let* ((margin-r (car make-frame-margin))
+         (margin-t (cdr make-frame-margin))
          (char-w (frame-char-width))
          (popup-w (* (car make-frame-size) char-w))
          (parent-w (frame-pixel-width))
-         (x (max 0 (- parent-w popup-w margin)))
-         (y 8))
+         (x (max 0 (- parent-w popup-w margin-r)))
+         (y margin-t))
     (cons x y)))
 
 (defun make--apply-styles (frame buf)
