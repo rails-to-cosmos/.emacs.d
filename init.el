@@ -107,7 +107,7 @@
 
 (require 'make)
 
-(global-set-key (kbd "C-x y m") #'make-completing-read)
+(global-set-key (kbd "C-x y m") #'make-menu)
 (global-set-key (kbd "C-x C-o") #'other-frame)
 
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
