@@ -1618,12 +1618,16 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
         (llm-model (or (llm--menu-model) llm-model)))
     (call-interactively #'llm)))
 
+(defun llm--menu-model-description ()
+  "Description for the model switch showing the current default."
+  (format "Model [%s]" (or llm-model "default")))
+
 (transient-define-prefix llm-menu ()
   "Claude CLI commands."
   ["Options"
    ("-b" "Prepend /btw slash-command to inline prompts" "--btw")
    ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")
-   ("-m" "Model"                                        "--model="
+   ("-m" llm--menu-model-description                    "--model="
     :choices llm--model-choices)]
   [["Session"
     ("c" llm--menu-open-claude)

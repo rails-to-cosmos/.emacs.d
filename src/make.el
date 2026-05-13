@@ -83,7 +83,7 @@ Nil disables auto-cleanup."
                  (const :tag "Never" nil))
   :group 'make)
 
-(defcustom make-frame-size '(100 . 48)
+(defcustom make-frame-size '(128 . 32)
   "Target (COLS . ROWS) for the make popup."
   :type '(cons integer integer)
   :group 'make)
@@ -93,16 +93,6 @@ Nil disables auto-cleanup."
 Nil keeps it open.  Failed builds always stay open."
   :type '(choice (integer :tag "Seconds")
                  (const :tag "Never" nil))
-  :group 'make)
-
-(defcustom make-bubble-steps 8
-  "Number of animation frames for the popup grow effect."
-  :type 'integer
-  :group 'make)
-
-(defcustom make-bubble-interval 0.018
-  "Seconds between animation steps."
-  :type 'number
   :group 'make)
 
 (defcustom make-frame-margin '(32 . 8)
@@ -123,8 +113,7 @@ Nil keeps it open.  Failed builds always stay open."
     (no-accept-focus . nil)
     (unsplittable . t)
     (no-other-frame . t)
-    (cursor-type . box)
-    (visibility . nil))
+    (cursor-type . box))
   "Frame parameters for the make popup child frame.")
 
 ;;; Frame state
@@ -164,11 +153,12 @@ Nil keeps it open.  Failed builds always stay open."
 (defun make--make-frame (buf anchor)
   "Create the make child frame showing BUF at ANCHOR."
   (let* ((parent (selected-frame))
+         (size make-frame-size)
          (params (append `((parent-frame . ,parent)
                            (left . ,(car anchor))
                            (top  . ,(cdr anchor))
-                           (width . 1)
-                           (height . 1))
+                           (width . ,(car size))
+                           (height . ,(cdr size)))
                          make-frame-parameters))
          (frame (make-frame params))
          (win (frame-selected-window frame)))
@@ -177,28 +167,8 @@ Nil keeps it open.  Failed builds always stay open."
     (set-window-parameter win 'no-other-window t)
     (make--apply-styles frame buf)
     (make-frame-visible frame)
+    (select-frame-set-input-focus frame)
     frame))
-
-(defun make--animate-frame (frame target-w target-h)
-  "Grow FRAME from 1x1 to TARGET-W x TARGET-H."
-  (let* ((i 0) (steps make-bubble-steps) timer)
-    (setq timer
-          (run-with-timer
-           0 make-bubble-interval
-           (lambda ()
-             (cl-incf i)
-             (cond
-              ((not (frame-live-p frame))
-               (cancel-timer timer))
-              ((>= i steps)
-               (set-frame-size frame target-w target-h)
-               (select-frame-set-input-focus frame)
-               (cancel-timer timer))
-              (t
-               (let ((k (/ (float i) steps)))
-                 (set-frame-size frame
-                                 (max 1 (round (* target-w k)))
-                                 (max 1 (round (* target-h k))))))))))))
 
 (defun make--close-frame ()
   "Delete the make child frame."
@@ -390,11 +360,9 @@ Nil keeps it open.  Failed builds always stay open."
   "Show BUF in a child-frame popup."
   (make--close-frame)
   (if (display-graphic-p)
-      (let* ((size make-frame-size)
-             (anchor (make--anchor-xy))
+      (let* ((anchor (make--anchor-xy))
              (frame (make--make-frame buf anchor)))
-        (setq make--frame frame)
-        (make--animate-frame frame (car size) (cdr size)))
+        (setq make--frame frame))
     (pop-to-buffer buf)))
 
 ;;; Spawn
