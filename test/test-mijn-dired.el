@@ -19,7 +19,7 @@
         (eval (read (current-buffer)) t)))))
 
 (defvar test--dired-file
-  (expand-file-name "../src/my-dired.el"
+  (expand-file-name "../src/mijn-dired.el"
                     (file-name-directory (or load-file-name buffer-file-name))))
 
 ;; Load just the pure functions

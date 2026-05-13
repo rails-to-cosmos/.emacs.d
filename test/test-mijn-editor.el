@@ -19,7 +19,7 @@
         (eval (read (current-buffer)) t)))))
 
 (defvar test--editor-file
-  (expand-file-name "../src/my-editor.el"
+  (expand-file-name "../src/mijn-editor.el"
                     (file-name-directory (or load-file-name buffer-file-name))))
 
 ;; Load just the functions we want to test

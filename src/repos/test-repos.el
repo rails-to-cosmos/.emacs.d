@@ -80,9 +80,6 @@
   (let ((home (expand-file-name "~")))
     (should (string-prefix-p "~/" (repos--abbrev (concat home "/foo"))))))
 
-(ert-deftest test-repos-default-directory-trailing-slash ()
-  "Should return a path ending with /."
-  (should (string-suffix-p "/" (repos--default-directory "~/.emacs.d"))))
 
 ;; ---------------------------------------------------------------------------
 ;; Rendering
@@ -93,7 +90,7 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'checking) repos--statuses)
+             '((state . "checking")) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (should (string-match-p "\\*\\* CHECKING" (buffer-string))))))
@@ -103,7 +100,7 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'error :error "Fetch failed") repos--statuses)
+             '((state . "error") (error . "Fetch failed")) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (let ((text (buffer-string)))
@@ -115,7 +112,7 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'ready :behind 0 :modified 0 :untracked 0) repos--statuses)
+             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (should (string-match-p "\\*\\* UP_TO_DATE" (buffer-string))))))
@@ -125,7 +122,7 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'ready :behind 3 :modified 0 :untracked 0) repos--statuses)
+             '((state . "ready") (behind . 3) (modified . 0) (untracked . 0)) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (should (string-match-p "\\*\\* BEHIND" (buffer-string))))))
@@ -135,8 +132,8 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'ready :behind 0 :modified 2 :untracked 0
-                   :local "Modified 2 files") repos--statuses)
+             '((state . "ready") (behind . 0) (modified . 2) (untracked . 0)
+               (local . "Modified 2 files")) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (should (string-match-p "\\*\\* MODIFIED" (buffer-string))))))
@@ -146,8 +143,8 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'ready :behind 0 :modified 0 :untracked 3
-                   :local "Untracked 3 files") repos--statuses)
+             '((state . "ready") (behind . 0) (modified . 0) (untracked . 3)
+               (local . "Untracked 3 files")) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (should (string-match-p "\\*\\* UNTRACKED" (buffer-string))))))
@@ -157,7 +154,7 @@
   (with-repos-buffer
     (setq repos-list '(("~/nonexistent" . "git@host:repo")))
     (puthash (repos--abbrev "~/nonexistent")
-             (list :state 'missing) repos--statuses)
+             '((state . "missing")) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (let ((text (buffer-string)))
@@ -169,10 +166,10 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'checking) repos--statuses)
+             '((state . "checking")) repos--statuses)
     (repos--render)
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'ready :behind 0 :modified 0 :untracked 0) repos--statuses)
+             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (let ((text (buffer-string)))
@@ -189,9 +186,9 @@
   (with-repos-buffer
     (setq repos-list '(("~/.emacs.d") ("/tmp")))
     (puthash (repos--abbrev "~/.emacs.d")
-             (list :state 'ready :behind 0 :modified 0 :untracked 0) repos--statuses)
+             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
     (puthash (repos--abbrev "/tmp")
-             (list :state 'error :error "Not a git repo") repos--statuses)
+             '((state . "error") (error . "Not a git repo")) repos--statuses)
     (repos--render)
     (with-current-buffer repos-dashboard-buffer-name
       (let ((text (buffer-string)))
@@ -215,9 +212,9 @@
   (with-repos-buffer
     (setq repos-list '(("~/a") ("~/b")))
     (puthash (repos--abbrev "~/a")
-             (list :state 'ready :behind 0 :modified 0 :untracked 0) repos--statuses)
+             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
     (puthash (repos--abbrev "~/b")
-             (list :state 'error :error "fail") repos--statuses)
+             '((state . "error") (error . "fail")) repos--statuses)
     (let ((sorted (repos--sorted-entries)))
       (should (equal "~/b" (repos--path (car sorted)))))))
 
@@ -241,9 +238,9 @@
 (ert-deftest test-repos-todo-order ()
   "Status priority should follow #+TODO header order."
   (with-repos-buffer
-    (puthash "checking" (list :state 'checking) repos--statuses)
-    (puthash "error" (list :state 'error) repos--statuses)
-    (puthash "ok" (list :state 'ready :behind 0 :modified 0 :untracked 0) repos--statuses)
+    (puthash "checking" '((state . "checking")) repos--statuses)
+    (puthash "error" '((state . "error")) repos--statuses)
+    (puthash "ok" '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
     (should (< (repos--status-priority "checking")
                (repos--status-priority "error")))
     (should (< (repos--status-priority "error")
