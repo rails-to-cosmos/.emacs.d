@@ -95,7 +95,7 @@
 
 (use-package darr
   :vc (:url "https://github.com/rails-to-cosmos/darr.git")
-  :bind ("C-x y d" . darr))
+  :bind ("C-x y d i" . darr))
 
 (use-package agnostic-translate
   :vc (:url "https://github.com/rails-to-cosmos/agnostic-translate.git")
