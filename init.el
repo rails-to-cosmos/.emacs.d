@@ -94,11 +94,11 @@
 (require 'mijn-llm)
 
 (use-package darr
-  :vc (:url "https://github.com/rails-to-cosmos/darr.git")
-  :bind ("C-x y d" . darr))
+  :vc (:url "https://github.com/rails-to-cosmos/darr.git" :branch "master" :rev :newest)
+  :bind ("C-x y d i" . darr))
 
 (use-package agnostic-translate
-  :vc (:url "https://github.com/rails-to-cosmos/agnostic-translate.git")
+  :vc (:url "https://github.com/rails-to-cosmos/agnostic-translate.git" :branch "master" :rev :newest)
   :bind ("C-x y t r" . agnostic-translate-menu))
 
 (require 'xrandr)
@@ -134,8 +134,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-vc-selected-packages
-   '((darr :vc-backend Git :url
-           "https://github.com/rails-to-cosmos/darr.git"))))
+   '((agnostic-translate :url "https://github.com/rails-to-cosmos/agnostic-translate.git")
+     (darr :url "https://github.com/rails-to-cosmos/darr.git"))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
