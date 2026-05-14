@@ -264,7 +264,12 @@ Without prefix: reuse the existing buffer, or create one.
 With \\[universal-argument]: new buffer, continue session if possible.
 With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
   (interactive)
-  (pcase-let* ((`(,label . ,root) (llm--project-label (or user-root default-directory)))
+  (pcase-let* ((`(,label . ,root)
+                (if user-root
+                    (cons (file-name-nondirectory
+                           (directory-file-name (expand-file-name user-root)))
+                          user-root)
+                  (llm--project-label default-directory)))
                (default-directory (or user-root root default-directory))
                (base (format "*claude:%s*" label))
                (prefix (prefix-numeric-value current-prefix-arg)))
@@ -1562,6 +1567,10 @@ Source-file comment is left untouched — remove it manually if desired."
   "Return non-nil if the menu's `-d' switch is active for this invocation."
   (member "--dangerously-skip-permissions" (transient-args 'llm-menu)))
 
+(defun llm--menu-use-cwd-p ()
+  "Return non-nil if the menu's `-c' switch is active."
+  (member "-c" (transient-args 'llm-menu)))
+
 (defun llm--menu-model ()
   "Return the menu's `-m' value as a model string, or nil if not set."
   (cl-some (lambda (a)
@@ -1593,11 +1602,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
                "cleared (claude picks)"))))
 
 (transient-define-suffix llm--menu-prompt-bubble ()
-  "Launch the inline-conversation bubble; honors the menu's switches.
-- `--btw' prepends the `/btw ' slash-command prefix to every turn.
-- `--dangerously-skip-permissions' is captured into the bubble and
-  passed to every `claude -p' turn as well as the promote vterm.
-- `--model=NAME' is captured into the bubble and passed to every turn."
+  "Launch the inline-conversation bubble; honors the menu's switches."
   :description "Prompt inline (conversation)"
   (interactive)
   (let ((llm-bubble-prompt-prefix
@@ -1606,17 +1611,21 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
            ""))
         (llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
-        (llm-model (or (llm--menu-model) llm-model)))
+        (llm-model (or (llm--menu-model) llm-model))
+        (default-directory (if (llm--menu-use-cwd-p)
+                               default-directory
+                             (or (llm--project-root) default-directory))))
     (llm-prompt-bubble)))
 
 (transient-define-suffix llm--menu-open-claude ()
-  "Open the main *claude:PROJECT* vterm; honors the `-d' and `-m' switches."
+  "Open the main *claude:PROJECT* vterm; honors the menu's switches."
   :description "Open Claude in project"
   (interactive)
   (let ((llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
-        (llm-model (or (llm--menu-model) llm-model)))
-    (call-interactively #'llm)))
+        (llm-model (or (llm--menu-model) llm-model))
+        (root (when (llm--menu-use-cwd-p) default-directory)))
+    (llm root)))
 
 (defun llm--menu-model-description ()
   "Description for the model switch showing the current default."
@@ -1626,6 +1635,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
   "Claude CLI commands."
   ["Options"
    ("-b" "Prepend /btw slash-command to inline prompts" "--btw")
+   ("-c" "Use current directory (not project root)"     "-c")
    ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")
    ("-m" llm--menu-model-description                    "--model="
     :choices llm--model-choices)]
