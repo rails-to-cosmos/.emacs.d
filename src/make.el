@@ -69,8 +69,8 @@ Nil disables auto-cleanup."
 
 (defvar make-output-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "q")       #'quit-window)
-    (define-key map (kbd "C-c C-k") #'quit-window)
+    (define-key map (kbd "q")       #'bury-buffer)
+    (define-key map (kbd "C-c C-k") #'bury-buffer)
     (define-key map (kbd "C-c C-c") #'make-kill-process)
     map)
   "Keymap for `make-output-mode'.")
