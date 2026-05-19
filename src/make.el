@@ -1,9 +1,9 @@
-;;; make.el --- Makefile target picker with popup output  -*- lexical-binding: t -*-
+;;; make.el --- Makefile target picker with output buffer  -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; M-x make-completing-read picks a target from the dominating Makefile
 ;; and spawns `make TARGET' as an async process.  Output streams into
-;; an animated child-frame popup (same pattern as agnostic-translate).
+;; a buffer shown in another window.
 ;; Status also appears in the global mode line with mouse interaction.
 
 ;;; Code:
@@ -11,8 +11,6 @@
 (require 'cl-lib)
 (require 'ansi-color)
 (require 'transient)
-
-(declare-function face-remap-remove-relative "face-remap")
 
 ;;; Per-buffer state
 
@@ -34,9 +32,6 @@
 (defvar-local make--process nil
   "Async make process for this buffer.")
 
-(defvar-local make--face-cookie nil
-  "Cookie from `face-remap-add-relative' for the popup buffer.")
-
 ;;; Faces
 
 (defface make-status-running-face
@@ -51,28 +46,15 @@
   '((t :inherit error))
   "Face for a failed make in the mode line.")
 
-(defface make-frame-face
-  '((((background dark))
-     :background "#1a1a2e" :foreground "#e6e6ee")
-    (t :background "#f8f8f0" :foreground "#1a1a1a"))
-  "Default text and background for the make popup."
-  :group 'make)
-
-(defface make-frame-border-face
-  '((((background dark)) :background "#565f89")
-    (t :background "#8899aa"))
-  "Border color for the make popup."
-  :group 'make)
-
 (defface make-header-face
   '((t :inherit header-line :slant italic))
-  "Face for the popup header line."
+  "Face for the output buffer header line."
   :group 'make)
 
 ;;; Customization
 
 (defgroup make nil
-  "Makefile target picker with popup output."
+  "Makefile target picker with output buffer."
   :group 'tools
   :prefix "make-")
 
@@ -83,123 +65,25 @@ Nil disables auto-cleanup."
                  (const :tag "Never" nil))
   :group 'make)
 
-(defcustom make-frame-size '(128 . 32)
-  "Target (COLS . ROWS) for the make popup."
-  :type '(cons integer integer)
-  :group 'make)
-
-(defcustom make-popup-auto-close 5
-  "Seconds after successful completion before the popup auto-closes.
-Nil keeps it open.  Failed builds always stay open."
-  :type '(choice (integer :tag "Seconds")
-                 (const :tag "Never" nil))
-  :group 'make)
-
-(defcustom make-frame-margin '(32 . 8)
-  "Pixel margin (RIGHT . TOP) from the parent frame edges."
-  :type '(cons integer integer)
-  :group 'make)
-
-;;; Frame parameters
-
-(defvar make-frame-parameters
-  '((minibuffer . nil)
-    (undecorated . t)
-    (internal-border-width . 2)
-    (child-frame-border-width . 1)
-    (left-fringe . 8) (right-fringe . 8)
-    (vertical-scroll-bars . nil) (horizontal-scroll-bars . nil)
-    (menu-bar-lines . 0) (tool-bar-lines . 0) (tab-bar-lines . 0)
-    (no-accept-focus . nil)
-    (unsplittable . t)
-    (no-other-frame . t)
-    (cursor-type . box))
-  "Frame parameters for the make popup child frame.")
-
-;;; Frame state
-
-(defvar make--frame nil
-  "Currently visible make child frame, or nil.")
-
-;;; Anchor / frame plumbing
-
-(defun make--anchor-xy ()
-  "Return pixel (X . Y) for the top-right corner with margin."
-  (let* ((margin-r (car make-frame-margin))
-         (margin-t (cdr make-frame-margin))
-         (char-w (frame-char-width))
-         (popup-w (* (car make-frame-size) char-w))
-         (parent-w (frame-pixel-width))
-         (x (max 0 (- parent-w popup-w margin-r)))
-         (y margin-t))
-    (cons x y)))
-
-(defun make--apply-styles (frame buf)
-  "Apply faces to FRAME and BUF."
-  (let ((bg (face-attribute 'make-frame-face :background nil 'default))
-        (fg (face-attribute 'make-frame-face :foreground nil 'default))
-        (bd (face-attribute 'make-frame-border-face :background nil 'default)))
-    (when (stringp bg) (set-frame-parameter frame 'background-color bg))
-    (when (stringp fg) (set-frame-parameter frame 'foreground-color fg))
-    (dolist (face '(internal-border child-frame-border))
-      (when (facep face)
-        (set-face-background face (if (stringp bd) bd 'unspecified) frame)))
-    (with-current-buffer buf
-      (when make--face-cookie
-        (face-remap-remove-relative make--face-cookie))
-      (setq make--face-cookie
-            (face-remap-add-relative 'default 'make-frame-face)))))
-
-(defun make--make-frame (buf anchor)
-  "Create the make child frame showing BUF at ANCHOR."
-  (let* ((parent (selected-frame))
-         (size make-frame-size)
-         (params (append `((parent-frame . ,parent)
-                           (left . ,(car anchor))
-                           (top  . ,(cdr anchor))
-                           (width . ,(car size))
-                           (height . ,(cdr size)))
-                         make-frame-parameters))
-         (frame (make-frame params))
-         (win (frame-selected-window frame)))
-    (set-window-buffer win buf)
-    (set-window-dedicated-p win t)
-    (set-window-parameter win 'no-other-window t)
-    (make--apply-styles frame buf)
-    (make-frame-visible frame)
-    (select-frame-set-input-focus frame)
-    frame))
-
-(defun make--close-frame ()
-  "Delete the make child frame."
-  (when (and make--frame (frame-live-p make--frame))
-    (delete-frame make--frame t))
-  (setq make--frame nil))
-
 ;;; Major mode
 
 (defvar make-output-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "q")       #'make-popup-close)
-    (define-key map (kbd "C-c C-k") #'make-popup-close)
-    (define-key map (kbd "C-c C-c") #'make-popup-kill)
+    (define-key map (kbd "q")       #'bury-buffer)
+    (define-key map (kbd "C-c C-k") #'bury-buffer)
+    (define-key map (kbd "C-c C-c") #'make-kill-process)
     map)
   "Keymap for `make-output-mode'.")
 
 (define-derived-mode make-output-mode special-mode "Make"
-  "Major mode for make output popup."
+  "Major mode for make output."
   (setq-local truncate-lines nil)
   (setq-local word-wrap t)
   (ansi-color-for-comint-mode-on))
 
 ;;; Commands
 
-(defun make-popup-close ()
-  "Close the make popup (process keeps running in background)."
-  (interactive)
-  (make--close-frame))
-
-(defun make-popup-kill ()
+(defun make-kill-process ()
   "Kill the running make process."
   (interactive)
   (when (process-live-p make--process)
@@ -220,7 +104,7 @@ Nil keeps it open.  Failed builds always stay open."
 (defun make--entry-help (buf)
   "Help-echo for BUF's mode-line entry."
   (with-current-buffer buf
-    (format "%s\nstatus: %s\nelapsed: %.1fs\nmouse-1 popup, mouse-3 kill"
+    (format "%s\nstatus: %s\nelapsed: %.1fs\nmouse-1 show, mouse-3 kill"
             (buffer-name buf)
             (pcase make--status
               ('running     "running")
@@ -232,10 +116,10 @@ Nil keeps it open.  Failed builds always stay open."
               0.0))))
 
 (defun make--entry-keymap (buf)
-  "Mode-line keymap for BUF: mouse-1 shows popup, mouse-3 kills."
+  "Mode-line keymap for BUF: mouse-1 shows buffer, mouse-3 kills."
   (let ((m (make-sparse-keymap)))
     (define-key m [mode-line mouse-1]
-                (lambda (_e) (interactive "e") (make--show-popup buf)))
+                (lambda (_e) (interactive "e") (make--show-buffer buf)))
     (define-key m [mode-line mouse-3]
                 (lambda (_e)
                   (interactive "e")
@@ -310,7 +194,7 @@ Nil keeps it open.  Failed builds always stay open."
           (set-window-point win (point-max)))))))
 
 (defun make--sentinel (proc _event)
-  "Update status when PROC exits; update popup header and schedule cleanup."
+  "Update status when PROC exits; update header and schedule cleanup."
   (when (and (memq (process-status proc) '(exit signal))
              (buffer-live-p (process-buffer proc)))
     (with-current-buffer (process-buffer proc)
@@ -344,8 +228,6 @@ Nil keeps it open.  Failed builds always stay open."
                  (pcase make--status
                    ('ok "ok")
                    (`(fail . ,n) (format "failed (%d)" n)))))
-      (when (and make-popup-auto-close (eq make--status 'ok))
-        (run-at-time make-popup-auto-close nil #'make--close-frame))
       (when make-mode-line-cleanup-delay
         (let ((buf (current-buffer)))
           (run-at-time make-mode-line-cleanup-delay nil
@@ -354,23 +236,18 @@ Nil keeps it open.  Failed builds always stay open."
                            (setq make--buffers (delq buf make--buffers))
                            (force-mode-line-update t)))))))))
 
-;;; Popup
+;;; Show buffer
 
-(defun make--show-popup (buf)
-  "Show BUF in a child-frame popup."
-  (make--close-frame)
-  (if (display-graphic-p)
-      (let* ((anchor (make--anchor-xy))
-             (frame (make--make-frame buf anchor)))
-        (setq make--frame frame))
-    (pop-to-buffer buf)))
+(defun make--show-buffer (buf)
+  "Show BUF in another window."
+  (pop-to-buffer buf))
 
 ;;; Spawn
 
 (defun make--spawn (buffer-name target project dir)
-  "Run `make TARGET' in BUFFER-NAME as an async process with popup.
+  "Run `make TARGET' in BUFFER-NAME as an async process.
 DIR is the directory containing the Makefile.
-PROJECT is shown in the mode-line and popup header."
+PROJECT is shown in the mode-line and header."
   (when (buffer-live-p (get-buffer buffer-name))
     (let ((old-proc (get-buffer-process buffer-name)))
       (when (and old-proc (process-live-p old-proc))
@@ -394,12 +271,12 @@ PROJECT is shown in the mode-line and popup header."
         (set-process-filter   proc #'make--filter)
         (set-process-sentinel proc #'make--sentinel)))
     (make--register buf)
-    (make--show-popup buf)))
+    (make--show-buffer buf)))
 
 ;;; Entry point
 
 (cl-defun make-completing-read ()
-  "Pick a target from the dominating Makefile and run it with a popup."
+  "Pick a target from the dominating Makefile and run it."
   (interactive)
   (let* ((dir (or (locate-dominating-file default-directory "Makefile")
                   (user-error "No Makefile found above %s"
@@ -437,7 +314,7 @@ PROJECT is shown in the mode-line and popup header."
     (let* ((choice (completing-read "Make buffer: "
                                     (mapcar #'car entries) nil t))
            (buf (cdr (assoc choice entries))))
-      (make--show-popup buf))))
+      (make--show-buffer buf))))
 
 ;;; Transient
 
