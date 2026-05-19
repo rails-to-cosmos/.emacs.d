@@ -1624,7 +1624,8 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
   (let ((llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
         (llm-model (or (llm--menu-model) llm-model))
-        (root (when (llm--menu-use-cwd-p) default-directory)))
+        (root (when (llm--menu-use-cwd-p) default-directory))
+        (current-prefix-arg nil))
     (llm root)))
 
 (defun llm--menu-model-description ()
@@ -1759,8 +1760,17 @@ continuously redraw and overwrite selections.  No-op outside vterm."
   (setq-local llm--vterm-copy-resume t)
   (vterm-copy-mode 1))
 
+(defun llm--auto-copy-mode ()
+  "Enter `vterm-copy-mode' when point moves away from the end in a claude buffer."
+  (when (and (derived-mode-p 'vterm-mode)
+             (llm-buffer-p)
+             (not vterm-copy-mode)
+             (< (point) (- (point-max) 1)))
+    (vterm-copy-mode 1)))
+
 (with-eval-after-load 'vterm
   (add-hook 'vterm-copy-mode-hook #'llm--vterm-copy-resume-on-exit)
+  (add-hook 'post-command-hook #'llm--auto-copy-mode)
   (define-key vterm-mode-map (kbd "C-c C-y") #'llm-vterm-copy))
 
 ;;; Keybindings
