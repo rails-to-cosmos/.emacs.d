@@ -358,24 +358,44 @@ Drains the prompt queue on transitions to idle/busy."
   (setq llm--status-timer
         (run-with-timer 0.5 nil #'llm--detect-status (current-buffer))))
 
+(defun llm--save-window-state (buf)
+  "Return an alist of (WINDOW . (POINT . START)) for all windows showing BUF
+where the user has scrolled away from the end."
+  (cl-loop for win in (get-buffer-window-list buf nil t)
+           for pt = (window-point win)
+           for ws = (window-start win)
+           when (< pt (with-current-buffer buf (1- (point-max))))
+           collect (list win pt ws)))
+
+(defun llm--restore-window-state (saved)
+  "Restore point and window-start for windows in SAVED."
+  (dolist (entry saved)
+    (pcase-let ((`(,win ,pt ,ws) entry))
+      (when (window-live-p win)
+        (set-window-start win ws t)
+        (set-window-point win pt)))))
+
 (defun llm--filter-advice (orig-fn process input)
   "After vterm processes output, update buffer status.
-Uses `llm--status-from-output' to determine new status based on patterns.
-Only redraws when the status actually changes to avoid vterm jitter."
-  (funcall orig-fn process input)
-  (when-let ((buf (process-buffer process)))
-    (when (buffer-live-p buf)
+Preserves scroll position in claude windows where the user has
+scrolled away from the end."
+  (let* ((buf (process-buffer process))
+         (is-llm (and buf (buffer-live-p buf)
+                      (with-current-buffer buf (llm-buffer-p))))
+         (saved (when is-llm (llm--save-window-state buf))))
+    (funcall orig-fn process input)
+    (when is-llm
+      (llm--restore-window-state saved)
       (with-current-buffer buf
-        (when (llm-buffer-p)
-          (let* ((old-status (gethash buf llm--buffers))
-                 (new-status (llm--status-from-output input old-status)))
-            (when (and new-status (not (eq old-status new-status)))
-              (puthash buf new-status llm--buffers)
-              (force-mode-line-update)
-              (when (and llm--prompt-queue
-                         (memq new-status '(idle busy)))
-                (llm--drain-queue)))
-            (llm--schedule-status-check)))))))
+        (let* ((old-status (gethash buf llm--buffers))
+               (new-status (llm--status-from-output input old-status)))
+          (when (and new-status (not (eq old-status new-status)))
+            (puthash buf new-status llm--buffers)
+            (force-mode-line-update)
+            (when (and llm--prompt-queue
+                       (memq new-status '(idle busy)))
+              (llm--drain-queue)))
+          (llm--schedule-status-check))))))
 
 (advice-add 'vterm--filter :around #'llm--filter-advice)
 
@@ -1760,17 +1780,8 @@ continuously redraw and overwrite selections.  No-op outside vterm."
   (setq-local llm--vterm-copy-resume t)
   (vterm-copy-mode 1))
 
-(defun llm--auto-copy-mode ()
-  "Enter `vterm-copy-mode' when point moves away from the end in a claude buffer."
-  (when (and (derived-mode-p 'vterm-mode)
-             (llm-buffer-p)
-             (not vterm-copy-mode)
-             (< (point) (- (point-max) 1)))
-    (vterm-copy-mode 1)))
-
 (with-eval-after-load 'vterm
   (add-hook 'vterm-copy-mode-hook #'llm--vterm-copy-resume-on-exit)
-  (add-hook 'post-command-hook #'llm--auto-copy-mode)
   (define-key vterm-mode-map (kbd "C-c C-y") #'llm-vterm-copy))
 
 ;;; Keybindings

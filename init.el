@@ -84,6 +84,7 @@
 (require 'mijn-java)
 (require 'mijn-c)
 (require 'mijn-rust)
+(require 'mijn-lisette)
 (require 'mijn-nix)
 (require 'mijn-docker)
 (require 'mijn-os)
