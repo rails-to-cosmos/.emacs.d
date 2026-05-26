@@ -241,14 +241,12 @@ Rules:
             (abbreviate-file-name directory))
           root)))
 
-(defun llm--claude-shell-command (root)
-  "Return the claude shell command, using `-c' if ROOT has a `.claude/' dir.
+(defun llm--claude-shell-command (_root)
+  "Return the claude shell command with `-c' (continue most recent session).
 Appends `--model' when `llm-model' is set, and
 `--dangerously-skip-permissions' when `llm-dangerously-skip-permissions'
 is non-nil."
-  (let* ((base (if (and root (file-directory-p (expand-file-name ".claude" root)))
-                   "claude -c"
-                 "claude"))
+  (let* ((base "claude -c")
          (with-model (if llm-model
                          (concat base " --model "
                                  (shell-quote-argument llm-model))
