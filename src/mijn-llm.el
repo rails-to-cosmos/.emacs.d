@@ -5,6 +5,7 @@
 (require 'project)
 (require 'transient)
 (require 'ansi-color)
+(require 'json)
 
 (defvar vterm-shell)
 (defvar vterm--process)
@@ -257,12 +258,309 @@ is non-nil."
         (concat with-model " --dangerously-skip-permissions")
       with-model)))
 
+;;; Stream-JSON Chat Mode
+;;
+;; A single long-running `claude-stream' wrapper process per chat buffer.
+;; Bidirectional communication via `--input-format stream-json' (stdin)
+;; and `--output-format stream-json' (stdout).  The wrapper uses a FIFO
+;; to solve the stdin race condition (Claude checks for stdin data at
+;; startup before Emacs can write to the pipe).
+
+(defvar-local llm-chat--process nil
+  "The running claude process for this chat buffer.")
+
+(defvar-local llm-chat--session-id nil
+  "Session ID captured from the first system/init event.")
+
+(defvar-local llm-chat--input-marker nil
+  "Marker at the start of the user input area.")
+
+(defvar-local llm-chat--json-buffer ""
+  "Partial JSON line accumulator for the process filter.")
+
+(defvar-local llm-chat--root nil
+  "Project root for this chat session.")
+
+(defvar-local llm-chat--receiving nil
+  "Non-nil while receiving a response from Claude.")
+
+(defface llm-chat-prompt-face
+  '((((background dark))  :foreground "#7aa2f7" :weight bold)
+    (((background light)) :foreground "#5c7cfa" :weight bold))
+  "Face for the prompt marker in chat buffers."
+  :group 'llm)
+
+(defface llm-chat-tool-face
+  '((((background dark))  :foreground "#bb9af7")
+    (((background light)) :foreground "#7c3aed"))
+  "Face for tool use indicators in chat buffers."
+  :group 'llm)
+
+(defface llm-chat-info-face
+  '((t :inherit shadow :slant italic))
+  "Face for info messages (cost, duration) in chat buffers."
+  :group 'llm)
+
+(defvar llm-chat-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map text-mode-map)
+    (define-key map (kbd "RET")     #'llm-chat-send-or-newline)
+    (define-key map (kbd "C-c C-c") #'llm-chat-send)
+    (define-key map (kbd "C-c C-k") #'llm-chat-cancel)
+    map))
+
+(define-derived-mode llm-chat-mode text-mode "Claude"
+  "Chat with Claude via bidirectional stream-JSON.
+\\<llm-chat-mode-map>\
+\\[llm-chat-send-or-newline] send (or newline with prefix), \
+\\[llm-chat-cancel] cancel."
+  :group 'llm
+  (setq-local llm-chat--json-buffer "")
+  (setq-local llm-chat--receiving nil)
+  (setq-local llm-chat--session-id nil)
+  (setq header-line-format
+        '(" Claude  " (:eval (llm-chat--header-status))
+          "  RET send | C-u RET newline | C-c C-k cancel"))
+  (add-hook 'kill-buffer-hook #'llm-chat--kill-process nil t))
+
+(defun llm-chat--kill-process ()
+  "Kill the claude process when the chat buffer is killed."
+  (when (and llm-chat--process (process-live-p llm-chat--process))
+    (kill-process llm-chat--process)))
+
+(defun llm-chat--header-status ()
+  "Return a status string for the header line."
+  (cond
+   (llm-chat--receiving
+    (propertize "working..." 'face 'llm-status-busy-face))
+   ((and llm-chat--process (process-live-p llm-chat--process))
+    (propertize "ready" 'face 'llm-status-idle-face))
+   (t
+    (propertize "disconnected" 'face 'llm-status-exited-face))))
+
+(defconst llm-chat--wrapper
+  (expand-file-name "claude-stream"
+                    (file-name-directory
+                     (or load-file-name buffer-file-name
+                         default-directory)))
+  "Path to the claude-stream FIFO wrapper script.")
+
+(defun llm-chat--process-extra-args ()
+  "Build extra CLI arguments forwarded to claude via the wrapper."
+  (append (when llm-model
+            (list "--model" llm-model))
+          (when llm-dangerously-skip-permissions
+            (list "--dangerously-skip-permissions"))))
+
+(defun llm-chat--ensure-process ()
+  "Start the claude stream-json process if not already running."
+  (unless (and llm-chat--process (process-live-p llm-chat--process))
+    (let* ((default-directory (or llm-chat--root default-directory))
+           (process-environment
+            (append '("NO_COLOR=1" "TERM=dumb") process-environment))
+           (buf (current-buffer))
+           (proc (apply #'start-process "claude-chat" nil
+                        llm-chat--wrapper
+                        (llm-chat--process-extra-args))))
+      (set-process-filter proc
+        (lambda (p out) (llm-chat--filter p out buf)))
+      (set-process-sentinel proc
+        (lambda (p ev) (llm-chat--sentinel p ev buf)))
+      (set-process-coding-system proc 'utf-8 'utf-8)
+      (setq-local llm-chat--process proc)
+      (setq-local llm-chat--json-buffer "")
+      (llm--register-buffer buf))))
+
+(defun llm-chat--insert-prompt ()
+  "Insert a prompt marker and set the input marker."
+  (let ((inhibit-read-only t))
+    (goto-char (point-max))
+    (insert (propertize "▸ " 'face 'llm-chat-prompt-face))
+    (setq llm-chat--input-marker (copy-marker (point) nil))
+    (add-text-properties (point-min) llm-chat--input-marker
+                         '(read-only t rear-nonsticky t))))
+
+(defun llm-chat-send ()
+  "Send the current input to Claude."
+  (interactive)
+  (when llm-chat--receiving
+    (user-error "Claude is still responding"))
+  (unless (and llm-chat--input-marker
+               (marker-position llm-chat--input-marker))
+    (user-error "No input area"))
+  (let ((input (string-trim
+                (buffer-substring-no-properties
+                 llm-chat--input-marker (point-max)))))
+    (when (string-empty-p input)
+      (user-error "Empty input"))
+    (llm-chat--ensure-process)
+    (let ((inhibit-read-only t))
+      (add-text-properties (point-min) (point-max)
+                           '(read-only t rear-nonsticky t)))
+    (setq-local llm-chat--receiving t)
+    (force-mode-line-update)
+    (puthash (current-buffer) 'busy llm--buffers)
+    (let ((json (json-encode
+                 `((type . "user")
+                   (message . ((role . "user")
+                               (content . ,input)))))))
+      (process-send-string llm-chat--process (concat json "\n")))))
+
+(defun llm-chat-send-or-newline ()
+  "Send input if no prefix arg, otherwise insert a newline."
+  (interactive)
+  (if current-prefix-arg
+      (newline)
+    (if (and llm-chat--input-marker
+             (>= (point) (marker-position llm-chat--input-marker))
+             (not llm-chat--receiving))
+        (llm-chat-send)
+      (newline))))
+
+(defun llm-chat-cancel ()
+  "Cancel the current response."
+  (interactive)
+  (when (and llm-chat--process (process-live-p llm-chat--process))
+    (kill-process llm-chat--process))
+  (setq-local llm-chat--receiving nil)
+  (let ((inhibit-read-only t))
+    (goto-char (point-max))
+    (insert "\n" (propertize "[cancelled]" 'face 'llm-chat-info-face) "\n\n"))
+  (llm-chat--insert-prompt)
+  (puthash (current-buffer) 'idle llm--buffers)
+  (force-mode-line-update))
+
+(defun llm-chat--filter (_proc output buf)
+  "Process filter: accumulate and parse JSONL events into BUF."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      (setq llm-chat--json-buffer
+            (concat llm-chat--json-buffer output))
+      (let ((lines (split-string llm-chat--json-buffer "\n")))
+        (setq llm-chat--json-buffer (car (last lines)))
+        (dolist (line (butlast lines))
+          (when (not (string-empty-p (string-trim line)))
+            (llm-chat--handle-event line)))))))
+
+(defun llm-chat--handle-event (json-line)
+  "Parse and handle a single JSONL event."
+  (condition-case err
+      (let* ((data (json-read-from-string json-line))
+             (type (alist-get 'type data)))
+        (pcase type
+          ("system"
+           (when-let ((sid (alist-get 'session_id data)))
+             (unless llm-chat--session-id
+               (setq-local llm-chat--session-id sid))))
+          ("assistant"
+           (llm-chat--handle-assistant data))
+          ("result"
+           (llm-chat--handle-result data))
+          (_ nil)))
+    (json-parse-error
+     (llm-chat--handle-stderr json-line))
+    (json-readtable-error
+     (llm-chat--handle-stderr json-line))
+    (error
+     (llm-chat--handle-stderr
+      (format "%s (parse error: %s)" json-line err)))))
+
+(defun llm-chat--handle-stderr (text)
+  "Display non-JSON process output (likely stderr) in the chat buffer.
+Filters out terminal escape sequences from claude's cleanup code."
+  (let ((trimmed (string-trim text)))
+    (unless (or (string-empty-p trimmed)
+                (string-match-p "\e" trimmed)
+                (and (string-match-p "\\`[][]" trimmed)
+                     (not (string-match-p " " trimmed))))
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (goto-char (point-max))
+          (insert "\n" (propertize trimmed 'face 'error))
+          (add-text-properties (line-beginning-position) (point)
+                               '(read-only t rear-nonsticky t)))))))
+
+(defun llm-chat--handle-assistant (data)
+  "Handle an assistant message event — insert response text."
+  (let* ((msg (alist-get 'message data))
+         (content (alist-get 'content msg))
+         (inhibit-read-only t))
+    (save-excursion
+      (goto-char (point-max))
+      (let ((start (point)))
+        (dolist (block (append content nil))
+          (let ((block-type (alist-get 'type block)))
+            (pcase block-type
+              ("text"
+               (insert "\n" (alist-get 'text block)))
+              ("tool_use"
+               (let ((name (alist-get 'name block)))
+                 (insert "\n"
+                         (propertize (format "⚙ %s" name)
+                                    'face 'llm-chat-tool-face))))
+              (_ nil))))
+        (add-text-properties start (point)
+                             '(read-only t rear-nonsticky t))))))
+
+(defun llm-chat--handle-result (data)
+  "Handle a result event — mark turn as complete."
+  (let ((inhibit-read-only t)
+        (is-error (eq (alist-get 'is_error data) t))
+        (result-text (alist-get 'result data))
+        (cost (alist-get 'total_cost_usd data))
+        (duration (alist-get 'duration_ms data))
+        (sid (alist-get 'session_id data)))
+    (when (and sid (not llm-chat--session-id))
+      (setq-local llm-chat--session-id sid))
+    (save-excursion
+      (goto-char (point-max))
+      (when (and is-error result-text)
+        (insert "\n" (propertize result-text 'face 'error)))
+      (insert "\n"
+              (propertize (format "— %.2fs · $%.4f%s"
+                                 (/ (or duration 0) 1000.0)
+                                 (or cost 0)
+                                 (if is-error " [error]" ""))
+                          'face 'llm-chat-info-face)
+              "\n\n")
+      (add-text-properties (point-min) (point)
+                           '(read-only t rear-nonsticky t))))
+  (setq-local llm-chat--receiving nil)
+  (llm-chat--insert-prompt)
+  (goto-char (point-max))
+  (puthash (current-buffer) 'idle llm--buffers)
+  (force-mode-line-update))
+
+(defun llm-chat--sentinel (_proc event buf)
+  "Handle process exit — show the event and re-enable input."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      (let ((abnormal (not (string-match-p "finished" event))))
+        (setq-local llm-chat--process nil)
+        (setq-local llm-chat--json-buffer "")
+        (when (and abnormal llm-chat--receiving)
+          (setq-local llm-chat--receiving nil)
+          (let ((inhibit-read-only t))
+            (save-excursion
+              (goto-char (point-max))
+              (insert "\n"
+                      (propertize (format "[process %s]"
+                                         (string-trim event))
+                                 'face 'error)
+                      "\n\n")
+              (add-text-properties (point-min) (point)
+                                   '(read-only t rear-nonsticky t))))
+          (llm-chat--insert-prompt)
+          (goto-char (point-max)))
+        (puthash buf (if abnormal 'exited 'idle) llm--buffers)
+        (force-mode-line-update)))))
+
 ;;;###autoload
 (defun llm (&optional user-root)
-  "Open Claude CLI in a vterm buffer named *claude:project*.
-Without prefix: reuse the existing buffer, or create one.
-With \\[universal-argument]: new buffer, continue session if possible.
-With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
+  "Open Claude chat buffer named *claude:project*.
+Without prefix: reuse an existing buffer or create one.
+With \\[universal-argument]: new buffer.
+With \\[universal-argument] \\[universal-argument]: open in vterm instead (full TUI)."
   (interactive)
   (pcase-let* ((`(,label . ,root)
                 (if user-root
@@ -278,19 +576,47 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
       (let ((existing (get-buffer base)))
         (if (and existing (buffer-live-p existing))
             (pop-to-buffer existing)
-          (let ((vterm-shell (llm--claude-shell-command root)))
-            (vterm-other-window base)
-            (llm--register-buffer (current-buffer))))))
+          (let ((buf (get-buffer-create base)))
+            (with-current-buffer buf
+              (llm-chat-mode)
+              (setq-local llm-chat--root (or root default-directory))
+              (llm-chat--insert-prompt))
+            (pop-to-buffer buf)))))
      ((= prefix 4)
-      (let ((vterm-shell (llm--claude-shell-command root))
-            (name (generate-new-buffer-name base)))
-        (vterm-other-window name)
-        (llm--register-buffer (current-buffer))))
+      (let* ((name (generate-new-buffer-name base))
+             (buf (get-buffer-create name)))
+        (with-current-buffer buf
+          (llm-chat-mode)
+          (setq-local llm-chat--root (or root default-directory))
+          (llm-chat--insert-prompt))
+        (pop-to-buffer buf)))
      ((>= prefix 16)
-      (let ((vterm-shell "claude")
-            (name (generate-new-buffer-name base)))
-        (vterm-other-window name)
-        (llm--register-buffer (current-buffer)))))))
+      (llm-vterm user-root)))))
+
+;;;###autoload
+(defun llm-vterm (&optional user-root)
+  "Open Claude CLI in a vterm buffer (full TUI).
+This is the legacy interface; `llm' now uses the simpler chat mode."
+  (interactive)
+  (pcase-let* ((`(,label . ,root)
+                (if user-root
+                    (cons (file-name-nondirectory
+                           (directory-file-name (expand-file-name user-root)))
+                          user-root)
+                  (llm--project-label default-directory)))
+               (default-directory (or user-root root default-directory))
+               (base (format "*claude:%s*" label)))
+    (let ((existing (get-buffer base)))
+      (if (and existing (buffer-live-p existing)
+               (with-current-buffer existing
+                 (derived-mode-p 'vterm-mode)))
+          (pop-to-buffer existing)
+        (let ((vterm-shell (llm--claude-shell-command root))
+              (name (if existing
+                        (generate-new-buffer-name base)
+                      base)))
+          (vterm-other-window name)
+          (llm--register-buffer (current-buffer)))))))
 
 ;;;###autoload
 (defun llm-vterm-here ()
@@ -381,7 +707,9 @@ Preserves scroll position in claude windows where the user has
 scrolled away from the end."
   (let* ((buf (process-buffer process))
          (is-llm (and buf (buffer-live-p buf)
-                      (with-current-buffer buf (llm-buffer-p))))
+                      (with-current-buffer buf
+                        (and (derived-mode-p 'vterm-mode)
+                             (llm-buffer-p)))))
          (saved (when is-llm (llm--save-window-state buf))))
     (funcall orig-fn process input)
     (when is-llm
@@ -550,19 +878,26 @@ No-op unless `llm-persistence-strategy' is `project' and ROOT is a git repo."
     (with-temp-file file (insert prompt))))
 
 (defun llm--send-to-claude (prompt &optional root)
-  "Switch to the claude vterm buffer and insert PROMPT.
+  "Switch to the claude buffer and send PROMPT.
+Works with both chat-mode and vterm buffers.
 If ROOT is provided, switch to the claude buffer for that project root.
 If the session is busy or blocked, queue the prompt and insert it
 once the session becomes idle."
   (llm--save-prompt prompt root)
   (llm root)
-  (let ((status (gethash (current-buffer) llm--buffers)))
-    (if (memq status '(nil idle busy))
-        (progn (vterm-insert prompt)
-               (vterm-send-return))
-      (push (cons (current-buffer) prompt) llm--prompt-queue)
-      (message "Claude is %s — prompt queued (%d pending), will send when idle"
-               status (length llm--prompt-queue)))))
+  (cond
+   ((derived-mode-p 'llm-chat-mode)
+    (goto-char (point-max))
+    (insert prompt)
+    (llm-chat-send))
+   ((derived-mode-p 'vterm-mode)
+    (let ((status (gethash (current-buffer) llm--buffers)))
+      (if (memq status '(nil idle busy))
+          (progn (vterm-insert prompt)
+                 (vterm-send-return))
+        (push (cons (current-buffer) prompt) llm--prompt-queue)
+        (message "Claude is %s — prompt queued (%d pending), will send when idle"
+                 status (length llm--prompt-queue)))))))
 
 (defun llm--write-context-file (text)
   "Write TEXT to a temporary file and return its path."
@@ -1638,8 +1973,8 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
     (llm-prompt-bubble)))
 
 (transient-define-suffix llm--menu-open-claude ()
-  "Open the main *claude:PROJECT* vterm; honors the menu's switches."
-  :description "Open Claude in project"
+  "Open Claude chat buffer; honors the menu's switches."
+  :description "Open Claude (chat)"
   (interactive)
   (let ((llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
@@ -1647,6 +1982,16 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
         (root (when (llm--menu-use-cwd-p) default-directory))
         (current-prefix-arg nil))
     (llm root)))
+
+(transient-define-suffix llm--menu-open-vterm ()
+  "Open Claude in vterm (full TUI); honors the menu's switches."
+  :description "Open Claude (vterm TUI)"
+  (interactive)
+  (let ((llm-dangerously-skip-permissions
+         (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
+        (llm-model (or (llm--menu-model) llm-model))
+        (root (when (llm--menu-use-cwd-p) default-directory)))
+    (llm-vterm root)))
 
 (defun llm--menu-model-description ()
   "Description for the model switch showing the current default."
@@ -1662,6 +2007,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
     :choices llm--model-choices)]
   [["Session"
     ("c" llm--menu-open-claude)
+    ("C" llm--menu-open-vterm)
     ("v" "Vterm in project"       llm-vterm-here)
     ("b" "Switch buffer"          llm-switch-buffer)
     ("p" "Prompt"                 llm-prompt)
@@ -1699,9 +2045,12 @@ to the project's vterm first (reusing or spawning)."
             (pcase-let* ((`(,_ . ,root) (llm--project-label default-directory))
                          (default-directory (or root default-directory)))
               (if (equal kind "vterm")
-                  (let ((vterm-shell (llm--claude-shell-command root)))
-                    (vterm target)
-                    (llm--register-buffer (current-buffer)))
+                  (let ((buf (get-buffer-create target)))
+                    (with-current-buffer buf
+                      (llm-chat-mode)
+                      (setq-local llm-chat--root (or root default-directory))
+                      (llm-chat--insert-prompt))
+                    (switch-to-buffer buf))
                 (vterm target)))))
       (let ((current-prefix-arg nil))
         (llm-vterm-here)))))
