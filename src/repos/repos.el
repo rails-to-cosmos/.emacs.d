@@ -26,6 +26,7 @@
           (let ((exit-code (call-process "cabal" nil "*repos-build*" nil
                                          "install" "-O2"
                                          "--enable-executable-stripping"
+                                         "--enable-split-sections"
                                          "--install-method=copy"
                                          (concat "--installdir=" repos--backend-source-dir)
                                          "--overwrite-policy=always")))

@@ -1,5 +1,6 @@
 module Repos.Discover (findGitRepos) where
 
+import Control.Concurrent.Async (mapConcurrently)
 import Data.Text (Text)
 import Data.Text qualified as T
 import System.Directory (doesDirectoryExist, listDirectory)
@@ -22,8 +23,7 @@ findGitRepos dir = do
         then pure [T.pack dir]
         else do
           entries <- listDirectory dir
-          repos <- concat <$> mapM (processEntry dir) entries
-          pure repos
+          concat <$> mapConcurrently (processEntry dir) entries
 
 processEntry :: FilePath -> String -> IO [Text]
 processEntry parent name

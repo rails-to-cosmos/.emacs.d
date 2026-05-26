@@ -12,6 +12,7 @@ executable repos
   hs-source-dirs:   app, src
   build-depends:    base >= 4.14 && < 5
                   , aeson >= 2.0
+                  , async
                   , bytestring
                   , directory
                   , filepath
