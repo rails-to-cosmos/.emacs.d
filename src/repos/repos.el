@@ -63,6 +63,44 @@
            (kill-buffer (process-buffer process))
            (when json (funcall callback json))))))))
 
+(defun repos--call-batch (command paths per-result-callback &optional done-callback)
+  "Run the backend `batch' subcommand in a single process.
+COMMAND is \"status\" or \"status-quick\". PATHS is a list of
+absolute paths. PER-RESULT-CALLBACK is invoked for each repo
+as (PATH STATUS) as results stream in. DONE-CALLBACK, when non-nil,
+runs after the process exits."
+  (repos--ensure-backend)
+  (let* ((process-connection-type nil) ;; pipe, not pty — so `process-send-eof' actually closes stdin
+         (buf  (generate-new-buffer " *repos-batch*"))
+         (proc (start-process "repos-batch" buf repos--backend "batch"))
+         (pending ""))
+    (set-process-filter
+     proc
+     (lambda (_process output)
+       (let* ((combined (concat pending output))
+              (lines    (split-string combined "\n"))
+              (tail     (car (last lines)))
+              (complete (butlast lines)))
+         (setq pending tail)
+         (dolist (line complete)
+           (unless (string-empty-p line)
+             (condition-case _err
+                 (let* ((parsed (json-read-from-string line))
+                        (path   (cdr (assq 'path parsed)))
+                        (status (cdr (assq 'status parsed))))
+                   (when path
+                     (funcall per-result-callback path status)))
+               (error nil)))))))
+    (set-process-sentinel
+     proc
+     (lambda (process _event)
+       (when (memq (process-status process) '(exit signal))
+         (kill-buffer (process-buffer process))
+         (when done-callback (funcall done-callback)))))
+    (process-send-string
+     proc (json-encode `((command . ,command) (repos . ,(vconcat paths)))))
+    (process-send-eof proc)))
+
 ;;; Buffer & Mode
 
 (defvar repos-dashboard-buffer-name "*repos*"
@@ -366,6 +404,20 @@
        (puthash path json repos--statuses)
        (repos--update path)))))
 
+(defun repos--fetch-many (repos)
+  "Async fetch + status for REPOS in a single backend process."
+  (when repos
+    (let ((paths (mapcar #'repos--abbrev repos)))
+      (dolist (path paths)
+        (puthash path '((state . "fetching")) repos--statuses)
+        (repos--update-in-place path))
+      (repos--call-batch
+       "status" (mapcar #'expand-file-name paths)
+       (lambda (path-abs status)
+         (let ((path (repos--abbrev path-abs)))
+           (puthash path status repos--statuses)
+           (repos--update path)))))))
+
 (defun repos--fetch-quick (repo)
   "Async status (no fetch) for REPO via the Haskell backend."
   (let ((path (repos--abbrev repo)))
@@ -495,7 +547,6 @@ work happens lazily, on first user interaction, instead of at startup."
                                            (setq repos-list
                                                  (append repos-list
                                                          (list (cons path (if (and remote (not (equal remote :json-false))) remote nil)))))
-                                           (repos--fetch path)
                                            path))))
                                    (append found nil))))) ;; coerce vector to list
     (unless found (user-error "No git repositories found in %s" (repos--abbrev dir)))
@@ -505,6 +556,7 @@ work happens lazily, on first user interaction, instead of at startup."
         (if (equal target repos-file)
             (repos--save)
           (repos--append-to-file target new-entries)))
+      (repos--fetch-many added)
       (message "Added %d repo%s" (length added) (if (= 1 (length added)) "" "s")))))
 
 ;;;###autoload
@@ -574,8 +626,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
           (setq repos--pending (1+ repos--pending))
           (repos--fetch path))
       (setq repos--pending (length repos-list))
-      (dolist (entry repos-list)
-        (repos--fetch (repos--path entry))))))
+      (repos--fetch-many (mapcar #'repos--path repos-list)))))
 
 ;;;###autoload
 (defun repos-refresh-all ()
@@ -583,8 +634,7 @@ Prompts for which file to save to when `repos-extra-files' is set."
   (interactive)
   (repos--ensure-loaded)
   (setq repos--pending (length repos-list))
-  (dolist (entry repos-list)
-    (repos--fetch (repos--path entry))))
+  (repos--fetch-many (mapcar #'repos--path repos-list)))
 
 ;;;###autoload
 (defun repos-pull-repo ()
@@ -600,8 +650,8 @@ Prompts for which file to save to when `repos-extra-files' is set."
   "Pull all repositories."
   (interactive)
   (repos--ensure-loaded)
-  (dolist (entry repos-list)
-    (repos--pull (repos--path entry))))
+  (setq repos--pending (length repos-list))
+  (repos--fetch-many (mapcar #'repos--path repos-list)))
 
 ;;;###autoload
 (defun repos-dashboard ()
