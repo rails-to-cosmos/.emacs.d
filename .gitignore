@@ -49,3 +49,5 @@ last-frame-state.el
 /.project/
 dist-newstyle
 *.*#
+/elpa/agnostic-translate/
+/elpa/darr/
