@@ -3,6 +3,7 @@
 (require 'cl-lib)
 (require 'json)
 (require 'ol)
+(require 'magit)
 
 (declare-function magit-status "magit-status")
 
@@ -376,8 +377,25 @@
        (repos--update path)))))
 
 (defun repos--pull (repo)
-  "Pull REPO by fetching with the backend (which does git fetch)."
-  (repos--fetch repo))
+  "Pull REPO: run git pull, then refresh status."
+  (let* ((path (repos--abbrev repo))
+         (dir (expand-file-name path)))
+    (puthash path '((state . "fetching")) repos--statuses)
+    (repos--update path)
+    (let ((buf (generate-new-buffer " *repos-pull*")))
+      (set-process-sentinel
+       (start-process "repos-pull" buf "git" "-C" dir "pull" "--ff-only")
+       (lambda (process _event)
+         (let ((exit-code (process-exit-status process)))
+           (kill-buffer (process-buffer process))
+           (if (= exit-code 0)
+               (progn
+                 (message "repos: pulled %s" path)
+                 (repos--fetch-quick repo))
+             (puthash path `((state . "error")
+                             (error . ,(format "git pull failed (exit %d)" exit-code)))
+                      repos--statuses)
+             (repos--update path))))))))
 
 (defun repos--clone-async (path remote target)
   "Clone REMOTE into TARGET for repo at PATH."
