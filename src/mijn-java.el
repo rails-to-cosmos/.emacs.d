@@ -29,6 +29,13 @@ Here the suffix is optional and a hash fallback guarantees a real filename."
   (setq-local c-basic-offset 4
               tab-width 4
               indent-tabs-mode nil)
+  ;; Tell jdtls to fetch dependency sources/javadoc so jump-to-definition lands
+  ;; on real source (not decompiled stubs). Buffer-local — must NOT clobber the
+  ;; global `eglot-workspace-configuration' that `mijn-rust' sets.
+  (setq-local eglot-workspace-configuration
+              '(:java (:maven (:downloadSources t)
+                       :eclipse (:downloadSources t)
+                       :references (:includeDecompiledSources t))))
   (subword-mode)
   (smartparens-strict-mode)
   (yas-minor-mode)
