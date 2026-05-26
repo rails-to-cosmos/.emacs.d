@@ -22,6 +22,15 @@
 ;; (add-hook 'lisp-mode-hook 'enable-paredit-mode)
 (add-hook 'lisp-mode-hook 'smartparens-strict-mode)
 
+(use-package sly
+  :ensure t
+  :config
+  (setq inferior-lisp-program "sbcl")
+  (setq sly-complete-symbol-function 'sly-flex-completions))
+
+(add-hook 'lisp-mode-hook 'sly-editing-mode)
+(add-hook 'lisp-mode-hook 'company-mode)
+
 (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
 ;; (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
 (add-hook 'emacs-lisp-mode-hook 'smartparens-strict-mode)
