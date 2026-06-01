@@ -113,6 +113,9 @@
 
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
 
+;; Haskell-generated config (from emacs-config.hs; regenerate via `make emacs-config`)
+(load (expand-file-name "generated.el" user-emacs-directory) t)
+
 (condition-case nil
     (load-file (f-join user-emacs-directory "init-local.el"))
   (file-missing nil))

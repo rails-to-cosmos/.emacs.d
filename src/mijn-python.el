@@ -82,6 +82,8 @@ as-is — caller is responsible for the result compiling."
   (company-quickhelp-mode)
   (abbrev-mode)
 
+  (add-hook 'before-save-hook #'my-python-imports nil t)
+
   ;; (flymake-mode)
 
   (setq-local company-backends '(company-files

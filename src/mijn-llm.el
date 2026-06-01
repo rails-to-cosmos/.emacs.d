@@ -49,7 +49,8 @@ tool-use confirmation prompts."
   :group 'llm)
 
 (defconst llm-model-choices
-  '("claude-opus-4-7"
+  '("claude-opus-4-8"
+    "claude-opus-4-7"
     "claude-opus-4-6"
     "claude-sonnet-4-6"
     "claude-haiku-4-5")
@@ -271,24 +272,27 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
                (default-directory (or user-root root default-directory))
                (base (format "*claude:%s*" label))
                (prefix (prefix-numeric-value current-prefix-arg)))
-    (cond
-     ((= prefix 1)
-      (let ((existing (get-buffer base)))
-        (if (and existing (buffer-live-p existing))
-            (pop-to-buffer existing)
-          (let ((vterm-shell (llm--claude-shell-command root)))
-            (vterm-other-window base)
-            (llm--register-buffer (current-buffer))))))
-     ((= prefix 4)
-      (let ((vterm-shell (llm--claude-shell-command root))
-            (name (generate-new-buffer-name base)))
-        (vterm-other-window name)
-        (llm--register-buffer (current-buffer))))
-     ((>= prefix 16)
-      (let ((vterm-shell "claude")
-            (name (generate-new-buffer-name base)))
-        (vterm-other-window name)
-        (llm--register-buffer (current-buffer)))))))
+    (cond ((= prefix 1)
+           (let ((existing (get-buffer base)))
+             (cond
+              ((and existing (buffer-live-p existing)
+                    (get-buffer-process existing))
+               (pop-to-buffer existing))
+              (t
+               (when existing (kill-buffer existing))
+               (let ((vterm-shell (llm--claude-shell-command root)))
+                 (vterm-other-window base)
+                 (llm--register-buffer (current-buffer)))))))
+          ((= prefix 4)
+           (let ((vterm-shell (llm--claude-shell-command root))
+                 (name (generate-new-buffer-name base)))
+             (vterm-other-window name)
+             (llm--register-buffer (current-buffer))))
+          ((>= prefix 16)
+           (let ((vterm-shell "claude")
+                 (name (generate-new-buffer-name base)))
+             (vterm-other-window name)
+             (llm--register-buffer (current-buffer)))))))
 
 ;;;###autoload
 (defun llm-vterm-here ()
@@ -1590,12 +1594,14 @@ Source-file comment is left untouched — remove it manually if desired."
   (member "-c" (transient-args 'llm-menu)))
 
 (defun llm--menu-model ()
-  "Return the menu's `-m' value as a model string, or nil if not set."
-  (cl-some (lambda (a)
-             (and (stringp a)
-                  (string-prefix-p "--model=" a)
-                  (substring a (length "--model="))))
-           (transient-args 'llm-menu)))
+  "Return the menu's `-m' value as a model string, or nil if not set.
+\"default\" is treated as nil so that no `--model' flag is passed."
+  (let ((val (cl-some (lambda (a)
+                        (and (stringp a)
+                             (string-prefix-p "--model=" a)
+                             (substring a (length "--model="))))
+                      (transient-args 'llm-menu))))
+    (if (equal val "default") nil val)))
 
 (defun llm--model-choices ()
   "Return `llm-model-choices' (transient `:choices' wants a function)."
@@ -1613,7 +1619,9 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
           (format "Default model (current: %s, empty = claude picks): "
                   (or llm-model "none"))
           llm-model-choices nil nil nil nil llm-model)))
-  (let ((value (if (string-empty-p (or model "")) nil model)))
+  (let ((value (if (or (string-empty-p (or model ""))
+                       (equal model "default"))
+                   nil model)))
     (customize-save-variable 'llm-model value)
     (message "Default model %s"
              (if value (format "set to %s (saved)" value)
