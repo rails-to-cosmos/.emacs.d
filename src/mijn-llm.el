@@ -71,6 +71,24 @@ vterm and to the inline bubble (captured once at bubble creation)."
                  (string :tag "Model name"))
   :group 'llm)
 
+(defconst llm-effort-choices
+  '("default"
+    "low"
+    "medium"
+    "high")
+  "Reasoning-effort levels offered by `llm-menu' under the `-e' switch.")
+
+(defcustom llm-effort nil
+  "Reasoning effort passed to claude as `--effort'.
+Nil means use claude's default.  A string like \"low\", \"medium\",
+or \"high\" is passed through verbatim.
+
+Normally toggled per-invocation via the `-e' switch in `llm-menu'
+rather than set directly."
+  :type '(choice (const :tag "Default (claude picks)" nil)
+                 (string :tag "Effort level"))
+  :group 'llm)
+
 (cl-defun llm--project-root (&optional (dir default-directory))
   "Find the nearest ancestor of DIR (inclusive) containing any marker
 in `llm-project-root-markers'.  Falls back to DIR if none found.
@@ -242,19 +260,42 @@ Rules:
             (abbreviate-file-name directory))
           root)))
 
+(defun llm--claude-session-dir (dir)
+  "Return the `~/.claude/projects/<encoded>' path for DIR.
+Claude encodes a project directory by replacing each `/' and `.'
+with `-' (e.g. /home/u/.emacs.d → -home-u--emacs-d)."
+  (let ((encoded (replace-regexp-in-string
+                  "[/.]" "-"
+                  (directory-file-name (expand-file-name dir)))))
+    (expand-file-name encoded "~/.claude/projects/")))
+
+(defun llm--claude-has-session-p (dir)
+  "Return non-nil if DIR has at least one recorded claude session."
+  (let ((sdir (llm--claude-session-dir dir)))
+    (and (file-directory-p sdir)
+         (directory-files sdir nil "\\.jsonl\\'" t))))
+
 (defun llm--claude-shell-command (_root)
-  "Return the claude shell command with `-c' (continue most recent session).
-Appends `--model' when `llm-model' is set, and
-`--dangerously-skip-permissions' when `llm-dangerously-skip-permissions'
-is non-nil."
-  (let* ((base "claude -c")
+  "Return the claude shell command.
+Uses `claude -c' (continue most recent session) when the current
+directory has a recorded session, otherwise plain `claude'.
+Appends `--model' when `llm-model' is set, `--effort' when `llm-effort'
+is set, and `--dangerously-skip-permissions' when
+`llm-dangerously-skip-permissions' is non-nil."
+  (let* ((base (if (llm--claude-has-session-p default-directory)
+                   "claude -c"
+                 "claude"))
          (with-model (if llm-model
                          (concat base " --model "
                                  (shell-quote-argument llm-model))
-                       base)))
+                       base))
+         (with-effort (if llm-effort
+                          (concat with-model " --effort "
+                                  (shell-quote-argument llm-effort))
+                        with-model)))
     (if llm-dangerously-skip-permissions
-        (concat with-model " --dangerously-skip-permissions")
-      with-model)))
+        (concat with-effort " --dangerously-skip-permissions")
+      with-effort)))
 
 ;;;###autoload
 (defun llm (&optional user-root)
@@ -1607,6 +1648,20 @@ Source-file comment is left untouched — remove it manually if desired."
   "Return `llm-model-choices' (transient `:choices' wants a function)."
   llm-model-choices)
 
+(defun llm--menu-effort ()
+  "Return the menu's `-e' value as an effort string, or nil if not set.
+\"default\" is treated as nil so that no `--effort' flag is passed."
+  (let ((val (cl-some (lambda (a)
+                        (and (stringp a)
+                             (string-prefix-p "--effort=" a)
+                             (substring a (length "--effort="))))
+                      (transient-args 'llm-menu))))
+    (if (equal val "default") nil val)))
+
+(defun llm--effort-choices ()
+  "Return `llm-effort-choices' (transient `:choices' wants a function)."
+  llm-effort-choices)
+
 ;;;###autoload
 (defun llm-set-default-model (model)
   "Set MODEL as the default for new claude sessions and persist it.
@@ -1650,6 +1705,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
   (let ((llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
         (llm-model (or (llm--menu-model) llm-model))
+        (llm-effort (or (llm--menu-effort) llm-effort))
         (root (when (llm--menu-use-cwd-p) default-directory))
         (current-prefix-arg nil))
     (llm root)))
@@ -1658,6 +1714,10 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
   "Description for the model switch showing the current default."
   (format "Model [%s]" (or llm-model "default")))
 
+(defun llm--menu-effort-description ()
+  "Description for the effort switch showing the current default."
+  (format "Effort [%s]" (or llm-effort "default")))
+
 (transient-define-prefix llm-menu ()
   "Claude CLI commands."
   ["Options"
@@ -1665,7 +1725,9 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
    ("-c" "Use current directory (not project root)"     "-c")
    ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")
    ("-m" llm--menu-model-description                    "--model="
-    :choices llm--model-choices)]
+    :choices llm--model-choices)
+   ("-e" llm--menu-effort-description                   "--effort="
+    :choices llm--effort-choices)]
   [["Session"
     ("c" llm--menu-open-claude)
     ("v" "Vterm in project"       llm-vterm-here)
