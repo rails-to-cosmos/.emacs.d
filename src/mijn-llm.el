@@ -16,23 +16,6 @@
 (use-package vterm
   :ensure t)
 
-;;; Migration: uninstall the old display-corrupting vterm modifications
-;; Earlier versions advised `vterm--filter' / `vterm--sentinel' and injected a
-;; status indicator into `mode-line-misc-info'.  Saving/restoring window-start
-;; and point around vterm's own per-chunk redraw corrupted the display for
-;; full-screen TUIs (interactive `claude').  Uninstall anything a prior load
-;; left attached so re-evaluating this file in a running session is safe.
-;; Transitional — safe to delete after one clean Emacs restart.
-(dolist (a '((vterm--filter   . llm--filter-advice)
-             (vterm--sentinel . llm--sentinel-advice)))
-  (when (advice-member-p (cdr a) (car a))
-    (advice-remove (car a) (cdr a))))
-(cancel-function-timers 'llm--detect-status)
-(setq-default mode-line-misc-info
-              (cl-remove '(:eval (llm--mode-line-status))
-                         (default-value 'mode-line-misc-info)
-                         :test #'equal))
-
 ;;; Customization
 
 (defgroup llm nil
