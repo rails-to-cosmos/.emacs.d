@@ -5,23 +5,33 @@
 (require 'project)
 (require 'transient)
 (require 'ansi-color)
+(require 'vterm)
 
-(defvar vterm-shell)
-(defvar vterm--process)
-(defvar llm--prompt-queue)
-
-(declare-function vterm "vterm")
-(declare-function vterm-insert "vterm")
-(declare-function vterm-send-return "vterm")
-(declare-function vterm-other-window "vterm")
-(declare-function vterm-copy-mode "vterm" (&optional arg))
 (defvar vterm-copy-mode)
 (defvar vterm-mode-map)
 (defvar vterm-copy-mode-hook)
+(defvar vterm--process)
 (declare-function face-remap-remove-relative "face-remap")
 
 (use-package vterm
   :ensure t)
+
+;;; Migration: uninstall the old display-corrupting vterm modifications
+;; Earlier versions advised `vterm--filter' / `vterm--sentinel' and injected a
+;; status indicator into `mode-line-misc-info'.  Saving/restoring window-start
+;; and point around vterm's own per-chunk redraw corrupted the display for
+;; full-screen TUIs (interactive `claude').  Uninstall anything a prior load
+;; left attached so re-evaluating this file in a running session is safe.
+;; Transitional — safe to delete after one clean Emacs restart.
+(dolist (a '((vterm--filter   . llm--filter-advice)
+             (vterm--sentinel . llm--sentinel-advice)))
+  (when (advice-member-p (cdr a) (car a))
+    (advice-remove (car a) (cdr a))))
+(cancel-function-timers 'llm--detect-status)
+(setq-default mode-line-misc-info
+              (cl-remove '(:eval (llm--mode-line-status))
+                         (default-value 'mode-line-misc-info)
+                         :test #'equal))
 
 ;;; Customization
 
@@ -126,12 +136,12 @@ visible buffer so the composition area stays clean.")
 (defcustom llm-persistence-strategy 'project
   "Where to store prompt history and annotations.
 
-- `project': per-project, inside the repo at `.project/'.
+- `project': per-project, inside the repo at `.llm/'.
   Committable across machines; `.gitignore' auto-appended to avoid
   dirtying `git status'.
 - `user': per-user, per-machine, at `~/.cache/mijn-llm/<repo-id>/'.
   Never touches the repo; each checkout starts empty."
-  :type '(choice (const :tag "Per-project (.project/ in repo)" project)
+  :type '(choice (const :tag "Per-project (.llm/ in repo)" project)
                  (const :tag "Per-user (~/.cache/mijn-llm/)"    user))
   :group 'llm)
 
@@ -161,22 +171,16 @@ SUBPATH is relative (e.g. \"prompts\" or \"fixme.el\")."
       (expand-file-name (llm--project-cache-subdir root)
                         llm-user-cache-dir)))
     (_
-     (expand-file-name (concat ".project/" subpath) root))))
-
-(defun llm--legacy-project-path (root subpath)
-  "Return the `.project/SUBPATH' path under ROOT.
-Used as a read-side fallback when `llm-persistence-strategy' is `user'
-so existing in-repo annotations remain visible after switching."
-  (expand-file-name (concat ".project/" subpath) root))
+     (expand-file-name (concat ".llm/" subpath) root))))
 
 ;;; Claude vterm buffer management
 
 (defvar llm--buffers (make-hash-table :test 'eq)
-  "Hash table mapping claude vterm buffers to their status.")
+  "Registry of live claude vterm buffers (used as a set; keys only).")
 
 (defun llm--register-buffer (buf)
-  "Register BUF as a claude buffer with initial status nil."
-  (puthash buf nil llm--buffers))
+  "Register BUF as a claude buffer."
+  (puthash buf t llm--buffers))
 
 (defun llm--unregister-buffer (buf)
   "Unregister BUF from the claude buffer registry."
@@ -186,78 +190,13 @@ so existing in-repo annotations remain visible after switching."
   "Return a list of all live claude buffers."
   (cl-remove-if-not #'buffer-live-p (hash-table-keys llm--buffers)))
 
-;;; Status Detection Patterns and Logic
-
-(defvar llm--permission-pattern
-  (rx (or "Do you want to proceed"
-          "❯ 1. Yes"
-          "❯ 2. Yes"
-          "[y/N]"
-          "[Y/n]"
-          (seq "(y" (0+ space) "/" (0+ space) "n)")
-          (seq "(Y" (0+ space) "/" (0+ space) "n)")))
-  "Regex matching Claude CLI permission prompts (→ blocked).
-Anchored on distinctive UI markers rather than generic words like
-\"allow\" or \"yes\" so it doesn't false-positive on prose.")
-
-(defvar llm--busy-pattern
-  "esc to interrupt"
-  "Regex to detect when Claude is actively working (→ busy).")
-
-(defvar llm--user-input-pattern
-  "^[^[:space:]].*[%$>#λ]\\s*$"
-  "Regex to detect shell prompts and user input areas (ignored for status).")
-
-(defun llm--status-from-output (input current-status)
-  "Determine new status based on vterm INPUT chunk and CURRENT-STATUS.
-Rules (in order):
-1. INPUT matches permission pattern → \\='blocked
-2. INPUT matches busy pattern → \\='busy
-3. INPUT is not a shell prompt and current isn't already busy → \\='busy
-4. Otherwise → keep CURRENT-STATUS."
-  (cond
-   ((string-match-p llm--permission-pattern input) 'blocked)
-   ((string-match-p llm--busy-pattern input) 'busy)
-   ((not (string-match-p llm--user-input-pattern input))
-    (unless (eq current-status 'busy) 'busy))
-   (t current-status)))
-
-(defconst llm--terminal-tail-bytes 4096
-  "Bytes of trailing vterm content to scan for status detection.
-Enough to cover any realistic permission prompt while keeping
-regex time O(1) regardless of session length.")
-
-(defun llm--last-terminal-line (buf)
-  "Return the last non-empty line from the vterm terminal in BUF."
-  (with-current-buffer buf
-    (let* ((end (point-max))
-           (beg (max (point-min) (- end llm--terminal-tail-bytes)))
-           (content (buffer-substring-no-properties beg end)))
-      (if (string-match "\\([^\n\r\t ][^\n]*\\)[\n\r\t ]*\\'" content)
-          (match-string 1 content)
-        ""))))
-
-(defun llm--status-from-process (buf)
-  "Determine new status for BUF based on process state and terminal content.
-Rules:
-1. If process is dead → \\='exited
-2. If terminal still shows a permission prompt → \\='blocked
-3. Otherwise → \\='idle"
-  (let* ((proc vterm--process)
-         (alive (and proc (process-live-p proc))))
-    (cond ((not alive) 'exited)
-          ((string-match-p llm--permission-pattern
-                           (llm--last-terminal-line buf))
-           'blocked)
-          (t 'idle))))
-
 (defun llm--project-label (directory)
-  "Return (LABEL . ROOT) for the current project or directory."
-  (let* ((proj (project-current nil directory))
-         (root (when proj (project-root proj))))
-    (cons (if root
-              (file-name-nondirectory (directory-file-name root))
-            (abbreviate-file-name directory))
+  "Return (LABEL . ROOT) for DIRECTORY.
+ROOT comes from `llm--project-root' — the single source of truth for
+project roots in this package — and is never nil; LABEL is its final
+path component."
+  (let ((root (llm--project-root directory)))
+    (cons (file-name-nondirectory (directory-file-name root))
           root)))
 
 (defun llm--claude-session-dir (dir)
@@ -353,149 +292,24 @@ With prefix: always create a new vterm buffer."
             (switch-to-buffer (car vterm-bufs))
           (vterm base))))))
 
-;;; Claude vterm status indicator
-
-(defvar-local llm--status-timer nil
-  "Debounce timer for status detection in claude vterm buffers.")
-
-(defface llm-status-idle-face
-  '((t :foreground "green3"))
-  "Face for claude status when idle/waiting for user input.")
-
-(defface llm-status-busy-face
-  '((t :foreground "dark orange"))
-  "Face for claude status when thinking/working.")
-
-(defface llm-status-blocked-face
-  '((t :foreground "red"))
-  "Face for claude status when waiting for user approval.")
-
-(defface llm-status-exited-face
-  '((t :foreground "gray50"))
-  "Face for claude status when process has exited.")
+;;; Claude vterm buffer predicate
 
 (defun llm-buffer-p (&optional buf)
   "Return non-nil if BUF (default: current buffer) is a claude vterm buffer."
   (string-prefix-p "*claude:" (buffer-name (or buf (current-buffer)))))
 
-(defun llm--detect-status (buf)
-  "Update the status for BUF based on process state.
-Uses `llm--status-from-process' to determine new status.
-Only triggers a mode-line redraw when the status actually changes.
-Drains the prompt queue on transitions to idle/busy."
-  (when (buffer-live-p buf)
-    (with-current-buffer buf
-      (let ((old-status (gethash buf llm--buffers))
-            (new-status (llm--status-from-process buf)))
-        (unless (eq old-status new-status)
-          (puthash buf new-status llm--buffers)
-          (force-mode-line-update)
-          (when (and llm--prompt-queue
-                     (memq new-status '(idle busy)))
-            (llm--drain-queue)))))))
-
-(defun llm--schedule-status-check ()
-  "Schedule a debounced status check for the current claude buffer."
-  (when (timerp llm--status-timer)
-    (cancel-timer llm--status-timer))
-  (setq llm--status-timer
-        (run-with-timer 0.5 nil #'llm--detect-status (current-buffer))))
-
-(defun llm--save-window-state (buf)
-  "Return an alist of (WINDOW . (POINT . START)) for all windows showing BUF
-where the user has scrolled away from the end."
-  (cl-loop for win in (get-buffer-window-list buf nil t)
-           for pt = (window-point win)
-           for ws = (window-start win)
-           when (< pt (with-current-buffer buf (1- (point-max))))
-           collect (list win pt ws)))
-
-(defun llm--restore-window-state (saved)
-  "Restore point and window-start for windows in SAVED."
-  (dolist (entry saved)
-    (pcase-let ((`(,win ,pt ,ws) entry))
-      (when (window-live-p win)
-        (set-window-start win ws t)
-        (set-window-point win pt)))))
-
-(defun llm--filter-advice (orig-fn process input)
-  "After vterm processes output, update buffer status.
-Preserves scroll position in claude windows where the user has
-scrolled away from the end."
-  (let* ((buf (process-buffer process))
-         (is-llm (and buf (buffer-live-p buf)
-                      (with-current-buffer buf (llm-buffer-p))))
-         (saved (when is-llm (llm--save-window-state buf))))
-    (funcall orig-fn process input)
-    (when is-llm
-      (llm--restore-window-state saved)
-      (with-current-buffer buf
-        (let* ((old-status (gethash buf llm--buffers))
-               (new-status (llm--status-from-output input old-status)))
-          (when (and new-status (not (eq old-status new-status)))
-            (puthash buf new-status llm--buffers)
-            (force-mode-line-update)
-            (when (and llm--prompt-queue
-                       (memq new-status '(idle busy)))
-              (llm--drain-queue)))
-          (llm--schedule-status-check))))))
-
-(advice-add 'vterm--filter :around #'llm--filter-advice)
-
-(defun llm--sentinel-advice (orig-fn process event)
-  "Update claude status when the vterm process exits."
-  (funcall orig-fn process event)
-  (when (and (string-match-p "\\`\\(finished\\|exited\\|signal\\)" event)
-             (not (process-live-p process)))
-    (when-let ((buf (process-buffer process)))
-      (when (buffer-live-p buf)
-        (with-current-buffer buf
-          (when (llm-buffer-p)
-            (when (timerp llm--status-timer)
-              (cancel-timer llm--status-timer)
-              (setq llm--status-timer nil))
-            (puthash (current-buffer) 'exited llm--buffers)
-            (force-mode-line-update)))))))
-
-(advice-add 'vterm--sentinel :around #'llm--sentinel-advice)
-
-(defun llm--mode-line-status ()
-  "Return a mode-line string showing the current claude buffer status.
-Returns empty string for non-llm buffers."
-  (if (not (llm-buffer-p))
-      ""
-    (let ((status (gethash (current-buffer) llm--buffers)))
-      (pcase status
-        ('idle    (propertize " ● idle" 'face 'llm-status-idle-face))
-        ('busy    (propertize " ◉ busy" 'face 'llm-status-busy-face))
-        ('blocked (propertize " ⊘ blocked" 'face 'llm-status-blocked-face))
-        ('exited  (propertize " ○ exited" 'face 'llm-status-exited-face))
-        (_        (propertize " ● idle" 'face 'llm-status-idle-face))))))
-
-;; Clean up stale timers and unregister dead buffers on re-eval.
+;; Unregister dead buffers on re-eval.
 (when (hash-table-p llm--buffers)
   (maphash (lambda (buf _status)
              (unless (buffer-live-p buf)
                (remhash buf llm--buffers)))
            llm--buffers))
-(dolist (buf (buffer-list))
-  (with-current-buffer buf
-    (when (and (bound-and-true-p llm--status-timer)
-               (timerp llm--status-timer))
-      (cancel-timer llm--status-timer)
-      (setq llm--status-timer nil))))
 
 (defun llm--cleanup-buffer ()
   "Unregister the current buffer from the claude buffer list."
   (llm--unregister-buffer (current-buffer)))
 
 (add-hook 'kill-buffer-hook #'llm--cleanup-buffer)
-
-(let ((entry '(:eval (llm--mode-line-status))))
-  (setq-default mode-line-misc-info
-                (cons entry
-                      (cl-remove entry (default-value 'mode-line-misc-info)
-                                 :test #'equal))))
 
 ;;; Prompt Mode
 
@@ -507,10 +321,8 @@ Offers project-relative file paths when the point follows `@'."
       (when (re-search-backward "@\\([^ \t\n]*\\)" (line-beginning-position) t)
         (let* ((at-start (match-beginning 0))
                (start    (1+ at-start))
-               (prefix   (buffer-substring-no-properties start end))
                (root     (or llm--prompt-project-root (llm--current-root))))
-          (when (and root (eq (char-before (1+ at-start)) ?@))
-            (ignore prefix)
+          (when root
             (list start end
                   (completion-table-dynamic
                    (lambda (_)
@@ -532,33 +344,8 @@ Offers project-relative file paths when the point follows `@'."
 
 ;;; Interactive Commands
 
-(defvar llm--prompt-queue nil
-  "LIFO queue of (BUFFER . PROMPT) entries waiting to be sent when claude is idle.")
-
-(defun llm--drain-queue ()
-  "Flush the next prompt from `llm--prompt-queue' if its buffer is ready.
-Called from status transitions in `llm--filter-advice' /
-`llm--detect-status'; does nothing if the target is busy/blocked."
-  (while-let ((entry (car (last llm--prompt-queue)))
-              (buf (car entry))
-              ((not (buffer-live-p buf))))
-    (setq llm--prompt-queue (butlast llm--prompt-queue)))
-  (when-let ((entry (car (last llm--prompt-queue))))
-    (let ((buf (car entry))
-          (prompt (cdr entry)))
-      (with-current-buffer buf
-        (when (memq (gethash buf llm--buffers) '(idle busy))
-          (setq llm--prompt-queue (butlast llm--prompt-queue))
-          (vterm-insert prompt)
-          (vterm-send-return)
-          (let ((remaining (length llm--prompt-queue)))
-            (if (zerop remaining)
-                (message "Queued prompt sent to %s" (buffer-name buf))
-              (message "Queued prompt sent to %s (%d still pending)"
-                       (buffer-name buf) remaining))))))))
-
 (defun llm--ensure-ignored (root)
-  "Append `.project/' to ROOT's .gitignore if missing.
+  "Append `.llm/' to ROOT's .gitignore if missing.
 No-op unless `llm-persistence-strategy' is `project' and ROOT is a git repo."
   (when (and (eq llm-persistence-strategy 'project)
              root
@@ -571,14 +358,14 @@ No-op unless `llm-persistence-strategy' is `project' and ROOT is a git repo."
       (unless (and existing
                    (string-match-p (rx line-start
                                        (? "/")
-                                       ".project/"
+                                       ".llm/"
                                        (? line-end))
                                    existing))
         (with-temp-buffer
           (when existing (insert existing))
           (unless (or (null existing) (string-suffix-p "\n" existing))
             (insert "\n"))
-          (insert ".project/\n")
+          (insert ".llm/\n")
           (write-region (point-min) (point-max) gitignore))))))
 
 (defun llm--save-prompt (prompt root)
@@ -594,18 +381,11 @@ No-op unless `llm-persistence-strategy' is `project' and ROOT is a git repo."
 
 (defun llm--send-to-claude (prompt &optional root)
   "Switch to the claude vterm buffer and insert PROMPT.
-If ROOT is provided, switch to the claude buffer for that project root.
-If the session is busy or blocked, queue the prompt and insert it
-once the session becomes idle."
+If ROOT is provided, switch to the claude buffer for that project root."
   (llm--save-prompt prompt root)
   (llm root)
-  (let ((status (gethash (current-buffer) llm--buffers)))
-    (if (memq status '(nil idle busy))
-        (progn (vterm-insert prompt)
-               (vterm-send-return))
-      (push (cons (current-buffer) prompt) llm--prompt-queue)
-      (message "Claude is %s — prompt queued (%d pending), will send when idle"
-               status (length llm--prompt-queue)))))
+  (vterm-insert prompt)
+  (vterm-send-return))
 
 (defun llm--write-context-file (text)
   "Write TEXT to a temporary file and return its path."
@@ -637,16 +417,6 @@ once the session becomes idle."
 (defcustom llm-prompt-frame-size '(80 . 14)
   "Target (COLS . ROWS) of the prompt child frame."
   :type '(cons integer integer)
-  :group 'llm)
-
-(defcustom llm-prompt-bubble-steps 8
-  "Number of animation frames from point to full prompt size."
-  :type 'integer
-  :group 'llm)
-
-(defcustom llm-prompt-bubble-interval 0.018
-  "Seconds between animation steps."
-  :type 'number
   :group 'llm)
 
 (defvar llm-prompt-frame-parameters
@@ -689,13 +459,14 @@ once the session becomes idle."
       (setq llm--prompt-face-cookie
             (face-remap-add-relative 'default 'llm-prompt-frame-face)))))
 
-(defun llm--prompt-make-frame (buf anchor)
-  "Create the prompt child frame showing BUF, anchored at ANCHOR (X . Y) pixels."
+(defun llm--prompt-make-frame (buf anchor size)
+  "Create the prompt child frame showing BUF at ANCHOR (X . Y) pixels.
+SIZE is a (COLS . ROWS) cons giving the frame's dimensions."
   (let* ((parent (selected-frame))
          (params (append `((parent-frame . ,parent)
                            (left . ,(car anchor))
                            (top  . ,(cdr anchor))
-                           (width . 1) (height . 1))
+                           (width . ,(car size)) (height . ,(cdr size)))
                          llm-prompt-frame-parameters))
          (frame (make-frame params))
          (win (frame-selected-window frame)))
@@ -706,32 +477,24 @@ once the session becomes idle."
     (make-frame-visible frame)
     frame))
 
-(defun llm--animate-prompt-frame (frame target-w target-h)
-  "Grow FRAME from 1x1 to TARGET-W x TARGET-H over `llm-prompt-bubble-steps'."
-  (let* ((i 0) (steps llm-prompt-bubble-steps) timer)
-    (setq timer
-          (run-with-timer
-           0 llm-prompt-bubble-interval
-           (lambda ()
-             (cl-incf i)
-             (cond
-              ((not (frame-live-p frame))
-               (cancel-timer timer))
-              ((>= i steps)
-               (set-frame-size frame target-w target-h)
-               (select-frame-set-input-focus frame)
-               (cancel-timer timer))
-              (t
-               (let ((k (/ (float i) steps)))
-                 (set-frame-size frame
-                                 (max 1 (round (* target-w k)))
-                                 (max 1 (round (* target-h k))))))))))))
-
 (defun llm--close-prompt-frame ()
   "Delete the prompt child frame if it's live."
   (when (and llm--prompt-frame (frame-live-p llm--prompt-frame))
     (delete-frame llm--prompt-frame t))
   (setq llm--prompt-frame nil))
+
+(defun llm--present-prompt-buffer (buf size)
+  "Show BUF in a child frame sized SIZE (a (COLS . ROWS) cons).
+Closes any existing prompt frame first and focuses the new one.  On a
+TTY (no GUI), pops to BUF in a window instead.  This is the single
+presentation path shared by `llm-prompt', `llm--open-prompt-in-bubble',
+and `llm-describe-at-point'."
+  (llm--close-prompt-frame)
+  (if (display-graphic-p)
+      (let ((frame (llm--prompt-make-frame buf (llm--prompt-anchor-xy) size)))
+        (setq llm--prompt-frame frame)
+        (select-frame-set-input-focus frame))
+    (pop-to-buffer buf)))
 
 ;;; Bubble (inline-response) mode
 
@@ -823,17 +586,24 @@ doesn't retroactively change the session's permission posture.")
                    (llm--bubble-thinking-string llm--bubble-thinking-tick)))))
 
 (defun llm--bubble-start-thinking (buf)
-  "Begin the `thinking' animation in BUF at current `point-max'."
+  "Begin the `thinking' animation in BUF at current `point-max'.
+The timer cancels itself if BUF is killed, so a promoted/closed bubble
+can never strand a repeating timer on a dead buffer."
   (with-current-buffer buf
     (llm--bubble-stop-thinking buf)
     (let* ((pos (point-max))
-           (ov  (make-overlay pos pos buf t nil)))
+           (ov  (make-overlay pos pos buf t nil))
+           timer)
       (overlay-put ov 'after-string (llm--bubble-thinking-string 0))
       (setq-local llm--bubble-thinking-overlay ov)
       (setq-local llm--bubble-thinking-tick 0)
-      (setq-local llm--bubble-thinking-timer
-                  (run-with-timer 0.4 0.4
-                                  #'llm--bubble-thinking-tick-fn buf)))))
+      (setq timer (run-with-timer
+                   0.4 0.4
+                   (lambda ()
+                     (if (buffer-live-p buf)
+                         (llm--bubble-thinking-tick-fn buf)
+                       (cancel-timer timer)))))
+      (setq-local llm--bubble-thinking-timer timer))))
 
 (defun llm--bubble-stop-thinking (buf)
   "Cancel BUF's thinking animation and remove its indicator."
@@ -1055,7 +825,7 @@ Otherwise close the bubble and kill its buffer."
       (goto-char (point-max))
       (insert "\n\n[cancelled]\n"))
     (setq header-line-format
-          (propertize " Claude bubble  (cancelled — q close)"
+          (propertize " Claude bubble  (cancelled — C-c C-k close)"
                       'face 'llm-bubble-header-face)))
    (t
     (let ((buf (current-buffer)))
@@ -1077,9 +847,7 @@ Nothing is saved to prompt history and the main claude vterm is
 untouched."
   (interactive "P")
   (let* ((bubble (consp arg))
-         (proj (project-current nil default-directory))
-         (root (when proj (project-root proj)))
-         (root (or root (llm--project-root default-directory)))
+         (root (llm--project-root default-directory))
          (file-name (buffer-file-name))
          (prefix (unless bubble
                    (cond
@@ -1116,14 +884,8 @@ untouched."
               (propertize
                " Claude  C-c C-c send · C-c C-k close · C-c C-m →claude"
                'face 'llm-bubble-header-face))))
-    (llm--close-prompt-frame)
-    (if (display-graphic-p)
-        (let* ((size (if bubble llm-bubble-frame-size llm-prompt-frame-size))
-               (anchor (llm--prompt-anchor-xy))
-               (frame (llm--prompt-make-frame buf anchor)))
-          (setq llm--prompt-frame frame)
-          (llm--animate-prompt-frame frame (car size) (cdr size)))
-      (pop-to-buffer buf))))
+    (llm--present-prompt-buffer
+     buf (if bubble llm-bubble-frame-size llm-prompt-frame-size))))
 
 ;;; Prompt History
 
@@ -1152,15 +914,7 @@ Honors `llm-persistence-strategy'."
       (erase-buffer)
       (insert text)
       (setq-local llm--prompt-project-root root))
-    (llm--close-prompt-frame)
-    (if (display-graphic-p)
-        (let* ((anchor (llm--prompt-anchor-xy))
-               (frame (llm--prompt-make-frame buf anchor)))
-          (setq llm--prompt-frame frame)
-          (llm--animate-prompt-frame frame
-                                     (car llm-prompt-frame-size)
-                                     (cdr llm-prompt-frame-size)))
-      (pop-to-buffer buf))))
+    (llm--present-prompt-buffer buf llm-prompt-frame-size)))
 
 ;;;###autoload
 (defun llm-prompt-history ()
@@ -1280,18 +1034,13 @@ where the timer fires but nothing actually changed on disk)."
 
 ;;;###autoload
 (defun llm-switch-buffer ()
-  "Switch between claude buffers, showing status in the menu."
+  "Switch to another claude buffer."
   (interactive)
   (let ((bufs (llm--get-buffers)))
     (unless bufs
       (user-error "No claude buffers"))
     (let ((entries (cl-loop for buffer in bufs
-                            collect (let ((name (buffer-name buffer))
-                                          (status (gethash buffer llm--buffers)))
-                                      (cons (if status
-                                                (format "%s [%s]" name status)
-                                              name)
-                                            buffer)))))
+                            collect (cons (buffer-name buffer) buffer))))
       (let* ((choice (completing-read "Claude buffer: "
                                       (mapcar #'car entries)
                                       nil t))
@@ -1347,25 +1096,13 @@ Each entry is a plist (:file :line :text :time).")
 Honors `llm-persistence-strategy'."
   (llm--persistence-dir root (format "%s.el" (downcase kind))))
 
-(defun llm--annotation-file-for-read (root kind)
-  "Like `llm--annotation-file', but falls back to the legacy `.project/' path
-if the primary path doesn't exist. Lets existing in-repo annotations stay
-visible after the user switches `llm-persistence-strategy' to `user'."
-  (let ((primary (llm--annotation-file root kind))
-        (legacy  (llm--legacy-project-path root (format "%s.el" (downcase kind)))))
-    (if (file-readable-p primary)
-        primary
-      (if (file-readable-p legacy) legacy primary))))
-
 (defun llm--annotation-key (root kind)
   "Return the hash key for ROOT and KIND."
   (cons root kind))
 
 (defun llm--annotation-load (root kind)
-  "Load annotations of KIND for ROOT from disk.
-Reads from `llm--annotation-file-for-read' so legacy `.project/' data
-stays visible after switching `llm-persistence-strategy' to `user'."
-  (let ((file (llm--annotation-file-for-read root kind)))
+  "Load annotations of KIND for ROOT from disk."
+  (let ((file (llm--annotation-file root kind)))
     (puthash (llm--annotation-key root kind)
              (when (file-readable-p file)
                (with-temp-buffer
@@ -1383,13 +1120,15 @@ stays visible after switching `llm-persistence-strategy' to `user'."
       (pp entries (current-buffer)))))
 
 (defun llm--annotation-alive-p (entry kind)
-  "Return non-nil if ENTRY's KIND comment still exists in the file."
+  "Return non-nil if ENTRY's KIND comment still exists in the file.
+The needle matches the `KIND(llm): ' prefix produced by
+`llm--annotation-comment', not a bare `KIND: '."
   (let ((file (plist-get entry :file))
         (text (plist-get entry :text)))
     (and (file-readable-p file)
          (with-temp-buffer
            (insert-file-contents file)
-           (let ((needle (concat kind ": " (car (split-string text "\n")))))
+           (let ((needle (concat kind "(llm): " (car (split-string text "\n")))))
              (search-forward needle nil t))))))
 
 (defun llm--annotation-entries (root kind)
@@ -1580,41 +1319,28 @@ Source-file comment is left untouched — remove it manually if desired."
       (llm--send-to-claude
        (format "Resolve the following %ss in this project:\n\n%s" kind prompt)))))
 
-;;;###autoload
-(defun llm-add-fixme ()
-  "Add a FIXME annotation at point."
-  (interactive)
-  (llm--add-annotation "FIXME"))
+;; The per-kind annotation commands (add/list/send for FIXME and TODO) are
+;; generated from the generic helpers, so the three operations stay in sync
+;; across kinds instead of being six hand-maintained wrappers.
+(defmacro llm--define-annotation-commands (kind)
+  "Define `llm-add/list/send' commands for annotation KIND (a string)."
+  (let ((lc (downcase kind)))
+    `(progn
+       (defun ,(intern (format "llm-add-%s" lc)) ()
+         ,(format "Add a %s annotation at point." kind)
+         (interactive)
+         (llm--add-annotation ,kind))
+       (defun ,(intern (format "llm-list-%ss" lc)) ()
+         ,(format "List all %ss for the current project." kind)
+         (interactive)
+         (llm--list-annotations ,kind))
+       (defun ,(intern (format "llm-send-%ss" lc)) ()
+         ,(format "Send all %ss to Claude." kind)
+         (interactive)
+         (llm--send-annotations ,kind)))))
 
-;;;###autoload
-(defun llm-add-todo ()
-  "Add a TODO annotation at point."
-  (interactive)
-  (llm--add-annotation "TODO"))
-
-;;;###autoload
-(defun llm-list-fixmes ()
-  "List all FIXMEs for the current project."
-  (interactive)
-  (llm--list-annotations "FIXME"))
-
-;;;###autoload
-(defun llm-list-todos ()
-  "List all TODOs for the current project."
-  (interactive)
-  (llm--list-annotations "TODO"))
-
-;;;###autoload
-(defun llm-send-fixmes ()
-  "Send all FIXMEs to Claude."
-  (interactive)
-  (llm--send-annotations "FIXME"))
-
-;;;###autoload
-(defun llm-send-todos ()
-  "Send all TODOs to Claude."
-  (interactive)
-  (llm--send-annotations "TODO"))
+(llm--define-annotation-commands "FIXME")
+(llm--define-annotation-commands "TODO")
 
 ;;;###autoload
 (defun llm-grep-annotations ()
@@ -1634,33 +1360,15 @@ Source-file comment is left untouched — remove it manually if desired."
   "Return non-nil if the menu's `-c' switch is active."
   (member "-c" (transient-args 'llm-menu)))
 
-(defun llm--menu-model ()
-  "Return the menu's `-m' value as a model string, or nil if not set.
-\"default\" is treated as nil so that no `--model' flag is passed."
+(defun llm--menu-flag (prefix)
+  "Return the menu argument value for PREFIX (e.g. \"--model=\"), or nil.
+\"default\" is treated as nil so that no flag is passed."
   (let ((val (cl-some (lambda (a)
                         (and (stringp a)
-                             (string-prefix-p "--model=" a)
-                             (substring a (length "--model="))))
+                             (string-prefix-p prefix a)
+                             (substring a (length prefix))))
                       (transient-args 'llm-menu))))
     (if (equal val "default") nil val)))
-
-(defun llm--model-choices ()
-  "Return `llm-model-choices' (transient `:choices' wants a function)."
-  llm-model-choices)
-
-(defun llm--menu-effort ()
-  "Return the menu's `-e' value as an effort string, or nil if not set.
-\"default\" is treated as nil so that no `--effort' flag is passed."
-  (let ((val (cl-some (lambda (a)
-                        (and (stringp a)
-                             (string-prefix-p "--effort=" a)
-                             (substring a (length "--effort="))))
-                      (transient-args 'llm-menu))))
-    (if (equal val "default") nil val)))
-
-(defun llm--effort-choices ()
-  "Return `llm-effort-choices' (transient `:choices' wants a function)."
-  llm-effort-choices)
 
 ;;;###autoload
 (defun llm-set-default-model (model)
@@ -1692,7 +1400,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
            ""))
         (llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
-        (llm-model (or (llm--menu-model) llm-model))
+        (llm-model (or (llm--menu-flag "--model=") llm-model))
         (default-directory (if (llm--menu-use-cwd-p)
                                default-directory
                              (or (llm--project-root) default-directory))))
@@ -1704,8 +1412,8 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
   (interactive)
   (let ((llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
-        (llm-model (or (llm--menu-model) llm-model))
-        (llm-effort (or (llm--menu-effort) llm-effort))
+        (llm-model (or (llm--menu-flag "--model=") llm-model))
+        (llm-effort (or (llm--menu-flag "--effort=") llm-effort))
         (root (when (llm--menu-use-cwd-p) default-directory))
         (current-prefix-arg nil))
     (llm root)))
@@ -1725,9 +1433,9 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
    ("-c" "Use current directory (not project root)"     "-c")
    ("-d" "Dangerously skip permission prompts"          "--dangerously-skip-permissions")
    ("-m" llm--menu-model-description                    "--model="
-    :choices llm--model-choices)
+    :choices (lambda () llm-model-choices))
    ("-e" llm--menu-effort-description                   "--effort="
-    :choices llm--effort-choices)]
+    :choices (lambda () llm-effort-choices))]
   [["Session"
     ("c" llm--menu-open-claude)
     ("v" "Vterm in project"       llm-vterm-here)
@@ -1744,6 +1452,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
     ("F" "List FIXMEs"        llm-list-fixmes)
     ("T" "List TODOs"         llm-list-todos)
     ("S" "Send FIXMEs"        llm-send-fixmes)
+    ("D" "Send TODOs"         llm-send-todos)
     ("G" "Grep annotations"   llm-grep-annotations)]
    ["Highlights"
     ("h" "Clear revert highlights" llm-change-highlight-clear)]])
@@ -1812,16 +1521,22 @@ buffer name is used as context instead."
       (setq-local llm--bubble-session-id (llm--generate-uuid))
       (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions)
       (setq-local llm--bubble-model llm-model))
-    (llm--close-prompt-frame)
-    (if (display-graphic-p)
-        (let* ((size llm-bubble-frame-size)
-               (anchor (llm--prompt-anchor-xy))
-               (frame (llm--prompt-make-frame buf anchor)))
-          (setq llm--prompt-frame frame)
-          (llm--animate-prompt-frame frame (car size) (cdr size)))
-      (pop-to-buffer buf))
+    (llm--present-prompt-buffer buf llm-bubble-frame-size)
     (with-current-buffer buf
       (llm--bubble-spawn-turn text))))
+
+;;; Vterm display fixups
+
+(defun llm--vterm-display-fixups ()
+  "Neutralize global display settings that corrupt vterm's character grid.
+This config sets `line-spacing' globally (see `mijn-ui'); the extra
+pixels between rows break the vertical box-drawing borders of TUIs like
+interactive `claude', so it is zeroed buffer-locally here.  Symbol
+prettification (from `global-prettify-symbols-mode') has no place in a
+terminal grid and is likewise disabled."
+  (setq-local line-spacing 0)
+  (when (bound-and-true-p prettify-symbols-mode)
+    (prettify-symbols-mode -1)))
 
 ;;; Vterm copy helper (for TUIs that redraw and stomp on selections)
 
@@ -1849,6 +1564,7 @@ continuously redraw and overwrite selections.  No-op outside vterm."
   (vterm-copy-mode 1))
 
 (with-eval-after-load 'vterm
+  (add-hook 'vterm-mode-hook #'llm--vterm-display-fixups)
   (add-hook 'vterm-copy-mode-hook #'llm--vterm-copy-resume-on-exit)
   (define-key vterm-mode-map (kbd "C-c C-y") #'llm-vterm-copy))
 
