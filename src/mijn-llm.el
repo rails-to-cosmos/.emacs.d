@@ -219,6 +219,143 @@ is set, and `--dangerously-skip-permissions' when
         (concat with-effort " --dangerously-skip-permissions")
       with-effort)))
 
+;;; Show last response in a side buffer
+;;
+;; Reads the current *claude:* vterm's session JSONL (newest .jsonl in the
+;; buffer's project dir, via `llm--claude-session-dir') and renders Claude's
+;; most recent assistant turn into a plain-text buffer in another window.
+;; Nothing is written to disk.
+
+(defcustom llm-response-render-function #'llm--render-response-plain
+  "Function that renders an extracted Claude response for display.
+Called with one argument, the raw response STRING (already joined from
+the assistant turn's text blocks), in a fresh buffer that is current and
+empty.  It should insert the display text and may set the major mode.
+
+The default, `llm--render-response-plain', inserts the text verbatim in
+`fundamental-mode'.  This indirection is the single seam for future
+rendering: point it at e.g. an `llm--render-response-markdown' that turns
+on `gfm-mode'/`markdown-mode' without touching the extraction or display
+plumbing."
+  :type 'function
+  :group 'llm)
+
+(defun llm--session-file (dir)
+  "Return the newest session .jsonl for DIR, or nil if none.
+DIR is resolved to its claude project dir via `llm--claude-session-dir';
+files are ranked by modification time so the session the live claude is
+actively appending wins (session filenames are random UUIDs, so name
+order is meaningless)."
+  (let ((sdir (llm--claude-session-dir dir)))
+    (when (file-directory-p sdir)
+      (car (sort (directory-files sdir t "\\.jsonl\\'" t)
+                 (lambda (a b)
+                   (time-less-p (file-attribute-modification-time
+                                 (file-attributes b))
+                                (file-attribute-modification-time
+                                 (file-attributes a)))))))))
+
+(defun llm--session-records (file)
+  "Parse FILE (JSONL) into a list of alists, in file order.
+Lines that fail to parse as a JSON object are skipped, so a partially
+written trailing line (claude still flushing mid-write) can't error."
+  (let (records)
+    (with-temp-buffer
+      (insert-file-contents file)
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let ((line (buffer-substring-no-properties
+                     (line-beginning-position) (line-end-position))))
+          (unless (string-blank-p line)
+            (let ((obj (ignore-errors
+                         (json-parse-string line
+                                            :object-type 'alist
+                                            :array-type 'list
+                                            :null-object nil
+                                            :false-object nil))))
+              (when (and obj (listp obj)) (push obj records)))))
+        (forward-line 1)))
+    (nreverse records)))
+
+(defun llm--genuine-user-prompt-p (record)
+  "Return non-nil if RECORD is a genuine human prompt (the turn boundary).
+A genuine prompt is a type==\"user\" line whose `message.content' is a
+STRING (not an array), and which is NOT a tool result, meta/command
+expansion, compact summary, or sidechain.  This string-only test is what
+correctly skips the array-content lines that masquerade as user turns:
+tool_result entries (content is a `tool_result' array), isMeta skill /
+command expansions, and synthetic \"[Request interrupted by user]\"
+markers — all of which can otherwise be mistaken for the boundary and
+truncate the latest turn."
+  (and (equal (alist-get 'type record) "user")
+       (stringp (alist-get 'content (alist-get 'message record)))
+       (not (assq 'toolUseResult record))
+       (not (eq t (alist-get 'isMeta record)))
+       (not (eq t (alist-get 'isCompactSummary record)))
+       (not (eq t (alist-get 'isSidechain record)))))
+
+(defun llm--extract-last-response (records)
+  "Return Claude's latest assistant response text from RECORDS, or nil.
+The latest turn is every assistant `text' block appearing after the last
+genuine human prompt; blocks are joined with blank lines.  `thinking' and
+`tool_use' blocks, sidechain assistant lines, and API-error lines are
+intentionally dropped — this is the prose reply."
+  (let* ((boundary (or (cl-position-if #'llm--genuine-user-prompt-p records
+                                       :from-end t)
+                       -1))
+         (tail (nthcdr (1+ boundary) records))
+         texts)
+    (dolist (rec tail)
+      (when (and (equal (alist-get 'type rec) "assistant")
+                 (not (eq t (alist-get 'isSidechain rec)))
+                 (not (eq t (alist-get 'isApiErrorMessage rec))))
+        (let ((content (alist-get 'content (alist-get 'message rec))))
+          (when (listp content)
+            (dolist (blk content)
+              (when (equal (alist-get 'type blk) "text")
+                (let ((txt (alist-get 'text blk)))
+                  (when (and (stringp txt) (not (string-blank-p txt)))
+                    (push txt texts)))))))))
+    (when texts
+      (string-trim (string-join (nreverse texts) "\n\n")))))
+
+(defun llm--render-response-plain (text)
+  "Default renderer: insert TEXT verbatim as plain text.
+Current buffer is fresh and current; leaves it in `fundamental-mode'."
+  (fundamental-mode)
+  (insert text))
+
+;;;###autoload
+(defun llm-show-last-response ()
+  "Show the current claude session's latest response in another window.
+Must be invoked from a `*claude:PROJECT*' vterm.  Locates that buffer's
+session JSONL (newest .jsonl under its project dir) without writing
+anything to disk, extracts the most recent assistant turn, and renders it
+via `llm-response-render-function' into a reused `*claude-response:LABEL*'
+buffer shown in another window, with point at the top."
+  (interactive)
+  (unless (llm-buffer-p)
+    (user-error "Not a claude buffer"))
+  (let* ((dir   default-directory)
+         (label (car (llm--project-label dir)))
+         (file  (llm--session-file dir)))
+    (unless file
+      (user-error "No claude session found for %s" label))
+    (let ((response (llm--extract-last-response (llm--session-records file))))
+      (unless response
+        (user-error "No assistant response found in latest turn"))
+      (let ((buf (get-buffer-create (format "*claude-response:%s*" label))))
+        (with-current-buffer buf
+          (let ((inhibit-read-only t))
+            (when (bound-and-true-p view-mode) (view-mode -1))
+            (erase-buffer)
+            (funcall llm-response-render-function response)
+            (goto-char (point-min))
+            (set-buffer-modified-p nil))
+          (view-mode 1))            ; q to bury; read-only with cheap nav
+        (display-buffer buf '(display-buffer-pop-up-window
+                              (inhibit-same-window . t)))))))
+
 ;;;###autoload
 (defun llm (&optional user-root)
   "Open Claude CLI in a vterm buffer named *claude:project*.
@@ -1428,7 +1565,8 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
     ("r" "Resume last prompt"     llm-prompt-resume)
     ("H" "Prompt history"         llm-prompt-history)
     ("M" "Set default model"      llm-set-default-model)
-    ("?" "Describe at point"      llm-describe-at-point)]
+    ("?" "Describe at point"      llm-describe-at-point)
+    ("R" "Show last response"     llm-show-last-response)]
    ["Annotations"
     ("f" "Add FIXME"          llm-add-fixme)
     ("t" "Add TODO"           llm-add-todo)
@@ -1540,16 +1678,158 @@ Resumes the process automatically when copy-mode is exited (q / C-c C-t).
 Useful for copying from TUIs (e.g. interactive `claude') that
 continuously redraw and overwrite selections.  No-op outside vterm."
   (interactive)
-  (unless (derived-mode-p 'vterm-mode)
-    (user-error "Not a vterm buffer"))
-  (process-send-string vterm--process "\C-z")
-  (setq-local llm--vterm-copy-resume t)
-  (vterm-copy-mode 1))
+  ;; (unless (derived-mode-p 'vterm-mode)
+  ;;   (user-error "Not a vterm buffer"))
+  ;; (process-send-string vterm--process "\C-z")
+  ;; (setq-local llm--vterm-copy-resume t)
+  ;; (vterm-copy-mode 1)
+  )
+
+;;; Vterm auto-freeze: scroll up to read history, type or q to resume
+;;
+;; vterm forces buffer point to the terminal cursor (bottom) on every redraw
+;; (vterm-module.c term_redraw -> adjust_topline, unconditional), so a
+;; streaming TUI like `claude' makes scrollback unreadable.  There is NO
+;; public "disable follow" knob; the only sanctioned freeze is
+;; `vterm-copy-mode', which sends XOFF (`<stop>' -> tcflow TCOOFF) so the
+;; child PAUSES and no further output arrives to trigger the redraw.  We do
+;; NOT pin window geometry around the filter (that caused the torn frames
+;; that were removed); we only OBSERVE point in `post-command-hook' and
+;; toggle the documented `vterm-copy-mode'.  Exiting it sends XON and snaps
+;; point back to the live cursor, resuming following.
+;;
+;; `window-scroll-functions' is deliberately NOT used: it runs during
+;; redisplay, where toggling a minor mode / writing to the pty is unsafe.
+;; Every user scroll (C-v, M-v) and point move is a command, so
+;; `post-command-hook' catches them without redisplay re-entry.
+
+(defvar vterm--term)
+(declare-function vterm-copy-mode "vterm" (&optional arg))
+(declare-function vterm-reset-cursor-point "vterm" ())
+
+(defcustom llm-vterm-autofreeze-buffers #'llm-buffer-p
+  "Predicate deciding whether auto-freeze is active in a vterm buffer.
+Called with no args in the vterm buffer; non-nil enables the behavior.
+Defaults to claude buffers only, so plain `*vterm:…*' shells are untouched."
+  :type 'function
+  :group 'llm)
+
+(defvar-local llm--vterm-autofreeze-armed nil
+  "Guard so our own copy-mode toggles don't re-trigger the observer.")
+
+(defvar-local llm--vterm-autofreeze-active nil
+  "Non-nil when copy-mode in this buffer was entered BY auto-freeze.
+As opposed to the manual `llm-vterm-copy' / `C-c C-y' workflow or a bare
+`vterm-copy-mode'.  Scopes the resume overlay map and the header-line so
+manual copy-mode keeps vanilla behavior.")
+
+(defun llm--vterm-autofreeze-p ()
+  "Non-nil if auto-freeze should manage the current buffer."
+  (and (derived-mode-p 'vterm-mode)
+       (boundp 'vterm--term) vterm--term
+       (ignore-errors (funcall llm-vterm-autofreeze-buffers))))
+
+(defun llm--vterm-at-bottom-p ()
+  "Non-nil if point in the selected window is on the buffer's last line.
+That last line is the live prompt/cursor row vterm keeps pinned, so being
+there means we are following; being above it means the user scrolled up."
+  (>= (point)
+      (save-excursion (goto-char (point-max))
+                      (line-beginning-position))))
+
+(defun llm--vterm-freeze ()
+  "Enter copy-mode to freeze the view (XOFF pauses claude).  Idempotent.
+Sets `llm--vterm-autofreeze-active' so only our managed freeze gets the
+resume overlay map + header-line, and leaves `llm--vterm-copy-resume' nil
+so exiting sends only XON, never the `fg' of the C-c C-y suspend path."
+  ;; (unless (or (bound-and-true-p vterm-copy-mode)
+  ;;             llm--vterm-autofreeze-armed)
+  ;;   (let ((llm--vterm-autofreeze-armed t))
+  ;;     (setq llm--vterm-autofreeze-active t)
+  ;;     (vterm-copy-mode 1)
+  ;;     (setq header-line-format
+  ;;           " VTerm frozen — scroll to read · q quits · any key resumes")))
+  )
+
+(defun llm--vterm-resume ()
+  "Exit copy-mode and snap point to the live cursor so output follows again.
+Safe to call when not frozen (no-op)."
+  (when (bound-and-true-p vterm-copy-mode)
+    (let ((llm--vterm-autofreeze-armed t))
+      (vterm-copy-mode -1)        ; sends XON, restores vterm-mode-map
+      (vterm-reset-cursor-point)  ; point -> live terminal cursor (bottom)
+      (dolist (w (get-buffer-window-list (current-buffer) nil t))
+        (set-window-point w (point))))))
+
+(defun llm--vterm-autofreeze-post-command ()
+  "`post-command-hook': freeze when point has moved up off the live line.
+Only fires from the command loop — never from vterm's redraw timer — so
+plain streaming with no keypress does NOT freeze; the user must actively
+scroll or move point up.  Skips mid-toggle calls via the armed guard."
+  (when (and (not llm--vterm-autofreeze-armed)
+             (not (bound-and-true-p vterm-copy-mode))
+             (llm--vterm-autofreeze-p)
+             (not (llm--vterm-at-bottom-p)))
+    (llm--vterm-freeze)))
+
+(defun llm--vterm-resume-and-resend ()
+  "Thaw, then replay the triggering key into the live terminal so it is
+not lost.  Bound to self-inserting keys while auto-frozen."
+  (interactive)
+  (let ((keys (this-command-keys-vector)))
+    (llm--vterm-resume)
+    (setq unread-command-events
+          (append (listify-key-sequence keys) unread-command-events))))
+
+(defun llm--vterm-resume-only ()
+  "Thaw without resending the key (viewer-style quit on `q')."
+  (interactive)
+  (llm--vterm-resume))
+
+(defvar llm--vterm-autofreeze-resume-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap self-insert-command] #'llm--vterm-resume-and-resend)
+    (dolist (k '("SPC" "DEL" "TAB" "RET" "<return>"))
+      (define-key map (kbd k) #'llm--vterm-resume-and-resend))
+    (define-key map (kbd "q") #'llm--vterm-resume-only)
+    map)
+  "Overlay keymap active while a claude vterm is auto-frozen.
+Layered above `vterm-copy-mode-map' so it adds resume keys without
+overriding copy-mode's bindings.  Note: this rebinds RET to
+resume-and-send-newline; drop the RET/<return> entries if you prefer
+RET to copy the line (`vterm-copy-mode-done').
+Deliberately does NOT bind C-d (EOF) or C-c C-c (SIGINT), so a stray key
+while reading can never end or interrupt claude.")
+
+(defun llm--vterm-autofreeze-copy-hook ()
+  "Run on `vterm-copy-mode-hook' (fires on BOTH enable and disable).
+On enable of an auto-freeze-initiated copy-mode, install the resume
+overlay map.  On disable, clear our header-line and flag.  Manual
+`vterm-copy-mode' / `C-c C-y' sessions (active flag nil) stay vanilla."
+  (when (llm--vterm-autofreeze-p)
+    (cond
+     ((and (bound-and-true-p vterm-copy-mode)
+           llm--vterm-autofreeze-active)
+      (set-transient-map llm--vterm-autofreeze-resume-map
+                         (lambda () (bound-and-true-p vterm-copy-mode))))
+     ((not (bound-and-true-p vterm-copy-mode))
+      (when llm--vterm-autofreeze-active
+        (setq llm--vterm-autofreeze-active nil)
+        (setq header-line-format nil))))))
+
+(defun llm--vterm-autofreeze-setup ()
+  "Arm the auto-freeze observer buffer-locally for a managed vterm buffer."
+  (when (llm--vterm-autofreeze-p)
+    (add-hook 'post-command-hook
+              #'llm--vterm-autofreeze-post-command nil t)))
 
 (with-eval-after-load 'vterm
   (add-hook 'vterm-mode-hook #'llm--vterm-display-fixups)
-  (add-hook 'vterm-copy-mode-hook #'llm--vterm-copy-resume-on-exit)
-  (define-key vterm-mode-map (kbd "C-c C-y") #'llm-vterm-copy))
+  ;; (add-hook 'vterm-mode-hook #'llm--vterm-autofreeze-setup)
+  ;; (add-hook 'vterm-copy-mode-hook #'llm--vterm-copy-resume-on-exit)
+  ;; (add-hook 'vterm-copy-mode-hook #'llm--vterm-autofreeze-copy-hook)
+  ;; (define-key vterm-mode-map (kbd "C-c C-y") #'llm-vterm-copy)
+  (define-key vterm-mode-map (kbd "C-c C-r") #'llm-show-last-response))
 
 ;;; Keybindings
 

@@ -2,6 +2,17 @@
 (require 'org-clock)
 (require 'ob)
 
+(use-package org-re-reveal
+  :custom (org-re-reveal-revealjs-version "6.0.1")
+  :ensure edit-server-htmlize
+  :ensure t)
+
+(use-package ox-reveal
+  :config (load-library "ox-reveal")
+          (load-library "ox-reveal-layouts")
+  :ensure ox-reveal-layouts
+  :ensure t)
+
 (global-set-key (kbd "C-c o l") #'org-store-link)
 
 (setq org-element-use-cache nil

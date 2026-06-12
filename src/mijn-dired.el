@@ -131,7 +131,12 @@ If it's a directory, apply recursively to all files and subdirectories."
   (define-key dired-mode-map (kbd "<DEL>") #'dired-up-please)
   (define-key dired-mode-map (kbd "e") #'eshell)
   (define-key dired-mode-map (kbd "<RET>") #'dired-down-please)
-  (define-key dired-mode-map (kbd "C-c C-p") #'wdired-change-to-wdired-mode))
+  (define-key dired-mode-map (kbd "C-c C-p") #'wdired-change-to-wdired-mode)
+  (define-key dired-mode-map (kbd "j") #'next-line)
+  (define-key dired-mode-map (kbd "k") #'previous-line)
+  (define-key dired-mode-map (kbd "h") #'dired-up-please)
+  (define-key dired-mode-map (kbd "l") #'dired-down-please)
+  )
 
 (add-hook 'dired-mode-hook 'dired-set-keys)
 (define-key global-map (kbd "C-x C-d") #'dired-switch-buffers)
