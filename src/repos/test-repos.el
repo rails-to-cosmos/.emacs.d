@@ -7,53 +7,12 @@
 ;; Helper
 ;; ---------------------------------------------------------------------------
 
-(defmacro with-repos-buffer (&rest body)
-  "Run BODY with a temporary *repos* buffer and clean state."
+(defmacro with-clean-repos (&rest body)
+  "Run BODY with a fresh `repos--statuses' and a restorable `repos-list'."
   (declare (indent 0))
   `(let ((repos-list repos-list)
-         (repos--statuses (make-hash-table :test 'equal))
-         (repos-dashboard-buffer-name "*repos-test*")
-         (repos--current-sort 'status)
-         (repos--sort-ascending t))
-     (unwind-protect
-         (progn
-           (get-buffer-create repos-dashboard-buffer-name)
-           ,@body)
-       (when (get-buffer repos-dashboard-buffer-name)
-         (kill-buffer repos-dashboard-buffer-name)))))
-
-;; ---------------------------------------------------------------------------
-;; repos-dashboard-mode
-;; ---------------------------------------------------------------------------
-
-(ert-deftest test-repos-mode-derives-from-org ()
-  "repos-dashboard-mode should derive from org-mode."
-  (with-temp-buffer
-    (repos-dashboard-mode)
-    (should (derived-mode-p 'org-mode))))
-
-(ert-deftest test-repos-mode-is-read-only ()
-  "repos-dashboard-mode should set buffer-read-only."
-  (with-temp-buffer
-    (repos-dashboard-mode)
-    (should buffer-read-only)))
-
-;; ---------------------------------------------------------------------------
-;; Keybindings
-;; ---------------------------------------------------------------------------
-
-(ert-deftest test-repos-keybindings ()
-  "Key bindings should be set in repos-dashboard-mode-map."
-  (should (eq (lookup-key repos-dashboard-mode-map "g") #'repos-refresh))
-  (should (eq (lookup-key repos-dashboard-mode-map "G") #'repos-refresh-all))
-  (should (eq (lookup-key repos-dashboard-mode-map "+") #'repos-add-repo))
-  (should (eq (lookup-key repos-dashboard-mode-map "c") #'repos-clone-repo))
-  (should (eq (lookup-key repos-dashboard-mode-map "C") #'repos-clone-all-missing))
-  (should (eq (lookup-key repos-dashboard-mode-map "f") #'repos-pull-repo))
-  (should (eq (lookup-key repos-dashboard-mode-map "F") #'repos-pull-all))
-  (should (eq (lookup-key repos-dashboard-mode-map "^") #'repos-cycle-sort))
-  (should (eq (lookup-key repos-dashboard-mode-map "~") #'repos-toggle-sort-direction))
-  (should (eq (lookup-key repos-dashboard-mode-map "q") #'quit-window)))
+         (repos--statuses (make-hash-table :test 'equal)))
+     ,@body))
 
 ;; ---------------------------------------------------------------------------
 ;; Accessors
@@ -80,171 +39,85 @@
   (let ((home (expand-file-name "~")))
     (should (string-prefix-p "~/" (repos--abbrev (concat home "/foo"))))))
 
-
 ;; ---------------------------------------------------------------------------
-;; Rendering
-;; ---------------------------------------------------------------------------
-
-(ert-deftest test-repos-render-checking ()
-  "Should show CHECKING for repos in checking state."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "checking")) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (should (string-match-p "\\*\\* CHECKING" (buffer-string))))))
-
-(ert-deftest test-repos-render-error ()
-  "Should show ERROR and error message."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "error") (error . "Fetch failed")) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (let ((text (buffer-string)))
-        (should (string-match-p "\\*\\* ERROR" text))
-        (should (string-match-p "Fetch failed" text))))))
-
-(ert-deftest test-repos-render-up-to-date ()
-  "Should show UP_TO_DATE for clean repos."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (should (string-match-p "\\*\\* UP_TO_DATE" (buffer-string))))))
-
-(ert-deftest test-repos-render-behind ()
-  "Should show BEHIND when commits behind upstream."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "ready") (behind . 3) (modified . 0) (untracked . 0)) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (should (string-match-p "\\*\\* BEHIND" (buffer-string))))))
-
-(ert-deftest test-repos-render-modified ()
-  "Should show MODIFIED when files are changed."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "ready") (behind . 0) (modified . 2) (untracked . 0)
-               (local . "Modified 2 files")) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (should (string-match-p "\\*\\* MODIFIED" (buffer-string))))))
-
-(ert-deftest test-repos-render-untracked ()
-  "Should show UNTRACKED when only untracked files exist."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "ready") (behind . 0) (modified . 0) (untracked . 3)
-               (local . "Untracked 3 files")) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (should (string-match-p "\\*\\* UNTRACKED" (buffer-string))))))
-
-(ert-deftest test-repos-render-missing ()
-  "Should show MISSING and clone hint."
-  (with-repos-buffer
-    (setq repos-list '(("~/nonexistent" . "git@host:repo")))
-    (puthash (repos--abbrev "~/nonexistent")
-             '((state . "missing")) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (let ((text (buffer-string)))
-        (should (string-match-p "\\*\\* MISSING" text))
-        (should (string-match-p "clone" text))))))
-
-(ert-deftest test-repos-render-idempotent ()
-  "Multiple renders should not duplicate content."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "checking")) repos--statuses)
-    (repos--render)
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (let ((text (buffer-string)))
-        (should (= 1 (with-temp-buffer
-                        (insert text)
-                        (goto-char (point-min))
-                        (let ((count 0))
-                          (while (re-search-forward "^\\* Repository Status" nil t)
-                            (setq count (1+ count)))
-                          count))))))))
-
-(ert-deftest test-repos-render-multiple ()
-  "Should render all repos."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d") ("/tmp")))
-    (puthash (repos--abbrev "~/.emacs.d")
-             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
-    (puthash (repos--abbrev "/tmp")
-             '((state . "error") (error . "Not a git repo")) repos--statuses)
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (let ((text (buffer-string)))
-        (should (string-match-p "UP_TO_DATE.*~/.emacs.d" text))
-        (should (string-match-p "ERROR.*/tmp" text))))))
-
-(ert-deftest test-repos-render-shows-sort ()
-  "Heading should show current sort method."
-  (with-repos-buffer
-    (setq repos-list '(("~/.emacs.d")))
-    (repos--render)
-    (with-current-buffer repos-dashboard-buffer-name
-      (should (string-match-p "sort: status asc" (buffer-string))))))
-
-;; ---------------------------------------------------------------------------
-;; Sorting
+;; Status keyword
 ;; ---------------------------------------------------------------------------
 
-(ert-deftest test-repos-sort-by-status ()
-  "Status sort should put errors before up-to-date."
-  (with-repos-buffer
-    (setq repos-list '(("~/a") ("~/b")))
-    (puthash (repos--abbrev "~/a")
-             '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
-    (puthash (repos--abbrev "~/b")
-             '((state . "error") (error . "fail")) repos--statuses)
-    (let ((sorted (repos--sorted-entries)))
-      (should (equal "~/b" (repos--path (car sorted)))))))
+(ert-deftest test-repos-todo-kw-checking ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "checking")) repos--statuses)
+    (should (equal "CHECKING" (repos--todo-kw "~/r")))))
 
-(ert-deftest test-repos-sort-by-name ()
-  "Name sort should alphabetize by directory name."
-  (with-repos-buffer
-    (setq repos-list '(("~/zebra") ("~/alpha")))
-    (setq repos--current-sort 'name)
-    (let ((sorted (repos--sorted-entries)))
-      (should (equal "~/alpha" (repos--path (car sorted)))))))
+(ert-deftest test-repos-todo-kw-missing ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "missing")) repos--statuses)
+    (should (equal "MISSING" (repos--todo-kw "~/r")))))
 
-(ert-deftest test-repos-sort-descending ()
-  "Descending should reverse the order."
-  (with-repos-buffer
-    (setq repos-list '(("~/zebra") ("~/alpha")))
-    (setq repos--current-sort 'name)
-    (setq repos--sort-ascending nil)
-    (let ((sorted (repos--sorted-entries)))
-      (should (equal "~/zebra" (repos--path (car sorted)))))))
+(ert-deftest test-repos-todo-kw-error ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "error") (error . "boom")) repos--statuses)
+    (should (equal "ERROR" (repos--todo-kw "~/r")))))
 
-(ert-deftest test-repos-todo-order ()
-  "Status priority should follow #+TODO header order."
-  (with-repos-buffer
-    (puthash "checking" '((state . "checking")) repos--statuses)
-    (puthash "error" '((state . "error")) repos--statuses)
-    (puthash "ok" '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
-    (should (< (repos--status-priority "checking")
-               (repos--status-priority "error")))
-    (should (< (repos--status-priority "error")
-               (repos--status-priority "ok")))))
+(ert-deftest test-repos-todo-kw-behind ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (behind . 2) (modified . 0) (untracked . 0)) repos--statuses)
+    (should (equal "BEHIND" (repos--todo-kw "~/r")))))
+
+(ert-deftest test-repos-todo-kw-modified ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (behind . 0) (modified . 1) (untracked . 0)) repos--statuses)
+    (should (equal "MODIFIED" (repos--todo-kw "~/r")))))
+
+(ert-deftest test-repos-todo-kw-untracked ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (behind . 0) (modified . 0) (untracked . 3)) repos--statuses)
+    (should (equal "UNTRACKED" (repos--todo-kw "~/r")))))
+
+(ert-deftest test-repos-todo-kw-up-to-date ()
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (behind . 0) (modified . 0) (untracked . 0)) repos--statuses)
+    (should (equal "UP_TO_DATE" (repos--todo-kw "~/r")))))
+
+;; ---------------------------------------------------------------------------
+;; Table-view consumer row mapping
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-repos-table-row-behind ()
+  "Row cells should reflect a behind repo."
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (branch . "main") (behind . 3)
+                     (modified . 0) (untracked . 0)) repos--statuses)
+    (let* ((row (repos-table--row "~/r"))
+           (cells (alist-get 'cells row)))
+      (should (equal "~/r" (alist-get 'id row)))
+      (should (equal "BEHIND" (alist-get 'state cells)))
+      (should (equal "~/r" (alist-get 'name cells)))
+      (should (equal "main" (alist-get 'branch cells)))
+      (should (equal 3 (alist-get 'behind cells))))))
+
+(ert-deftest test-repos-table-row-error ()
+  "Error rows surface the error message in the local cell."
+  (with-clean-repos
+    (puthash "~/r" '((state . "error") (error . "boom")) repos--statuses)
+    (let ((cells (alist-get 'cells (repos-table--row "~/r"))))
+      (should (equal "ERROR" (alist-get 'state cells)))
+      (should (equal "boom" (alist-get 'local cells))))))
+
+(ert-deftest test-repos-table-row-missing ()
+  "Missing rows surface a clone hint."
+  (with-clean-repos
+    (puthash "~/r" '((state . "missing")) repos--statuses)
+    (let ((cells (alist-get 'cells (repos-table--row "~/r"))))
+      (should (equal "MISSING" (alist-get 'state cells)))
+      (should (equal "clone with c" (alist-get 'local cells))))))
+
+;; ---------------------------------------------------------------------------
+;; Keybinding
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-repos-dashboard-binding ()
+  "C-x y p opens the table dashboard."
+  (should (eq (lookup-key global-map (kbd "C-x y p")) #'repos-table)))
 
 ;; ---------------------------------------------------------------------------
 ;; Persistence

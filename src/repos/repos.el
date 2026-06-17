@@ -2,8 +2,11 @@
 
 (require 'cl-lib)
 (require 'json)
-(require 'ol)
 (require 'magit)
+
+(eval-and-compile
+  (add-to-list 'load-path (expand-file-name "src/repos" user-emacs-directory)))
+(require 'table-view)
 
 (declare-function magit-status "magit-status")
 
@@ -101,51 +104,7 @@ runs after the process exits."
      proc (json-encode `((command . ,command) (repos . ,(vconcat paths)))))
     (process-send-eof proc)))
 
-;;; Buffer & Mode
-
-(defvar repos-dashboard-buffer-name "*repos*"
-  "Name of the repository dashboard buffer.")
-
-(defvar repos-dashboard-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "e" #'end-of-line)
-    (define-key map "a" #'beginning-of-line)
-    (define-key map "n" #'org-next-visible-heading)
-    (define-key map "p" #'org-previous-visible-heading)
-    (define-key map "f" #'repos-pull-repo)
-    (define-key map "F" #'repos-pull-all)
-    (define-key map "b" #'backward-char)
-    (define-key map "g" #'repos-refresh)
-    (define-key map "G" #'repos-refresh-all)
-    (define-key map "+" #'repos-add-repo)
-    (define-key map "/" #'repos-search)
-    (define-key map "c" #'repos-clone-repo)
-    (define-key map "C" #'repos-clone-all-missing)
-    (define-key map (kbd "RET") #'repos-open-repo)
-    (define-key map "^" #'repos-cycle-sort)
-    (define-key map "~" #'repos-toggle-sort-direction)
-    (define-key map "q" #'quit-window)
-    map)
-  "Keymap for `repos-dashboard-mode'.")
-
-(define-derived-mode repos-dashboard-mode org-mode "Repos"
-  "Read-only org-mode dashboard for monitoring git repositories."
-  (setq-local org-todo-keyword-faces
-              '(("CHECKING"   . (:foreground "yellow"))
-                ("FETCHING"   . (:foreground "yellow"))
-                ("UP_TO_DATE" . (:foreground "green"))
-                ("BEHIND"     . (:foreground "#e67e22"))
-                ("MODIFIED"   . (:foreground "#749AF7"))
-                ("UNTRACKED"  . (:foreground "#565f89"))
-                ("MISSING"    . (:foreground "#9b59b6"))
-                ("ERROR"      . (:foreground "#c0392b"))))
-  (setq buffer-read-only t))
-
 ;;; Repository Configuration
-
-(defconst repos--header
-  "#+TODO: CHECKING FETCHING | BEHIND MODIFIED MISSING ERROR UNTRACKED UP_TO_DATE"
-  "Static header for the dashboard.")
 
 (defvar repos-file
   (expand-file-name "repos" user-emacs-directory)
@@ -230,24 +189,18 @@ runs after the process exits."
 (defvar repos--statuses (make-hash-table :test 'equal)
   "Hash table mapping repo path to its status alist (parsed JSON).")
 
-(defvar repos--pending 0
-  "Number of repos still being checked.")
+(defvar repos--status-change-functions nil
+  "Abnormal hook run with one argument PATH whenever a repo's status changes.
+Views (the table view) add observers here so that every state transition
+-- pull, fetch, refresh, clone -- reflects live.  `repos--update' is the
+sole place this fires.")
 
 (defun repos--status-get (path key)
   "Get KEY from the status of PATH."
   (cdr (assq key (gethash path repos--statuses))))
 
-;;; Sorting
-
-(defvar repos--sort-methods '(status name path))
-(defvar repos--current-sort 'status)
-(defvar repos--sort-ascending t)
-
-(defconst repos--todo-order
-  '("CHECKING" "FETCHING" "BEHIND" "MODIFIED" "MISSING" "ERROR" "UP_TO_DATE" "UNTRACKED"))
-
 (defun repos--todo-kw (path)
-  "Return the TODO keyword for PATH."
+  "Return the status keyword for PATH."
   (let* ((status (gethash path repos--statuses))
          (state (cdr (assq 'state status)))
          (behind (or (cdr (assq 'behind status)) 0))
@@ -263,135 +216,13 @@ runs after the process exits."
      ((> untracked 0) "UNTRACKED")
      (t "UP_TO_DATE"))))
 
-(defun repos--status-priority (path)
-  (or (cl-position (repos--todo-kw path) repos--todo-order :test #'equal)
-      (length repos--todo-order)))
-
-(defun repos--sorted-entries ()
-  "Return repos sorted by current method."
-  (let* ((entries (copy-sequence repos-list))
-         (sorted
-          (pcase repos--current-sort
-            ('name (sort entries (lambda (a b)
-                                   (string< (file-name-nondirectory (directory-file-name (repos--path a)))
-                                            (file-name-nondirectory (directory-file-name (repos--path b)))))))
-            ('path (sort entries (lambda (a b) (string< (repos--path a) (repos--path b)))))
-            ('status (sort entries (lambda (a b)
-                                     (< (repos--status-priority (repos--abbrev (repos--path a)))
-                                        (repos--status-priority (repos--abbrev (repos--path b)))))))
-            (_ entries))))
-    (if repos--sort-ascending sorted (nreverse sorted))))
-
-(defun repos--sort-label ()
-  (concat (propertize (symbol-name repos--current-sort) 'face '(:foreground "#749AF7"))
-          " "
-          (propertize (if repos--sort-ascending "asc" "desc") 'face '(:foreground "#9ece6a"))))
-
-;;;###autoload
-(defun repos-cycle-sort ()
-  "Cycle sort methods."
-  (interactive)
-  (repos--ensure-loaded)
-  (let* ((idx (cl-position repos--current-sort repos--sort-methods))
-         (next (nth (mod (1+ (or idx 0)) (length repos--sort-methods)) repos--sort-methods)))
-    (if (eq next repos--current-sort)
-        (setq repos--sort-ascending (not repos--sort-ascending))
-      (setq repos--current-sort next repos--sort-ascending t))
-    (repos--render)
-    (message "Sort: %s" (repos--sort-label))))
-
-;;;###autoload
-(defun repos-toggle-sort-direction ()
-  "Toggle sort direction."
-  (interactive)
-  (repos--ensure-loaded)
-  (setq repos--sort-ascending (not repos--sort-ascending))
-  (repos--render)
-  (message "Sort: %s" (repos--sort-label)))
-
-;;; Rendering
-
-(defun repos--format-entry (path)
-  "Return org text for repo at PATH from its stored status."
-  (let* ((status (gethash path repos--statuses))
-         (state (or (cdr (assq 'state status)) "checking"))
-         (behind (or (cdr (assq 'behind status)) 0))
-         (local-desc (cdr (assq 'local status)))
-         (err (cdr (assq 'error status)))
-         (kw (repos--todo-kw path)))
-    (concat
-     (format "** %s %s\n" kw path)
-     (cond
-      ((equal state "missing")
-       "   - Directory not found. Press =c= to clone, =C= to clone all.\n")
-      ((equal state "ready")
-       (concat
-        (when (> behind 0)
-          (format "   - %d commit%s behind upstream\n" behind (if (> behind 1) "s" "")))
-        (when local-desc
-          (format "   - Uncommitted: %s\n" local-desc))))
-      ((equal state "error")
-       (format "   %s\n" (or err "unknown")))))))
-
-(defun repos--render ()
-  "Full re-render of the dashboard."
-  (let ((buf (get-buffer repos-dashboard-buffer-name)))
-    (when buf
-      (with-current-buffer buf
-        (unless (derived-mode-p 'repos-dashboard-mode)
-          (repos-dashboard-mode))
-        (let ((inhibit-read-only t)
-              (pt (point)))
-          (erase-buffer)
-          (insert repos--header)
-          (insert (format "\n\n* Repository Status [/]  (sort: %s)\n\n" (repos--sort-label)))
-          (dolist (entry (repos--sorted-entries))
-            (insert (repos--format-entry (repos--abbrev (repos--path entry)))))
-          (goto-char (point-min))
-          (when (re-search-forward "^#\\+" nil t)
-            (org-ctrl-c-ctrl-c))
-          (goto-char (min pt (point-max))))))))
-
-(defun repos--update-in-place (path)
-  "Replace the heading for PATH in the dashboard."
-  (let ((buf (get-buffer repos-dashboard-buffer-name)))
-    (when buf
-      (with-current-buffer buf
-        (let ((inhibit-read-only t)
-              (new-text (repos--format-entry path)))
-          (save-excursion
-            (goto-char (point-min))
-            (if (re-search-forward (format "^\\*\\* [A-Z_]+ %s$" (regexp-quote path)) nil t)
-                (let ((start (line-beginning-position))
-                      (end (or (save-excursion
-                                 (when (re-search-forward "^\\*\\* " nil t)
-                                   (line-beginning-position)))
-                               (point-max))))
-                  (delete-region start end)
-                  (goto-char start)
-                  (insert new-text))
-              (goto-char (point-max))
-              (insert new-text))
-            (goto-char (point-min))
-            (when (re-search-forward "^\\* Repository Status" nil t)
-              (org-update-statistics-cookies nil))))))))
-
 (defun repos--update (path)
-  "Update PATH. Re-renders fully when last pending repo resolves."
-  (repos--update-in-place path)
-  (let ((kw (repos--todo-kw path)))
-    (when (and (> repos--pending 0)
-               (not (member kw '("CHECKING" "FETCHING"))))
-      (setq repos--pending (1- repos--pending))
-      (when (= repos--pending 0)
-        (repos--render)))))
+  "Notify observers that PATH's status changed.
+The sole status-change choke point; views observe via
+`repos--status-change-functions'."
+  (run-hook-with-args 'repos--status-change-functions path))
 
 ;;; Async Git Operations (via Haskell backend)
-
-(defun repos--entry (repo)
-  "Find the repos entry for REPO."
-  (seq-find (lambda (e) (equal (repos--abbrev (repos--path e)) (repos--abbrev repo)))
-            repos-list))
 
 (defun repos--fetch (repo)
   "Async fetch + status for REPO via the Haskell backend."
@@ -410,7 +241,7 @@ runs after the process exits."
     (let ((paths (mapcar #'repos--abbrev repos)))
       (dolist (path paths)
         (puthash path '((state . "fetching")) repos--statuses)
-        (repos--update-in-place path))
+        (repos--update path))
       (repos--call-batch
        "status" (mapcar #'expand-file-name paths)
        (lambda (path-abs status)
@@ -429,33 +260,70 @@ runs after the process exits."
        (puthash path json repos--statuses)
        (repos--update path)))))
 
-(defun repos--pull (repo)
-  "Pull REPO: run git pull, then refresh status."
+(defun repos--pull (repo &optional on-exit)
+  "Pull REPO: run git pull --ff-only, then refresh status.
+ON-EXIT, when non-nil, is called with no arguments once the git
+process exits (success or failure), so callers can manage concurrency.
+An absent directory is left in the MISSING state rather than pulled."
   (let* ((path (repos--abbrev repo))
          (dir (expand-file-name path)))
-    (puthash path '((state . "fetching")) repos--statuses)
-    (repos--update path)
-    (let ((buf (generate-new-buffer " *repos-pull*")))
-      (set-process-sentinel
-       (start-process "repos-pull" buf "git" "-C" dir "pull" "--ff-only")
-       (lambda (process _event)
-         (let ((exit-code (process-exit-status process)))
-           (kill-buffer (process-buffer process))
-           (if (= exit-code 0)
-               (progn
-                 (message "repos: pulled %s" path)
-                 (repos--fetch-quick repo))
-             (puthash path `((state . "error")
-                             (error . ,(format "git pull failed (exit %d)" exit-code)))
-                      repos--statuses)
-             (repos--update path))))))))
+    (if (not (file-directory-p dir))
+        ;; Preserve MISSING (and its clone affordances) instead of running
+        ;; git in a directory that isn't there.
+        (progn
+          (puthash path '((state . "missing")) repos--statuses)
+          (repos--update path)
+          (when on-exit (funcall on-exit)))
+      (puthash path '((state . "fetching")) repos--statuses)
+      (repos--update path)
+      (let ((buf (generate-new-buffer " *repos-pull*")))
+        (set-process-sentinel
+         (start-process "repos-pull" buf "git" "-C" dir "pull" "--ff-only")
+         (lambda (process _event)
+           (let ((exit-code (process-exit-status process)))
+             (kill-buffer (process-buffer process))
+             (if (= exit-code 0)
+                 (progn
+                   (message "repos: pulled %s" path)
+                   (repos--fetch-quick repo))
+               (puthash path `((state . "error")
+                               (error . ,(format "git pull failed (exit %d)" exit-code)))
+                        repos--statuses)
+               (repos--update path))
+             (when on-exit (funcall on-exit)))))))))
+
+(defvar repos-pull-max-concurrency 4
+  "Maximum number of concurrent `git pull' processes `repos--pull-many' runs.
+Unlike status checks (a single batched backend process), each pull is a
+real network fetch + merge, so a large `repos-list' is drained through a
+bounded pool rather than launched all at once.")
 
 (defun repos--pull-many (repos)
   "Pull each repo in REPOS via git pull --ff-only, then refresh status.
-Each repo resolves independently; `repos--pending' counts them down so
-the dashboard re-renders (and re-sorts) once the last pull completes."
-  (dolist (repo repos)
-    (repos--pull repo)))
+Drains REPOS through a pool of at most `repos-pull-max-concurrency'
+concurrent git processes.  Each repo resolves independently and updates
+its row live via `repos--update'."
+  (let ((queue nil)
+        (active 0))
+    ;; Partition: absent dirs resolve to MISSING right away; only existing
+    ;; dirs enter the pool, so every pooled `repos--pull' completes
+    ;; asynchronously and `launch' is never re-entered from within its loop.
+    (dolist (repo repos)
+      (let ((dir (expand-file-name (repos--abbrev repo))))
+        (if (file-directory-p dir)
+            (push repo queue)
+          (puthash (repos--abbrev repo) '((state . "missing")) repos--statuses)
+          (repos--update (repos--abbrev repo)))))
+    (setq queue (nreverse queue))
+    (cl-labels ((launch ()
+                  (while (and queue (< active repos-pull-max-concurrency))
+                    (let ((repo (pop queue)))
+                      (setq active (1+ active))
+                      (repos--pull repo
+                                   (lambda ()
+                                     (setq active (1- active))
+                                     (launch)))))))
+      (launch))))
 
 (defun repos--clone-async (path remote target)
   "Clone REMOTE into TARGET for repo at PATH."
@@ -468,18 +336,6 @@ the dashboard re-renders (and re-sorts) once the last pull completes."
      (repos--update path))))
 
 ;;; Helpers
-
-(defun repos--heading-path ()
-  "Return the repo path from the current org headline."
-  (when-let ((heading (org-get-heading t t t t)))
-    (when (string-match "\\` *\\(.*?\\)\\(?: on \\|$\\)" heading)
-      (string-trim (match-string 1 heading)))))
-
-(defun repos--path-at-point ()
-  (save-excursion
-    (when (and (derived-mode-p 'org-mode)
-               (ignore-errors (org-back-to-heading t) t))
-      (repos--heading-path))))
 
 (defun repos--choose-file ()
   (if (null repos-extra-files)
@@ -515,29 +371,6 @@ work happens lazily, on first user interaction, instead of at startup."
     (setq repos--loaded t)))
 
 ;;; Interactive Commands
-
-;;;###autoload
-(defun repos-search ()
-  "Jump to a repository headline via completing-read."
-  (interactive)
-  (repos--ensure-loaded)
-  (let* ((paths (mapcar (lambda (e) (repos--abbrev (repos--path e))) repos-list))
-         (choice (completing-read "Repo: " paths nil t)))
-    (goto-char (point-min))
-    (unless (re-search-forward
-             (format "^\\*\\* [A-Z_]+ %s$" (regexp-quote choice)) nil t)
-      (message "Not found: %s" choice))
-    (beginning-of-line)))
-
-;;;###autoload
-(defun repos-open-repo ()
-  "Open magit-status for the repository at point."
-  (interactive)
-  (repos--ensure-loaded)
-  (let ((path (repos--heading-path)))
-    (unless path (user-error "Not on a repo headline"))
-    (let ((default-directory (file-name-as-directory (expand-file-name path))))
-      (magit-status))))
 
 ;;;###autoload
 (defun repos-add-repo (dir)
@@ -589,23 +422,6 @@ Prompts for which file to save to when `repos-extra-files' is set."
       (message "Added %s" path))))
 
 ;;;###autoload
-(defun repos-clone-repo ()
-  "Clone the repository at point."
-  (interactive)
-  (repos--ensure-loaded)
-  (let* ((path (repos--heading-path))
-         (_ (unless path (user-error "Not on a repo headline")))
-         (status (gethash path repos--statuses))
-         (_ (unless (equal (cdr (assq 'state status)) "missing")
-              (user-error "Repository is not missing")))
-         (entry (repos--entry path))
-         (remote (repos--remote entry))
-         (_ (unless remote (user-error "No remote URL for %s" path)))
-         (target (expand-file-name path)))
-    (when (y-or-n-p (format "Clone %s to %s? " remote target))
-      (repos--clone-async path remote target))))
-
-;;;###autoload
 (defun repos-clone-all-missing ()
   "Clone all missing repositories."
   (interactive)
@@ -623,61 +439,132 @@ Prompts for which file to save to when `repos-extra-files' is set."
           (repos--clone-async (nth 0 m) (nth 1 m) (nth 2 m)))))))
 
 ;;;###autoload
-(defun repos-refresh ()
-  "Refresh repo at point, or all repos."
-  (interactive)
-  (repos--ensure-loaded)
-  (let ((path (repos--path-at-point)))
-    (if path
-        (progn
-          (setq repos--pending (1+ repos--pending))
-          (repos--fetch path))
-      (setq repos--pending (length repos-list))
-      (repos--fetch-many (mapcar #'repos--path repos-list)))))
-
-;;;###autoload
 (defun repos-refresh-all ()
-  "Refresh all repos."
+  "Fetch every registered repo and update the table view."
   (interactive)
   (repos--ensure-loaded)
-  (setq repos--pending (length repos-list))
   (repos--fetch-many (mapcar #'repos--path repos-list)))
-
-;;;###autoload
-(defun repos-pull-repo ()
-  "Pull the repository at point."
-  (interactive)
-  (repos--ensure-loaded)
-  (let ((path (repos--path-at-point)))
-    (unless path (user-error "Not on a repo headline"))
-    (repos--pull path)))
 
 ;;;###autoload
 (defun repos-pull-all ()
   "Pull all repositories (git pull --ff-only each), then refresh status."
   (interactive)
   (repos--ensure-loaded)
-  (setq repos--pending (length repos-list))
   (repos--pull-many (mapcar #'repos--path repos-list)))
 
+;;; Table-view dashboard (generic table-view.el core)
+;;
+;; The Haskell `table' command supplies the SCHEMA (columns/actions/sort);
+;; the rows are filled here from the registered repos, reusing the streaming
+;; `repos--call-batch' and `repos--statuses'.  This is the repository
+;; dashboard (C-x y p); status transitions reflect live via
+;; `repos--status-change-functions'.
+
+(defun repos-table--call-table (paths callback)
+  "Call the backend `table' command with PATHS; CALLBACK gets the JSON string.
+With PATHS nil this returns just the schema (no rows)."
+  (repos--ensure-backend)
+  (let* ((process-connection-type nil) ;; pipe, so `process-send-eof' closes stdin
+         (buf (generate-new-buffer " *repos-table-proc*"))
+         (proc (start-process "repos-table" buf repos--backend "table")))
+    (set-process-sentinel
+     proc
+     (lambda (process _event)
+       (when (memq (process-status process) '(exit signal))
+         (let ((out (with-current-buffer (process-buffer process) (buffer-string)))
+               (ok (= (process-exit-status process) 0)))
+           (kill-buffer (process-buffer process))
+           (if ok
+               (funcall callback out)
+             (message "repos-table: backend `table' failed (no view opened): %s"
+                      (string-trim out)))))))
+    (process-send-string proc (json-encode `((repos . ,(vconcat paths)))))
+    (process-send-eof proc)))
+
+(defun repos-table--row (path)
+  "Build a `table-view' row alist for the repo at PATH (abbreviated)."
+  (let* ((state  (repos--status-get path 'state))
+         (kw     (repos--todo-kw path))
+         (branch (or (repos--status-get path 'branch) ""))
+         (behind (or (repos--status-get path 'behind) 0))
+         (local  (cond ((equal state "error")   (or (repos--status-get path 'error) ""))
+                       ((equal state "missing") "clone with c")
+                       (t (or (repos--status-get path 'local) "")))))
+    `((id . ,path)
+      (cells . ((state . ,kw)
+                (name . ,path)
+                (branch . ,branch)
+                (behind . ,behind)
+                (local . ,local))))))
+
+(defun repos-table--fill (buffer)
+  "Populate table-view BUFFER from the registered repos, streaming results."
+  (let ((paths (mapcar (lambda (e) (repos--abbrev (repos--path e))) repos-list)))
+    ;; Seed the full row set in one shot: every registered repo appears
+    ;; immediately, and rows for repos no longer registered are dropped.
+    (dolist (path paths)
+      (unless (gethash path repos--statuses)
+        (puthash path '((state . "checking")) repos--statuses)))
+    (table-view-set-rows buffer (mapcar #'repos-table--row paths))
+    ;; Refine each row in place as its real status streams back.
+    (repos--call-batch
+     "status" (mapcar #'expand-file-name paths)
+     (lambda (path-abs status)
+       (let ((path (repos--abbrev path-abs)))
+         (puthash path status repos--statuses)
+         (table-view-upsert-row buffer (repos-table--row path)))))))
+
+(defun repos-table--open (id _row)
+  "Open magit-status for the repo with ID (a path)."
+  (when id
+    (let ((default-directory (file-name-as-directory (expand-file-name id))))
+      (magit-status))))
+
+(defun repos-table--pull (id _row)
+  "Pull the repo with ID; its row reflects each transition as it resolves."
+  (when id
+    (message "repos-table: pulling %s..." id)
+    (repos--pull id)))
+
+(defun repos-table--refresh (_id _row)
+  "Re-fill the current table view from the registered repos."
+  (table-view-refresh (current-buffer)))
+
+(defun repos-table--on-status-change (path)
+  "Reflect PATH's new status in the table view, when it is live.
+Registered on `repos--status-change-functions' so transitions triggered
+outside the table's own fill (pulls, clones, `repos-refresh-all') update
+the row immediately."
+  (let ((buf (get-buffer "*repos-table*")))
+    (when buf
+      (table-view-upsert-row buf (repos-table--row path)))))
+
 ;;;###autoload
-(defun repos-dashboard ()
-  "Open the repository dashboard."
+(defun repos-table ()
+  "Show the repository dashboard as a generic declarative table."
   (interactive)
   (repos--ensure-loaded)
-  (let ((buf (get-buffer-create repos-dashboard-buffer-name)))
-    (pop-to-buffer buf)
-    (unless (derived-mode-p 'repos-dashboard-mode)
-      (repos-dashboard-mode))
-    ;; Seed all repos as CHECKING so the initial render has headings
-    (dolist (entry repos-list)
-      (let ((path (repos--abbrev (repos--path entry))))
-        (unless (gethash path repos--statuses)
-          (puthash path (list :state 'checking) repos--statuses))))
-    (repos--render)
-    (repos-refresh)))
+  (repos-table--call-table
+   nil ;; schema only; rows are filled by `repos-table--fill'
+   (lambda (json)
+     (let ((buf (table-view-display
+                 "*repos-table*"
+                 (table-view-parse json)
+                 (list (cons "open"    #'repos-table--open)
+                       (cons "pull"    #'repos-table--pull)
+                       (cons "refresh" #'repos-table--refresh))
+                 #'repos-table--fill)))
+       ;; Observe status changes so pulls/clones reflect live; drop the
+       ;; observer when the view is closed.
+       (add-hook 'repos--status-change-functions #'repos-table--on-status-change)
+       (with-current-buffer buf
+         (add-hook 'kill-buffer-hook
+                   (lambda ()
+                     (remove-hook 'repos--status-change-functions
+                                  #'repos-table--on-status-change))
+                   nil t))))))
 
-(global-set-key (kbd "C-x y p") #'repos-dashboard)
+(global-set-key (kbd "C-x y p") #'repos-table)
 
 (provide 'repos)
 ;;; repos.el ends here
