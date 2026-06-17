@@ -450,6 +450,13 @@ runs after the process exits."
                       repos--statuses)
              (repos--update path))))))))
 
+(defun repos--pull-many (repos)
+  "Pull each repo in REPOS via git pull --ff-only, then refresh status.
+Each repo resolves independently; `repos--pending' counts them down so
+the dashboard re-renders (and re-sorts) once the last pull completes."
+  (dolist (repo repos)
+    (repos--pull repo)))
+
 (defun repos--clone-async (path remote target)
   "Clone REMOTE into TARGET for repo at PATH."
   (puthash path '((state . "checking")) repos--statuses)
@@ -647,11 +654,11 @@ Prompts for which file to save to when `repos-extra-files' is set."
 
 ;;;###autoload
 (defun repos-pull-all ()
-  "Pull all repositories."
+  "Pull all repositories (git pull --ff-only each), then refresh status."
   (interactive)
   (repos--ensure-loaded)
   (setq repos--pending (length repos-list))
-  (repos--fetch-many (mapcar #'repos--path repos-list)))
+  (repos--pull-many (mapcar #'repos--path repos-list)))
 
 ;;;###autoload
 (defun repos-dashboard ()
