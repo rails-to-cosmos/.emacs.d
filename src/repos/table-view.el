@@ -354,7 +354,7 @@ of one argument (BUFFER) that populates rows via `table-view-set-rows' /
                                      t)))
       (table-view--install-action-keys spec)
       (table-view--render))
-    (pop-to-buffer buf)
+    (switch-to-buffer buf)
     (when fill-fn (funcall fill-fn buf))
     buf))
 

@@ -35,7 +35,7 @@
                                          "--overwrite-policy=always")))
             (if (= exit-code 0)
                 (message "repos built successfully")
-              (pop-to-buffer "*repos-build*")
+              (switch-to-buffer "*repos-build*")
               (error "repos build failed (exit %d)" exit-code))))
       (user-error "repos is required"))))
 
