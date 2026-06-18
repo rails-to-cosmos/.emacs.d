@@ -11,7 +11,7 @@
 (defvar vterm-mode-map)
 (defvar vterm-copy-mode-hook)
 (defvar vterm--process)
-(declare-function face-remap-remove-relative "face-remap")
+
 
 (use-package vterm
   :ensure t)
@@ -513,117 +513,11 @@ If ROOT is provided, switch to the claude buffer for that project root."
     (with-temp-file file (insert text))
     file))
 
-;;; Prompt child-frame ("thinking bubble")
-
-(defface llm-prompt-frame-face
-  '((((background dark))
-     :background "#2a2a3a" :foreground "#e6e6ee")
-    (t :background "#fff8e6" :foreground "#1a1a1a"))
-  "Face for the prompt child frame's default text and background."
-  :group 'llm)
-
-(defface llm-prompt-frame-border-face
-  '((((background dark)) :background "#7aa2f7")
-    (t :background "#5c7cfa"))
-  "Face whose :background colors the prompt child frame's border."
-  :group 'llm)
-
-(defvar llm--prompt-frame nil
-  "Currently visible prompt child frame, or nil.")
-
-(defvar-local llm--prompt-face-cookie nil
-  "Cookie from `face-remap-add-relative' used inside the prompt buffer.")
-
-(defcustom llm-prompt-frame-size '(80 . 14)
-  "Target (COLS . ROWS) of the prompt child frame."
-  :type '(cons integer integer)
-  :group 'llm)
-
-(defvar llm-prompt-frame-parameters
-  '((minibuffer . nil)
-    (undecorated . t)
-    (internal-border-width . 2)
-    (child-frame-border-width . 1)
-    (left-fringe . 8) (right-fringe . 8)
-    (vertical-scroll-bars . nil) (horizontal-scroll-bars . nil)
-    (menu-bar-lines . 0) (tool-bar-lines . 0) (tab-bar-lines . 0)
-    (no-accept-focus . nil)
-    (unsplittable . t)
-    (no-other-frame . t)
-    (cursor-type . box)
-    (visibility . nil)))
-
-(defun llm--prompt-anchor-xy ()
-  "Return pixel (X . Y) at point in the selected window's frame."
-  (let* ((edges (window-inside-pixel-edges))
-         (posn (posn-at-point))
-         (xy (and posn (posn-x-y posn))))
-    (if xy
-        (cons (+ (nth 0 edges) (car xy))
-              (+ (nth 1 edges) (cdr xy) (default-line-height)))
-      (cons (nth 0 edges) (nth 1 edges)))))
-
-(defun llm--prompt-apply-styles (frame buf)
-  "Apply `llm-prompt-frame-face' + border face to FRAME and BUF."
-  (let ((bg  (face-attribute 'llm-prompt-frame-face :background nil 'default))
-        (fg  (face-attribute 'llm-prompt-frame-face :foreground nil 'default))
-        (bd  (face-attribute 'llm-prompt-frame-border-face :background nil 'default)))
-    (when (stringp bg) (set-frame-parameter frame 'background-color bg))
-    (when (stringp fg) (set-frame-parameter frame 'foreground-color fg))
-    (dolist (face '(internal-border child-frame-border))
-      (when (facep face)
-        (set-face-background face (if (stringp bd) bd 'unspecified) frame)))
-    (with-current-buffer buf
-      (when llm--prompt-face-cookie
-        (face-remap-remove-relative llm--prompt-face-cookie))
-      (setq llm--prompt-face-cookie
-            (face-remap-add-relative 'default 'llm-prompt-frame-face)))))
-
-(defun llm--prompt-make-frame (buf anchor size)
-  "Create the prompt child frame showing BUF at ANCHOR (X . Y) pixels.
-SIZE is a (COLS . ROWS) cons giving the frame's dimensions."
-  (let* ((parent (selected-frame))
-         (params (append `((parent-frame . ,parent)
-                           (left . ,(car anchor))
-                           (top  . ,(cdr anchor))
-                           (width . ,(car size)) (height . ,(cdr size)))
-                         llm-prompt-frame-parameters))
-         (frame (make-frame params))
-         (win (frame-selected-window frame)))
-    (set-window-buffer win buf)
-    (set-window-dedicated-p win t)
-    (set-window-parameter win 'no-other-window t)
-    (llm--prompt-apply-styles frame buf)
-    (make-frame-visible frame)
-    frame))
-
-(defun llm--close-prompt-frame ()
-  "Delete the prompt child frame if it's live."
-  (when (and llm--prompt-frame (frame-live-p llm--prompt-frame))
-    (delete-frame llm--prompt-frame t))
-  (setq llm--prompt-frame nil))
-
-(defun llm--present-prompt-buffer (buf size)
-  "Show BUF in a child frame sized SIZE (a (COLS . ROWS) cons).
-Closes any existing prompt frame first and focuses the new one.  On a
-TTY (no GUI), pops to BUF in a window instead.  This is the single
-presentation path shared by `llm-prompt', `llm--open-prompt-in-bubble',
-and `llm-describe-at-point'."
-  (llm--close-prompt-frame)
-  (if (display-graphic-p)
-      (let ((frame (llm--prompt-make-frame buf (llm--prompt-anchor-xy) size)))
-        (setq llm--prompt-frame frame)
-        (select-frame-set-input-focus frame))
-    (pop-to-buffer buf)))
+(defun llm--present-prompt-buffer (buf)
+  "Show BUF in a window for editing, like `org-capture'."
+  (pop-to-buffer buf))
 
 ;;; Bubble (inline-response) mode
-
-(defcustom llm-bubble-frame-size '(100 . 24)
-  "Target (COLS . ROWS) for the bubble.
-Bigger than `llm-prompt-frame-size' because the bubble ends up
-displaying Claude's reply, not just the prompt."
-  :type '(cons integer integer)
-  :group 'llm)
 
 (defcustom llm-bubble-prompt-prefix ""
   "String prepended to the user's text when sending in bubble mode.
@@ -833,7 +727,6 @@ all prior turns regardless of what else is happening in the directory."
          (dangerous llm--bubble-dangerous)
          (model     llm--bubble-model)
          (bubble    (current-buffer)))
-    (llm--close-prompt-frame)
     (kill-buffer bubble)
     (let ((default-directory dir)
           (vterm-shell (format "claude --resume %s%s%s"
@@ -927,7 +820,6 @@ vterm session (queues if busy)."
            (buf    (current-buffer))
            (full   (if ctx (concat ctx prompt) prompt)))
       (when (string-empty-p prompt) (user-error "Empty prompt"))
-      (llm--close-prompt-frame)
       (kill-buffer buf)
       (llm--send-to-claude full root))))
 
@@ -949,7 +841,6 @@ Otherwise close the bubble and kill its buffer."
                       'face 'llm-bubble-header-face)))
    (t
     (let ((buf (current-buffer)))
-      (llm--close-prompt-frame)
       (kill-buffer buf)
       (message "Prompt cancelled")))))
 
@@ -1004,8 +895,7 @@ untouched."
               (propertize
                " Claude  C-c C-c send · C-c C-k close · C-c C-m →claude"
                'face 'llm-bubble-header-face))))
-    (llm--present-prompt-buffer
-     buf (if bubble llm-bubble-frame-size llm-prompt-frame-size))))
+    (llm--present-prompt-buffer buf)))
 
 ;;; Prompt History
 
@@ -1034,7 +924,7 @@ Honors `llm-persistence-strategy'."
       (erase-buffer)
       (insert text)
       (setq-local llm--prompt-project-root root))
-    (llm--present-prompt-buffer buf llm-prompt-frame-size)))
+    (llm--present-prompt-buffer buf)))
 
 ;;;###autoload
 (defun llm-prompt-history ()
@@ -1642,7 +1532,7 @@ buffer name is used as context instead."
       (setq-local llm--bubble-session-id (llm--generate-uuid))
       (setq-local llm--bubble-dangerous llm-dangerously-skip-permissions)
       (setq-local llm--bubble-model llm-model))
-    (llm--present-prompt-buffer buf llm-bubble-frame-size)
+    (llm--present-prompt-buffer buf)
     (with-current-buffer buf
       (llm--bubble-spawn-turn text))))
 
