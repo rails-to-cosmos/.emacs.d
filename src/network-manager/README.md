@@ -17,18 +17,18 @@ Displays current connection details:
 
 ## Keybindings
 
-| Key | Action |
-|---|---|
-| `g` | Refresh status and networks |
-| `s` | Rescan wifi |
-| `RET` | Connect to network at point |
-| `d` | Disconnect current connection |
-| `D` | Forget (delete) a saved connection |
-| `e` | Set DNS (Google, Cloudflare, Quad9, Auto) |
-| `r` | Open router admin page in browser |
-| `t` | Toggle wifi on/off |
-| `n/p` | Navigate lines |
-| `q` | Quit |
+| Key   | Action                                    |
+|-------|-------------------------------------------|
+| `g`   | Refresh status and networks               |
+| `s`   | Rescan wifi                               |
+| `RET` | Connect to network at point               |
+| `d`   | Disconnect current connection             |
+| `D`   | Forget (delete) a saved connection        |
+| `e`   | Set DNS (Google, Cloudflare, Quad9, Auto) |
+| `r`   | Open router admin page in browser         |
+| `t`   | Toggle wifi on/off                        |
+| `n/p` | Navigate lines                            |
+| `q`   | Quit                                      |
 
 ## Features
 

@@ -34,6 +34,10 @@
   "Column key (string) currently sorted by, or nil.")
 (defvar-local table-view--sort-asc t
   "Non-nil when the current sort is ascending.")
+(defvar-local table-view--sorted nil
+  "Non-nil once an explicit sort has been applied to the current row set.
+Reset whenever the full row set is replaced (`table-view-set-rows'), so
+the hint line never claims a sort the displayed rows are not actually in.")
 
 ;;; Spec accessors
 
@@ -80,20 +84,23 @@
     (_
      (lambda (a b) (string< (table-view--str a) (table-view--str b))))))
 
-(defun table-view--sorted-rows ()
-  "Return `table-view--rows' sorted by the current sort column."
-  (let ((rows (copy-sequence table-view--rows))
-        (key table-view--sort-key))
-    (if (null key)
-        rows
+(defun table-view--sort-rows ()
+  "Sort `table-view--rows' in place by the current sort column.
+No-op when no sort column is selected.  Sorting is explicit: it runs
+only from the sort commands (`g', `^', `~'), never from row updates,
+so operating on a row updates it in place without moving it."
+  (let ((key table-view--sort-key))
+    (when key
       (let* ((col (table-view--column table-view--spec key))
              (less (table-view--comparator col))
-             (sorted (sort rows
+             (sorted (sort (copy-sequence table-view--rows)
                            (lambda (a b)
                              (funcall less
                                       (table-view--cell a key)
                                       (table-view--cell b key))))))
-        (if table-view--sort-asc sorted (nreverse sorted))))))
+        (setq table-view--rows
+              (if table-view--sort-asc sorted (nreverse sorted)))
+        (setq table-view--sorted t)))))
 
 ;;; Rendering
 
@@ -152,10 +159,14 @@
           "|"))
 
 (defun table-view--hint-string ()
-  "A one-line status/help string: current sort + declared action keys."
-  (format "sort: %s %s    %s"
-          (or table-view--sort-key "-")
-          (if table-view--sort-asc "asc" "desc")
+  "A one-line status/help string: current sort + declared action keys.
+Shows \"unsorted\" until an explicit sort has been applied, since rows
+render in load order and only reorder on `g'/`^'/`~'."
+  (format "sort: %s    %s"
+          (if (and table-view--sorted table-view--sort-key)
+              (format "%s %s" table-view--sort-key
+                      (if table-view--sort-asc "asc" "desc"))
+            "unsorted (g)")
           (mapconcat (lambda (a) (format "%s:%s"
                                          (alist-get 'key a) (alist-get 'label a)))
                      (table-view--actions table-view--spec) "  ")))
@@ -171,10 +182,12 @@
 
 (defun table-view--render ()
   "Re-render the current buffer from spec + rows.
-Keeps point on the same row id when possible (rows re-sort on each
-update), else falls back to the same line number."
+Renders rows in their current order; sorting is explicit (see
+`table-view--sort-rows'), so a row updated by an action stays in place.
+Keeps point on the same row id when possible, else falls back to the
+same line number."
   (let* ((spec table-view--spec)
-         (rows (table-view--sorted-rows))
+         (rows table-view--rows)
          (widths (table-view--widths spec rows))
          (inhibit-read-only t)
          (line (line-number-at-pos))
@@ -193,9 +206,9 @@ update), else falls back to the same line number."
           (insert (table-view--row-string spec row widths #'table-view--cell-string) "\n")
           (put-text-property start (point) 'table-view-id (alist-get 'id row))
           (put-text-property start (point) 'table-view-row row))))
-    (goto-char (point-min))
     (unless (and id (table-view--goto-id id))
-      (forward-line (1- (max 1 (min line (line-number-at-pos (point-max)))))))))
+      (goto-char (point-min))
+      (forward-line (1- line)))))
 
 ;;; Dispatch
 
@@ -214,6 +227,7 @@ update), else falls back to the same line number."
   (let ((map (make-sparse-keymap)))
     (define-key map "n" #'next-line)
     (define-key map "p" #'previous-line)
+    (define-key map "g" #'table-view-sort)
     (define-key map "^" #'table-view-cycle-sort)
     (define-key map "~" #'table-view-toggle-sort-direction)
     (define-key map "q" #'quit-window)
@@ -244,6 +258,21 @@ update), else falls back to the same line number."
                       (when (eq t (alist-get 'sortable c)) (alist-get 'key c)))
                     (table-view--columns table-view--spec))))
 
+(defun table-view-sort ()
+  "Sort the table by the current sort column and re-render.
+With no active sort column, fall back to the spec's default sort
+column.  This is the primary key that reorders rows; updates from row
+actions leave rows in place until `g' is pressed."
+  (interactive)
+  (unless table-view--sort-key
+    (setq table-view--sort-key
+          (alist-get 'column (alist-get 'sort table-view--spec))))
+  (table-view--sort-rows)
+  (table-view--render)
+  (message "Sort: %s %s"
+           (or table-view--sort-key "-")
+           (if table-view--sort-asc "asc" "desc")))
+
 (defun table-view-cycle-sort ()
   "Cycle the sort column among sortable columns."
   (interactive)
@@ -252,6 +281,7 @@ update), else falls back to the same line number."
          (next (and keys (nth (mod (1+ (or idx -1)) (length keys)) keys))))
     (when next
       (setq table-view--sort-key next table-view--sort-asc t)
+      (table-view--sort-rows)
       (table-view--render)
       (message "Sort: %s asc" next))))
 
@@ -259,6 +289,7 @@ update), else falls back to the same line number."
   "Toggle ascending/descending of the current sort."
   (interactive)
   (setq table-view--sort-asc (not table-view--sort-asc))
+  (table-view--sort-rows)
   (table-view--render)
   (message "Sort: %s %s" table-view--sort-key (if table-view--sort-asc "asc" "desc")))
 
@@ -275,7 +306,8 @@ update), else falls back to the same line number."
   (let ((buf (get-buffer buffer)))
     (when (buffer-live-p buf)
       (with-current-buffer buf
-        (setq table-view--rows (copy-sequence rows))
+        (setq table-view--rows (copy-sequence rows)
+              table-view--sorted nil)
         (table-view--render)))))
 
 (defun table-view-upsert-row (buffer row)
