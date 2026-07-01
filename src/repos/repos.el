@@ -5,7 +5,7 @@
 (require 'magit)
 
 (eval-and-compile
-  (add-to-list 'load-path (expand-file-name "src/repos" user-emacs-directory)))
+  (add-to-list 'load-path (expand-file-name "~/sync/stuff/table-view")))
 (require 'table-view)
 
 (declare-function magit-status "magit-status")

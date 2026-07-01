@@ -90,16 +90,24 @@ Walks up directory-by-directory, asking \"does any marker exist
 here?\" at each level.  This is intentionally different from looping
 over markers: looping would let an early marker (e.g. `.git') in a far
 ancestor win over a later marker (e.g. `CLAUDE.md') in a much closer
-ancestor."
-  (or (when-let ((root (locate-dominating-file
-                        dir
-                        (lambda (parent)
-                          (cl-some (lambda (marker)
-                                     (file-exists-p
-                                      (expand-file-name marker parent)))
-                                   llm-project-root-markers)))))
-        (file-name-as-directory root))
-      (file-name-as-directory dir)))
+ancestor.
+
+The home directory is never treated as a project root.  Markers there
+are global config, not project markers — most importantly `~/.claude',
+claude's own config dir, which matches the `.claude' marker.  Without
+this guard every markerless directory under HOME would resolve to HOME
+and share one `*claude:~*' buffer."
+  (let ((home (expand-file-name "~/")))
+    (or (when-let ((root (locate-dominating-file
+                          dir
+                          (lambda (parent)
+                            (and (not (file-equal-p parent home))
+                                 (cl-some (lambda (marker)
+                                            (file-exists-p
+                                             (expand-file-name marker parent)))
+                                          llm-project-root-markers))))))
+          (file-name-as-directory root))
+        (file-name-as-directory dir))))
 
 (defvar-local llm--prompt-project-root nil
   "Project root captured when the prompt buffer was opened.")
@@ -1544,10 +1552,20 @@ This config sets `line-spacing' globally (see `mijn-ui'); the extra
 pixels between rows break the vertical box-drawing borders of TUIs like
 interactive `claude', so it is zeroed buffer-locally here.  Symbol
 prettification (from `global-prettify-symbols-mode') has no place in a
-terminal grid and is likewise disabled."
+terminal grid and is likewise disabled.
+
+The terminal dimensions are computed during `vterm-mode' init, before
+this hook fires, so they reflect the old `line-spacing'.  A deferred
+resize corrects the mismatch once the buffer is displayed."
   (setq-local line-spacing 0)
   (when (bound-and-true-p prettify-symbols-mode)
-    (prettify-symbols-mode -1)))
+    (prettify-symbols-mode -1))
+  (let ((buf (current-buffer)))
+    (run-with-timer 0 nil
+      (lambda ()
+        (when (and (buffer-live-p buf)
+                   (get-buffer-window buf))
+          (window--adjust-process-windows))))))
 
 ;;; Vterm copy helper (for TUIs that redraw and stomp on selections)
 
