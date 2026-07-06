@@ -57,8 +57,9 @@
 
 (defun table-view-ray--ts (v)
   "Format epoch V (seconds or milliseconds) as a short local time, else \"\"."
+  ;; ISO-ish so the displayed string sorts chronologically (across year ends too).
   (if (and (numberp v) (> v 0))
-      (format-time-string "%m-%d %H:%M" (seconds-to-time (if (> v 1e12) (/ v 1000.0) v)))
+      (format-time-string "%Y-%m-%d %H:%M" (seconds-to-time (if (> v 1e12) (/ v 1000.0) v)))
     ""))
 
 (defun table-view-ray--trunc (s n)
@@ -81,16 +82,17 @@ Returns plain DESC when HEAD-IP or DESC is empty."
 
 (defun table-view-ray--refresh (buf rows-fn &optional id)
   "Refetch rows via ROWS-FN into BUF.
-With ID, update only that row in place (dropping it when it is gone); else
-replace the whole view.  No per-item endpoint exists, so refreshing one row
-still fetches the list -- it just updates a single line and keeps point."
+With ID, update only that row in place (dropping it when it is gone), keeping
+point; else replace the whole view and re-apply the spec's sort.  No per-item
+endpoint exists, so refreshing one row still fetches the list."
   (if (and id (not (equal id "")))
       (if-let ((fresh (cl-find id (funcall rows-fn)
                                :key (lambda (r) (alist-get 'id r)) :test #'equal)))
           (progn (table-view-upsert-row buf fresh) (message "Refreshed %s" id))
         (table-view-delete-row buf id)
         (message "%s is gone" id))
-    (table-view-set-rows buf (funcall rows-fn))))
+    (table-view-set-rows buf (funcall rows-fn))
+    (with-current-buffer (get-buffer buf) (table-view-apply-sort))))
 
 (defun table-view-ray--show (buf title columns sort rows-fn linkp)
   "Display table BUF titled TITLE with COLUMNS, SORT, filled by ROWS-FN.
@@ -170,11 +172,9 @@ RET follows the Org link at point."
     ((key . "ended")      (header . "Ended"))))
 
 (defun table-view-ray--rows-jobs (cluster)
-  "The job rows of CLUSTER, newest first."
+  "The job rows of CLUSTER (order applied from the spec sort)."
   (let ((head (table-view-ray--head cluster))
-        (jobs (sort (table-view-ray--get (format "/api/clusters/%s/jobs" cluster))
-                    (lambda (a b) (> (or (alist-get 'start_time a) 0)
-                                     (or (alist-get 'start_time b) 0))))))
+        (jobs (table-view-ray--get (format "/api/clusters/%s/jobs" cluster))))
     (mapcar
      (lambda (j)
        (let ((jid (or (alist-get 'job_id j) "")))
@@ -213,16 +213,10 @@ RET follows the Org link at point."
     ((key . "updated") (header . "Updated"))))
 
 (defun table-view-ray--rows-nodes (cluster)
-  "The node rows of CLUSTER, head first then by name."
+  "The node rows of CLUSTER (order applied from the spec sort: head, then name)."
   (let* ((data (table-view-ray--get (format "/api/clusters/%s/nodes" cluster)))
          (head (alist-get 'head_ip data))
-         (nodes (sort (alist-get 'nodes data)
-                      (lambda (a b)
-                        (let ((ha (eq (alist-get 'is_head a) t))
-                              (hb (eq (alist-get 'is_head b) t)))
-                          (if (eq ha hb)
-                              (string< (or (alist-get 'node a) "") (or (alist-get 'node b) ""))
-                            ha))))))
+         (nodes (alist-get 'nodes data)))
     (mapcar
      (lambda (n)
        (let ((node (or (alist-get 'node n) "")))
@@ -262,11 +256,9 @@ RET follows the Org link at point."
     ((key . "task")      (header . "Task Id"))))
 
 (defun table-view-ray--rows-tasks (cluster)
-  "The cluster-operation rows of CLUSTER, newest first."
-  (let ((ops (sort (alist-get 'operations
-                              (table-view-ray--get (format "/api/clusters/%s/operations" cluster)))
-                   (lambda (a b) (> (or (alist-get 'created_at a) 0)
-                                    (or (alist-get 'created_at b) 0))))))
+  "The cluster-operation rows of CLUSTER (order applied from the spec sort)."
+  (let ((ops (alist-get 'operations
+                        (table-view-ray--get (format "/api/clusters/%s/operations" cluster)))))
     (mapcar
      (lambda (o)
        (let ((id (or (alist-get 'id o) "")))
