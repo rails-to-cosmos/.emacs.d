@@ -111,6 +111,9 @@
 
 (global-set-key (kbd "C-x y m") #'make-menu)
 (global-set-key (kbd "C-x y r a") #'table-view-ray-actors)
+(global-set-key (kbd "C-x y r j") #'table-view-ray-jobs)
+(global-set-key (kbd "C-x y r n") #'table-view-ray-nodes)
+(global-set-key (kbd "C-x y r t") #'table-view-ray-tasks)
 (global-set-key (kbd "C-x C-o") #'other-frame)
 
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
