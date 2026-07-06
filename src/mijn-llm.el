@@ -64,12 +64,97 @@ vterm and to the inline bubble (captured once at bubble creation)."
                  (string :tag "Model name"))
   :group 'llm)
 
+;;; Model version parsing (for gating effort levels per model)
+
+(defun llm--model-split (model)
+  "Split MODEL into (FAMILY NUMS), without resolving aliases.
+FAMILY is the family string (\"opus\", \"sonnet\", ...) or nil.  NUMS is
+the version as up to two integers (major minor); it is empty for a bare
+alias like \"opus\".  The optional `claude-' prefix and any trailing
+date component (e.g. in \"haiku-4-5-20251001\") are ignored."
+  (let* ((name (string-remove-prefix "claude-" (or model "")))
+         (parts (split-string name "-" t)))
+    (list (car parts)
+          (seq-take
+           (cl-loop for p in (cdr parts)
+                    when (string-match-p "\\`[0-9]+\\'" p)
+                    collect (string-to-number p))
+           2))))
+
+(defun llm--version< (a b)
+  "Non-nil when version list A precedes B (lexicographic on integers).
+A missing component sorts before a present one, so (4) precedes (4 8)."
+  (cond ((null a) (and b t))
+        ((null b) nil)
+        ((= (car a) (car b)) (llm--version< (cdr a) (cdr b)))
+        (t (< (car a) (car b)))))
+
+(defun llm--version>= (a b)
+  "Non-nil when version list A is at least B."
+  (not (llm--version< a b)))
+
+(defun llm--family-newest-version (family)
+  "Newest version (a list like (4 8)) for FAMILY in `llm-model-choices'.
+Nil when FAMILY appears in no listed model."
+  (let (best)
+    (dolist (m llm-model-choices best)
+      (cl-destructuring-bind (fam nums) (llm--model-split m)
+        (when (and (equal fam family) nums
+                   (or (null best) (llm--version< best nums)))
+          (setq best nums))))))
+
+(defun llm--model-family+version (model)
+  "Return (FAMILY . VERSION) for MODEL, resolving aliases; nil if unknown.
+FAMILY is a string like \"opus\"; VERSION is an integer list like (4 8).
+A bare alias (\"opus\") resolves to the newest version of that family in
+`llm-model-choices'."
+  (when (and model (not (string-empty-p model)))
+    (cl-destructuring-bind (family nums) (llm--model-split model)
+      (when family
+        (cons family (or nums (llm--family-newest-version family)))))))
+
+(defun llm--model-supports-ultracode-p (model)
+  "Non-nil when MODEL can use the `ultracode' effort level.
+Nil MODEL (claude's own default) is treated as eligible, since the CLI
+default is a current-generation model.  Otherwise `ultracode' is offered
+for opus 4.8 and newer, and for any Claude 5-family model."
+  (or (null model)
+      (let ((fv (llm--model-family+version model)))
+        (and fv
+             (let ((family (car fv))
+                   (version (cdr fv)))
+               (or (llm--version>= version '(5))
+                   (and (equal family "opus")
+                        (llm--version>= version '(4 8)))))))))
+
+;;; Reasoning effort
+
 (defconst llm-effort-choices
   '("default"
     "low"
     "medium"
-    "high")
-  "Reasoning-effort levels offered by `llm-menu' under the `-e' switch.")
+    "high"
+    "max")
+  "Reasoning-effort levels offered by `llm-menu' for every model.
+Levels available only for some models live in
+`llm-effort-model-choices' and are appended by
+`llm-effort-choices-for-model'.")
+
+(defconst llm-effort-model-choices
+  '(("ultracode" . llm--model-supports-ultracode-p))
+  "Effort levels gated behind a model predicate.
+Each entry is (EFFORT . PREDICATE); PREDICATE is called with the model
+name (a string, or nil for claude's default) and returns non-nil when
+EFFORT should be offered for that model.")
+
+(defun llm-effort-choices-for-model (model)
+  "Return the effort levels offered for MODEL.
+The universal `llm-effort-choices' plus any `llm-effort-model-choices'
+whose predicate passes for MODEL."
+  (append llm-effort-choices
+          (cl-loop for (effort . pred) in llm-effort-model-choices
+                   when (funcall pred model)
+                   collect effort)))
 
 (defcustom llm-effort nil
   "Reasoning effort passed to claude as `--effort'.
@@ -1388,6 +1473,23 @@ Source-file comment is left untouched — remove it manually if desired."
                       (transient-args 'llm-menu))))
     (if (equal val "default") nil val)))
 
+(defun llm--menu-current-model ()
+  "The model in effect for `llm-menu': the `-m' override, else `llm-model'.
+Guarded so it is safe to call while the transient is live (e.g. from an
+infix `:choices' function)."
+  (or (ignore-errors (llm--menu-flag "--model="))
+      llm-model))
+
+(defun llm--menu-effort ()
+  "The effort selected in `llm-menu', filtered by the current model.
+Returns nil when no effort is set, or when the set effort is gated to a
+model the current selection does not satisfy (e.g. \"ultracode\" with a
+non-opus-4.8 model), so an unsupported level is never passed to claude."
+  (let ((effort (llm--menu-flag "--effort=")))
+    (and effort
+         (member effort (llm-effort-choices-for-model (llm--menu-current-model)))
+         effort)))
+
 ;;;###autoload
 (defun llm-set-default-model (model)
   "Set MODEL as the default for new claude sessions and persist it.
@@ -1431,7 +1533,7 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
   (let ((llm-dangerously-skip-permissions
          (or llm-dangerously-skip-permissions (llm--menu-dangerous-p)))
         (llm-model (or (llm--menu-flag "--model=") llm-model))
-        (llm-effort (or (llm--menu-flag "--effort=") llm-effort))
+        (llm-effort (or (llm--menu-effort) llm-effort))
         (root (when (llm--menu-use-cwd-p) default-directory))
         (current-prefix-arg nil))
     (llm root)))
@@ -1453,7 +1555,8 @@ Per-invocation overrides via the menu's `-m' switch are unaffected."
    ("-m" llm--menu-model-description                    "--model="
     :choices (lambda () llm-model-choices))
    ("-e" llm--menu-effort-description                   "--effort="
-    :choices (lambda () llm-effort-choices))]
+    :choices (lambda ()
+               (llm-effort-choices-for-model (llm--menu-current-model))))]
   [["Session"
     ("c" llm--menu-open-claude)
     ("v" "Vterm in project"       llm-vterm-here)

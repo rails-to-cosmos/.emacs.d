@@ -7,9 +7,10 @@
 
 (cl-defun my-python-imports ()
   (interactive)
-  (save-excursion
-    (python-fix-imports)
-    (pyimpsort-buffer)))
+  ;; (save-excursion
+  ;;   (python-fix-imports)
+  ;;   (pyimpsort-buffer))
+  )
 
 (defun my-python--dedent (text)
   "Strip leading whitespace from each line of TEXT."

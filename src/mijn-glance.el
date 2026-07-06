@@ -2,7 +2,7 @@
 (add-to-list 'load-path "~/sync/stuff/org-glance/src/view/")
 
 (use-package org-glance
-  :load-path "~/sync/stuff/org-glance"
+  :load-path ("~/sync/stuff/org-glance/dist")
   ;; :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/org-glance")
   :bind (("C-x j" . org-glance-form-action)
          ;; :map org-mode-map
