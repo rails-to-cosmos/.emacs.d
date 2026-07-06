@@ -5,20 +5,22 @@
 ;;; Commentary:
 ;; Browse a Ray cluster (served by the ray-cluster-manager service) as
 ;; table-views.  Each command asks (completion, match required) which cluster,
-;; then shows one resource; `g' refetches.
+;; then shows one resource:
 ;;
 ;;   M-x table-view-ray-actors      actors: id, class, name, state, restarts, pid, job
 ;;   M-x table-view-ray-jobs        jobs: id, status, entrypoint, submission, start/end
 ;;   M-x table-view-ray-nodes       nodes: role, cpu/mem/disk %, running/pending tasks
 ;;   M-x table-view-ray-tasks       cluster operations: op, status, created/finished
 ;;
-;; Id/job/node cells are Org links into the Ray dashboard
-;; (http://HEAD_IP:8265/#/…); press RET, C-c C-o, or mouse-1 to open.  Point
-;; `table-view-ray-base-url' at the manager.
+;; In every view: `g' refreshes the row at point, `G' refreshes the whole view,
+;; RET/C-c C-o/mouse-1 follows the Org link in id/job/node cells (into the Ray
+;; dashboard at http://HEAD_IP:8265/#/…).  Point `table-view-ray-base-url' at
+;; the manager.
 
 ;;; Code:
 
 (require 'table-view)
+(require 'cl-lib)
 (require 'url)
 (require 'json)
 
@@ -77,17 +79,34 @@ Returns plain DESC when HEAD-IP or DESC is empty."
                    (mapcar (lambda (c) (alist-get 'name c)) (table-view-ray--get "/api/clusters/"))
                    nil t))
 
-(defun table-view-ray--show (buf title columns sort fill-fn linkp)
-  "Display a table BUF titled TITLE with COLUMNS, SORT, and FILL-FN.
-With LINKP, bind RET to follow the Org link at point."
-  (let ((spec `((title . ,title) (columns . ,columns) (sort . ,sort)))
-        (handlers (and linkp `(("open-link" . ,(lambda (_id _row) (table-view-open-link)))))))
-    (table-view-display
-     buf
-     (if linkp
-         (append spec '((actions . (((key . "RET") (label . "Open") (command . "open-link"))))))
-       spec)
-     handlers fill-fn)
+(defun table-view-ray--refresh (buf rows-fn &optional id)
+  "Refetch rows via ROWS-FN into BUF.
+With ID, update only that row in place (dropping it when it is gone); else
+replace the whole view.  No per-item endpoint exists, so refreshing one row
+still fetches the list -- it just updates a single line and keeps point."
+  (if (and id (not (equal id "")))
+      (if-let ((fresh (cl-find id (funcall rows-fn)
+                               :key (lambda (r) (alist-get 'id r)) :test #'equal)))
+          (progn (table-view-upsert-row buf fresh) (message "Refreshed %s" id))
+        (table-view-delete-row buf id)
+        (message "%s is gone" id))
+    (table-view-set-rows buf (funcall rows-fn))))
+
+(defun table-view-ray--show (buf title columns sort rows-fn linkp)
+  "Display table BUF titled TITLE with COLUMNS, SORT, filled by ROWS-FN.
+Binds `g' to refresh the row at point and `G' to refresh all; with LINKP,
+RET follows the Org link at point."
+  (let* ((refresh (lambda (&optional id) (table-view-ray--refresh buf rows-fn id)))
+         (actions (append
+                   '(((key . "g") (label . "Refresh row") (command . "ray-refresh-one"))
+                     ((key . "G") (label . "Refresh all") (command . "ray-refresh-all")))
+                   (and linkp '(((key . "RET") (label . "Open") (command . "open-link"))))))
+         (handlers (append
+                    `(("ray-refresh-one" . ,(lambda (id _row) (funcall refresh id)))
+                      ("ray-refresh-all" . ,(lambda (_id _row) (funcall refresh))))
+                    (and linkp `(("open-link" . ,(lambda (_id _row) (table-view-open-link)))))))
+         (spec `((title . ,title) (columns . ,columns) (sort . ,sort) (actions . ,actions))))
+    (table-view-display buf spec handlers (lambda (_b) (funcall refresh)))
     (get-buffer buf)))
 
 ;;; Actors
@@ -106,25 +125,24 @@ With LINKP, bind RET to follow the Org link at point."
     ((key . "pid")      (header . "PID")      (type . "number") (align . "right"))
     ((key . "job")      (header . "Job"))))
 
-(defun table-view-ray--fill-actors (buf cluster)
+(defun table-view-ray--rows-actors (cluster)
+  "The actor rows of CLUSTER (server already sorts by state, then name)."
   (let* ((data (table-view-ray--get (format "/api/clusters/%s/actors" cluster)))
          (head (alist-get 'head_ip data)))
-    (table-view-set-rows
-     buf
-     (mapcar
-      (lambda (a)
-        (let* ((id (or (alist-get 'actor_id a) ""))
-               (short (if (> (length id) 8) (substring id 0 8) id)))
-          (list (cons 'id (if (string-empty-p id) short id))
-                (cons 'cells
-                      (list (cons 'actor    (table-view-ray--link head (format "actors/%s" id) short))
-                            (cons 'class    (or (alist-get 'class_name a) ""))
-                            (cons 'name     (or (alist-get 'name a) ""))
-                            (cons 'state    (or (alist-get 'state a) ""))
-                            (cons 'restarts (or (alist-get 'num_restarts a) 0))
-                            (cons 'pid      (or (alist-get 'pid a) 0))
-                            (cons 'job      (or (alist-get 'job_id a) "")))))))
-      (alist-get 'actors data)))))
+    (mapcar
+     (lambda (a)
+       (let* ((id (or (alist-get 'actor_id a) ""))
+              (short (if (> (length id) 8) (substring id 0 8) id)))
+         (list (cons 'id (if (string-empty-p id) short id))
+               (cons 'cells
+                     (list (cons 'actor    (table-view-ray--link head (format "actors/%s" id) short))
+                           (cons 'class    (or (alist-get 'class_name a) ""))
+                           (cons 'name     (or (alist-get 'name a) ""))
+                           (cons 'state    (or (alist-get 'state a) ""))
+                           (cons 'restarts (or (alist-get 'num_restarts a) 0))
+                           (cons 'pid      (or (alist-get 'pid a) 0))
+                           (cons 'job      (or (alist-get 'job_id a) "")))))))
+     (alist-get 'actors data))))
 
 ;;;###autoload
 (defun table-view-ray-actors (cluster)
@@ -134,7 +152,7 @@ With LINKP, bind RET to follow the Org link at point."
                         (format "Ray actors — %s" cluster)
                         table-view-ray--actor-columns
                         '((column . "state") (ascending . t))
-                        (lambda (b) (table-view-ray--fill-actors b cluster)) t))
+                        (lambda () (table-view-ray--rows-actors cluster)) t))
 
 ;;; Jobs
 
@@ -151,27 +169,24 @@ With LINKP, bind RET to follow the Org link at point."
     ((key . "started")    (header . "Started"))
     ((key . "ended")      (header . "Ended"))))
 
-(defun table-view-ray--fill-jobs (buf cluster)
-  ;; A fill-fn's rows land after display, so the spec's default sort never
-  ;; applies -- order the raw data here (newest first).
+(defun table-view-ray--rows-jobs (cluster)
+  "The job rows of CLUSTER, newest first."
   (let ((head (table-view-ray--head cluster))
         (jobs (sort (table-view-ray--get (format "/api/clusters/%s/jobs" cluster))
                     (lambda (a b) (> (or (alist-get 'start_time a) 0)
                                      (or (alist-get 'start_time b) 0))))))
-    (table-view-set-rows
-     buf
-     (mapcar
-      (lambda (j)
-        (let ((jid (or (alist-get 'job_id j) "")))
-          (list (cons 'id (if (string-empty-p jid) (or (alist-get 'submission_id j) "?") jid))
-                (cons 'cells
-                      (list (cons 'job        (table-view-ray--link head (format "jobs/%s" jid) jid))
-                            (cons 'status     (or (alist-get 'status j) ""))
-                            (cons 'entrypoint (table-view-ray--trunc (alist-get 'entrypoint j) 70))
-                            (cons 'submission (or (alist-get 'submission_id j) ""))
-                            (cons 'started    (table-view-ray--ts (alist-get 'start_time j)))
-                            (cons 'ended      (table-view-ray--ts (alist-get 'end_time j))))))))
-      jobs))))
+    (mapcar
+     (lambda (j)
+       (let ((jid (or (alist-get 'job_id j) "")))
+         (list (cons 'id (if (string-empty-p jid) (or (alist-get 'submission_id j) "?") jid))
+               (cons 'cells
+                     (list (cons 'job        (table-view-ray--link head (format "jobs/%s" jid) jid))
+                           (cons 'status     (or (alist-get 'status j) ""))
+                           (cons 'entrypoint (table-view-ray--trunc (alist-get 'entrypoint j) 70))
+                           (cons 'submission (or (alist-get 'submission_id j) ""))
+                           (cons 'started    (table-view-ray--ts (alist-get 'start_time j)))
+                           (cons 'ended      (table-view-ray--ts (alist-get 'end_time j))))))))
+     jobs)))
 
 ;;;###autoload
 (defun table-view-ray-jobs (cluster)
@@ -180,8 +195,8 @@ With LINKP, bind RET to follow the Org link at point."
   (table-view-ray--show (format "*ray-jobs: %s*" cluster)
                         (format "Ray jobs — %s" cluster)
                         table-view-ray--job-columns
-                        '((column . "status") (ascending . t))
-                        (lambda (b) (table-view-ray--fill-jobs b cluster)) t))
+                        '((column . "started") (ascending . nil))
+                        (lambda () (table-view-ray--rows-jobs cluster)) t))
 
 ;;; Nodes
 
@@ -197,32 +212,31 @@ With LINKP, bind RET to follow the Org link at point."
     ((key . "pending") (header . "Pend")  (type . "number") (align . "right"))
     ((key . "updated") (header . "Updated"))))
 
-(defun table-view-ray--fill-nodes (buf cluster)
+(defun table-view-ray--rows-nodes (cluster)
+  "The node rows of CLUSTER, head first then by name."
   (let* ((data (table-view-ray--get (format "/api/clusters/%s/nodes" cluster)))
          (head (alist-get 'head_ip data))
-         (nodes (sort (alist-get 'nodes data)         ; head first, then by name
+         (nodes (sort (alist-get 'nodes data)
                       (lambda (a b)
                         (let ((ha (eq (alist-get 'is_head a) t))
                               (hb (eq (alist-get 'is_head b) t)))
                           (if (eq ha hb)
                               (string< (or (alist-get 'node a) "") (or (alist-get 'node b) ""))
                             ha))))))
-    (table-view-set-rows
-     buf
-     (mapcar
-      (lambda (n)
-        (let ((node (or (alist-get 'node n) "")))
-          (list (cons 'id node)
-                (cons 'cells
-                      (list (cons 'node    (table-view-ray--link head (format "cluster/nodes/%s" node) node))
-                            (cons 'role    (if (eq (alist-get 'is_head n) t) "head" "worker"))
-                            (cons 'cpu     (or (alist-get 'cpu_pct n) 0))
-                            (cons 'mem     (or (alist-get 'mem_pct n) 0))
-                            (cons 'disk    (or (alist-get 'disk_pct n) 0))
-                            (cons 'running (or (alist-get 'running n) 0))
-                            (cons 'pending (or (alist-get 'pending n) 0))
-                            (cons 'updated (table-view-ray--ts (alist-get 'last_ts n))))))))
-      nodes))))
+    (mapcar
+     (lambda (n)
+       (let ((node (or (alist-get 'node n) "")))
+         (list (cons 'id node)
+               (cons 'cells
+                     (list (cons 'node    (table-view-ray--link head (format "cluster/nodes/%s" node) node))
+                           (cons 'role    (if (eq (alist-get 'is_head n) t) "head" "worker"))
+                           (cons 'cpu     (or (alist-get 'cpu_pct n) 0))
+                           (cons 'mem     (or (alist-get 'mem_pct n) 0))
+                           (cons 'disk    (or (alist-get 'disk_pct n) 0))
+                           (cons 'running (or (alist-get 'running n) 0))
+                           (cons 'pending (or (alist-get 'pending n) 0))
+                           (cons 'updated (table-view-ray--ts (alist-get 'last_ts n))))))))
+     nodes)))
 
 ;;;###autoload
 (defun table-view-ray-nodes (cluster)
@@ -232,7 +246,7 @@ With LINKP, bind RET to follow the Org link at point."
                         (format "Ray nodes — %s" cluster)
                         table-view-ray--node-columns
                         '((column . "role") (ascending . t))
-                        (lambda (b) (table-view-ray--fill-nodes b cluster)) t))
+                        (lambda () (table-view-ray--rows-nodes cluster)) t))
 
 ;;; Operations (cluster management tasks)
 
@@ -247,24 +261,23 @@ With LINKP, bind RET to follow the Org link at point."
     ((key . "finished")  (header . "Finished"))
     ((key . "task")      (header . "Task Id"))))
 
-(defun table-view-ray--fill-tasks (buf cluster)
+(defun table-view-ray--rows-tasks (cluster)
+  "The cluster-operation rows of CLUSTER, newest first."
   (let ((ops (sort (alist-get 'operations
                               (table-view-ray--get (format "/api/clusters/%s/operations" cluster)))
                    (lambda (a b) (> (or (alist-get 'created_at a) 0)
                                     (or (alist-get 'created_at b) 0))))))
-    (table-view-set-rows
-     buf
-     (mapcar
-      (lambda (o)
-        (let ((id (or (alist-get 'id o) "")))
-          (list (cons 'id id)
-                (cons 'cells
-                      (list (cons 'operation (or (alist-get 'operation o) ""))
-                            (cons 'status    (or (alist-get 'status o) ""))
-                            (cons 'created   (table-view-ray--ts (alist-get 'created_at o)))
-                            (cons 'finished  (table-view-ray--ts (alist-get 'finished_at o)))
-                            (cons 'task      id))))))
-      ops))))
+    (mapcar
+     (lambda (o)
+       (let ((id (or (alist-get 'id o) "")))
+         (list (cons 'id id)
+               (cons 'cells
+                     (list (cons 'operation (or (alist-get 'operation o) ""))
+                           (cons 'status    (or (alist-get 'status o) ""))
+                           (cons 'created   (table-view-ray--ts (alist-get 'created_at o)))
+                           (cons 'finished  (table-view-ray--ts (alist-get 'finished_at o)))
+                           (cons 'task      id))))))
+     ops)))
 
 ;;;###autoload
 (defun table-view-ray-tasks (cluster)
@@ -274,7 +287,7 @@ With LINKP, bind RET to follow the Org link at point."
                         (format "Ray operations — %s" cluster)
                         table-view-ray--op-columns
                         '((column . "created") (ascending . nil))
-                        (lambda (b) (table-view-ray--fill-tasks b cluster)) nil))
+                        (lambda () (table-view-ray--rows-tasks cluster)) nil))
 
 (provide 'ray-cluster)
 ;;; ray-cluster.el ends here
