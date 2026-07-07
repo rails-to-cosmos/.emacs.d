@@ -487,7 +487,8 @@ Prompts for which file to save to when `repos-extra-files' is set."
     (actions
      . (((key . "RET") (command . "open")    (label . "Open in Magit"))
         ((key . "F")   (command . "pull")    (label . "Pull"))
-        ((key . "g")   (command . "refresh") (label . "Refresh"))))
+        ((key . "g")   (command . "refresh") (label . "Refresh"))
+        ((key . "c")   (command . "clone")   (label . "Clone"))))
     (sort . ((column . "state") (ascending . t)))
     (rows . ()))
   "Declarative `table-view' schema for the repository dashboard.
@@ -553,6 +554,24 @@ mirrors the keyword ladder in `repos--todo-kw'.")
   "Re-fill the current table view from the registered repos."
   (table-view-refresh (current-buffer)))
 
+(defun repos-table--clone (id _row)
+  "Clone the repo at point (ID, a path) from its configured remote.
+Acts only on a MISSING repo that has a remote in `repos-list'; the row
+reflects the clone as it resolves via `repos--status-change-functions'."
+  (when id
+    (let* ((state  (repos--status-get id 'state))
+           (entry  (seq-find (lambda (e) (equal (repos--abbrev (repos--path e)) id))
+                             repos-list))
+           (remote (repos--remote entry)))
+      (cond
+       ((not (equal state "missing"))
+        (message "repos-table: %s is not missing" id))
+       ((null remote)
+        (message "repos-table: no remote configured for %s" id))
+       (t
+        (message "repos-table: cloning %s..." id)
+        (repos--clone-async id remote (expand-file-name id)))))))
+
 (defun repos-table--on-status-change (path)
   "Reflect PATH's new status in the table view, when it is live.
 Registered on `repos--status-change-functions' so transitions triggered
@@ -573,7 +592,8 @@ the row immediately."
               (copy-tree repos-table--spec)
               (list (cons "open"    #'repos-table--open)
                     (cons "pull"    #'repos-table--pull)
-                    (cons "refresh" #'repos-table--refresh))
+                    (cons "refresh" #'repos-table--refresh)
+                    (cons "clone"   #'repos-table--clone))
               #'repos-table--fill)))
     ;; Observe status changes so pulls/clones reflect live; drop the
     ;; observer when the view is closed.
