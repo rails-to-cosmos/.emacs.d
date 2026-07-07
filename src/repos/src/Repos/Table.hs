@@ -145,11 +145,15 @@ stateBadges =
 
 reposColumns :: [Column]
 reposColumns =
-  [ Column "state"  "State"  ColBadge  True  AlignLeft  stateBadges
-  , Column "name"   "Repo"   ColText   True  AlignLeft  []
-  , Column "branch" "Branch" ColText   False AlignLeft  []
-  , Column "behind" "Behind" ColNumber True  AlignRight []
-  , Column "local"  "Local"  ColText   False AlignLeft  []
+  [ Column "state"     "State"     ColBadge  True  AlignLeft  stateBadges
+  , Column "name"      "Repo"      ColText   True  AlignLeft  []
+  , Column "branch"    "Branch"    ColText   False AlignLeft  []
+  , Column "behind"    "Behind"    ColNumber True  AlignRight []
+  , Column "staged"    "Staged"    ColNumber True  AlignRight []
+  , Column "modified"  "Modified"  ColNumber True  AlignRight []
+  , Column "untracked" "Untracked" ColNumber True  AlignRight []
+  , Column "conflicts" "Conflicts" ColNumber True  AlignRight []
+  , Column "note"      "Note"      ColText   False AlignLeft  []
   ]
 
 reposActions :: [Action]
@@ -168,7 +172,7 @@ statusKeyword s = case rsState s of
   Error    -> "ERROR"
   Ready
     | rsBehind s > 0    -> "BEHIND"
-    | rsModified s > 0  -> "MODIFIED"
+    | rsModified s > 0 || rsStaged s > 0 || rsConflicts s > 0 -> "MODIFIED"
     | rsUntracked s > 0 -> "UNTRACKED"
     | otherwise         -> "UP_TO_DATE"
 
@@ -184,18 +188,24 @@ reposRow home (path, st) =
   in Row
        { rowId = p -- absolute: handlers feed this to git/magit
        , rowCells =
-           [ ("state",  toJSON (statusKeyword st))
-           , ("name",   toJSON (abbrevHome home p))
-           , ("branch", toJSON (maybe "" id (rsBranch st)))
-           , ("behind", toJSON (rsBehind st))
-           , ("local",  toJSON (localCell st))
+           [ ("state",     toJSON (statusKeyword st))
+           , ("name",      toJSON (abbrevHome home p))
+           , ("branch",    toJSON (maybe "" id (rsBranch st)))
+           , ("behind",    toJSON (rsBehind st))
+           , ("staged",    toJSON (rsStaged st))
+           , ("modified",  toJSON (rsModified st))
+           , ("untracked", toJSON (rsUntracked st))
+           , ("conflicts", toJSON (rsConflicts st))
+           , ("note",      toJSON (noteCell st))
            ]
        }
   where
-    localCell s = case rsState s of
+    -- The Note column carries only the exceptional messages the numeric
+    -- columns cannot express; it is empty for a plain (dirty or clean) repo.
+    noteCell s = case rsState s of
       Error   -> maybe "" id (rsError s)
       Missing -> "clone with c"
-      _       -> maybe "" id (rsLocal s)
+      _       -> ""
 
 -- | Build the repos dashboard as a generic 'TableView'. HOME is the absolute
 -- home directory (for display abbreviation); ROWS are gathered statuses.

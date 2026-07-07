@@ -68,6 +68,20 @@
     (puthash "~/r" '((state . "ready") (behind . 0) (modified . 1) (untracked . 0)) repos--statuses)
     (should (equal "MODIFIED" (repos--todo-kw "~/r")))))
 
+(ert-deftest test-repos-todo-kw-staged ()
+  "Staged-only changes still read as MODIFIED."
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (behind . 0) (staged . 1)
+                     (modified . 0) (untracked . 0) (conflicts . 0)) repos--statuses)
+    (should (equal "MODIFIED" (repos--todo-kw "~/r")))))
+
+(ert-deftest test-repos-todo-kw-conflicts ()
+  "Unmerged files read as MODIFIED."
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (behind . 0) (staged . 0)
+                     (modified . 0) (untracked . 0) (conflicts . 2)) repos--statuses)
+    (should (equal "MODIFIED" (repos--todo-kw "~/r")))))
+
 (ert-deftest test-repos-todo-kw-untracked ()
   (with-clean-repos
     (puthash "~/r" '((state . "ready") (behind . 0) (modified . 0) (untracked . 3)) repos--statuses)
@@ -96,20 +110,33 @@
       (should (equal 3 (alist-get 'behind cells))))))
 
 (ert-deftest test-repos-table-row-error ()
-  "Error rows surface the error message in the local cell."
+  "Error rows surface the error message in the note cell."
   (with-clean-repos
     (puthash "~/r" '((state . "error") (error . "boom")) repos--statuses)
     (let ((cells (alist-get 'cells (repos-table--row "~/r"))))
       (should (equal "ERROR" (alist-get 'state cells)))
-      (should (equal "boom" (alist-get 'local cells))))))
+      (should (equal "boom" (alist-get 'note cells))))))
 
 (ert-deftest test-repos-table-row-missing ()
-  "Missing rows surface a clone hint."
+  "Missing rows surface a clone hint in the note cell."
   (with-clean-repos
     (puthash "~/r" '((state . "missing")) repos--statuses)
     (let ((cells (alist-get 'cells (repos-table--row "~/r"))))
       (should (equal "MISSING" (alist-get 'state cells)))
-      (should (equal "clone with c" (alist-get 'local cells))))))
+      (should (equal "clone with c" (alist-get 'note cells))))))
+
+(ert-deftest test-repos-table-row-counts ()
+  "Row cells expose the per-category counts, with an empty note when clean."
+  (with-clean-repos
+    (puthash "~/r" '((state . "ready") (branch . "main") (behind . 0)
+                     (staged . 2) (modified . 3) (untracked . 5) (conflicts . 1))
+             repos--statuses)
+    (let ((cells (alist-get 'cells (repos-table--row "~/r"))))
+      (should (equal 2 (alist-get 'staged cells)))
+      (should (equal 3 (alist-get 'modified cells)))
+      (should (equal 5 (alist-get 'untracked cells)))
+      (should (equal 1 (alist-get 'conflicts cells)))
+      (should (equal "" (alist-get 'note cells))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Keybinding

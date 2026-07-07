@@ -22,9 +22,10 @@ data RepoStatus = RepoStatus
   { rsState     :: RepoState
   , rsBranch    :: Maybe Text
   , rsBehind    :: Int
-  , rsModified  :: Int
+  , rsStaged    :: Int  -- ^ files with index-side changes (git porcelain X)
+  , rsModified  :: Int  -- ^ files with worktree-side changes (git porcelain Y)
   , rsUntracked :: Int
-  , rsLocal     :: Maybe Text
+  , rsConflicts :: Int  -- ^ unmerged files
   , rsFiles     :: [Text]
   , rsError     :: Maybe Text
   } deriving (Show)
@@ -34,9 +35,10 @@ instance ToJSON RepoStatus where
     [ "state"     .= rsState
     , "branch"    .= rsBranch
     , "behind"    .= rsBehind
+    , "staged"    .= rsStaged
     , "modified"  .= rsModified
     , "untracked" .= rsUntracked
-    , "local"     .= rsLocal
+    , "conflicts" .= rsConflicts
     , "files"     .= rsFiles
     , "error"     .= rsError
     ]
@@ -46,9 +48,10 @@ emptyStatus = RepoStatus
   { rsState     = Checking
   , rsBranch    = Nothing
   , rsBehind    = 0
+  , rsStaged    = 0
   , rsModified  = 0
   , rsUntracked = 0
-  , rsLocal     = Nothing
+  , rsConflicts = 0
   , rsFiles     = []
   , rsError     = Nothing
   }

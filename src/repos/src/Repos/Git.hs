@@ -51,15 +51,15 @@ gatherStatus :: FilePath -> IO RepoStatus
 gatherStatus path = do
   branch  <- git path ["rev-parse", "--abbrev-ref", "HEAD"]
   behind  <- parseBehind <$> git path ["rev-list", "--count", "HEAD..@{u}"]
-  (modCount, untrackedCount, localDesc, files) <- parsePortcelain path
-  let dirty = modCount > 0 || untrackedCount > 0
+  (staged, modCount, untrackedCount, conflicts, files) <- parsePorcelain path
   pure RepoStatus
     { rsState     = Ready
     , rsBranch    = T.pack <$> branch
     , rsBehind    = behind
+    , rsStaged    = staged
     , rsModified  = modCount
     , rsUntracked = untrackedCount
-    , rsLocal     = if dirty then Just localDesc else Nothing
+    , rsConflicts = conflicts
     , rsFiles     = files
     , rsError     = Nothing
     }
@@ -73,29 +73,42 @@ readMaybe' s = case reads s of
   [(n, "")] -> Just n
   _         -> Nothing
 
-parsePortcelain :: FilePath -> IO (Int, Int, Text, [Text])
-parsePortcelain path = do
+-- | Count files by @git status --porcelain@ XY status codes.
+-- Returns (staged, modified, untracked, conflicts, files).  A file may be
+-- counted in both staged and modified (e.g. code @MM@); untracked (@??@) and
+-- unmerged files are counted only in their own bucket.
+parsePorcelain :: FilePath -> IO (Int, Int, Int, Int, [Text])
+parsePorcelain path = do
   output <- git path ["status", "--porcelain"]
   let ls = maybe [] (filter (not . null) . lines) output
-      (modCount, untrackedCount, files) = foldl' classify (0, 0, []) ls
-      parts = concat
-        [ ["Modified " <> T.pack (show modCount) <> " file" <> plural modCount | modCount > 0]
-        , ["Untracked " <> T.pack (show untrackedCount) <> " file" <> plural untrackedCount | untrackedCount > 0]
-        ]
-      localDesc = T.intercalate ", " parts
-  pure (modCount, untrackedCount, localDesc, reverse files)
+      (staged, modified, untracked, conflicts, files) =
+        foldl' classify (0, 0, 0, 0, []) ls
+  pure (staged, modified, untracked, conflicts, reverse files)
   where
-    classify (m, u, fs) line
-      | "?" `isPrefixOfStr` line = (m, u + 1, fileFromLine line : fs)
-      | otherwise                = (m + 1, u, fileFromLine line : fs)
+    classify (s, m, u, c, fs) line =
+      let x    = charAt line 0
+          y    = charAt line 1
+          code = [x, y]
+          fs'  = fileFromLine line : fs
+      in if code == "??"            then (s, m, u + 1, c, fs')
+         else if code `elem` unmerged then (s, m, u, c + 1, fs')
+         else ( if x `elem` indexCodes then s + 1 else s
+              , if y `elem` treeCodes  then m + 1 else m
+              , u, c, fs' )
+
+    -- The seven unmerged combinations git reports (both sides `U`, or the
+    -- add/add and delete/delete cases).
+    unmerged :: [String]
+    unmerged = ["DD", "AU", "UD", "UA", "DU", "AA", "UU"]
+
+    indexCodes = "MADRC" :: String  -- index side has a staged change
+    treeCodes  = "MD"    :: String  -- worktree side has an unstaged change
+
+    charAt s i = if length s > i then s !! i else ' '
 
     fileFromLine line
       | length line >= 3 = T.pack (drop 3 line)
       | otherwise        = T.pack line
-
-    isPrefixOfStr p s = take (length p) s == p
-
-    plural n = if n == 1 then "" else "s"
 
 -- | Detect the origin remote URL for a git repo.
 detectRemote :: FilePath -> IO (Maybe Text)
