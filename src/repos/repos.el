@@ -456,32 +456,43 @@ Prompts for which file to save to when `repos-extra-files' is set."
 
 ;;; Table-view dashboard (generic table-view.el core)
 ;;
-;; The Haskell `table' command supplies the SCHEMA (columns/actions/sort);
-;; the rows are filled here from the registered repos, reusing the streaming
-;; `repos--call-batch' and `repos--statuses'.  This is the repository
-;; dashboard (C-x y p); status transitions reflect live via
+;; The table SCHEMA (columns/actions/sort) is declared here in Elisp and
+;; handed straight to `table-view-display'; rows are filled from the
+;; registered repos via the streaming `repos--call-batch' and
+;; `repos--statuses'.  The Haskell backend is used only for git work
+;; (status/batch/clone/...), not for describing the view.  This is the
+;; repository dashboard (C-x y p); status transitions reflect live via
 ;; `repos--status-change-functions'.
 
-(defun repos-table--call-table (paths callback)
-  "Call the backend `table' command with PATHS; CALLBACK gets the JSON string.
-With PATHS nil this returns just the schema (no rows)."
-  (repos--ensure-backend)
-  (let* ((process-connection-type nil) ;; pipe, so `process-send-eof' closes stdin
-         (buf (generate-new-buffer " *repos-table-proc*"))
-         (proc (start-process "repos-table" buf repos--backend "table")))
-    (set-process-sentinel
-     proc
-     (lambda (process _event)
-       (when (memq (process-status process) '(exit signal))
-         (let ((out (with-current-buffer (process-buffer process) (buffer-string)))
-               (ok (= (process-exit-status process) 0)))
-           (kill-buffer (process-buffer process))
-           (if ok
-               (funcall callback out)
-             (message "repos-table: backend `table' failed (no view opened): %s"
-                      (string-trim out)))))))
-    (process-send-string proc (json-encode `((repos . ,(vconcat paths)))))
-    (process-send-eof proc)))
+(defconst repos-table--spec
+  '((title . "Repository Status")
+    (columns
+     . (((key . "state") (header . "State") (type . "badge") (sortable . t) (align . "left")
+         (badges . (((value . "CHECKING")   (color . "#e0af68"))
+                    ((value . "FETCHING")   (color . "#e0af68"))
+                    ((value . "BEHIND")     (color . "#e67e22"))
+                    ((value . "MODIFIED")   (color . "#749AF7"))
+                    ((value . "MISSING")    (color . "#9b59b6"))
+                    ((value . "ERROR")      (color . "#c0392b"))
+                    ((value . "UP_TO_DATE") (color . "#9ece6a"))
+                    ((value . "UNTRACKED")  (color . "#565f89")))))
+        ((key . "name")      (header . "Repo")      (type . "text")   (sortable . t)   (align . "left"))
+        ((key . "branch")    (header . "Branch")    (type . "text")   (sortable . nil) (align . "left"))
+        ((key . "behind")    (header . "Behind")    (type . "number") (sortable . t)   (align . "right"))
+        ((key . "staged")    (header . "Staged")    (type . "number") (sortable . t)   (align . "right"))
+        ((key . "modified")  (header . "Modified")  (type . "number") (sortable . t)   (align . "right"))
+        ((key . "untracked") (header . "Untracked") (type . "number") (sortable . t)   (align . "right"))
+        ((key . "conflicts") (header . "Conflicts") (type . "number") (sortable . t)   (align . "right"))
+        ((key . "note")      (header . "Note")      (type . "text")   (sortable . nil) (align . "left"))))
+    (actions
+     . (((key . "RET") (command . "open")    (label . "Open in Magit"))
+        ((key . "F")   (command . "pull")    (label . "Pull"))
+        ((key . "g")   (command . "refresh") (label . "Refresh"))))
+    (sort . ((column . "state") (ascending . t)))
+    (rows . ()))
+  "Declarative `table-view' schema for the repository dashboard.
+The state badge palette order doubles as the status sort priority and
+mirrors the keyword ladder in `repos--todo-kw'.")
 
 (defun repos-table--row (path)
   "Build a `table-view' row alist for the repo at PATH (abbreviated)."
@@ -556,25 +567,23 @@ the row immediately."
   "Show the repository dashboard as a generic declarative table."
   (interactive)
   (repos--ensure-loaded)
-  (repos-table--call-table
-   nil ;; schema only; rows are filled by `repos-table--fill'
-   (lambda (json)
-     (let ((buf (table-view-display
-                 "*repos-table*"
-                 (table-view-parse json)
-                 (list (cons "open"    #'repos-table--open)
-                       (cons "pull"    #'repos-table--pull)
-                       (cons "refresh" #'repos-table--refresh))
-                 #'repos-table--fill)))
-       ;; Observe status changes so pulls/clones reflect live; drop the
-       ;; observer when the view is closed.
-       (add-hook 'repos--status-change-functions #'repos-table--on-status-change)
-       (with-current-buffer buf
-         (add-hook 'kill-buffer-hook
-                   (lambda ()
-                     (remove-hook 'repos--status-change-functions
-                                  #'repos-table--on-status-change))
-                   nil t))))))
+  ;; `copy-tree' so the shared constant spec is never mutated by the view.
+  (let ((buf (table-view-display
+              "*repos-table*"
+              (copy-tree repos-table--spec)
+              (list (cons "open"    #'repos-table--open)
+                    (cons "pull"    #'repos-table--pull)
+                    (cons "refresh" #'repos-table--refresh))
+              #'repos-table--fill)))
+    ;; Observe status changes so pulls/clones reflect live; drop the
+    ;; observer when the view is closed.
+    (add-hook 'repos--status-change-functions #'repos-table--on-status-change)
+    (with-current-buffer buf
+      (add-hook 'kill-buffer-hook
+                (lambda ()
+                  (remove-hook 'repos--status-change-functions
+                               #'repos-table--on-status-change))
+                nil t))))
 
 (global-set-key (kbd "C-x y p") #'repos-table)
 
