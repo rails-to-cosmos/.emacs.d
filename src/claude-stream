@@ -1,0 +1,13 @@
+#!/bin/sh
+# Wrapper for bidirectional stream-json communication with Claude CLI.
+# Solves the stdin race condition: Claude checks for stdin data on startup,
+# but Emacs hasn't written yet. A FIFO ensures Claude blocks until data arrives.
+F=$(mktemp -u /tmp/claude-stream.XXXXXX)
+mkfifo "$F"
+trap 'rm -f "$F"' EXIT
+claude -p --input-format stream-json --output-format stream-json --verbose "$@" < "$F" &
+CPID=$!
+exec 3>"$F"
+cat >&3
+exec 3>&-
+wait $CPID

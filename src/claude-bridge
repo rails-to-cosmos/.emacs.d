@@ -1,0 +1,239 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["claude-code-sdk>=0.0.25"]
+# ///
+"""Emacs <-> Claude Code SDK bridge with interactive permission handling.
+
+Speaks JSONL on stdin/stdout. Adds a permission_request/permission_response
+protocol so Emacs can prompt the user for tool-use approval instead of
+auto-denying (which is what the raw CLI does in -p mode).
+"""
+
+import asyncio
+import json
+import os
+import sys
+import uuid
+
+from claude_code_sdk import query, ClaudeCodeOptions
+from claude_code_sdk.types import (
+    AssistantMessage,
+    ResultMessage,
+    SystemMessage,
+    TextBlock,
+    ThinkingBlock,
+    ToolUseBlock,
+    ToolResultBlock,
+    PermissionResultAllow,
+    PermissionResultDeny,
+)
+
+import claude_code_sdk._internal.message_parser as _mp
+import claude_code_sdk._internal.client as _client
+import claude_code_sdk._internal.query as _query
+_original_parse = _mp.parse_message
+
+def _tolerant_parse(data):
+    try:
+        return _original_parse(data)
+    except Exception:
+        return SystemMessage(subtype=data.get("type", "unknown"), data=data)
+
+_mp.parse_message = _tolerant_parse
+_client.parse_message = _tolerant_parse
+
+# Patch Query._handle_control_request to forward permission_suggestions
+# as updatedPermissions when the user allows a tool. The SDK has a TODO
+# for this; without it the CLI never adds directories outside the project
+# to its allowed list, so approved tools still fail on out-of-project paths.
+_original_handle_control = _query.Query._handle_control_request
+
+async def _patched_handle_control(self, request):
+    request_data = request["request"]
+    if request_data["subtype"] != "can_use_tool":
+        return await _original_handle_control(self, request)
+
+    request_id = request["request_id"]
+    try:
+        if not self.can_use_tool:
+            raise Exception("canUseTool callback is not provided")
+
+        from claude_code_sdk.types import ToolPermissionContext
+        suggestions = request_data.get("permission_suggestions", []) or []
+        context = ToolPermissionContext(signal=None, suggestions=suggestions)
+
+        response = await self.can_use_tool(
+            request_data["tool_name"],
+            request_data["input"],
+            context,
+        )
+
+        if isinstance(response, PermissionResultAllow):
+            response_data = {"allow": True}
+            if response.updated_input is not None:
+                response_data["input"] = response.updated_input
+            if suggestions:
+                response_data["updatedPermissions"] = suggestions
+        elif isinstance(response, PermissionResultDeny):
+            response_data = {"allow": False, "reason": response.message}
+        else:
+            raise TypeError(f"Unexpected permission result type: {type(response)}")
+
+        await self.transport.write(json.dumps({
+            "type": "control_response",
+            "response": {
+                "subtype": "success",
+                "request_id": request_id,
+                "response": response_data,
+            },
+        }) + "\n")
+    except Exception as e:
+        await self.transport.write(json.dumps({
+            "type": "control_response",
+            "response": {
+                "subtype": "error",
+                "request_id": request_id,
+                "error": str(e),
+            },
+        }) + "\n")
+
+_query.Query._handle_control_request = _patched_handle_control
+
+user_queue: asyncio.Queue = asyncio.Queue()
+perm_queue: asyncio.Queue = asyncio.Queue()
+
+
+def emit(data: dict) -> None:
+    sys.stdout.write(json.dumps(data, default=str) + "\n")
+    sys.stdout.flush()
+
+
+async def read_stdin() -> None:
+    reader = asyncio.StreamReader()
+    await asyncio.get_running_loop().connect_read_pipe(
+        lambda: asyncio.StreamReaderProtocol(reader), sys.stdin.buffer
+    )
+    while True:
+        line = await reader.readline()
+        if not line:
+            await user_queue.put(None)
+            break
+        text = line.decode().strip()
+        if not text:
+            continue
+        try:
+            data = json.loads(text)
+            if data.get("type") == "permission_response":
+                await perm_queue.put(data)
+            else:
+                await user_queue.put(data)
+        except json.JSONDecodeError:
+            pass
+
+
+async def prompt_stream():
+    while True:
+        msg = await user_queue.get()
+        if msg is None:
+            return
+        yield msg
+
+
+async def handle_permission(tool_name: str, tool_input: dict, context) -> object:
+    req_id = str(uuid.uuid4())
+    emit({
+        "type": "permission_request",
+        "id": req_id,
+        "tool_name": tool_name,
+        "input": tool_input,
+    })
+    while True:
+        resp = await perm_queue.get()
+        if resp.get("id") == req_id:
+            if resp.get("allow"):
+                return PermissionResultAllow()
+            return PermissionResultDeny(message=resp.get("message", "Denied by user"))
+        await perm_queue.put(resp)
+        await asyncio.sleep(0.01)
+
+
+def serialize_content_block(block):
+    if isinstance(block, TextBlock):
+        return {"type": "text", "text": block.text}
+    if isinstance(block, ToolUseBlock):
+        return {"type": "tool_use", "id": block.id, "name": block.name, "input": block.input}
+    if isinstance(block, ToolResultBlock):
+        d = {"type": "tool_result", "tool_use_id": block.tool_use_id}
+        if block.content is not None:
+            d["content"] = block.content
+        if block.is_error is not None:
+            d["is_error"] = block.is_error
+        return d
+    if isinstance(block, ThinkingBlock):
+        return {"type": "thinking", "thinking": block.thinking}
+    return None
+
+
+def serialize_message(msg):
+    if isinstance(msg, SystemMessage):
+        return msg.data
+    if isinstance(msg, AssistantMessage):
+        blocks = [serialize_content_block(b) for b in msg.content]
+        return {
+            "type": "assistant",
+            "message": {
+                "role": "assistant",
+                "model": msg.model,
+                "content": [b for b in blocks if b is not None],
+            },
+        }
+    if isinstance(msg, ResultMessage):
+        return {
+            "type": "result",
+            "subtype": msg.subtype,
+            "duration_ms": msg.duration_ms,
+            "duration_api_ms": msg.duration_api_ms,
+            "is_error": msg.is_error,
+            "num_turns": msg.num_turns,
+            "session_id": msg.session_id,
+            "total_cost_usd": msg.total_cost_usd,
+            "usage": msg.usage,
+            "result": msg.result,
+        }
+    return None
+
+
+async def run():
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--model")
+    p.add_argument("--continue", dest="continue_conv", action="store_true")
+    p.add_argument("--resume")
+    p.add_argument("--dangerously-skip-permissions", action="store_true")
+    args, _ = p.parse_known_args()
+
+    skip = args.dangerously_skip_permissions
+    opts = ClaudeCodeOptions(
+        model=args.model,
+        continue_conversation=args.continue_conv,
+        resume=args.resume,
+        can_use_tool=None if skip else handle_permission,
+        permission_mode="bypassPermissions" if skip else None,
+        add_dirs=[os.path.expanduser("~")],
+    )
+
+    reader_task = asyncio.create_task(read_stdin())
+    try:
+        async for msg in query(prompt=prompt_stream(), options=opts):
+            data = serialize_message(msg)
+            if data:
+                emit(data)
+    except Exception as e:
+        emit({"type": "error", "error": str(e)})
+    finally:
+        reader_task.cancel()
+
+
+if __name__ == "__main__":
+    asyncio.run(run())

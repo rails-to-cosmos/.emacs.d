@@ -9,7 +9,8 @@
 
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")))
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("rtc" . "https://rails-to-cosmos.github.io/elpa/")))
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
