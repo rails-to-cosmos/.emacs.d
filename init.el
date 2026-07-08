@@ -101,7 +101,7 @@
 
 (use-package agnostic-translate
   :vc (:url "https://github.com/rails-to-cosmos/agnostic-translate.git" :branch "master" :rev :newest)
-  :bind ("C-x y t r" . agnostic-translate-menu))
+  :bind ("C-x y t r" . agnostic-translate))
 
 (require 'xrandr)
 (require 'xmobarrc-mode)
