@@ -5,7 +5,7 @@
 ;; breakdown, the tag's configured cycle, and event-tracked created/modified
 ;; timestamps (see `org-glance-tag-metrics').  Row actions: open the tag's
 ;; overview (o/RET), add a tag (+), remove a tag (-, a guarded non-destructive
-;; retag).  Bound to "t" in `org-glance-form-action'.  Reuses the table-view
+;; retag).  Bound to "t" in `org-glance-transient'.  Reuses the table-view
 ;; package and `org-glance-view' coherence like `org-glance-table'.
 
 ;;; Code:
@@ -26,8 +26,7 @@
 (require 'org-glance-material)
 (require 'org-glance-capture)
 
-(defvar org-glance-graph)
-(declare-function org-glance-initialized? "org-glance")
+(require 'org-glance-core)
 
 (defvar-local org-glance-tags--mtime nil
   "Mtime of `headlines.jsonl' at the tags buffer's last fill (staleness snapshot).")
@@ -221,7 +220,7 @@ tag vanishes once no live headline carries it."
 (cl-defun org-glance-tags ()
   "Open the all-tags overview: a table of tags with per-tag metrics."
   (interactive)
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (org-glance-tags:visit org-glance-graph))
 
 (provide 'org-glance-tags)

@@ -1,5 +1,5 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "table-view" "0.1.0.0.20260708.30"
+(define-package "table-view" "20260708.836"
   "Declarative, backend-agnostic table view."
   '((emacs "28.1"))
   :url "https://github.com/rails-to-cosmos/table-view"

@@ -12,7 +12,6 @@
 ;;; Generated autoloads from table-view.el
 
 (register-definition-prefixes "table-view" '("table-view-"))
-
 
 ;;; End of scraped data
 

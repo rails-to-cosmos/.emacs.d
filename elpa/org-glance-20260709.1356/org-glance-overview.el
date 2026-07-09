@@ -44,8 +44,7 @@
 (require 'org-glance-material)
 (require 'org-glance-view)
 
-(defvar org-glance-graph)
-(declare-function org-glance-initialized? "org-glance")
+(require 'org-glance-core)
 (declare-function org-glance-table:visit "org-glance-table")
 (declare-function org-glance-capture "org-glance-capture")
 (declare-function org-glance-capture:completing-read-tag "org-glance-capture")
@@ -376,7 +375,7 @@ returns point to the headline once the change (and any note) is committed."
 
 (cl-defun org-glance-overview:completing-read-tag ()
   "Prompt for a tag from the graph's headlines; empty input means \"all\"."
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (let ((choice (completing-read "Overview tag (empty for all): "
                                  (org-glance-overview:tags org-glance-graph))))
     (unless (string-empty-p choice) choice)))
@@ -390,6 +389,7 @@ landing view for `org-glance-overview' (and the `org-glance-overview:' link)."
   :type '(choice (const :tag "Table dashboard" table)
                  (const :tag "Org-text overview" org)))
 
+;;;###autoload
 (cl-defun org-glance-overview (&optional tag)
   "Browse the graph, optionally filtered, in the default view.
 Interactively, prompt for a tag (empty input = no tag constraint) and overlay it
@@ -398,7 +398,7 @@ The landing view is `org-glance-overview-default-view' (the table dashboard by
 default); press `T' there to toggle to the other view.  TAG may be a bare tag
 (symbol/string) or a full filter plist -- see `org-glance-filter:predicate'."
   (interactive (list (org-glance-overview:completing-read-tag)))
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (let ((filter (org-glance-filter:merge org-glance-filter-spec tag)))
     (if (eq org-glance-overview-default-view 'table)
         (org-glance-table:visit org-glance-graph filter)
@@ -411,18 +411,18 @@ default); press `T' there to toggle to the other view.  TAG may be a bare tag
 ;; or re-uses, its own cache like any other filter, and the previous (less
 ;; filtered) buffer stays around, so narrowing is non-destructive.  The clause
 ;; builders (`org-glance-filter:set-state' / `:set-substring' / `:read-state')
-;; are shared with the `org-glance-form-action' transient so the two filter UIs
+;; are shared with the `org-glance-transient' transient so the two filter UIs
 ;; stay consistent.
 
 (cl-defun org-glance-overview--revisit (spec)
   "Re-visit the current overview with the (already composed) filter SPEC."
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (org-glance-overview:visit org-glance-graph spec))
 
 (cl-defun org-glance-overview:filter-by-state ()
   "Narrow the current overview by todo state (active / done / all / a state)."
   (interactive)
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (org-glance-overview--revisit
    (org-glance-filter:set-state org-glance-overview--spec
                                 (org-glance-filter:read-state org-glance-graph))))
@@ -438,7 +438,7 @@ default); press `T' there to toggle to the other view.  TAG may be a bare tag
 (cl-defun org-glance-overview:filter-clear ()
   "Drop all filters: visit the unfiltered overview."
   (interactive)
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (org-glance-overview:visit org-glance-graph nil))
 
 (transient-define-prefix org-glance-overview-filter ()
@@ -473,11 +473,12 @@ under us, or predates a source it renders from (`org-glance-overview:fresh?')."
 
 ;;; Agenda
 
+;;;###autoload
 (cl-defun org-glance-agenda ()
   "Show an `org-agenda' over the graph's scheduled/deadline headlines.
 Honours the ambient `org-glance-filter-spec' (default: active headlines)."
   (interactive)
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   ;; Render to a dedicated file rather than overview.org, so pressing `a' from an
   ;; open overview never rewrites the file that buffer is visiting.
   (let* ((file (f-join (org-glance-overview:cache-path org-glance-graph) "agenda.org"))

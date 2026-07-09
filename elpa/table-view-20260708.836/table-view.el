@@ -5,7 +5,7 @@
 ;; Author: Dmitry Akatov <akatovda@gmail.com>
 ;; Maintainer: Dmitry Akatov <akatovda@gmail.com>
 ;; URL: https://github.com/rails-to-cosmos/table-view
-;; Package-Version: 0.1.0.0.20260708.30
+;; Package-Version: 20260708.836
 ;; Package-Revision: d89d3b543593
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: convenience, data, tools

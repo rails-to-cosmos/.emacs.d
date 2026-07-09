@@ -6,7 +6,7 @@
          ;; :map org-mode-map
          ;; ("@" . org-glance:@)
          )
-  :config (org-glance-init)
+  :init (org-glance-init "~/sync/views")
   :ensure t)
 
 ;; (require 'project)

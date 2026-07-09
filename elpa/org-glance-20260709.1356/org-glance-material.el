@@ -24,9 +24,7 @@
 (require 'org-glance-datetime-mode)
 (require 'org-glance-view)
 
-;; Defined in org-glance.el (which requires this file); referenced only at runtime.
-(defvar org-glance-graph)
-(declare-function org-glance-initialized? "org-glance")
+(require 'org-glance-core)
 
 ;;; Selection
 
@@ -49,7 +47,14 @@ FILTER, if non-nil, is a predicate on the metadata."
                               when (or (null filter) (funcall filter meta))
                               collect (cons (org-glance-material:label meta) meta))))
     (unless candidates
-      (user-error "No matching headlines (run `M-x org-glance-reindex' if you upgraded)"))
+      (let ((total (length (org-glance-graph:headlines graph)))
+            (dir (org-glance-graph:directory graph)))
+        (user-error
+         (if (zerop total)
+             (format "org-glance: no headlines in the graph at `%s' -- capture some, or run `M-x org-glance-reindex' if you upgraded"
+                     dir)
+           (format "org-glance: no headlines match the active filter `%s' (of %d in the graph at `%s') -- clear it with `c' in `org-glance-transient', or run `M-x org-glance-reindex' if you upgraded"
+                   (org-glance-filter:describe org-glance-filter-spec) total dir)))))
     (cdr (assoc (completing-read prompt candidates nil t) candidates))))
 
 ;;; Materialized buffer
@@ -526,10 +531,11 @@ the (id . reason) pairs skipped."
 ;; overview and agenda (see `org-glance-overview'); capture creates a new
 ;; headline, so a state filter does not apply there.
 
+;;;###autoload
 (cl-defun org-glance-materialize ()
   "Choose a headline from the graph and materialize it."
   (interactive)
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (let* ((graph org-glance-graph)
          (metadata (org-glance-material:completing-read
                     graph :filter (org-glance-filter:predicate org-glance-filter-spec)))
@@ -558,7 +564,7 @@ chosen link, mirroring the v1 behaviour."
 
 (cl-defun org-glance-material--pick-headline (prompt extra-pred)
   "Read a graph headline matching the ambient filter AND EXTRA-PRED under PROMPT."
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (let* ((graph org-glance-graph)
          (keep? (org-glance-filter:predicate org-glance-filter-spec))
          (metadata (org-glance-material:completing-read
@@ -567,6 +573,7 @@ chosen link, mirroring the v1 behaviour."
                                         (funcall extra-pred m))))))
     (org-glance-graph:headline graph (org-glance-headline-metadata:id metadata))))
 
+;;;###autoload
 (cl-defun org-glance-open ()
   "Choose a headline from the graph and open a link inside it."
   (interactive)
@@ -585,6 +592,7 @@ With KEY, extract it non-interactively; otherwise prompt."
       (when (called-interactively-p 'any) (message "Copied: %s" value))
       value)))
 
+;;;###autoload
 (cl-defun org-glance-extract ()
   "Choose a headline from the graph and extract a key-value pair from it."
   (interactive)

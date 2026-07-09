@@ -11,7 +11,26 @@
 
 ;;; Generated autoloads from org-glance.el
 
+(autoload 'org-glance-init "org-glance" "\
+Initialize org-glance in DIRECTORY: bring up the graph store and, when legacy
+metadata is detected, warn that `M-x org-glance-migrate' can convert it.
+
+(fn &optional (DIRECTORY org-glance-directory))")
 (register-definition-prefixes "org-glance" '("org-glance-"))
+
+
+;;; Generated autoloads from org-glance-capture.el
+
+(autoload 'org-glance-capture "org-glance-capture" "\
+Capture a headline tagged with TAGS (a symbol or list of symbols).
+
+(fn TAGS TITLE &key TEMPLATE FINALIZE)" t)
+(function-put 'org-glance-capture 'lisp-indent-function 2)
+
+
+;;; Generated autoloads from org-glance-core.el
+
+(register-definition-prefixes "org-glance-core" '("org-glance-"))
 
 
 ;;; Generated autoloads from org-glance-datetime-mode.el
@@ -36,11 +55,29 @@
 
 ;;; Generated autoloads from org-glance-material.el
 
+(autoload 'org-glance-materialize "org-glance-material" "\
+Choose a headline from the graph and materialize it." t)
+(autoload 'org-glance-open "org-glance-material" "\
+Choose a headline from the graph and open a link inside it." t)
+(autoload 'org-glance-extract "org-glance-material" "\
+Choose a headline from the graph and extract a key-value pair from it." t)
 (register-definition-prefixes "org-glance-material" '("org-glance-"))
 
 
 ;;; Generated autoloads from org-glance-overview.el
 
+(autoload 'org-glance-overview "org-glance-overview" "\
+Browse the graph, optionally filtered, in the default view.
+Interactively, prompt for a tag (empty input = no tag constraint) and overlay it
+on the ambient `org-glance-filter-spec' (default: active headlines).
+The landing view is `org-glance-overview-default-view' (the table dashboard by
+default); press `T' there to toggle to the other view.  TAG may be a bare tag
+(symbol/string) or a full filter plist -- see `org-glance-filter:predicate'.
+
+(fn &optional TAG)" t)
+(autoload 'org-glance-agenda "org-glance-overview" "\
+Show an `org-agenda' over the graph's scheduled/deadline headlines.
+Honours the ambient `org-glance-filter-spec' (default: active headlines)." t)
 (register-definition-prefixes "org-glance-overview" '("org-glance-overview"))
 
 
@@ -70,6 +107,14 @@ Open the tag-configuration file for editing, creating a stub if absent." t)
 (autoload 'org-glance-tags "org-glance-tags" "\
 Open the all-tags overview: a table of tags with per-tag metrics." t)
 (register-definition-prefixes "org-glance-tags" '("org-glance-tags--mtime"))
+
+
+;;; Generated autoloads from org-glance-ui.el
+
+(autoload 'org-glance-transient "org-glance-ui" "\
+Perform action on selected view/headlines
+
+(fn)" t)
 
 
 ;;; Generated autoloads from org-glance-utils.el

@@ -10,10 +10,7 @@
 (require 'org-glance-headline)
 (require 'org-glance-graph)
 
-;; Defined in org-glance.el, which requires this file (cycle) -- runtime-only refs.
-(declare-function org-glance-initialized? "org-glance")
-
-(defvar org-glance-graph)
+(require 'org-glance-core)
 
 (cl-defun org-glance-capture--format-tags (tags)
   "Format TAGS (a symbol or list of symbols) as an org tag string `:a:b:'."
@@ -44,7 +41,7 @@ byte-identical to before.  Multi-tag composition is deferred to Phase 2."
   "Prompt for a tag; candidates come from the graph's live headlines.
 New tags are allowed -- the graph discovers tags from captured headlines, so no
 registration step is needed.  Errors on empty input."
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
   (let ((choice (s-trim (completing-read "Tag: " (org-glance-graph:tags org-glance-graph)))))
     (when (string-empty-p choice)
       (user-error "Tag must not be empty"))
@@ -65,6 +62,7 @@ separately."
                             (s-join "\n" tail))
                finally return (cons template nil)))))
 
+;;;###autoload
 (cl-defun org-glance-capture (tags title &key template finalize)
   "Capture a headline tagged with TAGS (a symbol or list of symbols)."
   (declare (indent 2))
@@ -74,7 +72,7 @@ separately."
                            (t ""))))
 
   (cl-check-type title string)
-  (cl-assert (org-glance-initialized?))
+  (org-glance-ensure-init)
 
   (let* ((file (make-temp-file "org-glance-" nil ".org"))
          (capture-token "_")

@@ -1,5 +1,5 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "table-view-native" "0.1.0.0.20260708.8"
+(define-package "table-view-native" "20260708.836"
   "Native (Rust) data backend for table-view."
   '((emacs      "28.1")
     (table-view "0.1.0"))
