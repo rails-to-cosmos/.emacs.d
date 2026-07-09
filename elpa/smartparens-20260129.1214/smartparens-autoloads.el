@@ -86,8 +86,6 @@ evaluate the variable `smartparens-strict-mode'.
 The mode's hook is called both when the mode is enabled and when it is
 disabled.
 
-\\{smartparens-strict-mode-map}
-
 (fn &optional ARG)" t)
 (put 'smartparens-global-strict-mode 'globalized-minor-mode t)
 (defvar smartparens-global-strict-mode nil "\

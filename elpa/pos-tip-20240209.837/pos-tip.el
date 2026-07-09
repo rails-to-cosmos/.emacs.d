@@ -6,7 +6,8 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Tooltip
 
-;; Package-Version: 0.4.7
+;; Package-Version: 20240209.837
+;; Package-Revision: 4889e08cf907
 
 (defconst pos-tip-version "0.4.7")
 

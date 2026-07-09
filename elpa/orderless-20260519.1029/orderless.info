@@ -1,4 +1,4 @@
-This is orderless.info, produced by makeinfo version 6.8 from
+This is orderless.info, produced by makeinfo version 7.1.1 from
 orderless.texi.
 
 INFO-DIR-SECTION Emacs misc features
@@ -19,7 +19,7 @@ Orderless
 * Integration with other completion UIs::
 * Related packages::
 
-— The Detailed Node Listing —
+-- The Detailed Node Listing --
 
 Customization
 
@@ -91,7 +91,7 @@ exclusively, set both variables to ‘nil’, but be aware that
 ‘completion-category-defaults’ is modified by packages at load time.
 
    With a bit of effort, it might still be possible to use ‘orderless’
-with other completion UIs, even if those UIs don’t support the standard
+with other completion UIs, even if those UIs don't support the standard
 Emacs completion styles.  Currently there is support for Ivy
 (https://github.com/abo-abo/swiper), as documented below.  Also, while
 Company does support completion styles directly, pressing ‘SPC’ takes
@@ -238,7 +238,7 @@ File: orderless.info,  Node: Style dispatchers,  Prev: Style modifiers,  Up: Com
 For more fine-grained control on which matching styles to use for each
 component of the input string, you can customize the variable
 ‘orderless-style-dispatchers’.  You can use this feature to define your
-own “query syntax”.  For example, the default value of
+own "query syntax".  For example, the default value of
 ‘orderless-style-dispatchers’ lists a single dispatcher called
 ‘orderless-affix-dispatch’ which enables a simple syntax based on
 special characters used as either a prefix or suffix:
@@ -246,7 +246,7 @@ special characters used as either a prefix or suffix:
    • !  modifies the component with ‘orderless-not’.  Both ‘!bad’ and
      ‘bad!’ will match strings that do _not_ contain the pattern ‘bad’.
    • & modifies the component with ‘orderless-annotation’.  The pattern
-     will match against the candidate’s annotation (cheesy mnemonic:
+     will match against the candidate's annotation (cheesy mnemonic:
      andnotation!).
    • , uses ‘orderless-initialism’.
    • = uses ‘orderless-literal’.
@@ -279,7 +279,7 @@ following setup:
 
    • you normally want components to match as regexps,
    • except for the first component, which should always match as an
-     initialism —this is pretty useful for, say,
+     initialism --this is pretty useful for, say,
      ‘execute-extended-command’ (‘M-x’) or ‘describe-function’ (‘C-h
      f’),
    • later components ending in ‘~’ should match (the characters other
@@ -361,7 +361,7 @@ command completion category.
              (variable (styles orderless+initialism))))
 
    Note that in order for the ‘orderless+initialism’ style to kick-in
-with the above configuration, you’d need to use commands whose metadata
+with the above configuration, you'd need to use commands whose metadata
 indicates that the completion candidates are commands or symbols.  In
 Emacs 28, ‘execute-extended-command’ has metadata indicating you are
 selecting a command, but earlier versions of Emacs lack this metadata.
@@ -415,7 +415,7 @@ configurations, have a set of named configurations and be prompted (with
 completion) for one of them, popup a hydra
 (https://github.com/abo-abo/hydra) to choose a configuration, etc.
 Since there are so many possible UIs and which to use is mostly a matter
-of taste, ‘orderless’ does not provide any such commands.  But it’s easy
+of taste, ‘orderless’ does not provide any such commands.  But it's easy
 to write your own!
 
    For example, say you want to use the keybinding ‘C-l’ to make all
@@ -498,12 +498,12 @@ This means that the ‘company-capf’ backend will automatically use
 
           (setq orderless-component-separator "[ &]")
 
-  2. The matching portions of candidates aren’t highlighted.  That’s
+  2. The matching portions of candidates aren't highlighted.  That's
      because ‘company-capf’ is hard-coded to look for the
      ‘completions-common-part’ face, and it only use one face,
      ‘company-echo-common’ to highlight candidates.
 
-     So, while you can’t get different faces for different components,
+     So, while you can't get different faces for different components,
      you can at least get the matches highlighted in the sole available
      face with this configuration:
 
@@ -513,7 +513,7 @@ This means that the ‘company-capf’ backend will automatically use
 
           (advice-add 'company-capf--candidates :around #'just-one-face)
 
-     (Aren’t dynamically scoped variables and the advice system nifty?)
+     (Aren't dynamically scoped variables and the advice system nifty?)
 
    If you would like to use different ‘completion-styles’ with
 ‘company-capf’ instead, you can add this to your configuration:
@@ -549,7 +549,7 @@ The well-known and hugely powerful completion frameworks Ivy
 (https://github.com/emacs-helm/helm) also provide for matching
 space-separated component regexps in any order.  In Ivy, this is done
 with the ‘ivy--regex-ignore-order’ matcher.  In Helm, it is the default,
-called “multi pattern matching”.
+called "multi pattern matching".
 
    This package is significantly smaller than either of those because it
 solely defines a completion style, meant to be used with any completion
@@ -571,24 +571,24 @@ configure Icomplete to use it as follows:
 ‘helm-mode’ rather than Icomplete.)
 
 
-File: orderless.info,  Node: Prescient,  Next: Restricting to current matches in Icicles, Ido and Ivy,  Prev: Ivy and Helm,  Up: Related packages
+File: orderless.info,  Node: Prescient,  Next: Restricting to current matches in Icicles, Ido and Ivy,  Prev: Ivy and Helm,  Up: Related packages
 
 4.2 Prescient
 =============
 
 The prescient.el (https://github.com/radian-software/prescient.el)
 library also provides matching of space-separated components in any
-order.  It offers a completion-style that can be used with Emacs’
+order.  It offers a completion-style that can be used with Emacs'
 default completion UI, Mct, Vertico or with Icomplete.  Furthermore Ivy
 is supported.  The components can be matched literally, as regexps, as
-initialisms or in the flex style (called “fuzzy” in prescient).
+initialisms or in the flex style (called "fuzzy" in prescient).
 Prescient does not offer the same flexibility as Orderless with its
 style dispatchers.  However in addition to matching, Prescient supports
 sorting of candidates, while Orderless leaves that up to the candidate
 source and the completion UI.
 
 
-File: orderless.info,  Node: Restricting to current matches in Icicles, Ido and Ivy,  Prev: Prescient,  Up: Related packages
+File: orderless.info,  Node: Restricting to current matches in Icicles, Ido and Ivy,  Prev: Prescient,  Up: Related packages
 
 4.3 Restricting to current matches in Icicles, Ido and Ivy
 ==========================================================
@@ -613,25 +613,25 @@ out of order matching!
 
 
 Tag Table:
-Node: Top235
+Node: Top237
 Node: Overview921
-Node: Customization5002
-Node: Component matching styles5360
-Node: Style modifiers7651
-Node: Style dispatchers8340
-Node: Component separator regexp12004
-Node: Defining custom orderless styles13232
-Node: Faces for component matches15124
-Node: Pattern compiler15928
-Node: Interactively changing the configuration16519
-Node: Integration with other completion UIs17982
-Node: Ivy18768
-Node: Helm19120
-Node: Company19464
-Node: Related packages21443
-Node: Ivy and Helm21687
-Node: Prescient23021
-Node: Restricting to current matches in Icicles, Ido and Ivy23855
+Node: Customization5000
+Node: Component matching styles5358
+Node: Style modifiers7649
+Node: Style dispatchers8338
+Node: Component separator regexp11995
+Node: Defining custom orderless styles13223
+Node: Faces for component matches15113
+Node: Pattern compiler15917
+Node: Interactively changing the configuration16508
+Node: Integration with other completion UIs17969
+Node: Ivy18755
+Node: Helm19107
+Node: Company19451
+Node: Related packages21422
+Node: Ivy and Helm21666
+Node: Prescient22996
+Node: Restricting to current matches in Icicles, Ido and Ivy23826
 
 End Tag Table
 

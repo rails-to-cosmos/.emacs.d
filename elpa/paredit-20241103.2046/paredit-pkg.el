@@ -2,7 +2,7 @@
 (define-package "paredit" "20241103.2046"
   "Minor mode for editing parentheses."
   ()
-  :url "https://mumble.net/~campbell/git/paredit.git"
+  :url "https://paredit.org"
   :commit "89e75b4cb21f525a6f4cabcd12f1bd4204e682ab"
   :revdesc "89e75b4cb21f"
   :keywords '("lisp")

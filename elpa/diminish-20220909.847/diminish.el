@@ -6,7 +6,8 @@
 ;; Maintainer: Martin Yrjölä <martin.yrjola@gmail.com>
 ;; URL: https://github.com/myrjola/diminish.el
 ;; Created: Th 19 Feb 98
-;; Version: 0.46
+;; Package-Version: 20220909.847
+;; Package-Revision: fbd5d846611b
 ;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: extensions, diminish, minor, codeprose
 
