@@ -5,8 +5,8 @@
 ;; Author: Filipe Guerreiro <filipe.m.guerreiro@gmail.com>
 ;; Maintainer: Filipe Guerreiro <filipe.m.guerreiro@gmail.com>
 ;; Created: November 11, 2023
-;; Package-Version: 20260126.915
-;; Package-Revision: 83fe7aadecc5
+;; Package-Version: 20260525.909
+;; Package-Revision: 31bbb4fbcba0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: languages unison tree-sitter
 ;; URL: https://github.com/fmguerreiro/unison-ts-mode
@@ -45,7 +45,8 @@
 ;; eglot or lsp-mode.
 ;;
 ;; UCM Keybindings (under C-c C-u prefix):
-;;   C-c C-u r - Open UCM REPL
+;;   C-c C-u r - Open UCM REPL (MCP-based)
+;;   C-c C-u i - Open inferior UCM (full TUI)
 ;;   C-c C-u a - Add definitions from current file
 ;;   C-c C-u u - Update definitions
 ;;   C-c C-u t - Run tests
@@ -54,6 +55,9 @@
 ;;   C-c C-u l - Load current file
 ;;   C-c C-u e - Send region to REPL
 ;;   C-c C-u d - Send definition at point to REPL
+;;   C-c C-u V - Eval expression and go to REPL
+;;   C-c C-u E - Send region to REPL and go
+;;   C-c C-u D - Send definition to REPL and go
 ;;
 ;; Forked from https://github.com/dariooddenino/unison-ts-mode-emacs.
 
@@ -127,6 +131,7 @@ See `treesit-simple-imenu-settings' for details.")
 (defvar unison-ts-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-u r") #'unison-ts-repl)
+    (define-key map (kbd "C-c C-u i") #'unison-ts-inferior-ucm)
     (define-key map (kbd "C-c C-u a") #'unison-ts-add)
     (define-key map (kbd "C-c C-u u") #'unison-ts-update)
     (define-key map (kbd "C-c C-u t") #'unison-ts-test)
@@ -136,6 +141,9 @@ See `treesit-simple-imenu-settings' for details.")
     (define-key map (kbd "C-c C-u l") #'unison-ts-load)
     (define-key map (kbd "C-c C-u e") #'unison-ts-send-region)
     (define-key map (kbd "C-c C-u d") #'unison-ts-send-definition)
+    (define-key map (kbd "C-c C-u V") #'unison-ts-eval-and-go)
+    (define-key map (kbd "C-c C-u E") #'unison-ts-send-region-and-go)
+    (define-key map (kbd "C-c C-u D") #'unison-ts-send-definition-and-go)
     map)
   "Keymap for `unison-ts-mode'.")
 
@@ -143,6 +151,7 @@ See `treesit-simple-imenu-settings' for details.")
   "Menu for Unison mode."
   '("Unison"
     ["Open UCM REPL" unison-ts-repl]
+    ["Open Inferior UCM (full TUI)" unison-ts-inferior-ucm]
     "---"
     ("UCM Commands"
      ["Add" unison-ts-add :active buffer-file-name]
@@ -189,29 +198,14 @@ See `treesit-simple-imenu-settings' for details.")
 
 (defun unison-ts-mode--eglot-contact (_interactive)
   "Contact function for eglot to connect to UCM LSP server.
-Starts UCM in headless mode if not already running."
-  (let ((port (or (getenv "UNISON_LSP_PORT") "5757")))
-    (unless (ignore-errors
-              (delete-process
-               (make-network-process
-                :name "unison-lsp-check"
-                :host "127.0.0.1"
-                :service (string-to-number port)
-                :nowait nil)))
-      (start-process "ucm-headless" nil "ucm" "headless")
-      (sleep-for 1))
-    (list "127.0.0.1" (string-to-number port))))
+Starts the inferior UCM if nothing is reachable on the LSP port."
+  (unison-ts--start-ucm-inferior)
+  (list "127.0.0.1" (unison-ts--resolve-lsp-port)))
 
 (defun unison-ts-mode--kill-ucm-lsp (&rest _)
-  "Kill any UCM process listening on the LSP port.
-Called after eglot shuts down to clean up orphaned UCM processes."
-  (let ((port (string-to-number (or (getenv "UNISON_LSP_PORT") "5757"))))
-    (when-let ((output (shell-command-to-string
-                        (format "lsof -t -i :%d 2>/dev/null" port))))
-      (dolist (pid (split-string output "\n" t))
-        (when (string-match-p "^[0-9]+$" pid)
-          (ignore-errors
-            (signal-process (string-to-number pid) 'TERM)))))))
+  "Tear down the Emacs-managed inferior UCM process.
+Called after eglot shuts down."
+  (unison-ts--cleanup-ucm))
 
 (declare-function eglot-shutdown "ext:eglot")
 
@@ -239,17 +233,8 @@ Call this from your init file:
    (make-lsp-client
     :new-connection (lsp-tcp-connection
                      (lambda (_port)
-                       (let ((lsp-port (or (getenv "UNISON_LSP_PORT") "5757")))
-                         (unless (ignore-errors
-                                   (delete-process
-                                    (make-network-process
-                                     :name "unison-lsp-check-lsp-mode"
-                                     :host "127.0.0.1"
-                                     :service (string-to-number lsp-port)
-                                     :nowait nil)))
-                           (start-process "ucm-headless-lsp-mode" nil "ucm" "headless")
-                           (sleep-for 1))
-                         (cons "localhost" (string-to-number lsp-port)))))
+                       (unison-ts--start-ucm-inferior)
+                       (cons "localhost" (unison-ts--resolve-lsp-port))))
     :activation-fn (lsp-activate-on "unison")
     :server-id 'unison-lsp
     :major-modes '(unison-ts-mode)

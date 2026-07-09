@@ -48,6 +48,11 @@ Call this from your init file:
 
 ;;; Generated autoloads from unison-ts-repl.el
 
+(autoload 'unison-ts-inferior-ucm "unison-ts-repl" "\
+Switch to the inferior UCM buffer, starting UCM if needed.
+The inferior UCM is the full `ucm' TUI running inside Emacs; it
+serves both eglot and the MCP REPL.  Errors when an external UCM
+is already holding the codebase lock — manage it there instead." t)
 (autoload 'unison-ts-repl "unison-ts-repl" "\
 Switch to UCM REPL buffer, starting UCM headless if needed.
 Uses MCP protocol to communicate with a single UCM headless process,
@@ -78,6 +83,23 @@ Send the region between START and END to UCM via MCP.
 (fn START END)" t)
 (autoload 'unison-ts-send-definition "unison-ts-repl" "\
 Send the definition at point to UCM via MCP." t)
+(autoload 'unison-ts-eval-and-go "unison-ts-repl" "\
+Evaluate EXPR via the UCM MCP REPL and switch to the REPL buffer.
+Inserts \"> EXPR\" as a typed-prompt entry and switches to the REPL,
+mirroring `unison-ts-eval' but routing output through the REPL buffer
+instead of the minibuffer or a separate output buffer.
+
+(fn EXPR)" t)
+(autoload 'unison-ts-send-region-and-go "unison-ts-repl" "\
+Send the region between START and END to the UCM MCP REPL and switch to it.
+Inserts \"add <region>\" as a typed-prompt entry and switches to the
+REPL buffer, mirroring `unison-ts-send-region'.
+
+(fn START END)" t)
+(autoload 'unison-ts-send-definition-and-go "unison-ts-repl" "\
+Send the definition at point to the UCM MCP REPL and switch to it.
+Inserts \"add <definition>\" as a typed-prompt entry and switches to
+the REPL buffer, mirroring `unison-ts-send-definition'." t)
 (register-definition-prefixes "unison-ts-repl" '("unison-ts-"))
 
 ;;; End of scraped data

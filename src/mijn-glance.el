@@ -2,21 +2,12 @@
   :ensure t)
 
 (use-package org-glance
-  ;; :load-path ("~/sync/stuff/org-glance/dist"
-  ;;             "~/sync/stuff/org-glance/src/data/"
-  ;;             "~/sync/stuff/org-glance/src/view/")
-  ;; :quelpa (git-browse :fetcher github :repo "rails-to-cosmos/org-glance")
-  :bind (("C-x j" . org-glance-form-action)
+  :bind (("C-x j" . org-glance-transient)
          ;; :map org-mode-map
          ;; ("@" . org-glance:@)
          )
-  :config (progn
-            (setq org-glance-directory "~/sync/views"
-                  org-glance-resource-directory "~/sync/resources")
-            (org-glance-init))
-  :ensure t
-  :ensure aes
-  :ensure load-relative)
+  :config (org-glance-init)
+  :ensure t)
 
 ;; (require 'project)
 ;; (cl-defun my-jump-meta ()

@@ -71,8 +71,7 @@ Constructed by `org-glance-init'; nil until the system is initialized.")
   "Initialize org-glance in DIRECTORY: bring up the graph store and, when legacy
 metadata is detected, warn that `M-x org-glance-migrate' can convert it."
   (load-library "org-element.el")  ;; temp fix https://github.com/doomemacs/doomemacs/issues/7347
-  (unless (f-exists? directory)
-    (mkdir directory t))
+  (unless (f-exists? directory) (mkdir directory t))
   (setq org-glance-graph (org-glance-graph directory))
   (org-glance-migrate-maybe directory))
 
