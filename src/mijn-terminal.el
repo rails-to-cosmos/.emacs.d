@@ -3,6 +3,9 @@
 (require 'mijn-org)
 (require 'direnv)
 
+(use-package vterm
+  :ensure t)
+
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
 
