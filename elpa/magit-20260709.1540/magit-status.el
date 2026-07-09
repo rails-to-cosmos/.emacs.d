@@ -453,7 +453,7 @@ Type \\[magit-commit] to create a commit.
   (setq magit--imenu-group-types '(not branch commit)))
 
 (put 'magit-status-mode 'magit-diff-default-arguments
-     '("--no-ext-diff"))
+     '("--no-ext-diff" "--ignore-submodules=none"))
 (put 'magit-status-mode 'magit-log-default-arguments
      '("-n256" "--decorate"))
 
@@ -566,26 +566,42 @@ the status buffer causes this section to disappear again."
       (insert (propertize (format "%-10s" "GitError! ")
                           'font-lock-face 'magit-section-heading))
       (insert (propertize magit-this-error 'font-lock-face 'error))
-      (when-let ((_ magit-show-process-buffer-hint)
-                 (key (car (where-is-internal 'magit-process-buffer))))
-        (insert (format "  [Type `%s' for details]" (key-description key))))
+      (when magit-show-process-buffer-hint
+        (insert (substitute-command-keys
+                 "  [Type \\[magit-process-buffer] for details]")))
       (insert ?\n))
     (setq magit-this-error nil)))
 
 (defun magit-insert-diff-filter-header ()
-  "Insert a header line showing the effective diff filters."
+  "Insert a header line showing the effective diff filters.
+
+If any diff filters are in effect in the status buffer, they are
+shown on a line beginning with \"Filter! ...\" as a reminder, so you
+won't end up wondering why certain changes, which you expect to be
+displayed, are not actually displayed.
+
+Filters either come from arguments, which can be changed using \
+\\<magit-status-mode-map>\\[magit-diff-refresh],
+or from Git variables, which are configured outside of Magit.
+
+If you do not want this reminder to be shown, remove it like so:
+
+  (remove-hook \\='magit-status-headers-hook
+               \\='magit-insert-diff-filter-header)"
   (let ((ignore-modules (magit-ignore-submodules-p)))
     (when (or ignore-modules
               magit-buffer-diff-files)
-      (insert (propertize (format "%-10s" "Filter! ")
-                          'font-lock-face 'magit-section-heading))
-      (when ignore-modules
-        (insert ignore-modules)
+      (magit-insert-section (diff-filter)
+        (insert (propertize (format "%-10s" "Filter! ")
+                            'font-lock-face 'magit-section-heading))
+        (when ignore-modules
+          (insert ignore-modules)
+          (when magit-buffer-diff-files
+            (insert " -- ")))
         (when magit-buffer-diff-files
-          (insert " -- ")))
-      (when magit-buffer-diff-files
-        (insert (string-join magit-buffer-diff-files " ")))
-      (insert ?\n))))
+          (insert (string-join magit-buffer-diff-files " ")))
+        (insert (substitute-command-keys " \
+[\\[magit-diff-refresh] to change, \\[magit-describe-section] for help]\n"))))))
 
 ;;;; Reference Headers
 
