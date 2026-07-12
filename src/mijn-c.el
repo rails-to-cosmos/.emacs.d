@@ -10,25 +10,25 @@
 ;; Then wire GTAGSLIBPATH (in .envrc or .dir-locals.el) so ggtags spans them.
 
 (use-package disaster
-  :ensure t)
+  :ensure nil)
 
 (use-package highlight-doxygen
-  :ensure t
+  :ensure nil
   :hook ((c-mode . highlight-doxygen-mode)
          (c++-mode . highlight-doxygen-mode)))
 
 (use-package cmake-mode
-  :ensure t
+  :ensure nil
   :hook (cmake-mode . eglot-ensure))
 
 (use-package cmake-font-lock
-  :ensure t)
+  :ensure nil)
 
 ;; GNU Global — cross-project source navigation (M-. into library implementations).
 ;; Set GTAGSLIBPATH in .envrc or .dir-locals.el to also search library sources:
 ;;   (setenv "GTAGSLIBPATH" "/path/to/project/.sources/raylib:/usr/src/glibc/glibc-2.40")
 (use-package ggtags
-  :ensure t
+  :ensure nil
   :hook ((c-mode   . ggtags-mode)
          (c++-mode . ggtags-mode)
          (asm-mode . ggtags-mode)))
@@ -52,7 +52,7 @@
          :map c++-mode-map
               ("C-x C-x" . ff-find-other-file))
 
-  :ensure t
+  :ensure nil
   :ensure eglot
   :ensure company
   :ensure yasnippet)

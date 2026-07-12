@@ -14,7 +14,7 @@
 
 
 (use-package vterm
-  :ensure t)
+  :ensure nil)
 
 ;;; Customization
 

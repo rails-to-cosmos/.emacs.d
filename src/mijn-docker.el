@@ -1,5 +1,5 @@
 (use-package dockerfile-mode
-  :ensure t)
+  :ensure nil)
 
 (cl-defun my-docker-container-running-p (container)
   "Check if a Docker CONTAINER is running.

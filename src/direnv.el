@@ -2,7 +2,7 @@
 (require 'strings)
 
 (use-package mise
-  :ensure t)
+  :ensure nil)
 
 (cl-defun mise-trusted-p ()
   (->> (with-output-to-string (mise--call standard-output "trust" "--show"))
@@ -30,7 +30,7 @@
     (setq-local exec-path path)))
 
 (use-package envrc
-  :ensure t)
+  :ensure nil)
 
 (cl-defun direnv (&rest project-files)
   (interactive)

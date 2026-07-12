@@ -18,4 +18,4 @@
   :config
   (which-key-mode t)
   (which-key-setup-side-window-bottom)
-  :ensure t)
+  :ensure nil)

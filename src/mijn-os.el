@@ -1,5 +1,5 @@
 (use-package disk-usage
-  :ensure t)
+  :ensure nil)
 
 (defun reset-caps-lock ()
   "Reset caps lock by sending a Caps_Lock key event via xdotool."

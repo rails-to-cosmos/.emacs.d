@@ -8,14 +8,14 @@
 (global-set-key (kbd "C-M-o") #'occur)
 
 (use-package whisper
-  :ensure t)
+  :ensure nil)
 
 (use-package cask-mode
-  :ensure t)
+  :ensure nil)
 
 (use-package align
   :bind ("M-[" . align)
-  :ensure t)
+  :ensure nil)
 
 (use-package whitespace-cleanup-mode
   :config (progn
@@ -38,15 +38,15 @@
                             eshell-mode-hook
                             prog-mode-hook))
               (add-hook hook #'sanityinc/no-trailing-whitespace)))
-  :ensure t)
+  :ensure nil)
 
 (use-package reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
-  :ensure t)
+  :ensure nil)
 
 (use-package a
-  :ensure t)
+  :ensure nil)
 
 (use-package browse-kill-ring
   :config (progn
@@ -56,19 +56,19 @@
             (define-key browse-kill-ring-mode-map (kbd "M-n") #'browse-kill-ring-forward)
             (define-key browse-kill-ring-mode-map (kbd "M-Y") #'browse-kill-ring-previous)
             (define-key browse-kill-ring-mode-map (kbd "M-p") #'browse-kill-ring-previous))
-  :ensure t)
+  :ensure nil)
 
 (use-package multiple-cursors
   :config (progn
             (define-key global-map (kbd "C-<") #'mc/mark-previous-like-this)
             (define-key global-map (kbd "C->") #'mc/mark-next-like-this)
             (define-key global-map (kbd "C-+") #'mc/mark-all-like-this))
-  :ensure t)
+  :ensure nil)
 
 (use-package expand-region
   :config (progn
             (global-set-key (kbd "M-2") #'er/expand-region))
-  :ensure t)
+  :ensure nil)
 
 (use-package undo-tree
   :config (progn
@@ -76,13 +76,13 @@
                   undo-tree-visualizer-diff t
                   undo-tree-history-directory-alist (a-list ".*" (f-join user-emacs-directory "undo-tree")))
             (global-undo-tree-mode))
-  :ensure t)
+  :ensure nil)
 
 (use-package smartparens
   :config (progn
             (require 'smartparens)
             (require 'smartparens-config))
-  :ensure t)
+  :ensure nil)
 
 (use-package paredit
   :config (progn
@@ -101,7 +101,7 @@
               "Enable paredit during lisp-related minibuffer commands."
               (if (memq this-command paredit-minibuffer-commands)
                   (enable-paredit-mode))))
-  :ensure t)
+  :ensure nil)
 
 (require 'haskell-mode)
 (defun my-kill-line ()
@@ -144,7 +144,7 @@
 (global-set-key (kbd "C-x y r c") #'my-rc)
 
 (use-package yaml-mode
-  :ensure t)
+  :ensure nil)
 
 (setq create-lockfiles nil)
 

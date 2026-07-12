@@ -7,11 +7,11 @@
 ;; (use-package paredit
 ;;     :config (progn
 ;;               ;; (use-package paredit-everywhere
-;;               ;;   :ensure t)
+;;               ;;   :ensure nil)
 ;;               ;; (add-hook 'prog-mode-hook 'paredit-everywhere-mode)
 ;;               ;; (add-hook 'css-mode-hook 'paredit-everywhere-mode)
 ;;               )
-;;     :ensure t)
+;;     :ensure nil)
 
 (require 'smartparens)
 (require 'paredit)

@@ -4,7 +4,7 @@
 (require 'direnv)
 
 (use-package vterm
-  :ensure t)
+  :ensure nil)
 
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
@@ -25,10 +25,10 @@ Handles regular file buffers and Eshell buffers correctly."
 
 (use-package exec-path-from-shell
   :config (exec-path-from-shell-initialize)
-  :ensure t)
+  :ensure nil)
 
 (use-package eshell-prompt-extras
-  :ensure t)
+  :ensure nil)
 
 (defun eshell-compl-space ()
   (interactive)

@@ -1,5 +1,5 @@
 (use-package table-view
-  :ensure t)
+  :ensure nil)
 
 (use-package org-glance
   :bind (("C-x j" . org-glance-transient)
@@ -7,7 +7,7 @@
          ;; ("@" . org-glance:@)
          )
   :init (org-glance-init "~/sync/views")
-  :ensure t)
+  :ensure nil)
 
 ;; (require 'project)
 ;; (cl-defun my-jump-meta ()

@@ -5,14 +5,14 @@
 
 ;; (use-package elsa
 ;;   :ensure elsa-flycheck
-;;   :ensure t)
+;;   :ensure nil)
 
 (use-package eask
-  :ensure t
+  :ensure nil
   :ensure eask-mode)
 
 (use-package buttercup
-  :ensure t)
+  :ensure nil)
 
 ;; (require 'eval-sexp-fu)
 
@@ -23,7 +23,7 @@
 (add-hook 'lisp-mode-hook 'smartparens-strict-mode)
 
 (use-package sly
-  :ensure t
+  :ensure nil
   :config
   (setq inferior-lisp-program "sbcl")
   (setq sly-complete-symbol-function 'sly-flex-completions))
@@ -40,16 +40,16 @@
 (add-to-list 'auto-mode-alist '("/Eask\\'" . emacs-lisp-mode))
 
 (use-package company-eask
-  :ensure t)
+  :ensure nil)
 
 (use-package eldoc-eask
-  :ensure t)
+  :ensure nil)
 
 (use-package flymake-eask
-  :ensure t)
+  :ensure nil)
 
 (use-package flycheck-eask
-  :ensure t)
+  :ensure nil)
 
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'my-expand-region)
 
@@ -142,6 +142,6 @@
 
 ;; (use-package elsa
 ;;   :ensure flycheck-elsa
-;;   :ensure t)
+;;   :ensure nil)
 
 (provide 'mijn-lisp)

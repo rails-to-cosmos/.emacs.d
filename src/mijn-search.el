@@ -11,7 +11,7 @@
 
 (use-package rg
   :bind (("C-c r" . rg-project))
-  :ensure t)
+  :ensure nil)
 
 (defun my-fzf ()
   (interactive)

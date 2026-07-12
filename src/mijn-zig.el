@@ -8,6 +8,6 @@
          (zig-mode . subword-mode))
 
   :ensure lsp-mode
-  :ensure t)
+  :ensure nil)
 
 (provide 'mijn-zig)

@@ -16,7 +16,7 @@
 ;;
 ;; Or, with use-package:
 ;;   (use-package flymake-ruff
-;;     :ensure t
+;;     :ensure nil
 ;;     :hook (python-mode . flymake-ruff-load))
 
 ;;; Code:

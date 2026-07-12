@@ -5,13 +5,13 @@
 (use-package org-re-reveal
   :custom (org-re-reveal-revealjs-version "6.0.1")
   :ensure edit-server-htmlize
-  :ensure t)
+  :ensure nil)
 
 (use-package ox-reveal
   :config (load-library "ox-reveal")
           (load-library "ox-reveal-layouts")
   :ensure ox-reveal-layouts
-  :ensure t)
+  :ensure nil)
 
 (global-set-key (kbd "C-c o l") #'org-store-link)
 
@@ -106,7 +106,7 @@
 (use-package ob-mermaid
   :config (progn
             (ob-add-language 'mermaid (cons "mermaid" "src mermaid :file test.png")))
-  :ensure t)
+  :ensure nil)
 
 (my-define-completion org-complete-structure "<"
   "Complete org-structure template alist."

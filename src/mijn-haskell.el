@@ -33,7 +33,7 @@
   (eglot-confirm-server-initiated-edits nil) ;; allow edits without confirmation
   (eglot-extend-to-xref t)
 
-  :ensure t
+  :ensure nil
   :ensure align
   :ensure smartparens
   :ensure yasnippet
@@ -118,15 +118,15 @@
 ;;   (haskell-hoogle-server-command (lambda (port) (list "stack" "hoogle" "--" "server" "--local" "--port" (number-to-string port))))
 ;;   (haskell-interactive-popup-errors nil)
 
-;;   :ensure t
+;;   :ensure nil
 ;;   :ensure smartparens
 ;;   :ensure haskell-mode
 ;;   :ensure company
 ;;   :ensure company-ghci
 ;;   :ensure company-cabal
 ;;   :ensure company-quickhelp
-;;   :ensure treemacs
-;;   :ensure treemacs-all-the-icons
+;;   :ensure nilreemacs
+;;   :ensure nilreemacs-all-the-icons
 ;;   :ensure lsp-mode
 ;;   :ensure lsp-ui
 ;;   :ensure lsp-haskell
@@ -157,7 +157,7 @@
 ;;          (interactive-haskell-mode . smartparens-strict-mode)
 ;;          )
 
-;;   :ensure t
+;;   :ensure nil
 ;;   :ensure citre
 ;;   :ensure company)
 

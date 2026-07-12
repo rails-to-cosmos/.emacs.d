@@ -13,7 +13,7 @@
   (company-echo-delay 0.2)
   (company-minimum-prefix-length 1)
 
-  :ensure t
+  :ensure nil
   :ensure company-statistics
   :ensure company-quickhelp
   :ensure yasnippet)
@@ -39,7 +39,7 @@
 ;;   :custom
 ;;   (icomplete-show-matches-on-no-input t)
 
-;;   :ensure t)
+;;   :ensure nil)
 
 (use-package vertico
   :config (progn
@@ -51,13 +51,13 @@
             (define-key vertico-map (kbd "M-DEL") #'vertico-directory-delete-word)
             ;; (rfn-eshadow-update-overlay . vertico-directory-tidy)
             )
-  :ensure t)
+  :ensure nil)
 
 (use-package consult
   :init (progn
           (unbind-key (kbd "C-x i")))
   :bind (("C-x i m" . #'consult-imenu))
-  :ensure t)
+  :ensure nil)
 
 (use-package orderless
   :custom
@@ -66,14 +66,14 @@
   (icomplete-completion-styles '(orderless flex))
   (completion-category-overrides '((file (styles basic partial-completion))))
 
-  :ensure t)
+  :ensure nil)
 
 (use-package marginalia
   :config (marginalia-mode)
-  :ensure t)
+  :ensure nil)
 
 (use-package yasnippet
-  :ensure t)
+  :ensure nil)
 
 (recentf-mode)
 

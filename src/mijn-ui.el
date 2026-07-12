@@ -9,17 +9,17 @@
   (pixel-scroll-precision-mode))
 
 (use-package default-text-scale
-  :ensure t)
+  :ensure nil)
 
 (use-package highlight
-  :ensure t)
+  :ensure nil)
 
 (use-package ace-window
   :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
                 aw-scope 'frame)
   :bind (("C-x C-o" . ace-window)
          ("M-o" . ace-window))
-  :ensure t)
+  :ensure nil)
 
 (cl-defun my:codegen-current-frame-settings ()
   (interactive)
@@ -133,10 +133,10 @@
     (kill-this-buffer)))
 
 (use-package rainbow-mode
-    :ensure t)
+    :ensure nil)
 
 (use-package rainbow-delimiters
-    :ensure t)
+    :ensure nil)
 
 (add-hook 'prog-mode-hook #'rainbow-mode)
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
@@ -147,7 +147,7 @@
 (use-package danneskjold-theme
   :config (enable-theme 'danneskjold)
   :bind (("C-x y t t" . #'danneskjold-toggle-theme))
-  :ensure t)
+  :ensure nil)
 
 (eval-after-load 'org-faces
   '(defcustom org-todo-keyword-faces nil

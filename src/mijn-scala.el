@@ -21,14 +21,14 @@
              'self-insert-command
              minibuffer-local-completion-map)
             (setq sbt:program-options '("-Dsbt.supershell=false")))
-  :ensure t)
+  :ensure nil)
 
 (use-package lsp-mode
   :hook ((scala-mode . lsp-deferred)
          (lsp-mode . lsp-lens-mode))
   :config (progn
             (setq lsp-prefer-flymake nil))
-  :ensure t)
+  :ensure nil)
 
 (use-package lsp-metals
     :config (progn
@@ -37,18 +37,18 @@
               ;; (lsp-metals-toggle-show-inferred-type)
               ;; (lsp-metals-toggle-show-super-method-lenses)
               )
-    :ensure t)
+    :ensure nil)
 
 (use-package lsp-ui
-    :ensure t)
+    :ensure nil)
 
 ;; (use-package company-lsp
-;;     :ensure t)
+;;     :ensure nil)
 
 (use-package posframe
-    :ensure t)
+    :ensure nil)
 
 (use-package dap-mode
-    :ensure t)
+    :ensure nil)
 
 (provide 'mijn-scala)

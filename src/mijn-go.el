@@ -39,7 +39,7 @@
          ;; (before-save-hook . gofmt-before-save)
          )
 
-  :ensure t
+  :ensure nil
   :ensure lsp-mode
   :ensure smartparens
   :ensure go-guru

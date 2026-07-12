@@ -58,7 +58,7 @@ Here the suffix is optional and a hash fallback guarantees a real filename."
   (define-key eglot-java-mode-map (kbd "C-c l N") #'eglot-java-project-new)
   (define-key eglot-java-mode-map (kbd "C-c l T") #'eglot-java-project-build-task)
   (define-key eglot-java-mode-map (kbd "C-c l R") #'eglot-java-project-build-refresh)
-  :ensure t
+  :ensure nil
   :ensure eglot
   :ensure company
   :ensure smartparens

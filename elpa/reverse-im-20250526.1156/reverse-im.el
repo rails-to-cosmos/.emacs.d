@@ -28,7 +28,7 @@
 ;; use Emacs bindings while the non-default system layout is active.
 ;; Usage example:
 ;; (use-package reverse-im
-;;   :ensure t
+;;   :ensure nil
 ;;   :custom
 ;;   (reverse-im-input-methods '("ukrainian-computer")) ; put your input-method(s) here
 ;;   :config

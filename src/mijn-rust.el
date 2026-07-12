@@ -19,7 +19,7 @@
   :config
   (setq rust-format-on-save t)
   (setq-default eglot-workspace-configuration #'mijn-rust--eglot-workspace-config)
-  :ensure t
+  :ensure nil
   :ensure eglot
   :ensure smartparens
   :ensure company

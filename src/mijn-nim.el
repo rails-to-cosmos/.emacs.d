@@ -2,7 +2,7 @@
   :hook ((nim-mode . smartparens-strict-mode))
   :config (progn
             (add-hook 'nim-mode-hook #'lsp-deferred))
-  :ensure t
+  :ensure nil
   :ensure flycheck-nim
   :ensure smartparens)
 

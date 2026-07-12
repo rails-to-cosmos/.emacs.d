@@ -2,6 +2,6 @@
   :config (progn
             (require 's3ed)
             (s3ed-mode))
-  :ensure t)
+  :ensure nil)
 
 (provide 'mijn-s3)
