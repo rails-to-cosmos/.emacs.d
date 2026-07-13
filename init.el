@@ -96,7 +96,13 @@
 (require 'mijn-prog)
 (require 'parquet-mode)
 
-(require 'mijn-llm)
+(use-package agnostic-llm
+  :bind (("C-x y e" . agnostic-llm-menu)
+         ("C-S-j"   . agnostic-llm-next-buffer)
+         ("C-S-k"   . agnostic-llm-previous-buffer)
+         ("C-x C-x" . agnostic-llm-toggle-vterm-claude))
+  :config (with-eval-after-load 'vterm
+            (define-key vterm-mode-map (kbd "C-c C-r") #'agnostic-llm-show-last-response)))
 
 (use-package darr
   :vc (:url "https://github.com/rails-to-cosmos/darr.git" :branch "master" :rev :newest)
@@ -146,7 +152,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-vc-selected-packages
-   '((agnostic-translate :url
+   '((agnostic-llm :url "https://github.com/rails-to-cosmos/agnostic-llm.git"
+                   :branch "master")
+     (agnostic-translate :url
                          "https://github.com/rails-to-cosmos/agnostic-translate.git"
                          :branch "master")
      (darr :url "https://github.com/rails-to-cosmos/darr.git" :branch
