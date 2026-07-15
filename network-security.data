@@ -1,0 +1,4 @@
+;;;; -*- mode: lisp-data -*-
+(
+ (:id "sha1:24c7a1e6369fef1e50de1deb1a9e5bbc68f80c8b" :fingerprints ("sha1:6f:f6:83:7c:9e:ec:49:6c:5e:8f:31:0c:aa:d5:2e:d8:99:05:44:80" "sha1:91:37:dd:74:7f:67:aa:14:4a:87:22:7a:07:66:bb:4e:af:01:8a:0c") :host "orgmode.org:443" :conditions (:same-cert))
+)
