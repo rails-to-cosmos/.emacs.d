@@ -57,6 +57,13 @@ Capture a headline tagged with TAGS (a symbol or list of symbols).
 
 (autoload 'org-glance-materialize "org-glance-material" "\
 Choose a headline from the graph and materialize it." t)
+(autoload 'org-glance-llm "org-glance-material" "\
+Choose a headline and open an `agnostic-llm' session in its data directory.
+Prompt for a headline as `org-glance-materialize' does, then launch
+`agnostic-llm' with its working directory set to the headline's
+content-addressable data directory.  The CLI operates on that headline's data
+there, and its per-directory session context accumulates in the same directory
+across invocations." t)
 (autoload 'org-glance-open "org-glance-material" "\
 Choose a headline from the graph and open a link inside it." t)
 (autoload 'org-glance-extract "org-glance-material" "\

@@ -3,8 +3,8 @@
 ;; Copyright (c) 2026 Dmitry Akatov
 ;; Author: Dmitry Akatov <dmitry.akatov@protonmail.com>
 ;; URL: https://github.com/rails-to-cosmos/agnostic-llm
-;; Package-Version: 20260713.1312
-;; Package-Revision: 24d03780b1fd
+;; Package-Version: 20260714.1339
+;; Package-Revision: f337a8850a09
 ;; Package-Requires: ((emacs "28.1") (transient "0.4.0") (vterm "0.0.2"))
 ;; Keywords: convenience, tools
 
@@ -195,9 +195,19 @@ rather than set directly."
                  (string :tag "Effort level"))
   :group 'agnostic-llm)
 
+(defvar-local agnostic-llm--root-override nil
+  "Directory pinned as this buffer's project root, bypassing marker search.
+When non-nil, `agnostic-llm--project-root' returns it verbatim instead of
+walking up to an ancestor marker.  A session launched in a specific
+directory (via `agnostic-llm''s USER-ROOT) sets this on its vterm, so the
+session's persistence (`.agnostic-llm/', prompt history) stays anchored to
+that directory even when it sits inside a larger project.")
+
 (cl-defun agnostic-llm--project-root (&optional (dir default-directory))
   "Return the project root at or above DIR.
-This is the nearest ancestor of DIR (inclusive) containing any marker in
+When `agnostic-llm--root-override' is set in the current buffer, return it
+verbatim, bypassing the marker search.  Otherwise this is the nearest
+ancestor of DIR (inclusive) containing any marker in
 `agnostic-llm-project-root-markers'.  Falls back to DIR if none found.
 
 Walks up directory-by-directory, asking \"does any marker exist
@@ -211,17 +221,19 @@ are global config, not project markers — most importantly `~/.claude',
 claude's own config dir, which matches the `.claude' marker.  Without
 this guard every markerless directory under HOME would resolve to HOME
 and share one `*llm:~*' buffer."
-  (let ((home (expand-file-name "~/")))
-    (or (when-let ((root (locate-dominating-file
-                          dir
-                          (lambda (parent)
-                            (and (not (file-equal-p parent home))
-                                 (cl-some (lambda (marker)
-                                            (file-exists-p
-                                             (expand-file-name marker parent)))
-                                          agnostic-llm-project-root-markers))))))
-          (file-name-as-directory root))
-        (file-name-as-directory dir))))
+  (if agnostic-llm--root-override
+      (file-name-as-directory (expand-file-name agnostic-llm--root-override))
+    (let ((home (expand-file-name "~/")))
+      (or (when-let ((root (locate-dominating-file
+                            dir
+                            (lambda (parent)
+                              (and (not (file-equal-p parent home))
+                                   (cl-some (lambda (marker)
+                                              (file-exists-p
+                                               (expand-file-name marker parent)))
+                                            agnostic-llm-project-root-markers))))))
+            (file-name-as-directory root))
+          (file-name-as-directory dir)))))
 
 (defvar-local agnostic-llm--prompt-project-root nil
   "Project root captured when the prompt buffer was opened.")
@@ -534,7 +546,12 @@ With \\[universal-argument] \\[universal-argument]: new buffer, fresh session."
            (let ((vterm-shell "claude")
                  (name (generate-new-buffer-name base)))
              (vterm-other-window name)
-             (agnostic-llm--register-buffer (current-buffer)))))))
+             (agnostic-llm--register-buffer (current-buffer)))))
+    ;; A session launched with an explicit USER-ROOT pins its persistence and
+    ;; scope to that directory: `agnostic-llm--project-root' in this vterm now
+    ;; returns USER-ROOT instead of walking up to an ancestor project marker.
+    (when (and user-root (agnostic-llm-buffer-p))
+      (setq-local agnostic-llm--root-override root))))
 
 ;;;###autoload
 (defun agnostic-llm-vterm-here ()
