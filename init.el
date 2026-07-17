@@ -23,7 +23,9 @@
 (use-package diminish)
 (use-package dash)
 (use-package f)
-(use-package session-buffer-cycle)
+
+(use-package session-buffer-cycle
+  :bind (("C-x C-x" . session-buffer-cycle)))
 
 (cl-defun overwrite-mode (&optional arg)
   "Disable overwrite mode entirely."
