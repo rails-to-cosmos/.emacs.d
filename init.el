@@ -23,9 +23,14 @@
 (use-package diminish)
 (use-package dash)
 (use-package f)
+(require 'vterm)
 
 (use-package session-buffer-cycle
-  :bind (("C-x C-x" . session-buffer-cycle)))
+  :bind (("C-x C-x" . session-buffer-cycle))
+  :custom (session-buffer-cycle-kinds '(("vterm" . (lambda (name _label _root)
+                                                     (vterm name)))
+                                        ("llm"   . (lambda (name _label _root)
+                                                     (let ((vterm-shell "claude")) (vterm name)))))))
 
 (cl-defun overwrite-mode (&optional arg)
   "Disable overwrite mode entirely."
