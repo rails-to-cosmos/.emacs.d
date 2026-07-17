@@ -9,9 +9,8 @@
 
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")))
-
-(add-to-list 'package-archives '("rails-to-cosmos" . "https://rails-to-cosmos.github.io/elpa/"))
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("rails-to-cosmos" . "https://rails-to-cosmos.github.io/elpa/")))
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -21,14 +20,10 @@
 
 (setq use-package-always-ensure t)
 
-(use-package diminish
-  :ensure nil)
-
-(use-package dash
-  :ensure nil)
-
-(use-package f
-  :ensure nil)
+(use-package diminish)
+(use-package dash)
+(use-package f)
+(use-package session-buffer-cycle)
 
 (cl-defun overwrite-mode (&optional arg)
   "Disable overwrite mode entirely."
