@@ -1,10 +1,8 @@
 (require 'direnv)
 
-(use-package dired-narrow
-  :ensure nil)
+(use-package dired-narrow)
 
-(use-package dired-rainbow
-  :ensure nil)
+(use-package dired-rainbow)
 
 (require 'dired-plus)
 (require 'dired)

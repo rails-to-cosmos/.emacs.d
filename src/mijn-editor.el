@@ -7,6 +7,8 @@
 
 (global-set-key (kbd "C-M-o") #'occur)
 
+(use-package rainbow-delimiters)
+
 (use-package whisper
   :ensure nil)
 
@@ -103,7 +105,6 @@
                   (enable-paredit-mode))))
   :ensure nil)
 
-(require 'haskell-mode)
 (defun my-kill-line ()
   (interactive)
   (delete-horizontal-space)

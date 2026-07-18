@@ -2,7 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 
-(add-to-list 'load-path (expand-file-name "src/parquet-mode" user-emacs-directory))
+;; (add-to-list 'load-path (expand-file-name "src/parquet-mode" user-emacs-directory))
 
 (require 'custom)
 (require 'package)
@@ -12,18 +12,25 @@
                          ("org" . "https://orgmode.org/elpa/")
                          ("rails-to-cosmos" . "https://rails-to-cosmos.github.io/elpa/")))
 
+(package-initialize)
+
+(setq package-selected-packages nil)
+(advice-add 'package--save-selected-packages :override #'ignore)
+
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
 
 (require 'use-package)
-
 (setq use-package-always-ensure t)
 
 (use-package diminish)
 (use-package dash)
 (use-package f)
-(require 'vterm)
+(use-package vterm)
+(use-package magit)
+(use-package rainbow-delimiters)
+(use-package table-view)
 
 (use-package session-buffer-cycle
   :bind (("C-x C-x" . session-buffer-cycle))
@@ -39,7 +46,7 @@
 
 (remove-hook 'pre-command-hook 'overwrite-mode)
 
-(let ((paths '("src" "src/repos" "src/network-manager" "packages")))
+(let ((paths '("src" "src/repos" "src/network-manager" "src/parquet-mode" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
 
 ;; lsp hack for svg support to not break sessions
@@ -101,8 +108,7 @@
 (use-package agnostic-llm
   :bind (("C-x y e" . agnostic-llm-menu)
          ("C-S-j"   . agnostic-llm-next-buffer)
-         ("C-S-k"   . agnostic-llm-previous-buffer)
-         ("C-x C-x" . agnostic-llm-toggle-vterm-claude))
+         ("C-S-k"   . agnostic-llm-previous-buffer))
   :config (with-eval-after-load 'vterm
             (define-key vterm-mode-map (kbd "C-c C-r") #'agnostic-llm-show-last-response)))
 
@@ -143,27 +149,4 @@
 ;;     (set-frame-size (selected-frame) 310 82)
 ;;     (set-frame-position (selected-frame) 1182 24)))
 
-(add-hook 'after-init-hook #'package-vc-upgrade-all)
-
 ;;; init.el ends here
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-vc-selected-packages
-   '((agnostic-llm :url "https://github.com/rails-to-cosmos/agnostic-llm.git"
-                   :branch "master")
-     (agnostic-translate :url
-                         "https://github.com/rails-to-cosmos/agnostic-translate.git"
-                         :branch "master")
-     (darr :url "https://github.com/rails-to-cosmos/darr.git" :branch
-           "master"))))
-
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )

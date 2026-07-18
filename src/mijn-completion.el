@@ -56,8 +56,7 @@
 (use-package consult
   :init (progn
           (unbind-key (kbd "C-x i")))
-  :bind (("C-x i m" . #'consult-imenu))
-  :ensure nil)
+  :bind (("C-x i m" . #'consult-imenu)))
 
 (use-package orderless
   :custom
@@ -81,11 +80,12 @@
 (require 'savehist)
 (savehist-mode)
 
-(consult-customize consult-completion-in-region
-                   :completion-styles '(orderless)
-                   :cycle-threshold 3)
-(setq completion-in-region-function 'consult-completion-in-region
-      orderless-smart-case t)
+;; (consult-customize consult-completion-in-region
+;;                    :completion-styles '(orderless)
+;;                    :cycle-threshold 3)
+
+;; (setq completion-in-region-function 'consult-completion-in-region
+;;       orderless-smart-case t)
 
 (define-key global-map (kbd "C-x b") #'consult-buffer)
 (define-key global-map (kbd "M-g M-g") #'consult-goto-line)
