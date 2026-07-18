@@ -57,3 +57,4 @@ build
 eglot-java-eclipse-jdt-cache
 .llm/
 /elpa/
+.agnostic-llm/

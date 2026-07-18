@@ -2,12 +2,8 @@
   :ensure nil)
 
 (use-package org-glance
-  :bind (("C-x j" . org-glance-transient)
-         ;; :map org-mode-map
-         ;; ("@" . org-glance:@)
-         )
-  :init (org-glance-init "~/sync/views")
-  :ensure nil)
+  :bind (("C-x j" . org-glance-transient))
+  :init (org-glance-init "~/sync/views"))
 
 ;; (require 'project)
 ;; (cl-defun my-jump-meta ()
