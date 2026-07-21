@@ -78,7 +78,6 @@
 (require 'mijn-org)
 (require 'mijn-editor)
 
-(require 'mijn-glance)
 (require 'mijn-dired)
 (require 'mijn-terminal)
 (require 'mijn-search)
@@ -124,6 +123,12 @@
 (require 'network-manager)
 
 (require 'make)
+
+(use-package table-view)
+
+(use-package org-glance
+  :bind (("C-x j" . org-glance-transient))
+  :init (org-glance-init "~/sync/views"))
 
 (global-set-key (kbd "C-x y m") #'make-menu)
 (global-set-key (kbd "C-x y r a") #'table-view-ray-actors)
