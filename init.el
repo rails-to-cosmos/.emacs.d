@@ -128,8 +128,9 @@
 
 (use-package org-glance
   :bind (("C-x j" . org-glance-transient))
-  :custom ((org-glance-llm-enabled t))
-  :init (org-glance-init "~/sync/views"))
+  :custom ((org-glance-plugins '(llm)))
+  :init (org-glance-init "~/sync/views")
+  :ensure org-glance-llm)
 
 (global-set-key (kbd "C-x y m") #'make-menu)
 (global-set-key (kbd "C-x y r a") #'table-view-ray-actors)
