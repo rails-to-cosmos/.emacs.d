@@ -72,13 +72,8 @@ as-is — caller is responsible for the result compiling."
 
   ;; (require 'flymake)
 
-  (direnv)
   (eglot-ensure)
-  (company-mode)
   (flycheck-mode)
-  (yas-minor-mode)
-  (subword-mode)
-  (smartparens-strict-mode)
   (python-highlight-breakpoints)
   (company-quickhelp-mode)
   (abbrev-mode)
@@ -98,7 +93,8 @@ as-is — caller is responsible for the result compiling."
                                   python-mypy
                                   python-pycodestyle)))
 
-(use-package python-mode
+(use-package python
+  :ensure nil                    ; built-in python.el; python-mode derives from prog-mode
   :defer
   :init (ob-add-language 'python (cons "python" "src python"))
   :hook ((python-mode . my-python-mode-hook)
@@ -111,7 +107,9 @@ as-is — caller is responsible for the result compiling."
               ("C-c C-c" . my-python-paragraph-eval)
               ("C-c C-k" . my-python-kill-comments)
               ("M-n" . flymake-goto-next-error)
-              ("M-p" . flymake-goto-prev-error))
+              ("M-p" . flymake-goto-prev-error)
+              ("C-c C-l" . my-python-send-buffer)
+              ("M-/" . hippie-expand))
 
   :ensure mise
   :ensure yasnippet
@@ -128,13 +126,15 @@ as-is — caller is responsible for the result compiling."
   :ensure ruff-format
   :ensure lsp-pyright)
 
-(flycheck-define-checker python-pycodestyle
-  "A Python syntax and style checker using pycodestyle (former pep8)."
-
-  :command ("pycodestyle" source-inplace)
-  :error-patterns
-  ((error line-start (file-name) ":" line ":" column ":" (message) line-end))
-  :modes python-mode)
+(use-package flycheck
+  :defer t
+  :config
+  (flycheck-define-checker python-pycodestyle
+    "A Python syntax and style checker using pycodestyle (former pep8)."
+    :command ("pycodestyle" source-inplace)
+    :error-patterns
+    ((error line-start (file-name) ":" line ":" column ":" (message) line-end))
+    :modes python-mode))
 
 (defun python-highlight-breakpoints ()
   (interactive)
@@ -163,8 +163,5 @@ as-is — caller is responsible for the result compiling."
   (python-shell-send-buffer)
   (save-window-excursion
     (switch-to-buffer-other-window (python-shell-get-buffer))))
-
-(define-key python-mode-map (kbd "C-c C-l") #'my-python-send-buffer)
-(define-key python-mode-map (kbd "M-/") #'hippie-expand)
 
 (provide 'mijn-python)

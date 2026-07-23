@@ -1,8 +1,6 @@
 (use-package scala-mode
   :mode "\\.s\\(cala\\|bt\\|c\\)$"
-  :hook ((scala-mode . flycheck-mode)
-         (scala-mode . smartparens-strict-mode)
-         (scala-mode . subword-mode))
+  :hook ((scala-mode . flycheck-mode))
   :config (progn
             (setq scala-indent:step 2
                   scala-indent:align-parameters t

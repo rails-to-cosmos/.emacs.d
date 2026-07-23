@@ -12,10 +12,7 @@
     `(:rust-analyzer (:linkedProjects []))))
 
 (use-package rust-mode
-  :hook ((rust-mode . eglot-ensure)
-         (rust-mode . company-mode)
-         (rust-mode . smartparens-strict-mode)
-         (rust-mode . yas-minor-mode))
+  :hook ((rust-mode . eglot-ensure))
   :config
   (setq rust-format-on-save t)
   (setq-default eglot-workspace-configuration #'mijn-rust--eglot-workspace-config)

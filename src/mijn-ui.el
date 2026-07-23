@@ -138,8 +138,13 @@
 (use-package rainbow-delimiters
     :ensure nil)
 
-(add-hook 'prog-mode-hook #'rainbow-mode)
-(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+;; Only enable if the package is actually provided.  A void function in
+;; `prog-mode-hook' otherwise fires during every package byte-compile and
+;; aborts the install.
+(when (fboundp 'rainbow-mode)
+  (add-hook 'prog-mode-hook #'rainbow-mode))
+(when (fboundp 'rainbow-delimiters-mode)
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
 (grab-and-drag-mode 1)
 (setq grab-and-drag-pointer-shape nil)

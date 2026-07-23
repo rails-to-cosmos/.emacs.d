@@ -2,6 +2,9 @@
 (require 'org-clock)
 (require 'ob)
 
+;; Provides `org-checklist' (an org-contrib module) enabled below.
+(use-package org-contrib)
+
 (use-package org-re-reveal
   :custom (org-re-reveal-revealjs-version "6.0.1")
   :ensure edit-server-htmlize
@@ -76,7 +79,8 @@
       org-use-property-inheritance t
       org-use-tag-inheritance t)
 
-(cl-pushnew 'org-checklist org-modules)
+(when (locate-library "org-checklist")
+  (cl-pushnew 'org-checklist org-modules))
 
 (unless org-modules-loaded (org-load-modules-maybe t))
 

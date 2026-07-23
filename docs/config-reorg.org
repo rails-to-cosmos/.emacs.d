@@ -1,0 +1,187 @@
+#+title: Configuration reorganization proposal
+#+options: toc:2
+
+Back to [[file:index.org][docs index]].
+
+A proposal for better separation of packages across files in this Emacs
+configuration. Motivated by the cold-start ordering failures (see the
+provisioning notes below) and by the large amount of copy-pasted per-language
+tooling the audit surfaced.
+
+* Current state
+
+The configuration loads ~36 =src/mijn-*.el= modules from [[file:../init.el][init.el]], plus a
+handful of inline =use-package= forms. The structure is mostly per-topic
+(one file per language, one per subsystem), which is a reasonable base. The
+problems are cross-cutting:
+
+- *No shared programming baseline.* =mijn-prog.el= is a single line
+  (~=(add-hook 'prog-mode-hook #'direnv)=~). The place where a real
+  "programming mode" baseline belongs is empty, so every language file
+  re-adds the same tools to its own mode hook. Across the 13 language
+  modules: =smartparens-strict-mode= appears in 12, =company= in 8,
+  =yasnippet= in 6, an LSP starter in all, =subword-mode= in 5 — each spelled
+  out per file, in three inconsistent styles (=:hook= lists, a named hook
+  function, and bare =add-hook=). Two LSP clients coexist (=eglot= for most,
+  =lsp-mode= for scala/nim/zig) with no shared configuration.
+
+- *Scattered keybindings.* There is no central keymap file. Global bindings
+  live in ≥10 loaded files plus =init.el=; the personal =C-x y= prefix is
+  defined piecemeal in editor, ui, org, ab, make, and =init.el=.
+
+- *Entangled provisioning.* "What to install" (the
+  =package-selected-packages= manifest in [[file:../custom.el][custom.el]]) and "how to configure"
+  (=use-package= bodies, ~73 of them carrying =:ensure nil=) are tangled.
+  The manifest is hand-maintained and must stay comprehensive because the
+  =:ensure nil= packages have no other declared install source; letting
+  =package.el= rewrite it silently emptied it once. The install-first
+  bootstrap in =init.el= depends on this manifest being intact.
+
+- *Dead code.* Five top-level =src/*.el= files are never loaded
+  (=mijn-project=, =mijn-release=, =mijn-s3=, =pyrun=, =inxi-mode-line=), and
+  seven subdirectories (=core=, =completion=, =os=, =utils=, =exwm=, =email=,
+  =redis-mode=) are not on =load-path= and nothing requires them — a second,
+  informal archive alongside =src/archive/=.
+
+- *Many thin single-purpose files.* =mijn-sql= (one babel registration),
+  =mijn-git= (one binding), =mijn-prog= (one hook), =mijn-bash=, =strings=,
+  =mijn-nim=, =mijn-ab= are each a few lines.
+
+* Goals
+
+1. One place for the programming baseline; language files hold only what is
+   language-specific.
+2. One place for global keybindings.
+3. A single, explicit source of truth for which packages are installed.
+4. A layout that makes load order obvious and prune dead code.
+
+* Proposal
+
+** 1. Shared programming baseline (the biggest win)
+
+Introduce =lang/prog-base.el= (replacing the near-empty =mijn-prog.el=) that
+enables the common tooling for every programming buffer:
+
+#+begin_src emacs-lisp
+;; lang/prog-base.el
+(defun mijn-prog-setup ()
+  "Baseline enabled in every programming buffer."
+  (smartparens-strict-mode)
+  (company-mode)
+  (yas-minor-mode)
+  (subword-mode)
+  (direnv))
+
+(add-hook 'prog-mode-hook #'mijn-prog-setup)
+#+end_src
+
+Each language file then keeps only its language-specific parts — the major
+mode package plus its LSP starter. For example =lang/haskell.el= drops from
+a six-entry hook list to:
+
+#+begin_src emacs-lisp
+(use-package haskell-mode
+  :hook ((haskell-mode . eglot-ensure)
+         (haskell-mode . xref-etags-mode))
+  :config ...)   ; server registration, align rules
+#+end_src
+
+This removes the =smartparens= / =company= / =yasnippet= / =subword=
+repetition from 12–13 files and gives one consistent style. Modes that want
+to opt out of a baseline element can disable it locally.
+
+LSP stays per-language (not every prog mode has a server, and the two clients
+differ), but a shared =lang/lsp.el= should hold the common =eglot=
+configuration (format-on-save policy, =eglot-workspace-configuration=
+defaults, key bindings in =eglot-mode-map=). Optionally migrate scala/nim/zig
+from =lsp-mode= to =eglot= for a single client — this is a separate decision
+(see [[*Open decisions]]).
+
+** 2. Central keybindings
+
+Move all global bindings into =keymaps.el=, loaded last so it can reference
+every command. In particular, define the =C-x y= personal prefix and its
+sub-bindings in one place instead of the current six. Language- and
+mode-local bindings (=:bind (:map foo-mode-map ...)=) stay with their feature
+— only *global* bindings move.
+
+** 3. Provisioning: manifest as the single source of truth
+
+Keep the current model but make its contract explicit:
+
+- =package-selected-packages= in =custom.el= is the authoritative install
+  list. Every package the config uses must appear there.
+- =package.el= is blocked from rewriting it (the =package--save-selected-packages=
+  override advice), so it cannot be silently emptied.
+- The install-first bootstrap installs any missing manifest entry before
+  loading modules.
+
+An alternative worth considering: drop =:ensure nil= everywhere and let
+=use-package-always-ensure= plus the manifest be the single mechanism. That
+removes the "config-only, assume present" ambiguity, but touches ~73 forms
+and is a larger change — deferred as a follow-up.
+
+** 4. Layered file layout
+
+Two options, from least to most disruptive.
+
+*** Option A — regroup within a flat =src/= (recommended first step)
+
+Add =prog-base.el= and =keymaps.el=, thin the language files, prune dead
+code, merge thin files. No directory moves. Low risk, captures most of the
+benefit.
+
+*** Option B — layered subdirectories
+
+Reorganize =src/= into layers, each on =load-path=:
+
+#+begin_example
+src/
+  ui/         ui.el
+  editing/    editor.el completion.el dired.el org.el terminal.el scratch.el
+  lang/       prog-base.el lsp.el haskell.el python.el scala.el java.el
+              c.el rust.el go.el nim.el zig.el bash.el sql.el lisp.el nix.el
+              lisette.el
+  tools/      git.el search.el make.el docker.el ab.el repos/ ray-cluster.el
+  os/         darwin.el os.el xrandr.el xmobarrc-mode.el network-manager/
+  lib/        direnv.el strings.el
+  keymaps.el
+#+end_example
+
+Cleaner long-term and makes load order read top-to-bottom by layer, but every
+file moves. Best done after Option A has settled.
+
+** 5. Prune dead code and merge thin files
+
+- *Delete or move to =src/archive/=:* the unloaded top-level files
+  (=mijn-project=, =mijn-release=, =mijn-s3=, =pyrun=, =inxi-mode-line=) and
+  the unloaded subdirs (=core=, =completion=, =os=, =utils=, =exwm=, =email=,
+  =redis-mode=). Confirm each is truly unwanted before removing.
+- *Merge thin files:* fold =mijn-sql= (SQL babel) into =mijn-org= or a
+  =lang/babel.el=; fold =mijn-git= into =mijn-editor= or =tools/git.el=;
+  =mijn-prog= is superseded by =prog-base=; =strings.el='s single helper can
+  live in =lib/=.
+
+* Migration plan (phased, each step independently loadable)
+
+1. Add =prog-base.el=; move the common tooling out of one language file and
+   confirm that language still works. Repeat per language.
+2. Add =keymaps.el=; move global bindings there, a few files at a time.
+3. Prune dead files/subdirs.
+4. (Optional) Apply Option B directory layout.
+5. (Optional) Drop =:ensure nil=, unify on the manifest.
+
+Steps 1–3 are low risk and deliver the duplication and clarity wins; 4–5 are
+larger and can wait.
+
+* Open decisions
+
+- *Single LSP client?* Migrate scala/nim/zig from =lsp-mode= to =eglot=, or
+  keep both?
+- *Directory layout:* flat regroup (Option A) only, or go to layered
+  subdirectories (Option B)?
+- *Provisioning:* keep =:ensure nil= + manifest, or drop =:ensure nil= and
+  let =use-package= ensure everything?
+- *Dead code:* delete outright, or move to =src/archive/= for reference?
+
+See also: [[file:network-hardening.md][network hardening notes]].

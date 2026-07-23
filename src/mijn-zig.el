@@ -2,10 +2,7 @@
   :hook ((zig-mode . lsp-deferred)
          (zig-mode . abbrev-mode)
          (zig-mode . flycheck-mode)
-         (zig-mode . smartparens-strict-mode)
-         (zig-mode . company-mode)
-         (zig-mode . company-quickhelp-mode)
-         (zig-mode . subword-mode))
+         (zig-mode . company-quickhelp-mode))
 
   :ensure lsp-mode
   :ensure nil)

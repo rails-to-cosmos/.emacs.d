@@ -17,6 +17,7 @@
 (cl-defun mise-enable (&optional project-root)
   (interactive)
   (when (and (executable-find "mise")
+             (require 'mise nil t)
              (or (mise-trusted-p) (mise-trust)))
     (mise-mode)))
 
@@ -44,7 +45,7 @@
                when work-directory
                do (cl-pushnew (format "Mode file %s found in %s, executing #'%s" mode-file work-directory mode-hook)
                               report)
-                  (funcall mode-hook work-directory)
+                  (when (fboundp mode-hook) (funcall mode-hook work-directory))
                   (setq project-directory work-directory)
                finally do
                   (message (s-join "\n" report))

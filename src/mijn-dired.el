@@ -2,7 +2,12 @@
 
 (use-package dired-narrow)
 
-(use-package dired-rainbow)
+(use-package dired-rainbow
+  :config
+  (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
+  (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
+  (dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
+  (dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*"))
 
 (require 'dired-plus)
 (require 'dired)
@@ -90,11 +95,6 @@ From https://www.reddit.com/r/emacs/comments/cgbpvl/opening_media_files_straight
   (rename-buffer (generate-new-buffer-name (concat "/dired:" dired-directory)))
   ;; (dired-collapse-mode)
   )
-
-(dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
-(dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))
-(dired-rainbow-define log (:inherit default :italic t) ".*\\.log")
-(dired-rainbow-define-chmod executable-unix "#B3DE81" "-[rw-]+x.*")
 
 (defun dired-smart-sort ()
   "Sort dired listings with directories first."

@@ -1,0 +1,10 @@
+#+title: Emacs configuration — docs
+
+Wiki index for design notes and audits on this configuration.
+
+* Documents
+
+- [[file:config-reorg.org][Configuration reorganization proposal]] — better separation of packages
+  across files: a shared programming baseline, central keybindings, a single
+  provisioning source of truth, and dead-code pruning.
+- [[file:network-hardening.md][WiFi network hardening]] — home-network audit notes (Markdown).
