@@ -148,6 +148,7 @@
 
 (use-package org-glance
   :bind (("C-x j" . org-glance-transient))
+  :custom ((org-glance-llm-enabled t))
   :init (org-glance-init "~/sync/views"))
 
 (global-set-key (kbd "C-x y m") #'make-menu)
