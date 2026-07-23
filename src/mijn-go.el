@@ -20,10 +20,8 @@
 
   (eglot-ensure)
   (indent-tabs-mode -1)
-  (yas-minor-mode)
   (setq-local tab-width 4)
   (go-guru-hl-identifier-mode)
-  (smartparens-strict-mode)
   (company-quickhelp-mode)
   (company-statistics-mode))
 

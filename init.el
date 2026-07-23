@@ -8,21 +8,40 @@
 (require 'package)
 
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
                          ("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("rails-to-cosmos" . "https://rails-to-cosmos.github.io/elpa/")))
 
 (package-initialize)
 
-(setq package-selected-packages nil)
+;; The `package-selected-packages' manifest in custom.el is the hand-maintained
+;; install source (see the install-first bootstrap below).  Keep package.el from
+;; rewriting it on install/autoremove, which once silently wiped it to nil.
 (advice-add 'package--save-selected-packages :override #'ignore)
 
+(unless package-archive-contents
+  (package-refresh-contents))
+
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
 (require 'use-package)
 (setq use-package-always-ensure t)
+
+;; Provision the declared package set BEFORE loading any config module, so a
+;; module's mode-hook never fires against an uninstalled package (which aborts
+;; that package's own byte-compilation and cascades install failures across the
+;; whole session).  custom.el is loaded here only to populate the
+;; `package-selected-packages' manifest; it is loaded again at the end so user
+;; settings still win over module defaults.
+(load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
+(when (seq-find (lambda (pkg) (not (package-installed-p pkg)))
+                package-selected-packages)
+  (package-refresh-contents)
+  (dolist (pkg package-selected-packages)
+    (unless (package-installed-p pkg)
+      (ignore-errors (package-install pkg)))))
 
 (use-package diminish)
 (use-package dash)
@@ -83,6 +102,8 @@
 (require 'mijn-search)
 
 (require 'mijn-git)
+
+(require 'mijn-prog)                ; shared baseline for all programming modes
 (require 'mijn-lisp)
 (require 'mijn-haskell)
 (require 'mijn-python)
@@ -101,7 +122,6 @@
 (require 'mijn-os)
 (require 'mijn-ab)
 (require 'ray-cluster)              ; M-x table-view-ray-actors
-(require 'mijn-prog)
 (require 'parquet-mode)
 
 (use-package agnostic-llm
@@ -155,3 +175,17 @@
 ;;     (set-frame-position (selected-frame) 1182 24)))
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-vc-selected-packages
+   '((darr :url "https://github.com/rails-to-cosmos/darr.git" :branch
+           "master"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

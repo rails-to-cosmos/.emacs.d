@@ -14,11 +14,9 @@
             (add-to-list 'align-rules-list '(haskell-arrows (regexp . "\\(\\s-+\\)\\(->\\|→\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
             (add-to-list 'align-rules-list '(haskell-left-arrows (regexp . "\\(\\s-+\\)\\(<-\\|←\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode)))))
 
+  ;; smartparens / company / yasnippet come from `mijn-prog-setup'; keep only
+  ;; the haskell-specific hooks here.
   :hook ((haskell-mode . eglot-ensure)
-         (haskell-mode . yas-minor-mode)
-         (haskell-mode . company-mode)
-         (haskell-mode . smartparens-strict-mode)
-         (haskell-mode . subword-mode)
          (haskell-mode . xref-etags-mode))
 
   :custom

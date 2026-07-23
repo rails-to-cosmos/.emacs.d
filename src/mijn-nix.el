@@ -1,5 +1,4 @@
 (use-package nix-mode
-  :hook ((nix-mode . smartparens-strict-mode))
   :ensure nil)
 
 ;; --- Nix Flake Environment Loader (No Direnv) ---

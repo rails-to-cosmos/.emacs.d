@@ -42,10 +42,7 @@
   :custom
   (c-basic-offset 4)
 
-  :hook (((c-mode c++-mode objc-mode) . eglot-ensure)
-         ((c-mode c++-mode objc-mode) . company-mode)
-         ((c-mode c++-mode objc-mode) . smartparens-strict-mode)
-         ((c-mode c++-mode objc-mode) . yas-minor-mode))
+  :hook (((c-mode c++-mode objc-mode) . eglot-ensure))
 
   :bind (:map c-mode-map
               ("C-x C-x" . ff-find-other-file)

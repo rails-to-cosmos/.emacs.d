@@ -9,11 +9,10 @@
 
 (use-package rainbow-delimiters)
 
-(use-package whisper
-  :ensure nil)
+;; (use-package whisper)
 
-(use-package cask-mode
-  :ensure nil)
+;; (use-package cask-mode
+;;   :ensure nil)
 
 (use-package align
   :bind ("M-[" . align)

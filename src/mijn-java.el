@@ -36,10 +36,6 @@ Here the suffix is optional and a hash fallback guarantees a real filename."
               '(:java (:maven (:downloadSources t)
                        :eclipse (:downloadSources t)
                        :references (:includeDecompiledSources t))))
-  (subword-mode)
-  (smartparens-strict-mode)
-  (yas-minor-mode)
-  (company-mode)
   (company-quickhelp-mode 1)
   ;; `eglot-java-mode' registers the Eclipse JDT server, downloads it on first
   ;; use, and starts eglot — enabling it is enough, no separate `eglot-ensure'.

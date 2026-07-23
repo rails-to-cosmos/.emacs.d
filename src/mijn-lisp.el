@@ -1,7 +1,10 @@
 ;; -*- lexical-binding: t -*-
 
-(require 'rainbow-delimiters)
-(require 'paredit)
+(use-package rainbow-delimiters
+  :hook ((lisp-mode emacs-lisp-mode) . rainbow-delimiters-mode))
+
+(use-package paredit
+  :defer t)
 
 ;; (use-package elsa
 ;;   :ensure elsa-flycheck
@@ -16,11 +19,7 @@
 
 ;; (require 'eval-sexp-fu)
 
-(add-hook 'lisp-data-mode-hook 'smartparens-strict-mode)
-
-(add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
 ;; (add-hook 'lisp-mode-hook 'enable-paredit-mode)
-(add-hook 'lisp-mode-hook 'smartparens-strict-mode)
 
 (use-package sly
   :ensure nil
@@ -29,13 +28,8 @@
   (setq sly-complete-symbol-function 'sly-flex-completions))
 
 (add-hook 'lisp-mode-hook 'sly-editing-mode)
-(add-hook 'lisp-mode-hook 'company-mode)
 
-(add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
 ;; (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
-(add-hook 'emacs-lisp-mode-hook 'smartparens-strict-mode)
-(add-hook 'emacs-lisp-mode-hook 'yas-minor-mode)
-(add-hook 'emacs-lisp-mode-hook 'company-mode)
 
 (add-to-list 'auto-mode-alist '("/Eask\\'" . emacs-lisp-mode))
 
@@ -57,7 +51,7 @@
 ;; (cl-defun emacs-lisp-completion-setup ()
 ;;   (setq-local company-backends '(company-elisp company-files company-yasnippet)))
 
-(require 'expand-region)
+(use-package expand-region)
 
 (defvar my-expand-region-last-bounds nil
   "Stores the previous region bounds for manual contraction.")
