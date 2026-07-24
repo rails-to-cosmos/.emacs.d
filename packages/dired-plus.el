@@ -8104,7 +8104,7 @@ show an image preview, then do so.  Otherwise, show text help."
 
   (eval '(define-minor-mode dired-hide-details-mode
           "Hide details in Dired mode."
-          (and diredp-hide-details-propagate-flag  diredp-hide-details-last-state)
+          :init-value (and diredp-hide-details-propagate-flag  diredp-hide-details-last-state)
           :group 'dired
           (unless (derived-mode-p 'dired-mode) (error "Not a Dired buffer"))
           (dired-hide-details-update-invisibility-spec)
