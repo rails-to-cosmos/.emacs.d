@@ -89,6 +89,7 @@
 (require 'mijn-ui)
 (require 'mijn-tramp)
 (require 'mijn-scratch)
+(require 'mijn-restart)
 (require 'repos)
 
 (require 'mijn-darwin)
@@ -122,6 +123,8 @@
 (require 'mijn-os)
 (require 'mijn-ab)
 (require 'ray-cluster)              ; M-x table-view-ray-actors
+
+
 (require 'parquet-mode)
 
 (use-package agnostic-llm
@@ -144,7 +147,19 @@
 
 (require 'make)
 
-(use-package table-view)
+(use-package table-view
+  :config (progn
+            (require 'table-view-csv)
+            (add-to-list 'auto-mode-alist '("\\.csv\\'" . table-view-csv-mode))
+            (add-to-list 'auto-mode-alist '("\\.tsv\\'" . table-view-csv-mode))
+            (global-set-key (kbd "C-x y c") #'table-view-csv)))
+
+;; Optional Rust backend: installed but not loaded until a large table (e.g. a
+;; big CSV) requires it -- then `table-view-display' routes to it, or recommends
+;; building its binary (M-x table-view-native-compile).
+(use-package table-view-native
+  :defer t
+  :commands (table-view-native-display table-view-native-compile))
 
 (use-package org-glance
   :bind (("C-x j" . org-glance-transient))
