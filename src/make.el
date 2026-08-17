@@ -273,6 +273,30 @@ PROJECT is shown in the mode-line and header."
     (make--register buf)
     (make--show-buffer buf)))
 
+;;; Makefile parsing
+
+(defconst make--rule-regexp "^\\([^#\t\n][^:#=\n]*\\):[^=]"
+  "Match a rule line, capturing every target it names before the colon.
+One rule may name several targets, as in `major minor patch:'.
+The trailing character keeps a `:=' assignment out.")
+
+(defun make--own-target-p (target)
+  "Is TARGET one make itself reads rather than one a user would pick?
+Covers make's dot-targets (`.PHONY' and its like), pattern rules, and
+targets spelled through a variable."
+  (or (string-prefix-p "." target)
+      (string-match-p "[%$]" target)))
+
+(defun make--targets (makefile)
+  "Every target MAKEFILE offers, sorted and without repeats."
+  (with-temp-buffer
+    (insert-file-contents makefile)
+    (cl-loop while (re-search-forward make--rule-regexp nil t)
+             append (split-string (match-string 1) "[ \t]+" t) into ts
+             finally (return (sort (cl-remove-if #'make--own-target-p
+                                                 (delete-dups ts))
+                                   #'string<)))))
+
 ;;; Entry point
 
 (cl-defun make-completing-read ()
@@ -283,14 +307,7 @@ PROJECT is shown in the mode-line and header."
                               (abbreviate-file-name default-directory))))
          (default-directory dir)
          (makefile (expand-file-name "Makefile" dir))
-         (targets (with-temp-buffer
-                    (insert-file-contents makefile)
-                    (cl-loop while (re-search-forward
-                                    "^\\([^#[:space:]\n][^:[:space:]]*\\):" nil t)
-                             for tgt = (match-string 1)
-                             unless (string= tgt ".PHONY")
-                             collect tgt into ts
-                             finally (return (sort ts #'string<)))))
+         (targets (make--targets makefile))
          (_ (unless targets (user-error "No targets in %s" makefile)))
          (target (completing-read "Make: " targets nil t))
          (project (file-name-base (directory-file-name dir)))

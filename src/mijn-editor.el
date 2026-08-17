@@ -7,6 +7,25 @@
 
 (global-set-key (kbd "C-M-o") #'occur)
 
+(defun mijn-fill-or-unfill ()
+  "Fill the paragraph; on a repeat press, unfill it to one long line.
+`M-q' fills as usual.  Pressing it again joins the paragraph back into a
+single line; a third press re-fills -- so `M-q' toggles fill/unfill.
+
+The repeat is detected via `last-command'; `fill-paragraph' is called
+directly (not through `call-interactively', which would overwrite
+`this-command' and defeat the toggle)."
+  (interactive)
+  (let ((fill-column
+         (if (eq last-command this-command)
+             ;; Repeat: unfill.  Clear `this-command' so the next press is not
+             ;; taken as a repeat and fills again.
+             (progn (setq this-command nil) most-positive-fixnum)
+           fill-column)))
+    (fill-paragraph)))
+
+(global-set-key (kbd "M-q") #'mijn-fill-or-unfill)
+
 (use-package rainbow-delimiters)
 
 ;; (use-package whisper)
