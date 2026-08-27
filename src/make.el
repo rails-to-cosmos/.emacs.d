@@ -1,15 +1,16 @@
-;;; make.el --- Makefile target picker with output buffer  -*- lexical-binding: t -*-
+;;; make.el --- Makefile target picker running in vterm  -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; M-x make-completing-read picks a target from the dominating Makefile
-;; and spawns `make TARGET' as an async process.  Output streams into
-;; a buffer shown in another window.
-;; Status also appears in the global mode line with mouse interaction.
+;; and runs `make TARGET' in a vterm buffer shown in another window.
+;; The terminal is interactive: sudo passwords and confirmations can
+;; be typed in.  Status also appears in the global mode line with
+;; mouse interaction.
 
 ;;; Code:
 
 (require 'cl-lib)
-(require 'ansi-color)
+(require 'vterm)
 (require 'transient)
 
 ;;; Per-buffer state
@@ -28,9 +29,6 @@
 
 (defvar-local make--start-time nil
   "Time the make process was spawned (for elapsed-time display).")
-
-(defvar-local make--process nil
-  "Async make process for this buffer.")
 
 ;;; Faces
 
@@ -54,7 +52,7 @@
 ;;; Customization
 
 (defgroup make nil
-  "Makefile target picker with output buffer."
+  "Makefile target picker running in vterm."
   :group 'tools
   :prefix "make-")
 
@@ -65,29 +63,24 @@ Nil disables auto-cleanup."
                  (const :tag "Never" nil))
   :group 'make)
 
-;;; Major mode
+;;; Keys
 
-(defvar make-output-mode-map
+(defvar make-done-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q")       #'bury-buffer)
     (define-key map (kbd "C-c C-k") #'bury-buffer)
-    (define-key map (kbd "C-c C-c") #'make-kill-process)
     map)
-  "Keymap for `make-output-mode'.")
-
-(define-derived-mode make-output-mode special-mode "Make"
-  "Major mode for make output."
-  (setq-local truncate-lines nil)
-  (setq-local word-wrap t)
-  (ansi-color-for-comint-mode-on))
+  "Local map installed once the make process has exited.
+Replaces `vterm-mode-map' so keys read the output instead of feeding
+a dead terminal.")
 
 ;;; Commands
 
 (defun make-kill-process ()
   "Kill the running make process."
   (interactive)
-  (when (process-live-p make--process)
-    (kill-process make--process)
+  (when (process-live-p vterm--process)
+    (kill-process vterm--process)
     (message "make %s: killed" make--target)))
 
 ;;; Mode-line construct
@@ -101,19 +94,27 @@ Nil disables auto-cleanup."
                               'face 'make-status-fail-face))
     (_            "[?]")))
 
+(defun make--status-label (status)
+  "Plain-text label for STATUS."
+  (pcase status
+    ('running     "running")
+    ('ok          "ok")
+    (`(fail . ,n) (format "failed (%d)" n))
+    (_            "?")))
+
+(defun make--elapsed ()
+  "Seconds since the make process in this buffer was spawned."
+  (if make--start-time
+      (float-time (time-since make--start-time))
+    0.0))
+
 (defun make--entry-help (buf)
   "Help-echo for BUF's mode-line entry."
   (with-current-buffer buf
     (format "%s\nstatus: %s\nelapsed: %.1fs\nmouse-1 show, mouse-3 kill"
             (buffer-name buf)
-            (pcase make--status
-              ('running     "running")
-              ('ok          "ok")
-              (`(fail . ,n) (format "failed (%d)" n))
-              (_            "?"))
-            (if make--start-time
-                (float-time (time-since make--start-time))
-              0.0))))
+            (make--status-label make--status)
+            (make--elapsed))))
 
 (defun make--entry-keymap (buf)
   "Mode-line keymap for BUF: mouse-1 shows buffer, mouse-3 kills."
@@ -124,7 +125,8 @@ Nil disables auto-cleanup."
                 (lambda (_e)
                   (interactive "e")
                   (when (y-or-n-p (format "Kill %s? " (buffer-name buf)))
-                    (kill-buffer buf))))
+                    (let ((kill-buffer-query-functions nil))
+                      (kill-buffer buf)))))
     m))
 
 (defun make--mode-line-entry (buf)
@@ -172,62 +174,27 @@ Nil disables auto-cleanup."
 
 ;;; Process plumbing
 
-(defun make--filter (proc chunk)
-  "Process filter: append CHUNK with ANSI colors to PROC's buffer."
-  (when (buffer-live-p (process-buffer proc))
-    (with-current-buffer (process-buffer proc)
-      (let ((inhibit-read-only t))
-        (save-excursion
-          (goto-char (point-max))
-          (let* ((no-crlf (replace-regexp-in-string "\r\n" "\n" chunk))
-                 (no-osc (replace-regexp-in-string "\e\\][^\a]*\\(?:\a\\|\e\\\\\\)" "" no-crlf))
-                 (no-csi (replace-regexp-in-string "\e\\[[?<>=]*[0-9;]*[a-zA-Z]" "" no-osc))
-                 (no-esc (replace-regexp-in-string "\e" "" no-csi))
-                 (clean  (ansi-color-apply no-esc))
-                 (segments (split-string clean "\r")))
-            (insert (car segments))
-            (dolist (seg (cdr segments))
-              (delete-region (line-beginning-position) (point))
-              (insert seg))))
-        (goto-char (point-max))
-        (dolist (win (get-buffer-window-list (current-buffer) nil t))
-          (set-window-point win (point-max)))))))
+(defun make--header (keys)
+  "Header line for the current make buffer, ending with the KEYS hint."
+  (propertize (format " make %s/%s %s  %s"
+                      make--project make--target
+                      (make--status-glyph make--status)
+                      keys)
+              'face 'make-header-face))
 
 (defun make--sentinel (proc _event)
-  "Update status when PROC exits; update header and schedule cleanup."
+  "Record PROC's exit status; update header, mode line and keys."
   (when (and (memq (process-status proc) '(exit signal))
              (buffer-live-p (process-buffer proc)))
     (with-current-buffer (process-buffer proc)
-      (let ((code (process-exit-status proc))
-            (inhibit-read-only t))
-        (setq-local make--status
-                    (if (zerop code) 'ok (cons 'fail code)))
-        (setq-local make--process nil)
-        (let ((elapsed (if make--start-time
-                          (float-time (time-since make--start-time))
-                        0.0)))
-          (save-excursion
-            (goto-char (point-max))
-            (insert (propertize
-                     (format "\n--- %s (%.1fs) ---"
-                             (pcase make--status
-                               ('ok "done")
-                               (`(fail . ,n) (format "failed (%d)" n)))
-                             elapsed)
-                     'face (if (eq make--status 'ok)
-                               'make-status-ok-face
-                             'make-status-fail-face)))))
-        (setq header-line-format
-              (propertize
-               (format " make %s/%s %s  q close"
-                       make--project make--target
-                       (make--status-glyph make--status))
-               'face 'make-header-face))
-        (force-mode-line-update t)
-        (message "make %s: %s" make--target
-                 (pcase make--status
-                   ('ok "ok")
-                   (`(fail . ,n) (format "failed (%d)" n)))))
+      (let ((code (process-exit-status proc)))
+        (setq-local make--status (if (zerop code) 'ok (cons 'fail code))))
+      (use-local-map make-done-map)
+      (setq buffer-read-only t)
+      (setq header-line-format
+            (make--header (format "(%.1fs)  q close" (make--elapsed))))
+      (force-mode-line-update t)
+      (message "make %s: %s" make--target (make--status-label make--status))
       (when make-mode-line-cleanup-delay
         (let ((buf (current-buffer)))
           (run-at-time make-mode-line-cleanup-delay nil
@@ -245,33 +212,32 @@ Nil disables auto-cleanup."
 ;;; Spawn
 
 (defun make--spawn (buffer-name target project dir)
-  "Run `make TARGET' in BUFFER-NAME as an async process.
+  "Run `make TARGET' in a vterm buffer named BUFFER-NAME.
 DIR is the directory containing the Makefile.
 PROJECT is shown in the mode-line and header."
   (when (buffer-live-p (get-buffer buffer-name))
     (let ((old-proc (get-buffer-process buffer-name)))
       (when (and old-proc (process-live-p old-proc))
         (kill-process old-proc)))
-    (kill-buffer buffer-name))
+    (let ((kill-buffer-query-functions nil))
+      (kill-buffer buffer-name)))
   (let ((buf (get-buffer-create buffer-name)))
+    ;; Display first so vterm sizes the terminal to its window.
+    (make--show-buffer buf)
     (with-current-buffer buf
-      (make-output-mode)
-      (setq-local make--target target)
-      (setq-local make--project project)
-      (setq-local make--status 'running)
-      (setq-local make--start-time (current-time))
-      (setq header-line-format
-            (propertize (format " make %s/%s [RUN]  C-c C-c kill | q close"
-                                project target)
-                        'face 'make-header-face))
+      (let ((default-directory dir)
+            (vterm-shell (concat "make " (shell-quote-argument target)))
+            (vterm-kill-buffer-on-exit nil))
+        (vterm-mode))
+      ;; `vterm-mode' resets local state, so set ours after it.
+      (setq-local make--target target
+                  make--project project
+                  make--status 'running
+                  make--start-time (current-time))
+      (setq header-line-format (make--header "C-c C-c interrupt"))
       (add-hook 'kill-buffer-hook #'make--unregister nil t)
-      (let* ((default-directory dir)
-             (proc (start-process "make" buf "make" target)))
-        (setq-local make--process proc)
-        (set-process-filter   proc #'make--filter)
-        (set-process-sentinel proc #'make--sentinel)))
-    (make--register buf)
-    (make--show-buffer buf)))
+      (set-process-sentinel vterm--process #'make--sentinel))
+    (make--register buf)))
 
 ;;; Makefile parsing
 
