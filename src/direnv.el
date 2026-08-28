@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'files)
 (require 'strings)
 
