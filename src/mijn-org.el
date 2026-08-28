@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'org)
 (require 'org-clock)
 (require 'ob)

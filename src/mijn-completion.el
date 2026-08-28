@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'eglot-booster)
 (fset #'jsonrpc--log-event #'ignore)
 ;; (fset #'eglot-events-buffer-size 0)

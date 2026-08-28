@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (when (eq system-type 'darwin)
   (setq mac-command-modifier 'control
         mac-option-modifier  'meta

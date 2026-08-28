@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)

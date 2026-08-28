@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (setenv "LSP_USE_PLISTS" "true")
 (setq read-process-output-max (* 3 1024 1024))
 

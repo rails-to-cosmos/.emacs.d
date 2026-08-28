@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (use-package magit
   :config (progn
             (define-key global-map (kbd "C-x g") #'magit-status))

@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (use-package zig-mode
   :hook ((zig-mode . lsp-deferred)
          (zig-mode . abbrev-mode)

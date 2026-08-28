@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (cl-defun ab-vpn-connect ()
   (interactive)
   (eshell-command "sudo wg-quick up wg-crypto"))

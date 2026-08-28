@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'mijn-org)
 
 (ob-add-language 'sql (cons "sql" "src sql"))

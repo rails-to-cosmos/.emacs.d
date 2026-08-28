@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (use-package scala-mode
   :mode "\\.s\\(cala\\|bt\\|c\\)$"
   :hook ((scala-mode . flycheck-mode))

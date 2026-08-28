@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (defun string-contains-p (substring string)
   "Return t if STRING contains SUBSTRING, otherwise return nil.
 The search is case-sensitive."

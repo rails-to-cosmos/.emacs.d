@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'eshell)
 (require 'esh-mode)
 (require 'mijn-org)

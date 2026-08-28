@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'direnv)
 
 (cl-defun my-init-go ()

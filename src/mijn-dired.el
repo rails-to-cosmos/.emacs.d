@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'direnv)
 
 (use-package dired-narrow)
