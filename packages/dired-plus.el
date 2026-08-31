@@ -1,4 +1,4 @@
-;;; dired+.el --- Extensions to Dired.
+;;; dired+.el --- Extensions to Dired.  -*- lexical-binding: nil -*-
 ;;
 ;; Filename: dired+.el
 ;; Description: Extensions to Dired.

@@ -1,4 +1,4 @@
-;;; grab-and-drag.el --- Scroll a window by mouse dragging
+;;; grab-and-drag.el --- Scroll a window by mouse dragging  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2010  S. Irie
 
