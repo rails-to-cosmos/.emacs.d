@@ -150,8 +150,30 @@
 (grab-and-drag-mode 1)
 (setq grab-and-drag-pointer-shape nil)
 
+(defun mijn-theme-variant ()
+  "Return the durable desktop theme variant, the symbol `light' or `dark'.
+Reads ~/.config/xmobar/theme-variant, the single source of truth shared
+with xmobar and its status daemon.  Defaults to `dark' when unset."
+  (let ((f (expand-file-name "~/.config/xmobar/theme-variant")))
+    (if (and (file-readable-p f)
+             (with-temp-buffer
+               (insert-file-contents f)
+               (string-match-p "light" (buffer-string))))
+        'light
+      'dark)))
+
+(defun mijn-apply-emacs-theme (variant)
+  "Enable the danneskjold theme matching VARIANT (`light' or `dark')."
+  (if (eq variant 'light)
+      (progn (disable-theme 'danneskjold)
+             (enable-theme 'danneskjold-light))
+    (disable-theme 'danneskjold-light)
+    (enable-theme 'danneskjold)))
+
 (use-package danneskjold-theme
-  :config (enable-theme 'danneskjold)
+  ;; Start in whatever variant the durable knob says, so Emacs matches the bar
+  ;; on a fresh session instead of always coming up dark.
+  :config (mijn-apply-emacs-theme (mijn-theme-variant))
   :bind (("C-x y t t" . #'danneskjold-toggle-theme))
   :ensure nil)
 
@@ -211,22 +233,17 @@ If KWD is a number, get the corresponding match group."
 ;; )
 
 (defun xmobar-toggle-theme ()
-  "Toggle between light and dark xmobar themes and sync danneskjold theme."
+  "Flip the durable desktop theme (Emacs + xmobar) between light and dark.
+Reads the current variant from the shared source of truth, applies the
+opposite here, and hands it to theme-sync.sh, which persists it and
+recolors the bar."
   (interactive)
-  (let ((light-enabled (custom-theme-enabled-p 'danneskjold-light)))
-    (if light-enabled
-        (progn
-          (disable-theme 'danneskjold-light)
-          (enable-theme 'danneskjold)
-          (message "Switched to dark theme")
-          (start-process "xmobar-theme-sync" nil "bash"
-                         (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh") "dark"))
-      (progn
-        (disable-theme 'danneskjold)
-        (enable-theme 'danneskjold-light)
-        (message "Switched to light theme")
-        (start-process "xmobar-theme-sync" nil "bash"
-                       (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh") "light")))))
+  (let ((new (if (eq (mijn-theme-variant) 'light) 'dark 'light)))
+    (mijn-apply-emacs-theme new)
+    (message "Switched to %s theme" new)
+    (start-process "xmobar-theme-sync" nil "bash"
+                   (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh")
+                   (symbol-name new))))
 
 (global-set-key (kbd "C-x y t x") #'xmobar-toggle-theme)
 
