@@ -170,10 +170,37 @@ with xmobar and its status daemon.  Defaults to `dark' when unset."
     (disable-theme 'danneskjold-light)
     (enable-theme 'danneskjold)))
 
+(defun mijn-current-emacs-variant ()
+  "Return the variant currently active in Emacs, `light' or `dark'."
+  (if (custom-theme-enabled-p 'danneskjold-light) 'light 'dark))
+
+(defun mijn-sync-emacs-theme (&rest _)
+  "Re-apply the Emacs theme to match the durable variant if it drifted.
+Idempotent: a no-op when Emacs already shows the desktop variant, so it
+is safe to call from a file-watch or a timer (and it will not loop with
+Emacs's own toggle, which applies the variant before writing the file)."
+  (let ((want (mijn-theme-variant)))
+    (unless (eq want (mijn-current-emacs-variant))
+      (mijn-apply-emacs-theme want)
+      (message "Theme synced to %s (external change)" want))))
+
+(defvar mijn-theme-poll-timer nil
+  "Repeating timer that follows the durable theme variant.")
+
+(defun mijn-watch-theme-variant ()
+  "Sensor: poll the durable theme-variant and sync Emacs when it drifts.
+A timer, not file-notify: inotify callbacks are not delivered reliably
+in a headless Emacs daemon, and the check is cheap (one small file read
+plus a symbol compare)."
+  (when mijn-theme-poll-timer (cancel-timer mijn-theme-poll-timer))
+  (setq mijn-theme-poll-timer (run-at-time 2 2 #'mijn-sync-emacs-theme)))
+
 (use-package danneskjold-theme
   ;; Start in whatever variant the durable knob says, so Emacs matches the bar
-  ;; on a fresh session instead of always coming up dark.
-  :config (mijn-apply-emacs-theme (mijn-theme-variant))
+  ;; on a fresh session instead of always coming up dark, then keep following it.
+  :config
+  (mijn-apply-emacs-theme (mijn-theme-variant))
+  (mijn-watch-theme-variant)
   :bind (("C-x y t t" . #'danneskjold-toggle-theme))
   :ensure nil)
 
