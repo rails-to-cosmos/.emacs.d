@@ -100,10 +100,11 @@ directly (not through `call-interactively', which would overwrite
   :ensure nil)
 
 (use-package smartparens
+  :ensure t
+  :demand t
   :config (progn
             (require 'smartparens)
-            (require 'smartparens-config))
-  :ensure nil)
+            (require 'smartparens-config)))
 
 (use-package paredit
   :config (progn
