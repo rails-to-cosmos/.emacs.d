@@ -58,3 +58,5 @@ eglot-java-eclipse-jdt-cache
 .llm/
 /elpa/
 .agnostic-llm/
+/projects.eld
+/recentf.eld

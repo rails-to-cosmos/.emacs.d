@@ -52,7 +52,7 @@
             (define-key vertico-map (kbd "M-DEL") #'vertico-directory-delete-word)
             ;; (rfn-eshadow-update-overlay . vertico-directory-tidy)
             )
-  :ensure nil)
+  :ensure t)
 
 (use-package consult
   :init (progn
@@ -66,11 +66,11 @@
   (icomplete-completion-styles '(orderless flex))
   (completion-category-overrides '((file (styles basic partial-completion))))
 
-  :ensure nil)
+  :ensure t)
 
 (use-package marginalia
   :config (marginalia-mode)
-  :ensure nil)
+  :ensure t)
 
 (use-package yasnippet
   :ensure nil)
