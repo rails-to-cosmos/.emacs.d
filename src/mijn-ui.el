@@ -46,7 +46,7 @@
     (set-window-parameter win 'no-other-window (not current))
     (message "Window is now %s for `other-window`" (if (not current) "SKIPPED" "SELECTABLE"))))
 
-(set-frame-font "-JB-JetBrains Mono NL-regular-normal-normal-*-11-*-*-*-m-0-iso10646-1" t nil)
+(require 'mijn-fonts)
 
 (setq-default ring-bell-function 'ignore
               use-dialog-box nil

@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (when (eq system-type 'darwin)
-  (setq mac-command-modifier 'control
+  (setq mac-command-modifier 'meta
         mac-option-modifier  'meta
         ;; sane trackpad/mouse scroll settings
         mac-redisplay-dont-reset-vscroll t
