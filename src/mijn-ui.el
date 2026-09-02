@@ -204,7 +204,7 @@ plus a symbol compare)."
   (mijn-apply-emacs-theme (mijn-theme-variant))
   (mijn-watch-theme-variant)
   :bind (("C-x y t t" . #'danneskjold-toggle-theme))
-  :ensure nil)
+  :ensure t)
 
 (eval-after-load 'org-faces
   '(defcustom org-todo-keyword-faces nil
