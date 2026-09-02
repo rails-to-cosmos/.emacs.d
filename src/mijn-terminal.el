@@ -25,8 +25,8 @@ Handles regular file buffers and Eshell buffers correctly."
 (add-hook 'eshell-mode-hook #'direnv)
 
 (use-package exec-path-from-shell
-  :config (exec-path-from-shell-initialize)
-  :ensure nil)
+  :ensure t
+  :config (exec-path-from-shell-initialize))
 
 (use-package eshell-prompt-extras
   :ensure nil)

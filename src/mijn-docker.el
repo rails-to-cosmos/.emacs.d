@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (use-package dockerfile-mode
-  :ensure nil)
+  :ensure t)
 
 (cl-defun my-docker-container-running-p (container)
   "Check if a Docker CONTAINER is running.

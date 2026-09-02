@@ -7,4 +7,6 @@ Wiki index for design notes and audits on this configuration.
 - [[file:config-reorg.org][Configuration reorganization proposal]] — better separation of packages
   across files: a shared programming baseline, central keybindings, a single
   provisioning source of truth, and dead-code pruning.
+- [[file:osx-install.org][Installing Emacs on OSX]] — fresh-machine setup: GUI Emacs via
+  brew, build tools for vterm (glibtool/cmake), and PATH wiring.
 - [[file:network-hardening.md][WiFi network hardening]] — home-network audit notes (Markdown).

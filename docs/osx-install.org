@@ -1,0 +1,63 @@
+#+title: Installing Emacs on OSX
+
+Steps to bring this configuration up on a fresh OSX machine. See also
+[[file:index.org][the docs index]] and [[file:config-reorg.org][the configuration reorganization proposal]].
+
+* Install GUI Emacs
+
+Two routes; =emacs-plus= is preferred because it ships native-comp and
+tree-sitter, matching the Linux build (=eln-cache=, libgccjit).
+
+** emacs-plus (recommended)
+
+#+begin_src sh
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@31 --with-native-comp
+ln -s /opt/homebrew/opt/emacs-plus@31/Emacs.app /Applications/Emacs.app
+#+end_src
+
+Useful extra flags: =--with-imagemagick=, =--with-poll=, an icon such as
+=--with-modern-doom3-icon=. Version taps =@31= / =@30= / =@29= — pick one;
+=@31= matches the Linux 31.1 build.
+
+** Homebrew cask (simpler, upstream build)
+
+#+begin_src sh
+brew install --cask emacs
+#+end_src
+
+* Build tools for native modules
+
+vterm compiles a C module through CMake, which calls GNU libtool (named
+=glibtool= on OSX). Missing it gives =glibtool: no such file=.
+
+#+begin_src sh
+brew install libtool cmake
+#+end_src
+
+* PATH: let Emacs see brew tools
+
+GUI Emacs on OSX does not inherit the shell =PATH=, so brew binaries in
+=/opt/homebrew/bin= are invisible to compile subprocesses even after
+installing them. The config handles this with =exec-path-from-shell=,
+initialized unconditionally in =src/mijn-terminal.el= (=:ensure t=, so a
+fresh machine installs it automatically).
+
+Nothing to configure by hand — just restart Emacs after the brew installs so
+=exec-path-from-shell-initialize= picks up the updated =PATH=.
+
+* Key remapping
+
+OSX-specific settings live in =src/mijn-darwin.el= (guarded by
+=(eq system-type 'darwin)=). Command is bound to Meta there.
+
+* Verify
+
+1. Restart Emacs.
+2. =M-x vterm= — the module recompiles; the =glibtool= error should be gone.
+3. Paths: =M-:= =(executable-find "glibtool")= should return a path.
+
+* Apple silicon vs Intel
+
+Brew prefix differs: =/opt/homebrew= on Apple silicon, =/usr/local= on Intel.
+Adjust the =Emacs.app= symlink path accordingly.
