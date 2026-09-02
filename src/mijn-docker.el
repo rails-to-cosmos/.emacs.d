@@ -1,4 +1,6 @@
 ;; -*- lexical-binding: t; -*-
+(require 's)
+
 (use-package dockerfile-mode
   :ensure t)
 
@@ -13,7 +15,8 @@ Returns t if running, nil otherwise."
 (defun my-docker-eshell (container dir)
   "Open Eshell via TRAMP in a Docker container.
 If CONTAINER is running, open Eshell in /docker:{CONTAINER}:/workspace/.
-If not, run `docker compose up -d` in DIR, wait for it to start (up to 5 minutes), then open Eshell."
+If not, run `docker compose up -d` in DIR, wait for it to start (up to
+5 minutes), then open Eshell."
   (interactive "sContainer name: \nDDirectory for docker-compose: ")
 
   (let ((default-directory dir))

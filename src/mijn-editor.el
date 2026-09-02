@@ -1,4 +1,7 @@
 ;; -*- lexical-binding: t; -*-
+(require 'f)
+(require 'a)
+
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)
@@ -184,7 +187,7 @@ directly (not through `call-interactively', which would overwrite
       (deactivate-mark)
       (message "Lines joined."))))
 
-(defun my/join-region-maybe (beg end &optional region)
+(defun my/join-region-maybe (beg end &optional _region)
   "With prefix arg, join region into one line and add to kill ring.
 Otherwise, behave like `kill-ring-save`."
   (interactive "r\nP")

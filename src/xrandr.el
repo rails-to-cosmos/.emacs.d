@@ -105,7 +105,7 @@ Each plist has :name :connected :primary :modes :current-mode :current-rate."
      (if res
          (format " %s" (propertize res 'face 'font-lock-constant-face))
        (propertize " (off)" 'face 'font-lock-comment-face))
-     (when-let ((active-mode (seq-find (lambda (m) (plist-get m :active)) modes)))
+     (when-let* ((active-mode (seq-find (lambda (m) (plist-get m :active)) modes)))
        (format " @ %sHz" (plist-get active-mode :active))))))
 
 ;;; Buffer / UI
@@ -347,7 +347,8 @@ extending right from the previous one. The first display is set as primary."
 
 (defun xrandr--current-setup-args ()
   "Build xrandr args that reproduce the current display setup.
-Parses `xrandr --verbose' to capture position, mode, rate, rotation, and primary."
+Parses `xrandr --verbose' to capture position, mode, rate, rotation,
+and primary."
   (let ((lines (split-string (xrandr--run "--verbose") "\n"))
         (args nil)
         (current-output nil)
@@ -399,16 +400,16 @@ Parses `xrandr --verbose' to capture position, mode, rate, rotation, and primary
        ((and current-output active-p (not mode)
              (string-match
               (rx (+ space) (group (+ digit) "x" (+ digit))
-                  (+ space) "(" (+ any) ")"
+                  (+ space) "(" (+ nonl) ")"
                   (+ space) (group (+ (or digit "."))) "MHz"
-                  (+ any) "*current")
+                  (+ nonl) "*current")
               line))
         (setq mode (match-string 1 line)))
        ;; Rate line with active flag: "        v: ... 165.0Hz *current"
        ((and current-output active-p mode (not rate)
              (string-match
               (rx (group (+ (or digit "."))) "Hz"
-                  (+ any) "*current")
+                  (+ nonl) "*current")
               line))
         (setq rate (match-string 1 line)))))
     ;; Flush last output

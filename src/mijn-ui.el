@@ -1,12 +1,14 @@
 ;; -*- lexical-binding: t; -*-
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+;; These chrome toggles are undefined in builds without the corresponding
+;; support (terminal/headless), so guard each one.
+(when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
 (require 'grab-and-drag)
 (require 'frame)
 
-(when (> (string-to-number emacs-version) 30)
+(when (fboundp 'pixel-scroll-precision-mode)
   (pixel-scroll-precision-mode))
 
 (use-package default-text-scale
@@ -26,12 +28,12 @@
   (interactive)
   (let* ((frame (selected-frame))
          (frame-geometry (frame-geometry))
-         (frame-x (car frame-geometry))
-         (frame-y (cadr frame-geometry))
+         (_frame-x (car frame-geometry))
+         (_frame-y (cadr frame-geometry))
          (font (face-attribute 'default :font frame))
          (font-info (font-info font))
          (font-name (aref font-info 0))
-         (font-size (face-attribute 'default :height frame)))
+         (_font-size (face-attribute 'default :height frame)))
     (cl-destructuring-bind (frame-x . frame-y) (cdar (frame-geometry))
       (insert (s-join "\n"
                       (list (format "(set-frame-font \"%s\" nil t)" font-name)
@@ -39,7 +41,7 @@
                             (format "(set-frame-position (selected-frame) %d %d)" frame-x frame-y)))))))
 
 (cl-defun my:toggle-no-other-window ()
-  "Toggle the 'no-other-window' parameter for the current window."
+  "Toggle the `no-other-window' parameter for the current window."
   (interactive)
   (let* ((win (selected-window))
          (current (window-parameter win 'no-other-window)))

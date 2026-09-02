@@ -15,6 +15,11 @@
 
 (package-initialize)
 
+;; Allow built-in packages to be upgraded from the archives.  Emacs 29/30 ship
+;; an older built-in `transient'; without this, package.el refuses to upgrade it
+;; and Magit fails to load (`void-function transient--set-layout').
+(setq package-install-upgrade-built-in t)
+
 ;; The `package-selected-packages' manifest in custom.el is the hand-maintained
 ;; install source (see the install-first bootstrap below).  Keep package.el from
 ;; rewriting it on install/autoremove, which once silently wiped it to nil.
@@ -22,6 +27,12 @@
 
 (unless package-archive-contents
   (package-refresh-contents))
+
+;; Magit needs transient >= 0.13, newer than the built-in on Emacs 29/30.  A
+;; built-in pulled in as a dependency is not upgraded automatically even with
+;; `package-install-upgrade-built-in', so upgrade it explicitly here.
+(unless (package-installed-p 'transient '(0 13))
+  (package-install 'transient))
 
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -46,6 +57,9 @@
 (use-package diminish)
 (use-package dash)
 (use-package f)
+;; Build the native module without an interactive prompt on first use
+;; (fresh machines, headless sessions).
+(setq vterm-always-compile-module t)
 (use-package vterm)
 (use-package magit)
 (use-package rainbow-delimiters)
@@ -68,8 +82,10 @@
 (let ((paths '("src" "src/repos" "src/network-manager" "src/parquet-mode" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
 
-;; lsp hack for svg support to not break sessions
-(setq image-types (cons 'svg image-types))
+;; lsp hack for svg support to not break sessions.  `image-types' is only
+;; bound once image support is initialised, so guard for headless/nox Emacs.
+(when (boundp 'image-types)
+  (add-to-list 'image-types 'svg))
 
 (with-eval-after-load 'undo-tree
   (diminish 'undo-tree-mode))

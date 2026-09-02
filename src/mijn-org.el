@@ -22,7 +22,7 @@
 (setq org-element-use-cache nil
       org-adapt-indentation t
       org-attach-auto-tag nil
-      org-catch-invisible-edits 'error
+      org-fold-catch-invisible-edits 'error
       org-clock-auto-clock-resolution 'when-no-clock-is-running
       org-clock-in-resume t
       org-clock-in-switch-to-state "STARTED"
@@ -122,9 +122,9 @@
            (item (cdr (assoc choice org-structure-template-alist))))
       (org-insert-structure-template item)
       (insert "\n")
-      (previous-line)
-      (previous-line)
-      (delete-backward-char 1)
+      (forward-line -1)
+      (forward-line -1)
+      (delete-char -1)
       (forward-line)
       t)))
 

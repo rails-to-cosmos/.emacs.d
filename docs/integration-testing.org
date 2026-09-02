@@ -1,0 +1,71 @@
+#+title: Integration testing across Emacs versions
+
+Podman-based integration tests that load the whole configuration on several
+Emacs versions and assert it comes up cleanly. Complements the in-repo
+byte-compile checks (=make typecheck=) and ERT units (=make test=). See
+[[file:index.org][the docs index]]; related: [[file:config-reorg.org][the configuration reorganization proposal]] and
+[[file:osx-install.org][Installing Emacs on OSX]].
+
+* What it proves
+
+For each Emacs version (default =29.4=, =30.2=, =31.1=) a container:
+
+1. Provisions the declared package set by loading the real =init.el=.
+2. Runs [[file:../test/integration/load-check.el][load-check.el]]: asserts init signals no error and that key
+   invariants hold (required features provided, =smartparens-strict-mode=
+   bound and active in a =prog-mode= buffer).
+3. Byte-compiles our =src/= — the warning gate.
+4. Runs the ERT suite (=make test=).
+
+The point is to catch version-specific breakage: obsolete macros
+(=when-let= → =when-let*= in 31), removed functions, and packages that fail
+to load on an older Emacs.
+
+* Running
+
+#+begin_src sh
+make integration                       # all default versions
+make integration INTEG_VERSIONS="31.1" # one version
+test/integration/run.sh 29.4 31.1      # ad hoc set
+#+end_src
+
+Options (environment variables):
+
+- =EMACS_CONFIG_STRICT=1= — make the warning gate fatal (byte-compile with
+  =byte-compile-error-on-warn=, and fail on any non-allowlisted init
+  warning). Default is report-only, so the suite is green while warnings are
+  burned down.
+- =ENGINE=docker= — use docker instead of podman.
+
+Each version keeps a package-cache volume (=emacs-config-elpa-<version>=),
+so only the first run pays the full download.
+
+* Warning policy
+
+"No warnings if possible" is enforced in two places:
+
+- =make typecheck-strict= treats every byte-compile warning in our =src/= as
+  an error. This is fully under our control and is the real ratchet.
+- =load-check.el= collects =display-warning= output during init and, under
+  strict mode, fails on anything not matched by =ic-allowed-warning-regexps=
+  (headless font absence, third-party =obsolete=/deprecation notices,
+  optional external tools like mise/envrc).
+
+To tighten the screw over time: run =EMACS_CONFIG_STRICT=1 make integration=,
+fix what it flags, and shrink the allowlist in =load-check.el=.
+
+* Base images
+
+The [[file:../test/integration/Containerfile][Containerfile]] builds =FROM silex/emacs:${EMACS_VERSION}= and adds the
+system libraries our native modules need (=cmake=, =libtool=, =libvterm-dev=
+for vterm; =git=, =make=, =rsync=). Available Emacs tags: =29.x=, =30.2=,
+=31.1= on Docker Hub =silex/emacs=.
+
+* Layout
+
+- =test/integration/Containerfile= — per-version image.
+- =test/integration/entrypoint.sh= — in-container driver (sync repo, provision,
+  three gates).
+- =test/integration/load-check.el= — headless smoke test + invariants.
+- =test/integration/run.sh= — host orchestrator: build, cache volume, run,
+  summarise.
