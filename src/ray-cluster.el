@@ -86,7 +86,7 @@ With ID, update only that row in place (dropping it when it is gone), keeping
 point; else replace the whole view and re-apply the spec's sort.  No per-item
 endpoint exists, so refreshing one row still fetches the list."
   (if (and id (not (equal id "")))
-      (if-let ((fresh (cl-find id (funcall rows-fn)
+      (if-let* ((fresh (cl-find id (funcall rows-fn)
                                :key (lambda (r) (alist-get 'id r)) :test #'equal)))
           (progn (table-view-upsert-row buf fresh) (message "Refreshed %s" id))
         (table-view-delete-row buf id)

@@ -9,4 +9,6 @@ Wiki index for design notes and audits on this configuration.
   provisioning source of truth, and dead-code pruning.
 - [[file:osx-install.org][Installing Emacs on OSX]] — fresh-machine setup: GUI Emacs via
   brew, build tools for vterm (glibtool/cmake), and PATH wiring.
+- [[file:integration-testing.org][Integration testing across Emacs versions]] — podman suite that loads the
+  whole config on Emacs 29/30/31 and gates on errors, invariants, and warnings.
 - [[file:network-hardening.md][WiFi network hardening]] — home-network audit notes (Markdown).
