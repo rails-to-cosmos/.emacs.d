@@ -64,10 +64,10 @@ directly (not through `call-interactively', which would overwrite
 (use-package reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
-  :ensure nil)
+  :ensure t)
 
 (use-package a
-  :ensure nil)
+  :ensure t)
 
 (use-package browse-kill-ring
   :config (progn
