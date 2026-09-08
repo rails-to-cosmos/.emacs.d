@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (use-package disk-usage
-  :ensure nil)
+  :ensure t)
 
 (defun reset-caps-lock ()
   "Reset caps lock by sending a Caps_Lock key event via xdotool."

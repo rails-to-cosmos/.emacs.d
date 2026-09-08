@@ -4,7 +4,8 @@
 
 (defvar parquet--script
   (expand-file-name "src/parquet-mode/parquet-info.py" user-emacs-directory)
-  "Path to the parquet-info Python script (fallback when native module is unavailable).")
+  "Path to the parquet-info Python script.
+Used as a fallback when the native module is unavailable.")
 
 (defvar parquet--native-module
   (expand-file-name

@@ -1,0 +1,20 @@
+# Integration test image: a given Emacs version plus the system libraries
+# our configuration needs to build native modules (vterm) and talk to package
+# archives. The repo is bind-mounted at /src; entrypoint.sh copies it into a
+# writable ~/.emacs.d and runs the checks.
+ARG EMACS_VERSION=31.1
+FROM docker.io/silex/emacs:${EMACS_VERSION}
+
+# Note: no libvterm-dev on purpose. Without a system libvterm, emacs-libvterm's
+# CMake builds a bundled static libvterm into vterm-module.so, so the module has
+# no runtime shared-library dependency to resolve -- the same self-contained
+# build a fresh developer machine produces.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential cmake libtool libtool-bin \
+      git make rsync ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV HOME=/root
+WORKDIR /root/.emacs.d
+
+ENTRYPOINT ["/bin/bash", "/src/test/integration/entrypoint.sh"]

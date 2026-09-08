@@ -34,15 +34,18 @@
 
 (defface make-status-running-face
   '((t :inherit warning))
-  "Face for a running make in the mode line.")
+  "Face for a running make in the mode line."
+  :group 'make)
 
 (defface make-status-ok-face
   '((t :inherit success))
-  "Face for a successful make in the mode line.")
+  "Face for a successful make in the mode line."
+  :group 'make)
 
 (defface make-status-fail-face
   '((t :inherit error))
-  "Face for a failed make in the mode line.")
+  "Face for a failed make in the mode line."
+  :group 'make)
 
 (defface make-header-face
   '((t :inherit header-line :slant italic))

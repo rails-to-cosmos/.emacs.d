@@ -1,6 +1,16 @@
 ;; -*- lexical-binding: t; -*-
+
+;; These are defined only in macOS Emacs builds; declare them so byte-compiling
+;; on other platforms does not warn about free variables.
+(defvar mac-command-modifier)
+(defvar mac-option-modifier)
+(defvar mac-redisplay-dont-reset-vscroll)
+(defvar ns-use-native-fullscreen)
+(defvar ns-pop-up-frames)
+(defvar alert-default-style)
+
 (when (eq system-type 'darwin)
-  (setq mac-command-modifier 'control
+  (setq mac-command-modifier 'meta
         mac-option-modifier  'meta
         ;; sane trackpad/mouse scroll settings
         mac-redisplay-dont-reset-vscroll t

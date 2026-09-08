@@ -2,12 +2,12 @@
 
 (defun mijn-rust--find-cargo-toml ()
   "Find nearest Cargo.toml from current file."
-  (when-let ((dir (locate-dominating-file default-directory "Cargo.toml")))
+  (when-let* ((dir (locate-dominating-file default-directory "Cargo.toml")))
     (expand-file-name "Cargo.toml" dir)))
 
 (defun mijn-rust--eglot-workspace-config (_server)
   "Return rust-analyzer workspace config with linkedProjects."
-  (if-let ((cargo (mijn-rust--find-cargo-toml)))
+  (if-let* ((cargo (mijn-rust--find-cargo-toml)))
       `(:rust-analyzer (:linkedProjects [,cargo]))
     `(:rust-analyzer (:linkedProjects []))))
 

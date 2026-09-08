@@ -1,6 +1,9 @@
 ;; -*- lexical-binding: t; -*-
 (require 'files)
 (require 'strings)
+(require 'dash)
+(require 's)
+(require 'f)
 
 (use-package mise
   :ensure nil)
@@ -15,7 +18,7 @@
     (message (with-output-to-string (mise--call standard-output "trust")))
     t))
 
-(cl-defun mise-enable (&optional project-root)
+(cl-defun mise-enable (&optional _project-root)
   (interactive)
   (when (and (executable-find "mise")
              (require 'mise nil t)

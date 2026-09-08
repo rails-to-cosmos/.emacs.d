@@ -27,7 +27,6 @@
   (package-install 'use-package))
 
 (require 'use-package)
-(setq use-package-always-ensure t)
 
 ;; Provision the declared package set BEFORE loading any config module, so a
 ;; module's mode-hook never fires against an uninstalled package (which aborts
@@ -36,20 +35,29 @@
 ;; `package-selected-packages' manifest; it is loaded again at the end so user
 ;; settings still win over module defaults.
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
-(when (seq-find (lambda (pkg) (not (package-installed-p pkg)))
-                package-selected-packages)
+(when (seq-find (lambda (pkg) (not (package-installed-p pkg))) package-selected-packages)
   (package-refresh-contents)
   (dolist (pkg package-selected-packages)
     (unless (package-installed-p pkg)
       (ignore-errors (package-install pkg)))))
 
-(use-package diminish)
-(use-package dash)
-(use-package f)
-(use-package vterm)
-(use-package magit)
-(use-package rainbow-delimiters)
-(use-package table-view)
+(use-package diminish
+  :ensure t)
+
+(use-package dash
+  :ensure t)
+
+(use-package f
+  :ensure t)
+
+(use-package vterm
+  :ensure t)
+
+(use-package magit
+  :ensure t)
+
+(use-package rainbow-delimiters
+  :ensure t)
 
 (use-package session-buffer-cycle
   :bind (("C-x C-x" . session-buffer-cycle))

@@ -87,7 +87,7 @@ nil means revert to automatic (DHCP-provided) DNS.")
           (lambda ()
             (setq pending (1- pending))
             (when (= pending 0)
-              (when-let ((dev (plist-get result :device)))
+              (when-let* ((dev (plist-get result :device)))
                 (with-temp-buffer
                   (insert-file-contents "/proc/net/dev")
                   (when (re-search-forward
@@ -412,7 +412,7 @@ If SAVED-P, deletes stale saved connection first, then uses
        (format "Connecting to %s..." ssid)
        "device" "wifi" "connect" ssid "password" password))))
 
-(defun network-manager--try-activate (ssid has-security)
+(defun network-manager--try-activate (ssid _has-security)
   "Try `connection up SSID'. On secrets failure, prompt for password and retry."
   (message "Connecting to %s..." ssid)
   (let ((buf (generate-new-buffer " *nm-activate*")))
@@ -548,7 +548,7 @@ Pick \"[Refresh]\" to rescan without exit."
 
 (defun network-manager--active-connection ()
   "Return the name of the active connection, or nil."
-  (when-let ((conn (and network-manager--status
+  (when-let* ((conn (and network-manager--status
                         (plist-get network-manager--status :connection))))
     (unless (string-empty-p conn) conn)))
 

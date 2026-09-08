@@ -1,4 +1,4 @@
-;;-*-coding: utf-8;-*-
+;; -*- coding: utf-8; lexical-binding: t -*-
 (define-abbrev-table 'python-mode-abbrev-table
   '(
     ("cpdb" "context.pdb.set_trace()" nil :count 0)

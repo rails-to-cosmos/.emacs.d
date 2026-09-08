@@ -10,7 +10,7 @@
 ;; Then wire GTAGSLIBPATH (in .envrc or .dir-locals.el) so ggtags spans them.
 
 (use-package disaster
-  :ensure nil)
+  :ensure t)
 
 (use-package highlight-doxygen
   :ensure nil
@@ -22,7 +22,7 @@
   :hook (cmake-mode . eglot-ensure))
 
 (use-package cmake-font-lock
-  :ensure nil)
+  :ensure t)
 
 ;; GNU Global — cross-project source navigation (M-. into library implementations).
 ;; Set GTAGSLIBPATH in .envrc or .dir-locals.el to also search library sources:

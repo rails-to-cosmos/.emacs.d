@@ -1,4 +1,7 @@
 ;; -*- lexical-binding: t; -*-
+(require 'f)
+(require 'a)
+
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)
@@ -64,10 +67,10 @@ directly (not through `call-interactively', which would overwrite
 (use-package reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
-  :ensure nil)
+  :ensure t)
 
 (use-package a
-  :ensure nil)
+  :ensure t)
 
 (use-package browse-kill-ring
   :config (progn
@@ -100,10 +103,11 @@ directly (not through `call-interactively', which would overwrite
   :ensure nil)
 
 (use-package smartparens
+  :ensure t
+  :demand t
   :config (progn
             (require 'smartparens)
-            (require 'smartparens-config))
-  :ensure nil)
+            (require 'smartparens-config)))
 
 (use-package paredit
   :config (progn
@@ -183,7 +187,7 @@ directly (not through `call-interactively', which would overwrite
       (deactivate-mark)
       (message "Lines joined."))))
 
-(defun my/join-region-maybe (beg end &optional region)
+(defun my/join-region-maybe (beg end &optional _region)
   "With prefix arg, join region into one line and add to kill ring.
 Otherwise, behave like `kill-ring-save`."
   (interactive "r\nP")
