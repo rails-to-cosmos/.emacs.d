@@ -1,6 +1,4 @@
 ;; -*- lexical-binding: t; -*-
-(setenv "LSP_USE_PLISTS" "true")
-(setq read-process-output-max (* 3 1024 1024))
 
 (use-package haskell-mode
   :config (progn
@@ -8,8 +6,10 @@
             (require 'eglot)
             (require 'align)
 
+            (setenv "LSP_USE_PLISTS" "true")
+            (setq read-process-output-max (* 3 1024 1024))
+            
             (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
-
             (add-to-list 'align-rules-list '(haskell-types (regexp . "\\(\\s-+\\)\\(::\\|∷\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
             (add-to-list 'align-rules-list '(haskell-assignment (regexp . "\\(\\s-+\\)=\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
             (add-to-list 'align-rules-list '(haskell-arrows (regexp . "\\(\\s-+\\)\\(->\\|→\\)\\s-+") (modes quote (haskell-mode literate-haskell-mode))))
@@ -32,7 +32,6 @@
   (eglot-confirm-server-initiated-edits nil) ;; allow edits without confirmation
   (eglot-extend-to-xref t)
 
-  :ensure nil
   :ensure align
   :ensure smartparens
   :ensure yasnippet
