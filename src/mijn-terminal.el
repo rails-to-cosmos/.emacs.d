@@ -29,7 +29,7 @@ Handles regular file buffers and Eshell buffers correctly."
   :config (exec-path-from-shell-initialize))
 
 (use-package eshell-prompt-extras
-  :ensure nil)
+  :ensure t)
 
 (defun eshell-compl-space ()
   (interactive)

@@ -35,7 +35,7 @@
     (setq-local exec-path path)))
 
 (use-package envrc
-  :ensure nil)
+  :ensure t)
 
 (cl-defun direnv (&rest project-files)
   (interactive)

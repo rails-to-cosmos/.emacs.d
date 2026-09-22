@@ -15,14 +15,14 @@
   :ensure eask-mode)
 
 (use-package buttercup
-  :ensure nil)
+  :ensure t)
 
 ;; (require 'eval-sexp-fu)
 
 ;; (add-hook 'lisp-mode-hook 'enable-paredit-mode)
 
 (use-package sly
-  :ensure nil
+  :ensure t
   :config
   (setq inferior-lisp-program "sbcl")
   (setq sly-complete-symbol-function 'sly-flex-completions))
@@ -34,16 +34,16 @@
 (add-to-list 'auto-mode-alist '("/Eask\\'" . emacs-lisp-mode))
 
 (use-package company-eask
-  :ensure nil)
+  :ensure t)
 
 (use-package eldoc-eask
-  :ensure nil)
+  :ensure t)
 
 (use-package flymake-eask
-  :ensure nil)
+  :ensure t)
 
 (use-package flycheck-eask
-  :ensure nil)
+  :ensure t)
 
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'my-expand-region)
 
@@ -51,7 +51,8 @@
 ;; (cl-defun emacs-lisp-completion-setup ()
 ;;   (setq-local company-backends '(company-elisp company-files company-yasnippet)))
 
-(use-package expand-region)
+(use-package expand-region
+  :ensure t)
 
 (defvar my-expand-region-last-bounds nil
   "Stores the previous region bounds for manual contraction.")

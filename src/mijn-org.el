@@ -4,18 +4,23 @@
 (require 'ob)
 
 ;; Provides `org-checklist' (an org-contrib module) enabled below.
-(use-package org-contrib)
+(use-package org-contrib
+  :ensure t)
+
+(use-package edit-server-htmlize
+  :ensure t)
 
 (use-package org-re-reveal
   :custom (org-re-reveal-revealjs-version "6.0.1")
-  :ensure edit-server-htmlize
-  :ensure nil)
+  :ensure t)
+
+(use-package ox-reveal-layouts
+  :ensure t)
 
 (use-package ox-reveal
   :config (load-library "ox-reveal")
           (load-library "ox-reveal-layouts")
-  :ensure ox-reveal-layouts
-  :ensure nil)
+  :ensure t)
 
 (global-set-key (kbd "C-c o l") #'org-store-link)
 
@@ -111,7 +116,7 @@
 (use-package ob-mermaid
   :config (progn
             (ob-add-language 'mermaid (cons "mermaid" "src mermaid :file test.png")))
-  :ensure nil)
+  :ensure t)
 
 (my-define-completion org-complete-structure "<"
   "Complete org-structure template alist."
