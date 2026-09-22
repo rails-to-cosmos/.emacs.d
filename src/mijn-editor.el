@@ -1,6 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 (require 'f)
-(require 'a)
 
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
