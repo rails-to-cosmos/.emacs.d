@@ -13,7 +13,7 @@
   (add-hook 'kill-buffer-query-functions 'immortal-scratch)
   
   (setq initial-major-mode 'emacs-lisp-mode
-        initial-scratch-message (s-join "\n\n" (--mapcat (list (concat ";; " it)) scratch-thoughts))
+        initial-scratch-message (format "%s\n\n" (s-join "\n\n" (--mapcat (list (concat ";; " it)) scratch-thoughts)))
         kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions)))
 
 (provide 'mijn-scratch)
