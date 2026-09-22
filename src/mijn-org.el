@@ -7,9 +7,6 @@
 (use-package org-contrib
   :ensure t)
 
-(use-package edit-server-htmlize
-  :ensure t)
-
 (use-package org-re-reveal
   :custom (org-re-reveal-revealjs-version "6.0.1")
   :ensure t)

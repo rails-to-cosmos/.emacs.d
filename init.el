@@ -41,8 +41,8 @@
   '(transient use-package a ace-window agnostic-translate browse-kill-ring buttercup
     cmake-font-lock cmake-mode company company-eask consult danneskjold-theme
     dap-mode dash default-text-scale diminish dired-narrow dired-rainbow
-    disaster disk-usage dockerfile-mode eask eask-mode edit-server-htmlize
-    eglot-java eldoc-eask elm-mode envrc eshell-prompt-extras
+    disaster disk-usage dockerfile-mode eask eask-mode eglot-java eldoc-eask
+    elm-mode envrc eshell-prompt-extras
     exec-path-from-shell expand-region f flycheck flycheck-eask flycheck-nim
     flymake-eask ggtags go-mode haskell-mode highlight-doxygen lsp-metals
     lsp-mode lsp-ui magit marginalia mise multiple-cursors nim-mode nix-mode
