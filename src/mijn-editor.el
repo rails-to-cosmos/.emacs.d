@@ -79,14 +79,14 @@ directly (not through `call-interactively', which would overwrite
             (define-key browse-kill-ring-mode-map (kbd "M-n") #'browse-kill-ring-forward)
             (define-key browse-kill-ring-mode-map (kbd "M-Y") #'browse-kill-ring-previous)
             (define-key browse-kill-ring-mode-map (kbd "M-p") #'browse-kill-ring-previous))
-  :ensure nil)
+  :ensure t)
 
 (use-package multiple-cursors
   :config (progn
             (define-key global-map (kbd "C-<") #'mc/mark-previous-like-this)
             (define-key global-map (kbd "C->") #'mc/mark-next-like-this)
             (define-key global-map (kbd "C-+") #'mc/mark-all-like-this))
-  :ensure nil)
+  :ensure t)
 
 (use-package expand-region
   :config (progn
@@ -99,7 +99,7 @@ directly (not through `call-interactively', which would overwrite
                   undo-tree-visualizer-diff t
                   undo-tree-history-directory-alist (a-list ".*" (f-join user-emacs-directory "undo-tree")))
             (global-undo-tree-mode))
-  :ensure nil)
+  :ensure t)
 
 (use-package smartparens
   :ensure t
