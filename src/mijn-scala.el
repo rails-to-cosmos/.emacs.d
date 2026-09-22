@@ -36,10 +36,10 @@
               ;; (lsp-metals-toggle-show-inferred-type)
               ;; (lsp-metals-toggle-show-super-method-lenses)
               )
-    :ensure nil)
+    :ensure t)
 
 (use-package lsp-ui
-    :ensure nil)
+    :ensure t)
 
 ;; (use-package company-lsp
 ;;     :ensure nil)
@@ -48,6 +48,6 @@
     :ensure nil)
 
 (use-package dap-mode
-    :ensure nil)
+    :ensure t)
 
 (provide 'mijn-scala)

@@ -1,6 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 (require 'f)
-(require 'a)
 
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
@@ -62,7 +61,7 @@ directly (not through `call-interactively', which would overwrite
                             eshell-mode-hook
                             prog-mode-hook))
               (add-hook hook #'sanityinc/no-trailing-whitespace)))
-  :ensure nil)
+  :ensure t)
 
 (use-package reverse-im
   :config (progn
@@ -92,7 +91,7 @@ directly (not through `call-interactively', which would overwrite
 (use-package expand-region
   :config (progn
             (global-set-key (kbd "M-2") #'er/expand-region))
-  :ensure nil)
+  :ensure t)
 
 (use-package undo-tree
   :config (progn
@@ -126,7 +125,7 @@ directly (not through `call-interactively', which would overwrite
               "Enable paredit during lisp-related minibuffer commands."
               (if (memq this-command paredit-minibuffer-commands)
                   (enable-paredit-mode))))
-  :ensure nil)
+  :ensure t)
 
 (defun my-kill-line ()
   (interactive)
@@ -168,7 +167,7 @@ directly (not through `call-interactively', which would overwrite
 (global-set-key (kbd "C-x y r c") #'my-rc)
 
 (use-package yaml-mode
-  :ensure nil)
+  :ensure t)
 
 (setq create-lockfiles nil)
 

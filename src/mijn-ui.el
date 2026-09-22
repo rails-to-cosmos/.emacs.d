@@ -12,10 +12,10 @@
   (pixel-scroll-precision-mode))
 
 (use-package default-text-scale
-  :ensure nil)
+  :ensure t)
 
 (use-package highlight
-  :ensure nil)
+  :ensure t)
 
 (use-package ace-window
   :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
@@ -136,7 +136,7 @@
     (kill-this-buffer)))
 
 (use-package rainbow-mode
-    :ensure nil)
+  :ensure t)
 
 (use-package rainbow-delimiters
     :ensure nil)

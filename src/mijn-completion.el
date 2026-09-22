@@ -57,7 +57,8 @@
 (use-package consult
   :init (progn
           (unbind-key (kbd "C-x i")))
-  :bind (("C-x i m" . #'consult-imenu)))
+  :bind (("C-x i m" . #'consult-imenu))
+  :ensure t)
 
 (use-package orderless
   :custom
