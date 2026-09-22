@@ -6,23 +6,26 @@
 # Usage:
 #   test/integration/run.sh [VERSION ...]
 #
-# Defaults to 29.4 30.2 31.1. Honours:
+# Defaults to 29.4 30.2 31.1 latest. Honours:
 #   EMACS_CONFIG_STRICT=1   fail on unexpected byte-compile warnings
+#   EMACS_CONFIG_FRESH=1    do not restore or save the package cache
 #   ENGINE=docker           use docker instead of podman
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ENGINE="${ENGINE:-podman}"
 STRICT="${EMACS_CONFIG_STRICT:-0}"
+FRESH="${EMACS_CONFIG_FRESH:-0}"
 
 VERSIONS=("$@")
 if [ "${#VERSIONS[@]}" -eq 0 ]; then
-  VERSIONS=(29.4 30.2 31.1)
+  VERSIONS=(29.4 30.2 31.1 latest)
 fi
 
 echo "Engine:   $ENGINE"
 echo "Versions: ${VERSIONS[*]}"
 echo "Strict:   $STRICT"
+echo "Fresh:    $FRESH"
 echo
 
 declare -A RESULT
@@ -42,13 +45,15 @@ for v in "${VERSIONS[@]}"; do
     -f "$REPO_ROOT/test/integration/Containerfile" \
     "$REPO_ROOT"
 
-  "$ENGINE" volume inspect "$vol" >/dev/null 2>&1 || "$ENGINE" volume create "$vol" >/dev/null
+  run_args=(--rm
+            -e "EMACS_CONFIG_STRICT=${STRICT}"
+            -v "$REPO_ROOT:/src:ro")
+  if [ "$FRESH" != "1" ]; then
+    "$ENGINE" volume inspect "$vol" >/dev/null 2>&1 || "$ENGINE" volume create "$vol" >/dev/null
+    run_args+=(-v "${vol}:/elpa-cache")
+  fi
 
-  if "$ENGINE" run --rm \
-      -e "EMACS_CONFIG_STRICT=${STRICT}" \
-      -v "$REPO_ROOT:/src:ro" \
-      -v "${vol}:/elpa-cache" \
-      "$img"; then
+  if "$ENGINE" run "${run_args[@]}" "$img"; then
     RESULT[$v]=PASS
   else
     RESULT[$v]=FAIL

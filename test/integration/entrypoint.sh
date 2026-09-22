@@ -55,6 +55,6 @@ else
 fi
 
 echo "==> [3/3] ERT unit tests"
-make test EMACS=emacs
+make test-unit EMACS=emacs
 
 echo "==> ALL GREEN on $(emacs --version | head -1)"

@@ -29,13 +29,12 @@ problems are cross-cutting:
   live in ≥10 loaded files plus =init.el=; the personal =C-x y= prefix is
   defined piecemeal in editor, ui, org, ab, make, and =init.el=.
 
-- *Entangled provisioning.* "What to install" (the
-  =package-selected-packages= manifest in [[file:../custom.el][custom.el]]) and "how to configure"
-  (=use-package= bodies, ~73 of them carrying =:ensure nil=) are tangled.
-  The manifest is hand-maintained and must stay comprehensive because the
-  =:ensure nil= packages have no other declared install source; letting
-  =package.el= rewrite it silently emptied it once. The install-first
-  bootstrap in =init.el= depends on this manifest being intact.
+- *Entangled provisioning.* "What to install" (the version-controlled
+  =mijn-required-packages= manifest in [[file:../init.el][init.el]]) and "how to configure"
+  (=use-package= bodies, many carrying =:ensure nil=) are tangled.  The
+  install-first bootstrap provisions the manifest before loading modules;
+  =custom.el= can add personal packages but is no longer required on a fresh
+  checkout.
 
 - *Dead code.* Five top-level =src/*.el= files are never loaded
   (=mijn-project=, =mijn-release=, =mijn-s3=, =pyrun=, =inxi-mode-line=), and
@@ -109,10 +108,14 @@ mode-local bindings (=:bind (:map foo-mode-map ...)=) stay with their feature
 
 Keep the current model but make its contract explicit:
 
-- =package-selected-packages= in =custom.el= is the authoritative install
+- =mijn-required-packages= in =init.el= is the authoritative, tracked install
   list. Every package the config uses must appear there.
-- =package.el= is blocked from rewriting it (the =package--save-selected-packages=
-  override advice), so it cannot be silently emptied.
+- =package-selected-packages= in ignored =custom.el= can add machine-local
+  packages, but bootstrap correctness does not depend on that file existing.
+- Startup merges the tracked manifest into =package-selected-packages=, so
+  package.el and =package-autoremove= see configured packages as explicit
+  roots.  Interactive package selections remain supported and are saved by
+  package.el normally.
 - The install-first bootstrap installs any missing manifest entry before
   loading modules.
 

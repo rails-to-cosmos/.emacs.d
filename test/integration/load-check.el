@@ -40,10 +40,15 @@ value rather than its mere presence.")
   "Functions that must be bound after a successful init.")
 
 (defvar ic-warnings nil "Collected `display-warning' payloads.")
+(defvar ic-use-package-errors nil
+  "Collected errors emitted by `use-package'.")
 
 (advice-add 'display-warning :before
-            (lambda (type message &optional _level &rest _)
-              (push (format "%s: %s" type message) ic-warnings)))
+            (lambda (type message &optional level &rest _)
+              (let ((warning (format "%s: %s" type message)))
+                (push warning ic-warnings)
+                (when (and (eq type 'use-package) (eq level :error))
+                  (push warning ic-use-package-errors)))))
 
 ;; --- Load the real configuration -------------------------------------------
 (let ((init (expand-file-name "init.el" user-emacs-directory)))
@@ -63,6 +68,17 @@ value rather than its mere presence.")
   (unless (fboundp fn)
     (error "Integration: function `%s' unbound after init" fn)))
 
+;; package.el must see configured packages as explicit roots.  Otherwise
+;; `package-autoremove' offers to delete the entire installation after updates.
+(unless package-selected-packages
+  (error "Integration: `package-selected-packages' is empty after init"))
+(let* ((configured (append mijn-required-packages mijn-vc-packages))
+       (removable (mapcar #'package-desc-name (package--removable-packages)))
+       (misclassified (seq-intersection configured removable)))
+  (when misclassified
+    (error "Integration: configured packages considered removable: %S"
+           misclassified)))
+
 ;; A prog-mode buffer must gain strict smartparens without error.
 (with-temp-buffer
   (let ((prog-mode-hook '(mijn-prog-setup)))
@@ -71,6 +87,11 @@ value rather than its mere presence.")
     (error "Integration: smartparens-strict-mode not active in prog-mode")))
 
 ;; --- Warning ledger ---------------------------------------------------------
+(when ic-use-package-errors
+  (error "Integration: %d use-package error(s) during init:\n  %s"
+         (length ic-use-package-errors)
+         (mapconcat #'identity (reverse ic-use-package-errors) "\n  ")))
+
 (let ((unexpected
        (seq-remove (lambda (w)
                      (seq-some (lambda (re) (string-match-p re w))

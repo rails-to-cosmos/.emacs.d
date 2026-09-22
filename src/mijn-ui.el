@@ -14,9 +14,6 @@
 (use-package default-text-scale
   :ensure t)
 
-(use-package highlight
-  :ensure t)
-
 (use-package ace-window
   :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
                 aw-scope 'frame)

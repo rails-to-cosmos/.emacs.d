@@ -6,6 +6,13 @@
 
 (require 'custom)
 (require 'package)
+(require 'warnings)
+
+;; Native compilation of third-party packages can report calls into optional
+;; integrations as undefined.  Keep the warnings in *Warnings* for diagnosis,
+;; but do not pop that buffer up during startup.  This changes display only;
+;; native compiler warnings and errors remain available in the warnings log.
+(add-to-list 'warning-suppress-types '(native-compiler))
 
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("nongnu" . "https://elpa.nongnu.org/nongnu/")
@@ -15,11 +22,6 @@
 
 (package-initialize)
 
-;; The `package-selected-packages' manifest in custom.el is the hand-maintained
-;; install source (see the install-first bootstrap below).  Keep package.el from
-;; rewriting it on install/autoremove, which once silently wiped it to nil.
-(advice-add 'package--save-selected-packages :override #'ignore)
-
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -28,18 +30,57 @@
 
 (require 'use-package)
 
-;; Provision the declared package set BEFORE loading any config module, so a
-;; module's mode-hook never fires against an uninstalled package (which aborts
-;; that package's own byte-compilation and cascades install failures across the
-;; whole session).  custom.el is loaded here only to populate the
-;; `package-selected-packages' manifest; it is loaded again at the end so user
-;; settings still win over module defaults.
+;; Packages can load vterm while being byte-compiled, before its declaration
+;; below is reached.  Never prompt on stdin during a batch/bootstrap run.
+(setq vterm-always-compile-module t)
+
+;; Keep the bootstrap manifest in version control.  `custom.el' is deliberately
+;; ignored and may not exist on a fresh checkout, so it cannot be the only
+;; record of packages needed while loading the modules below.
+(defconst mijn-required-packages
+  '(transient use-package a ace-window agnostic-translate browse-kill-ring buttercup
+    cmake-font-lock cmake-mode company company-eask consult danneskjold-theme
+    dap-mode dash default-text-scale diminish dired-narrow dired-rainbow
+    disaster disk-usage dockerfile-mode eask eask-mode edit-server-htmlize
+    eglot-java eldoc-eask elm-mode envrc eshell-prompt-extras
+    exec-path-from-shell expand-region f flycheck flycheck-eask flycheck-nim
+    flymake-eask ggtags go-mode haskell-mode highlight-doxygen lsp-metals
+    lsp-mode lsp-ui magit marginalia mise multiple-cursors nim-mode nix-mode
+    ob-mermaid orderless org-contrib org-glance org-glance-llm org-re-reveal
+    ox-reveal ox-reveal-layouts paredit posframe rainbow-delimiters rainbow-mode
+    reverse-im rg rust-mode sbt-mode scala-mode session-buffer-cycle sly
+    smartparens table-view table-view-native undo-tree vertico vterm
+    whitespace-cleanup-mode yaml-mode yasnippet zig-mode agnostic-llm
+    company-statistics company-quickhelp go-guru yasnippet-capf jinja2-mode
+    poetry pyimpsort py-autopep8 flycheck-mypy flymake-ruff ruff-format
+    lsp-pyright)
+  "Packages required by the configuration's eagerly loaded modules.")
+
+(defconst mijn-vc-packages '(darr)
+  "Packages installed through `package-vc-install' by `use-package'.")
+
+(defun mijn-sync-package-selected-packages ()
+  "Expose the tracked package roots to package.el.
+Keep selections made interactively or in `custom.el', while ensuring that
+`package-autoremove' never mistakes configured packages for dependencies."
+  (setq package-selected-packages
+        (delete-dups
+         (append mijn-required-packages
+                 mijn-vc-packages
+                 package-selected-packages))))
+
+;; Provision the declared package set BEFORE loading any config module.  A
+;; refresh here also replaces stale rolling-archive metadata whose package tar
+;; files may already have disappeared from MELPA.
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
-(when (seq-find (lambda (pkg) (not (package-installed-p pkg))) package-selected-packages)
-  (package-refresh-contents)
-  (dolist (pkg package-selected-packages)
-    (unless (package-installed-p pkg)
-      (ignore-errors (package-install pkg)))))
+(let ((required (delete-dups
+                 (append mijn-required-packages package-selected-packages))))
+  (when (seq-find (lambda (pkg) (not (package-installed-p pkg))) required)
+    (package-refresh-contents)
+    (dolist (pkg required)
+      (unless (package-installed-p pkg)
+        (ignore-errors (package-install pkg))))))
+(mijn-sync-package-selected-packages)
 
 (use-package diminish
   :ensure t)
@@ -76,8 +117,9 @@
 (let ((paths '("src" "src/repos" "src/network-manager" "src/parquet-mode" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
 
-;; lsp hack for svg support to not break sessions
-(setq image-types (cons 'svg image-types))
+;; LSP hack for SVG support.  `image-types' is absent in headless builds.
+(when (boundp 'image-types)
+  (cl-pushnew 'svg image-types))
 
 (with-eval-after-load 'undo-tree
   (diminish 'undo-tree-mode))
@@ -184,6 +226,7 @@
 (global-set-key (kbd "C-x C-o") #'other-frame)
 
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
+(mijn-sync-package-selected-packages)
 
 (condition-case nil
     (load-file (f-join user-emacs-directory "init-local.el"))

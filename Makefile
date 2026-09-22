@@ -18,10 +18,12 @@ EMACS_BATCH = $(EMACS) --batch \
 # Find all test .el files (in test/ and src/ subdirs)
 TEST_FILES := $(shell find test src -name 'test-*.el' | sort)
 
-.PHONY: typecheck typecheck-strict clean-elc test integration
+.PHONY: typecheck typecheck-strict clean-elc test test-unit startup-test integration
 
-# Emacs versions exercised by the podman integration suite.
-INTEG_VERSIONS ?= 29.4 30.2 31.1
+# Emacs versions exercised by the podman integration suite.  `latest' tracks
+# the newest image published by silex/emacs, in addition to the pinned matrix.
+INTEG_VERSIONS ?= 29.4 30.2 31.1 latest
+TEST_EMACS_VERSION ?= 31.1
 
 ## Type-check all elisp files via byte compilation (warnings displayed, fails on errors)
 typecheck:
@@ -40,12 +42,19 @@ typecheck-strict:
 	find src -name '*.elc' -delete 2>/dev/null; \
 	exit $$ret
 
-## Run ERT unit tests
-test:
+## Run unit tests and a fresh containerized startup check.
+test: test-unit startup-test
+
+## Run only the local ERT unit tests (also used inside the test container).
+test-unit:
 	@$(EMACS_BATCH) \
 	  -L test \
 	  $(foreach f,$(TEST_FILES),-l $(f)) \
 	  -f ert-run-tests-batch-and-exit
+
+## Test a clean package bootstrap and full startup under Podman.
+startup-test:
+	@EMACS_CONFIG_FRESH=1 test/integration/run.sh $(TEST_EMACS_VERSION)
 
 ## Run the podman integration suite across Emacs versions ($(INTEG_VERSIONS))
 integration:
