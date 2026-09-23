@@ -57,3 +57,8 @@ The dashboard uses a compiled Haskell backend for git operations. On first use,
 if the binary is missing, you'll be prompted to build it via `cabal install -O2`.
 If GHC is unavailable but ghcup is installed, repos asks ghcup to install the
 latest GHC and Cabal toolchain and uses it for the build.
+
+The build runs in the background, leaving Emacs responsive. Backend requests
+made during the build are queued and resume automatically when it succeeds. Its
+live output appears in the `*repos-build*` compilation buffer; reopen it at any
+time with `M-x repos-show-build-log`.

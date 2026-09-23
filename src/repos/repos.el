@@ -1,6 +1,7 @@
 ;;; repos.el --- Git repository dashboard (Haskell backend) -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
+(require 'compile)
 (require 'json)
 (require 'magit)
 
@@ -19,6 +20,20 @@
 (defvar repos--backend
   (expand-file-name "repos" repos--backend-source-dir)
   "Path to the repos Haskell binary.")
+
+(defvar repos--backend-build-process nil
+  "The current asynchronous backend build process, or nil.")
+
+(defvar repos--backend-waiters nil
+  "Functions waiting for the backend build to finish.")
+
+(defun repos-show-build-log ()
+  "Show the output from the current or most recent backend build."
+  (interactive)
+  (let ((buffer (get-buffer "*repos-build*")))
+    (if buffer
+        (pop-to-buffer buffer)
+      (user-error "No repos build log is available"))))
 
 (defconst repos--backend-build-args
   '("install" "-O2"
@@ -48,28 +63,72 @@ Use ghcup to provision a toolchain when GHC is not available."
      (t
       (user-error "Building repos requires GHC, or ghcup to install it")))))
 
-(defun repos--ensure-backend ()
-  "Ensure the backend binary exists. Offer to build it if missing."
-  (unless (file-executable-p repos--backend)
-    (if (y-or-n-p "repos binary not found. Build it? ")
-        (let* ((default-directory repos--backend-source-dir)
-               (command (repos--backend-build-command))
-               (program (car command))
-               (args (append (cdr command)
-                             (list (concat "--installdir="
-                                           repos--backend-source-dir)))))
-          (message "Building repos...")
-          (let ((exit-code (apply #'call-process program nil
-                                  "*repos-build*" nil args)))
-            (if (= exit-code 0)
-                (message "repos built successfully")
-              (switch-to-buffer "*repos-build*")
-              (error "repos build failed (exit %d)" exit-code))))
-      (user-error "repos is required"))))
+(defun repos--finish-backend-build (process)
+  "Finish the backend build represented by PROCESS."
+  (let ((exit-code (process-exit-status process)))
+    (setq repos--backend-build-process nil)
+    (if (and (= exit-code 0) (file-executable-p repos--backend))
+        (let ((waiters (nreverse repos--backend-waiters)))
+          (setq repos--backend-waiters nil)
+          (message "repos built successfully")
+          (dolist (waiter waiters)
+            (condition-case err
+                (funcall waiter)
+              (error (message "repos: deferred operation failed: %s"
+                              (error-message-string err))))))
+      (setq repos--backend-waiters nil)
+      (display-buffer (process-buffer process))
+      (message "repos build failed (exit %d)" exit-code))))
+
+(defun repos--start-backend-build ()
+  "Start building the backend without blocking Emacs."
+  (let* ((default-directory repos--backend-source-dir)
+         (command (repos--backend-build-command))
+         (args (append (cdr command)
+                       (list (concat "--installdir="
+                                     repos--backend-source-dir))))
+         (buffer (get-buffer-create "*repos-build*"))
+         (full-command (cons (car command) args)))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (mapconcat #'shell-quote-argument full-command " ") "\n\n"))
+      (compilation-mode)
+      (setq-local compilation-scroll-output t))
+    (display-buffer buffer)
+    (message "Building repos in the background...")
+    (setq repos--backend-build-process
+          (make-process
+           :name "repos-build"
+           :buffer buffer
+           :command full-command
+           :noquery t
+           :sentinel
+           (lambda (process _event)
+             (when (memq (process-status process) '(exit signal))
+               (repos--finish-backend-build process)))))))
+
+(defun repos--ensure-backend (callback)
+  "Run CALLBACK when the backend is ready, building it asynchronously."
+  (cond
+   ((file-executable-p repos--backend)
+    (funcall callback))
+   (repos--backend-build-process
+    (push callback repos--backend-waiters))
+   ((y-or-n-p "repos binary not found. Build it? ")
+    (push callback repos--backend-waiters)
+    (condition-case err
+        (repos--start-backend-build)
+      (error
+       (setq repos--backend-waiters nil)
+       (signal (car err) (cdr err)))))
+   (t
+    (user-error "repos is required"))))
 
 (defun repos--call-sync (command &rest args)
   "Call the backend synchronously with COMMAND and ARGS. Return parsed JSON."
-  (repos--ensure-backend)
+  (unless (file-executable-p repos--backend)
+    (error "repos backend is not ready"))
   (with-temp-buffer
     (let ((exit-code (apply #'call-process repos--backend nil t nil command args)))
       (unless (= exit-code 0)
@@ -79,20 +138,21 @@ Use ghcup to provision a toolchain when GHC is not available."
 
 (defun repos--call-async (command args callback)
   "Call the backend asynchronously. CALLBACK receives parsed JSON on completion."
-  (repos--ensure-backend)
-  (let ((buf (generate-new-buffer " *repos*")))
-    (set-process-sentinel
-     (apply #'start-process "repos" buf repos--backend command args)
-     (lambda (process _event)
-       (if (not (eq (process-exit-status process) 0))
-           (progn
-             (message "repos %s failed" command)
-             (kill-buffer (process-buffer process)))
-         (let ((json (with-current-buffer (process-buffer process)
-                       (goto-char (point-min))
-                       (condition-case nil (json-read) (error nil)))))
-           (kill-buffer (process-buffer process))
-           (when json (funcall callback json))))))))
+  (repos--ensure-backend
+   (lambda ()
+     (let ((buf (generate-new-buffer " *repos*")))
+       (set-process-sentinel
+        (apply #'start-process "repos" buf repos--backend command args)
+        (lambda (process _event)
+          (if (not (eq (process-exit-status process) 0))
+              (progn
+                (message "repos %s failed" command)
+                (kill-buffer (process-buffer process)))
+            (let ((json (with-current-buffer (process-buffer process)
+                          (goto-char (point-min))
+                          (condition-case nil (json-read) (error nil)))))
+              (kill-buffer (process-buffer process))
+              (when json (funcall callback json))))))))))
 
 (defun repos--call-batch (command paths per-result-callback &optional done-callback)
   "Run the backend `batch' subcommand in a single process.
@@ -100,37 +160,38 @@ COMMAND is \"status\" or \"status-quick\". PATHS is a list of
 absolute paths. PER-RESULT-CALLBACK is invoked for each repo
 as (PATH STATUS) as results stream in. DONE-CALLBACK, when non-nil,
 runs after the process exits."
-  (repos--ensure-backend)
-  (let* ((process-connection-type nil) ;; pipe, not pty — so `process-send-eof' actually closes stdin
-         (buf  (generate-new-buffer " *repos-batch*"))
-         (proc (start-process "repos-batch" buf repos--backend "batch"))
-         (pending ""))
-    (set-process-filter
-     proc
-     (lambda (_process output)
-       (let* ((combined (concat pending output))
-              (lines    (split-string combined "\n"))
-              (tail     (car (last lines)))
-              (complete (butlast lines)))
-         (setq pending tail)
-         (dolist (line complete)
-           (unless (string-empty-p line)
-             (condition-case _err
-                 (let* ((parsed (json-read-from-string line))
-                        (path   (cdr (assq 'path parsed)))
-                        (status (cdr (assq 'status parsed))))
-                   (when path
-                     (funcall per-result-callback path status)))
-               (error nil)))))))
-    (set-process-sentinel
-     proc
-     (lambda (process _event)
-       (when (memq (process-status process) '(exit signal))
-         (kill-buffer (process-buffer process))
-         (when done-callback (funcall done-callback)))))
-    (process-send-string
-     proc (json-encode `((command . ,command) (repos . ,(vconcat paths)))))
-    (process-send-eof proc)))
+  (repos--ensure-backend
+   (lambda ()
+     (let* ((process-connection-type nil)
+            (buf  (generate-new-buffer " *repos-batch*"))
+            (proc (start-process "repos-batch" buf repos--backend "batch"))
+            (pending ""))
+       (set-process-filter
+        proc
+        (lambda (_process output)
+          (let* ((combined (concat pending output))
+                 (lines    (split-string combined "\n"))
+                 (tail     (car (last lines)))
+                 (complete (butlast lines)))
+            (setq pending tail)
+            (dolist (line complete)
+              (unless (string-empty-p line)
+                (condition-case _err
+                    (let* ((parsed (json-read-from-string line))
+                           (path   (cdr (assq 'path parsed)))
+                           (status (cdr (assq 'status parsed))))
+                      (when path
+                        (funcall per-result-callback path status)))
+                  (error nil)))))))
+       (set-process-sentinel
+        proc
+        (lambda (process _event)
+          (when (memq (process-status process) '(exit signal))
+            (kill-buffer (process-buffer process))
+            (when done-callback (funcall done-callback)))))
+       (process-send-string
+        proc (json-encode `((command . ,command) (repos . ,(vconcat paths)))))
+       (process-send-eof proc)))))
 
 ;;; Repository Configuration
 
@@ -407,27 +468,46 @@ work happens lazily, on first user interaction, instead of at startup."
   "Add DIR to monitored repositories."
   (interactive "DDirectory: ")
   (repos--ensure-loaded)
-  (let* ((found (repos--call-sync "discover" (expand-file-name dir)))
-         (added (cl-remove nil
-                           (mapcar (lambda (d)
-                                     (let ((path (repos--abbrev d)))
-                                       (unless (seq-find (lambda (e) (equal (repos--abbrev (repos--path e)) path))
-                                                         repos-list)
-                                         (let ((remote (repos--call-sync "remote" (expand-file-name d))))
-                                           (setq repos-list
-                                                 (append repos-list
-                                                         (list (cons path (if (and remote (not (equal remote :json-false))) remote nil)))))
-                                           path))))
-                                   (append found nil))))) ;; coerce vector to list
-    (unless found (user-error "No git repositories found in %s" (repos--abbrev dir)))
-    (when added
-      (let* ((target (repos--choose-file))
-             (new-entries (mapcar (lambda (p) (assoc p repos-list)) added)))
-        (if (equal target repos-file)
-            (repos--save)
-          (repos--append-to-file target new-entries)))
-      (repos--fetch-many added)
-      (message "Added %d repo%s" (length added) (if (= 1 (length added)) "" "s")))))
+  (repos--ensure-backend
+   (lambda ()
+     (let* ((found (repos--call-sync "discover" (expand-file-name dir)))
+            (added (cl-remove nil
+                              (mapcar
+                               (lambda (d)
+                                 (let ((path (repos--abbrev d)))
+                                   (unless (seq-find
+                                            (lambda (e)
+                                              (equal (repos--abbrev
+                                                      (repos--path e))
+                                                     path))
+                                            repos-list)
+                                     (let ((remote
+                                            (repos--call-sync
+                                             "remote" (expand-file-name d))))
+                                       (setq repos-list
+                                             (append
+                                              repos-list
+                                              (list
+                                               (cons
+                                                path
+                                                (if (and remote
+                                                         (not (equal remote
+                                                                     :json-false)))
+                                                    remote
+                                                  nil)))))
+                                       path))))
+                               (append found nil)))))
+       (unless found
+         (user-error "No git repositories found in %s" (repos--abbrev dir)))
+       (when added
+         (let* ((target (repos--choose-file))
+                (new-entries (mapcar (lambda (p) (assoc p repos-list)) added)))
+           (if (equal target repos-file)
+               (repos--save)
+             (repos--append-to-file target new-entries)))
+         (repos--fetch-many added)
+         (message "Added %d repo%s"
+                  (length added) (if (= 1 (length added)) "" "s")))))))
 
 ;;;###autoload
 (defun repos-add-current-repo ()
@@ -441,15 +521,19 @@ Prompts for which file to save to when `repos-extra-files' is set."
     (when (seq-find (lambda (e) (equal (repos--abbrev (repos--path e)) path))
                     repos-list)
       (user-error "Already monitored: %s" path))
-    (let* ((remote (repos--call-sync "remote" (expand-file-name root)))
-           (entry (cons path (and remote (not (equal remote :json-false)) remote)))
-           (target (repos--choose-file)))
-      (setq repos-list (append repos-list (list entry)))
-      (if (equal target repos-file)
-          (repos--save)
-        (repos--append-to-file target (list entry)))
-      (repos--fetch path)
-      (message "Added %s" path))))
+    (repos--ensure-backend
+     (lambda ()
+       (let* ((remote (repos--call-sync "remote" (expand-file-name root)))
+              (entry (cons path (and remote
+                                     (not (equal remote :json-false))
+                                     remote)))
+              (target (repos--choose-file)))
+         (setq repos-list (append repos-list (list entry)))
+         (if (equal target repos-file)
+             (repos--save)
+           (repos--append-to-file target (list entry)))
+         (repos--fetch path)
+         (message "Added %s" path))))))
 
 ;;;###autoload
 (defun repos-clone-all-missing ()

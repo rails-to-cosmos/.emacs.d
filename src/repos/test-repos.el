@@ -51,6 +51,36 @@
                (and (equal program "cabal") "/bin/cabal"))))
     (should-error (repos--backend-build-command) :type 'user-error)))
 
+(ert-deftest test-repos-ensure-backend-runs-immediately-when-ready ()
+  (let (called)
+    (cl-letf (((symbol-function 'file-executable-p) (lambda (_file) t)))
+      (repos--ensure-backend (lambda () (setq called t))))
+    (should called)))
+
+(ert-deftest test-repos-ensure-backend-shares-background-build ()
+  (let ((repos--backend-build-process nil)
+        (repos--backend-waiters nil)
+        (ready nil)
+        (starts 0)
+        calls)
+    (cl-letf (((symbol-function 'file-executable-p)
+               (lambda (_file) ready))
+              ((symbol-function 'y-or-n-p) (lambda (_prompt) t))
+              ((symbol-function 'repos--start-backend-build)
+               (lambda ()
+                 (setq starts (1+ starts)
+                       repos--backend-build-process 'building)))
+              ((symbol-function 'process-exit-status) (lambda (_process) 0)))
+      (repos--ensure-backend (lambda () (push 'first calls)))
+      (repos--ensure-backend (lambda () (push 'second calls)))
+      (should (= starts 1))
+      (should (null calls))
+      (setq ready t)
+      (repos--finish-backend-build 'building)
+      (should (equal (nreverse calls) '(first second)))
+      (should (null repos--backend-build-process))
+      (should (null repos--backend-waiters)))))
+
 ;; ---------------------------------------------------------------------------
 ;; Accessors
 ;; ---------------------------------------------------------------------------
