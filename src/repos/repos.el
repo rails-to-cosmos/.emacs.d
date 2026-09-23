@@ -20,19 +20,47 @@
   (expand-file-name "repos" repos--backend-source-dir)
   "Path to the repos Haskell binary.")
 
+(defconst repos--backend-build-args
+  '("install" "-O2"
+    "--enable-executable-stripping"
+    "--enable-split-sections"
+    "--install-method=copy"
+    "--overwrite-policy=always")
+  "Arguments used to build and install the repos backend.")
+
+(defun repos--backend-build-command ()
+  "Return the command used to build the repos backend.
+Use ghcup to provision a toolchain when GHC is not available."
+  (let ((cabal (executable-find "cabal"))
+        (ghc (executable-find "ghc"))
+        (ghcup (executable-find "ghcup")))
+    (cond
+     ((and cabal ghc)
+      (cons cabal repos--backend-build-args))
+     (ghcup
+      (append (list ghcup "run"
+                    "--ghc" "latest"
+                    "--cabal" "latest"
+                    "--install" "--" "cabal")
+              repos--backend-build-args))
+     ((not cabal)
+      (user-error "Building repos requires cabal, or ghcup to install it"))
+     (t
+      (user-error "Building repos requires GHC, or ghcup to install it")))))
+
 (defun repos--ensure-backend ()
   "Ensure the backend binary exists. Offer to build it if missing."
   (unless (file-executable-p repos--backend)
     (if (y-or-n-p "repos binary not found. Build it? ")
-        (let ((default-directory repos--backend-source-dir))
+        (let* ((default-directory repos--backend-source-dir)
+               (command (repos--backend-build-command))
+               (program (car command))
+               (args (append (cdr command)
+                             (list (concat "--installdir="
+                                           repos--backend-source-dir)))))
           (message "Building repos...")
-          (let ((exit-code (call-process "cabal" nil "*repos-build*" nil
-                                         "install" "-O2"
-                                         "--enable-executable-stripping"
-                                         "--enable-split-sections"
-                                         "--install-method=copy"
-                                         (concat "--installdir=" repos--backend-source-dir)
-                                         "--overwrite-policy=always")))
+          (let ((exit-code (apply #'call-process program nil
+                                  "*repos-build*" nil args)))
             (if (= exit-code 0)
                 (message "repos built successfully")
               (switch-to-buffer "*repos-build*")

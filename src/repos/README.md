@@ -53,4 +53,7 @@ Repos are stored as alist entries `(PATH . REMOTE-URL)`. The primary file defaul
 
 ## Haskell Backend
 
-The dashboard uses a compiled Haskell backend (`src/repos/backend/`) for git operations. On first use, if the binary is missing, you'll be prompted to build it via `cabal build -O2`.
+The dashboard uses a compiled Haskell backend for git operations. On first use,
+if the binary is missing, you'll be prompted to build it via `cabal install -O2`.
+If GHC is unavailable but ghcup is installed, repos asks ghcup to install the
+latest GHC and Cabal toolchain and uses it for the build.

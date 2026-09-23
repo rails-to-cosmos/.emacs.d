@@ -15,6 +15,43 @@
      ,@body))
 
 ;; ---------------------------------------------------------------------------
+;; Backend build
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-repos-build-command-uses-active-toolchain ()
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (program)
+               (cdr (assoc program '(("cabal" . "/bin/cabal")
+                                      ("ghc" . "/bin/ghc")
+                                      ("ghcup" . "/bin/ghcup")))))))
+    (should (equal (repos--backend-build-command)
+                   (cons "/bin/cabal" repos--backend-build-args)))))
+
+(ert-deftest test-repos-build-command-uses-ghcup-without-ghc ()
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (program)
+               (cdr (assoc program '(("cabal" . "/bin/cabal")
+                                      ("ghcup" . "/bin/ghcup")))))))
+    (should (equal (repos--backend-build-command)
+                   (append '("/bin/ghcup" "run"
+                             "--ghc" "latest"
+                             "--cabal" "latest"
+                             "--install" "--" "cabal")
+                           repos--backend-build-args)))))
+
+(ert-deftest test-repos-build-command-uses-ghcup-without-cabal-or-ghc ()
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (program)
+               (and (equal program "ghcup") "/bin/ghcup"))))
+    (should (equal (car (repos--backend-build-command)) "/bin/ghcup"))))
+
+(ert-deftest test-repos-build-command-requires-ghc ()
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (program)
+               (and (equal program "cabal") "/bin/cabal"))))
+    (should-error (repos--backend-build-command) :type 'user-error)))
+
+;; ---------------------------------------------------------------------------
 ;; Accessors
 ;; ---------------------------------------------------------------------------
 
