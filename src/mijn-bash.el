@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-(use-package sh-script
+(up sh-script
   :hook ((sh-base-mode . eglot-ensure)))
 
 (provide 'mijn-bash)

@@ -4,7 +4,7 @@
 (require 'mijn-org)
 (require 'direnv)
 
-(use-package vterm
+(up vterm
   :ensure nil)
 
 (ob-add-language 'shell (cons "shell" "src shell"))
@@ -24,11 +24,11 @@ Handles regular file buffers and Eshell buffers correctly."
 (add-hook 'eshell-mode-hook #'my/eshell-apply-dir-locals)
 (add-hook 'eshell-mode-hook #'direnv)
 
-(use-package exec-path-from-shell
+(up exec-path-from-shell
   :ensure t
   :config (exec-path-from-shell-initialize))
 
-(use-package eshell-prompt-extras
+(up eshell-prompt-extras
   :ensure t)
 
 (defun eshell-compl-space ()
@@ -102,7 +102,7 @@ Handles regular file buffers and Eshell buffers correctly."
  "eshell"
  :follow #'eshell-browse-directory)
 
-(use-package term
+(up term
   :ensure nil ;; Built-in package
   :config (progn
             (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")

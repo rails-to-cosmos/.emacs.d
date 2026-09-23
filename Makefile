@@ -11,6 +11,7 @@ SRC_FILES := $(shell find src -name '*.el' -not -path 'src/archive/*' | sort)
 EMACS_BATCH = $(EMACS) --batch \
   --eval "(require 'cl-lib)" \
   --eval "(package-initialize)" \
+  -l $(CURDIR)/src/mijn-packages.el \
   --eval "(let ((default-directory \"$(CURDIR)/elpa\")) (normal-top-level-add-subdirs-to-load-path))" \
   --eval "(let ((default-directory \"$(CURDIR)/packages\")) (normal-top-level-add-subdirs-to-load-path))" \
   -L src -L src/repos -L src/network-manager -L packages

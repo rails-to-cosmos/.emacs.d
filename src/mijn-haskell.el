@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 
-(use-package haskell-mode
+(up haskell-mode
   :config (progn
             (require 'xref)
             (require 'eglot)

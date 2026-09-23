@@ -43,7 +43,7 @@ Here the suffix is optional and a hash fallback guarantees a real filename."
   ;; Let jdtls format (and organize imports via format) on save, buffer-locally.
   (add-hook 'before-save-hook #'eglot-format-buffer nil t))
 
-(use-package eglot-java
+(up eglot-java
   :hook (java-mode . mijn-java--init)
   :config
   ;; Fix jump-to-definition into libraries/JDK (see `mijn-java--jdt-uri-handler').

@@ -1,10 +1,10 @@
 ;; -*- lexical-binding: t; -*-
 (require 'direnv)
 
-(use-package dired-narrow
+(up dired-narrow
   :ensure t)
 
-(use-package dired-rainbow
+(up dired-rainbow
   :config
   (dired-rainbow-define html "#4e9a06" ("htm" "html" "xhtml"))
   (dired-rainbow-define media "#ce5c00" ("mp3" "mp4" "MP3" "MP4" "avi" "mpg" "flv" "ogg"))

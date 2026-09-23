@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-(use-package nix-mode
+(up nix-mode
   :ensure t)
 
 ;; --- Nix Flake Environment Loader (No Direnv) ---

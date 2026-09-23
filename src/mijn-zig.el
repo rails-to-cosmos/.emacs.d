@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-(use-package zig-mode
+(up zig-mode
   :hook ((zig-mode . lsp-deferred)
          (zig-mode . abbrev-mode)
          (zig-mode . flycheck-mode)

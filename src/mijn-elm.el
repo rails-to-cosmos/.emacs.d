@@ -1,6 +1,6 @@
 ;;; mijn-elm.el --- Elm development setup -*- lexical-binding: t; -*-
 
-(use-package elm-mode
+(up elm-mode
   :hook ((elm-mode . eglot-ensure))
   :config
   ;; Run `elm-format' on save (elm-mode reads this defcustom).

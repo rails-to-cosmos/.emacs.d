@@ -1,8 +1,8 @@
 ;; -*- lexical-binding: t; -*-
-(use-package flycheck-nim
+(up flycheck-nim
   :ensure t)
 
-(use-package nim-mode
+(up nim-mode
   :config (progn
             (add-hook 'nim-mode-hook #'lsp-deferred))
   :ensure t)

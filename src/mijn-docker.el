@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 (require 's)
 
-(use-package dockerfile-mode
+(up dockerfile-mode
   :ensure t)
 
 (cl-defun my-docker-container-running-p (container)

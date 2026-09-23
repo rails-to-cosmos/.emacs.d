@@ -29,12 +29,10 @@ problems are cross-cutting:
   live in ≥10 loaded files plus =init.el=; the personal =C-x y= prefix is
   defined piecemeal in editor, ui, org, ab, make, and =init.el=.
 
-- *Entangled provisioning.* "What to install" (the version-controlled
-  =mijn-required-packages= manifest in [[file:../init.el][init.el]]) and "how to configure"
-  (=use-package= bodies, many carrying =:ensure nil=) are tangled.  The
-  install-first bootstrap provisions the manifest before loading modules;
-  =custom.el= can add personal packages but is no longer required on a fresh
-  checkout.
+- *Unified provisioning.* The =up= declarations configure packages and build
+  =mijn-required-packages= automatically.  Their =:ensure= targets are tracked
+  too, including declarations with several targets.  A short bootstrap list
+  covers packages needed before declarations can run.
 
 - *Dead code.* Five top-level =src/*.el= files are never loaded
   (=mijn-project=, =mijn-release=, =mijn-s3=, =pyrun=, =inxi-mode-line=), and
@@ -104,25 +102,22 @@ sub-bindings in one place instead of the current six. Language- and
 mode-local bindings (=:bind (:map foo-mode-map ...)=) stay with their feature
 — only *global* bindings move.
 
-** 3. Provisioning: manifest as the single source of truth
+** 3. Provisioning: declarations as the single source of truth
 
-Keep the current model but make its contract explicit:
+The package contract is explicit:
 
-- =mijn-required-packages= in =init.el= is the authoritative, tracked install
-  list. Every package the config uses must appear there.
+- Every =up= declaration registers its package and all symbolic =:ensure=
+  targets in =mijn-required-packages= before delegating to =use-package=.
+- =mijn-bootstrap-packages= contains only dependencies needed before their
+  declarations can run.
 - =package-selected-packages= in ignored =custom.el= can add machine-local
   packages, but bootstrap correctness does not depend on that file existing.
-- Startup merges the tracked manifest into =package-selected-packages=, so
+- Startup merges the generated registry into =package-selected-packages=, so
   package.el and =package-autoremove= see configured packages as explicit
   roots.  Interactive package selections remain supported and are saved by
   package.el normally.
-- The install-first bootstrap installs any missing manifest entry before
-  loading modules.
-
-An alternative worth considering: drop =:ensure nil= everywhere and let
-=use-package-always-ensure= plus the manifest be the single mechanism. That
-removes the "config-only, assume present" ambiguity, but touches ~73 forms
-and is a larger change — deferred as a follow-up.
+- =up= installs missing archive packages before evaluating their declarations;
+  =:vc= declarations remain delegated to use-package's VC support.
 
 ** 4. Layered file layout
 

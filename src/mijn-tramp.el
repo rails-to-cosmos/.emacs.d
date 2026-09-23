@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 (require 'tramp)
 
-(use-package tramp
+(up tramp
   ;; https://coredumped.dev/2025/06/18/making-tramp-go-brrrr./
   :config (progn
 

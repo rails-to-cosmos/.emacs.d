@@ -94,7 +94,7 @@ as-is — caller is responsible for the result compiling."
                                   python-mypy
                                   python-pycodestyle)))
 
-(use-package python
+(up python
   :ensure nil                    ; built-in python.el; python-mode derives from prog-mode
   :defer
   :init (ob-add-language 'python (cons "python" "src python"))
@@ -127,7 +127,7 @@ as-is — caller is responsible for the result compiling."
   :ensure ruff-format
   :ensure lsp-pyright)
 
-(use-package flycheck
+(up flycheck
   :defer t
   :config
   (flycheck-define-checker python-pycodestyle

@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-(use-package scala-mode
+(up scala-mode
   :mode "\\.s\\(cala\\|bt\\|c\\)$"
   :hook ((scala-mode . flycheck-mode))
   :config (progn
@@ -12,7 +12,7 @@
   :ensure flycheck
   :ensure smartparens)
 
-(use-package sbt-mode
+(up sbt-mode
   :commands sbt-start sbt-command
   :config (progn
             (substitute-key-definition
@@ -22,14 +22,14 @@
             (setq sbt:program-options '("-Dsbt.supershell=false")))
   :ensure nil)
 
-(use-package lsp-mode
+(up lsp-mode
   :hook ((scala-mode . lsp-deferred)
          (lsp-mode . lsp-lens-mode))
   :config (progn
             (setq lsp-prefer-flymake nil))
   :ensure nil)
 
-(use-package lsp-metals
+(up lsp-metals
     :config (progn
               ;; (lsp-metals-toggle-show-implicit-arguments)
               ;; (lsp-metals-toggle-show-implicit-conversions)
@@ -38,16 +38,16 @@
               )
     :ensure t)
 
-(use-package lsp-ui
+(up lsp-ui
     :ensure t)
 
 ;; (use-package company-lsp
 ;;     :ensure nil)
 
-(use-package posframe
+(up posframe
     :ensure nil)
 
-(use-package dap-mode
+(up dap-mode
     :ensure t)
 
 (provide 'mijn-scala)

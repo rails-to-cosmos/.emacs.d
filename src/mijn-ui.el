@@ -11,10 +11,10 @@
 (when (fboundp 'pixel-scroll-precision-mode)
   (pixel-scroll-precision-mode))
 
-(use-package default-text-scale
+(up default-text-scale
   :ensure t)
 
-(use-package ace-window
+(up ace-window
   :config (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h ?i)
                 aw-scope 'frame)
   :bind (("C-x C-o" . ace-window)
@@ -132,10 +132,10 @@
     (delete-file (buffer-file-name))
     (kill-this-buffer)))
 
-(use-package rainbow-mode
+(up rainbow-mode
   :ensure t)
 
-(use-package rainbow-delimiters
+(up rainbow-delimiters
     :ensure nil)
 
 ;; Only enable if the package is actually provided.  A void function in
@@ -194,7 +194,7 @@ plus a symbol compare)."
   (when mijn-theme-poll-timer (cancel-timer mijn-theme-poll-timer))
   (setq mijn-theme-poll-timer (run-at-time 2 2 #'mijn-sync-emacs-theme)))
 
-(use-package danneskjold-theme
+(up danneskjold-theme
   ;; Start in whatever variant the durable knob says, so Emacs matches the bar
   ;; on a fresh session instead of always coming up dark, then keep following it.
   :config

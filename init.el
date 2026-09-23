@@ -30,77 +30,39 @@
 
 (require 'use-package)
 
+(add-to-list 'load-path (expand-file-name "src" user-emacs-directory))
+(require 'mijn-packages)
+
 ;; Packages can load vterm while being byte-compiled, before its declaration
 ;; below is reached.  Never prompt on stdin during a batch/bootstrap run.
 (setq vterm-always-compile-module t)
 
-;; Keep the bootstrap manifest in version control.  `custom.el' is deliberately
-;; ignored and may not exist on a fresh checkout, so it cannot be the only
-;; record of packages needed while loading the modules below.
-(defconst mijn-required-packages
-  '(transient use-package a ace-window agnostic-translate browse-kill-ring buttercup
-    cmake-font-lock cmake-mode company company-eask consult danneskjold-theme
-    dap-mode dash default-text-scale diminish dired-narrow dired-rainbow
-    disaster disk-usage dockerfile-mode eask eask-mode eglot-java eldoc-eask
-    elm-mode envrc eshell-prompt-extras
-    exec-path-from-shell expand-region f flycheck flycheck-eask flycheck-nim
-    flymake-eask ggtags go-mode haskell-mode highlight-doxygen lsp-metals
-    lsp-mode lsp-ui magit marginalia mise multiple-cursors nim-mode nix-mode
-    ob-mermaid orderless org-contrib org-glance org-glance-llm org-re-reveal
-    ox-reveal ox-reveal-layouts paredit posframe rainbow-delimiters rainbow-mode
-    reverse-im rg rust-mode sbt-mode scala-mode session-buffer-cycle sly
-    smartparens table-view table-view-native undo-tree vertico vterm
-    whitespace-cleanup-mode yaml-mode yasnippet zig-mode agnostic-llm
-    company-statistics company-quickhelp go-guru yasnippet-capf jinja2-mode
-    poetry pyimpsort py-autopep8 flycheck-mypy flymake-ruff ruff-format
-    lsp-pyright)
-  "Packages required by the configuration's eagerly loaded modules.")
-
-(defconst mijn-vc-packages '(darr)
-  "Packages installed through `package-vc-install' by `use-package'.")
-
-(defun mijn-sync-package-selected-packages ()
-  "Expose the tracked package roots to package.el.
-Keep selections made interactively or in `custom.el', while ensuring that
-`package-autoremove' never mistakes configured packages for dependencies."
-  (setq package-selected-packages
-        (delete-dups
-         (append mijn-required-packages
-                 mijn-vc-packages
-                 package-selected-packages))))
-
-;; Provision the declared package set BEFORE loading any config module.  A
-;; refresh here also replaces stale rolling-archive metadata whose package tar
-;; files may already have disappeared from MELPA.
+;; Provision packages needed before the declarations below are evaluated.
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
-(let ((required (delete-dups
-                 (append mijn-required-packages package-selected-packages))))
-  (when (seq-find (lambda (pkg) (not (package-installed-p pkg))) required)
-    (package-refresh-contents)
-    (dolist (pkg required)
-      (unless (package-installed-p pkg)
-        (ignore-errors (package-install pkg))))))
-(mijn-sync-package-selected-packages)
+(mijn-register-packages
+ (delete-dups (append mijn-bootstrap-packages package-selected-packages)))
 
-(use-package diminish
+(up diminish
   :ensure t)
 
-(use-package dash
+(up dash
   :ensure t)
 
-(use-package f
+(up f
   :ensure t)
 
-(use-package vterm
+(up bluetooth)
+
+(up vterm
   :ensure t)
 
-(use-package magit
+(up magit
   :ensure t)
 
-(use-package rainbow-delimiters
+(up rainbow-delimiters
   :ensure t)
 
-(use-package session-buffer-cycle
+(up session-buffer-cycle
   :bind (("C-x C-x" . session-buffer-cycle))
   :custom (session-buffer-cycle-kinds '(("vterm" . (lambda (name _label _root)
                                                      (vterm name)))
@@ -178,18 +140,18 @@ Keep selections made interactively or in `custom.el', while ensuring that
 
 (require 'parquet-mode)
 
-(use-package agnostic-llm
+(up agnostic-llm
   :bind (("C-x y e" . agnostic-llm-menu)
          ("C-S-j"   . agnostic-llm-next-buffer)
          ("C-S-k"   . agnostic-llm-previous-buffer))
   :config (with-eval-after-load 'vterm
             (define-key vterm-mode-map (kbd "C-c C-r") #'agnostic-llm-show-last-response)))
 
-(use-package darr
+(up darr
   :vc (:url "https://github.com/rails-to-cosmos/darr.git" :branch "master" :rev :newest)
   :bind ("C-x y d i" . darr))
 
-(use-package agnostic-translate
+(up agnostic-translate
   :bind ("C-x y t r" . agnostic-translate))
 
 (require 'xrandr)
@@ -198,7 +160,7 @@ Keep selections made interactively or in `custom.el', while ensuring that
 
 (require 'make)
 
-(use-package table-view
+(up table-view
   :config (progn
             (require 'table-view-csv)
             (add-to-list 'auto-mode-alist '("\\.csv\\'" . table-view-csv-mode))
@@ -208,11 +170,11 @@ Keep selections made interactively or in `custom.el', while ensuring that
 ;; Optional Rust backend: installed but not loaded until a large table (e.g. a
 ;; big CSV) requires it -- then `table-view-display' routes to it, or recommends
 ;; building its binary (M-x table-view-native-compile).
-(use-package table-view-native
+(up table-view-native
   :defer t
   :commands (table-view-native-display table-view-native-compile))
 
-(use-package org-glance
+(up org-glance
   :bind (("C-x j" . org-glance-transient))
   :custom ((org-glance-plugins '(llm)))
   :init (org-glance-init "~/sync/views")

@@ -26,7 +26,7 @@
   (company-quickhelp-mode)
   (company-statistics-mode))
 
-(use-package go-mode
+(up go-mode
   :hook (;; (go-mode . lsp-deferred)
          ;; (go-mode . set-go-mode-hooks)
          ;; (go-mode . company-mode)

@@ -3,7 +3,7 @@
 (fset #'jsonrpc--log-event #'ignore)
 ;; (fset #'eglot-events-buffer-size 0)
 
-(use-package company
+(up company
   :bind (:map company-active-map
               ("C-n" . company-select-next)
               ("C-p" . company-select-previous)
@@ -42,7 +42,7 @@
 
 ;;   :ensure nil)
 
-(use-package vertico
+(up vertico
   :config (progn
             (require 'vertico-directory)
             (vertico-mode)
@@ -54,13 +54,13 @@
             )
   :ensure t)
 
-(use-package consult
+(up consult
   :init (progn
           (unbind-key (kbd "C-x i")))
   :bind (("C-x i m" . #'consult-imenu))
   :ensure t)
 
-(use-package orderless
+(up orderless
   :custom
   (completion-styles '(orderless flex))
   (completion-category-defaults nil)
@@ -69,11 +69,11 @@
 
   :ensure t)
 
-(use-package marginalia
+(up marginalia
   :config (marginalia-mode)
   :ensure t)
 
-(use-package yasnippet
+(up yasnippet
   :ensure nil)
 
 (recentf-mode)

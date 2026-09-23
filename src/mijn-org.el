@@ -4,17 +4,17 @@
 (require 'ob)
 
 ;; Provides `org-checklist' (an org-contrib module) enabled below.
-(use-package org-contrib
+(up org-contrib
   :ensure t)
 
-(use-package org-re-reveal
+(up org-re-reveal
   :custom (org-re-reveal-revealjs-version "6.0.1")
   :ensure t)
 
-(use-package ox-reveal-layouts
+(up ox-reveal-layouts
   :ensure t)
 
-(use-package ox-reveal
+(up ox-reveal
   :config (load-library "ox-reveal")
           (load-library "ox-reveal-layouts")
   :ensure t)
@@ -110,7 +110,7 @@
      (setq ob-languages (remove (cons language t) ob-languages))
      (user-error "Unable to register language: %s" err))))
 
-(use-package ob-mermaid
+(up ob-mermaid
   :config (progn
             (ob-add-language 'mermaid (cons "mermaid" "src mermaid :file test.png")))
   :ensure t)

@@ -11,7 +11,7 @@
       `(:rust-analyzer (:linkedProjects [,cargo]))
     `(:rust-analyzer (:linkedProjects []))))
 
-(use-package rust-mode
+(up rust-mode
   :hook ((rust-mode . eglot-ensure))
   :config
   (setq rust-format-on-save t)

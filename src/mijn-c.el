@@ -9,31 +9,31 @@
 ;;   - build GTAGS databases per library
 ;; Then wire GTAGSLIBPATH (in .envrc or .dir-locals.el) so ggtags spans them.
 
-(use-package disaster
+(up disaster
   :ensure t)
 
-(use-package highlight-doxygen
+(up highlight-doxygen
   :ensure nil
   :hook ((c-mode . highlight-doxygen-mode)
          (c++-mode . highlight-doxygen-mode)))
 
-(use-package cmake-mode
+(up cmake-mode
   :ensure nil
   :hook (cmake-mode . eglot-ensure))
 
-(use-package cmake-font-lock
+(up cmake-font-lock
   :ensure t)
 
 ;; GNU Global — cross-project source navigation (M-. into library implementations).
 ;; Set GTAGSLIBPATH in .envrc or .dir-locals.el to also search library sources:
 ;;   (setenv "GTAGSLIBPATH" "/path/to/project/.sources/raylib:/usr/src/glibc/glibc-2.40")
-(use-package ggtags
+(up ggtags
   :ensure nil
   :hook ((c-mode   . ggtags-mode)
          (c++-mode . ggtags-mode)
          (asm-mode . ggtags-mode)))
 
-(use-package cc-mode
+(up cc-mode
   :config
   (add-hook 'c-mode-common-hook (lambda () (electric-indent-local-mode -1)))
   (keymap-set c-mode-map "<Return>" #'electric-newline-and-maybe-indent)

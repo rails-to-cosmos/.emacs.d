@@ -29,18 +29,18 @@ directly (not through `call-interactively', which would overwrite
 
 (global-set-key (kbd "M-q") #'mijn-fill-or-unfill)
 
-(use-package rainbow-delimiters)
+(up rainbow-delimiters)
 
 ;; (use-package whisper)
 
 ;; (use-package cask-mode
 ;;   :ensure nil)
 
-(use-package align
+(up align
   :bind ("M-[" . align)
   :ensure nil)
 
-(use-package whitespace-cleanup-mode
+(up whitespace-cleanup-mode
   :config (progn
             (global-whitespace-cleanup-mode t)
             (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -63,15 +63,15 @@ directly (not through `call-interactively', which would overwrite
               (add-hook hook #'sanityinc/no-trailing-whitespace)))
   :ensure t)
 
-(use-package reverse-im
+(up reverse-im
   :config (progn
             (reverse-im-activate "russian-computer"))
   :ensure t)
 
-(use-package a
+(up a
   :ensure t)
 
-(use-package browse-kill-ring
+(up browse-kill-ring
   :config (progn
             (global-unset-key (kbd "M-y"))
             (global-set-key (kbd "M-y") #'browse-kill-ring)
@@ -81,19 +81,19 @@ directly (not through `call-interactively', which would overwrite
             (define-key browse-kill-ring-mode-map (kbd "M-p") #'browse-kill-ring-previous))
   :ensure t)
 
-(use-package multiple-cursors
+(up multiple-cursors
   :config (progn
             (define-key global-map (kbd "C-<") #'mc/mark-previous-like-this)
             (define-key global-map (kbd "C->") #'mc/mark-next-like-this)
             (define-key global-map (kbd "C-+") #'mc/mark-all-like-this))
   :ensure t)
 
-(use-package expand-region
+(up expand-region
   :config (progn
             (global-set-key (kbd "M-2") #'er/expand-region))
   :ensure t)
 
-(use-package undo-tree
+(up undo-tree
   :config (progn
             (setq undo-tree-visualizer-timestamps t
                   undo-tree-visualizer-diff t
@@ -101,14 +101,14 @@ directly (not through `call-interactively', which would overwrite
             (global-undo-tree-mode))
   :ensure t)
 
-(use-package smartparens
+(up smartparens
   :ensure t
   :demand t
   :config (progn
             (require 'smartparens)
             (require 'smartparens-config)))
 
-(use-package paredit
+(up paredit
   :config (progn
             (add-hook 'lisp-mode-hook 'paredit-mode)
             (add-hook 'emacs-lisp-mode-hook 'paredit-mode)
@@ -166,7 +166,7 @@ directly (not through `call-interactively', which would overwrite
 
 (global-set-key (kbd "C-x y r c") #'my-rc)
 
-(use-package yaml-mode
+(up yaml-mode
   :ensure t)
 
 (setq create-lockfiles nil)

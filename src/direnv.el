@@ -5,7 +5,7 @@
 (require 's)
 (require 'f)
 
-(use-package mise
+(up mise
   :ensure nil)
 
 (cl-defun mise-trusted-p ()
@@ -34,7 +34,7 @@
     (setenv "PATH" (s-join ":" path))
     (setq-local exec-path path)))
 
-(use-package envrc
+(up envrc
   :ensure t)
 
 (cl-defun direnv (&rest project-files)

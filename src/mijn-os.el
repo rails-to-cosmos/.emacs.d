@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-(use-package disk-usage
+(up disk-usage
   :ensure t)
 
 (defun reset-caps-lock ()

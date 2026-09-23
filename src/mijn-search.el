@@ -10,7 +10,7 @@
         ((f-exists? (f-join dir ".project")) `(project ,dir))
         (t (my-project-root (f-parent dir)))))
 
-(use-package rg
+(up rg
   :bind (("C-c r" . rg-project))
   :ensure nil)
 

@@ -1,27 +1,27 @@
 ;; -*- lexical-binding: t -*-
 
-(use-package rainbow-delimiters
+(up rainbow-delimiters
   :hook ((lisp-mode emacs-lisp-mode) . rainbow-delimiters-mode))
 
-(use-package paredit
+(up paredit
   :defer t)
 
 ;; (use-package elsa
 ;;   :ensure elsa-flycheck
 ;;   :ensure nil)
 
-(use-package eask
+(up eask
   :ensure nil
   :ensure eask-mode)
 
-(use-package buttercup
+(up buttercup
   :ensure t)
 
 ;; (require 'eval-sexp-fu)
 
 ;; (add-hook 'lisp-mode-hook 'enable-paredit-mode)
 
-(use-package sly
+(up sly
   :ensure t
   :config
   (setq inferior-lisp-program "sbcl")
@@ -33,16 +33,16 @@
 
 (add-to-list 'auto-mode-alist '("/Eask\\'" . emacs-lisp-mode))
 
-(use-package company-eask
+(up company-eask
   :ensure t)
 
-(use-package eldoc-eask
+(up eldoc-eask
   :ensure t)
 
-(use-package flymake-eask
+(up flymake-eask
   :ensure t)
 
-(use-package flycheck-eask
+(up flycheck-eask
   :ensure t)
 
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'my-expand-region)
@@ -51,7 +51,7 @@
 ;; (cl-defun emacs-lisp-completion-setup ()
 ;;   (setq-local company-backends '(company-elisp company-files company-yasnippet)))
 
-(use-package expand-region
+(up expand-region
   :ensure t)
 
 (defvar my-expand-region-last-bounds nil
