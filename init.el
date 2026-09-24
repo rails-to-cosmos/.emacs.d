@@ -76,8 +76,9 @@
 
 (remove-hook 'pre-command-hook 'overwrite-mode)
 
-(let ((paths '("src" "src/repos" "src/network-manager" "src/parquet-mode" "packages")))
+(let ((paths '("src" "src/network-manager" "src/parquet-mode" "packages")))
   (--map (cl-pushnew (f-join user-emacs-directory it) load-path) paths))
+(cl-pushnew (expand-file-name "~/sync/stuff/lab/modules/repos/emacs") load-path)
 
 ;; LSP hack for SVG support.  `image-types' is absent in headless builds.
 (when (boundp 'image-types)
