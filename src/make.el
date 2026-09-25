@@ -72,6 +72,7 @@ Nil disables auto-cleanup."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q")       #'bury-buffer)
     (define-key map (kbd "C-c C-k") #'bury-buffer)
+    (define-key map (kbd "C-c C-q") #'bury-buffer)
     map)
   "Local map installed once the make process has exited.
 Replaces `vterm-mode-map' so keys read the output instead of feeding
@@ -232,6 +233,7 @@ PROJECT is shown in the mode-line and header."
             (vterm-shell (concat "make " (shell-quote-argument target)))
             (vterm-kill-buffer-on-exit nil))
         (vterm-mode))
+      (local-set-key (kbd "C-c C-q") #'bury-buffer)
       ;; `vterm-mode' resets local state, so set ours after it.
       (setq-local make--target target
                   make--project project
