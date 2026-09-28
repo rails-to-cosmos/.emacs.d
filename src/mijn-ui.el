@@ -149,17 +149,31 @@
 (grab-and-drag-mode 1)
 (setq grab-and-drag-pointer-shape nil)
 
+(defvar mijn-theme-variant-file
+  (expand-file-name "~/.config/xmobar/theme-variant")
+  "Shared theme variant file for Emacs and the desktop bar.")
+
+(defvar mijn-theme-sync-script
+  (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh")
+  "Optional desktop bar theme sync script.")
+
 (defun mijn-theme-variant ()
   "Return the durable desktop theme variant, the symbol `light' or `dark'.
-Reads ~/.config/xmobar/theme-variant, the single source of truth shared
-with xmobar and its status daemon.  Defaults to `dark' when unset."
-  (let ((f (expand-file-name "~/.config/xmobar/theme-variant")))
+Reads `mijn-theme-variant-file', shared with xmobar when present.
+Defaults to `dark' when unset."
+  (let ((f mijn-theme-variant-file))
     (if (and (file-readable-p f)
              (with-temp-buffer
                (insert-file-contents f)
                (string-match-p "light" (buffer-string))))
         'light
       'dark)))
+
+(defun mijn-write-theme-variant (variant)
+  "Persist VARIANT for Emacs and the optional desktop bar."
+  (make-directory (file-name-directory mijn-theme-variant-file) t)
+  (with-temp-file mijn-theme-variant-file
+    (insert (symbol-name variant) "\n")))
 
 (defun mijn-apply-emacs-theme (variant)
   "Enable the danneskjold theme matching VARIANT (`light' or `dark')."
@@ -259,17 +273,15 @@ If KWD is a number, get the corresponding match group."
 ;; )
 
 (defun xmobar-toggle-theme ()
-  "Flip the durable desktop theme (Emacs + xmobar) between light and dark.
-Reads the current variant from the shared source of truth, applies the
-opposite here, and hands it to theme-sync.sh, which persists it and
-recolors the bar."
+  "Flip the Emacs theme and persist it; sync xmobar when available."
   (interactive)
   (let ((new (if (eq (mijn-theme-variant) 'light) 'dark 'light)))
     (mijn-apply-emacs-theme new)
+    (mijn-write-theme-variant new)
     (message "Switched to %s theme" new)
-    (start-process "xmobar-theme-sync" nil "bash"
-                   (expand-file-name "~/.config/xmonad/scripts/theme-sync.sh")
-                   (symbol-name new))))
+    (when (file-readable-p mijn-theme-sync-script)
+      (start-process "xmobar-theme-sync" nil "bash"
+                     mijn-theme-sync-script (symbol-name new)))))
 
 (global-set-key (kbd "C-x y t x") #'xmobar-toggle-theme)
 
