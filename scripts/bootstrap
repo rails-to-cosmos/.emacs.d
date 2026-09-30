@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Idempotent host dependencies, package provisioning, and startup verification.
+set -euo pipefail
+
+repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+say() { printf 'bootstrap: %s\n' "$*"; }
+die() { say "$*" >&2; exit 1; }
+as_root() {
+  if [ "$(id -u)" = 0 ]; then "$@"; else sudo "$@"; fi
+}
+
+emacs_bin=${EMACS:-emacs}
+if ! command -v "$emacs_bin" >/dev/null 2>&1 && [ "$emacs_bin" = emacs ]; then
+  if [ -x /Applications/Emacs.app/Contents/MacOS/Emacs ]; then
+    emacs_bin=/Applications/Emacs.app/Contents/MacOS/Emacs
+  fi
+fi
+
+case $(uname -s) in
+  Darwin)
+    command -v brew >/dev/null 2>&1 || die "install Homebrew (https://brew.sh), then rerun make bootstrap"
+    xcode-select -p >/dev/null 2>&1 || die "install Command Line Tools with xcode-select --install, then rerun"
+    missing=()
+    brew list --versions libvterm >/dev/null 2>&1 || missing+=(libvterm)
+    for pair in cmake:cmake rg:ripgrep fd:fd fzf:fzf; do
+      command -v "${pair%%:*}" >/dev/null 2>&1 || missing+=("${pair##*:}")
+    done
+    if [ ${#missing[@]} -gt 0 ]; then
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install "${missing[@]}"
+    fi
+    if ! command -v "$emacs_bin" >/dev/null 2>&1; then
+      [ "$emacs_bin" = emacs ] || die "EMACS executable not found: $emacs_bin"
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask emacs
+      emacs_bin=/Applications/Emacs.app/Contents/MacOS/Emacs
+    fi
+    ;;
+  Linux)
+    if command -v apt-get >/dev/null 2>&1; then
+      packages=(build-essential cmake libtool-bin libvterm-dev git ca-certificates ripgrep fd-find fzf)
+      command -v "$emacs_bin" >/dev/null 2>&1 || packages+=(emacs)
+      missing=()
+      for package in "${packages[@]}"; do
+        if [ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" != 'install ok installed' ]; then
+          missing+=("$package")
+        fi
+      done
+      if [ ${#missing[@]} -gt 0 ]; then
+        as_root apt-get update
+        as_root apt-get install -y "${missing[@]}"
+      fi
+    elif command -v pacman >/dev/null 2>&1; then
+      packages=(base-devel cmake libtool libvterm git ca-certificates ripgrep fd fzf)
+      command -v "$emacs_bin" >/dev/null 2>&1 || packages+=(emacs)
+      missing=()
+      for package in "${packages[@]}"; do
+        pacman -Q "$package" >/dev/null 2>&1 || missing+=("$package")
+      done
+      [ ${#missing[@]} -eq 0 ] || as_root pacman -S --needed --noconfirm "${missing[@]}"
+    elif command -v dnf >/dev/null 2>&1; then
+      packages=(gcc make cmake libtool libvterm-devel git ca-certificates ripgrep fd-find fzf)
+      command -v "$emacs_bin" >/dev/null 2>&1 || packages+=(emacs)
+      missing=()
+      for package in "${packages[@]}"; do
+        rpm -q "$package" >/dev/null 2>&1 || missing+=("$package")
+      done
+      [ ${#missing[@]} -eq 0 ] || as_root dnf install -y "${missing[@]}"
+    else
+      die "supported Linux package managers: apt-get, pacman, dnf"
+    fi
+    ;;
+  *) die "supported platforms: Linux and macOS" ;;
+esac
+
+command -v "$emacs_bin" >/dev/null 2>&1 || die "EMACS executable not found: $emacs_bin"
+say "provisioning and verifying with $emacs_bin"
+"$emacs_bin" --batch -Q -l scripts/bootstrap.el
+say "ready; start Emacs and run M-x vterm"

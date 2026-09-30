@@ -22,6 +22,7 @@
 
 (package-initialize)
 
+(package-read-all-archive-contents)
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -36,6 +37,20 @@
 ;; Packages can load vterm while being byte-compiled, before its declaration
 ;; below is reached.  Never prompt on stdin during a batch/bootstrap run.
 (setq vterm-always-compile-module t)
+
+(up exec-path-from-shell
+  :ensure t
+  :config (exec-path-from-shell-initialize))
+
+(when (eq system-type 'darwin)
+  (let ((libvterm-prefix
+         (seq-find (lambda (prefix)
+                     (file-exists-p (expand-file-name "include/vterm.h" prefix)))
+                   '("/opt/homebrew/opt/libvterm" "/usr/local/opt/libvterm"))))
+    (when libvterm-prefix
+      (setq vterm-module-cmake-args
+            (concat "-DUSE_SYSTEM_LIBVTERM=ON -DCMAKE_PREFIX_PATH="
+                    (shell-quote-argument libvterm-prefix))))))
 
 ;; Provision packages needed before the declarations below are evaluated.
 (load (setq custom-file (expand-file-name "custom.el" user-emacs-directory)) t)
@@ -149,7 +164,7 @@
             (define-key vterm-mode-map (kbd "C-c C-r") #'agnostic-llm-show-last-response)))
 
 (up darr
-  :vc (:url "https://github.com/rails-to-cosmos/darr.git" :branch "master" :rev :newest)
+  :ensure t
   :bind ("C-x y d i" . darr))
 
 (up agnostic-translate
@@ -177,8 +192,8 @@
 
 (up org-glance
   :bind (("C-x j" . org-glance-transient))
-  :custom ((org-glance-plugins '(llm)))
-  :init (org-glance-init "~/sync/views")
+  :custom ((org-glance-directory (expand-file-name "~/sync/views"))
+           (org-glance-plugins '(llm)))
   :ensure org-glance-llm)
 
 (global-set-key (kbd "C-x y m") #'make-menu)

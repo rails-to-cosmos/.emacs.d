@@ -24,10 +24,6 @@ Handles regular file buffers and Eshell buffers correctly."
 (add-hook 'eshell-mode-hook #'my/eshell-apply-dir-locals)
 (add-hook 'eshell-mode-hook #'direnv)
 
-(up exec-path-from-shell
-  :ensure t
-  :config (exec-path-from-shell-initialize))
-
 (up eshell-prompt-extras
   :ensure t)
 

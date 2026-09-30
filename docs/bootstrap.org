@@ -1,0 +1,29 @@
+#+title: Bootstrap this Emacs configuration
+
+From this checkout, run:
+
+#+begin_src sh
+make bootstrap
+#+end_src
+
+Like Glance's bootstrap, this installs missing host dependencies and can be
+rerun. macOS requires Homebrew and Apple's Command Line Tools; Linux supports
+APT (Debian/Ubuntu), pacman (Arch), and DNF (Fedora). Linux package installs
+use sudo unless running as root. Internet access is required for packages.
+
+The target installs Emacs if absent, CMake, libvterm, native build tools on
+Linux, and the search tools ripgrep, fd, and fzf. It uses an existing Emacs
+when available, including =/Applications/Emacs.app= on macOS. Choose another
+executable with =make bootstrap EMACS=/path/to/emacs=. Emacs must be at least
+29.1 and support dynamic modules; an unsuitable existing build produces an
+explicit error.
+
+It provisions the packages declared by the real =init.el=, checks startup
+using the integration smoke test, and verifies that vterm loads its native
+module and executes a shell command. macOS links Homebrew's libvterm directly.
+Language-specific compilers, language servers, and external services remain
+per-project dependencies.
+
+The checkout becomes =user-emacs-directory= for this run. To use it as your
+normal configuration, keep it at =~/.emacs.d= or launch Emacs with an
+appropriate =--init-directory= (Emacs 29+).

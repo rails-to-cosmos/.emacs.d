@@ -59,3 +59,4 @@ eglot-java-eclipse-jdt-cache
 /elpa/
 .agnostic-llm/
 *.eld
+*#

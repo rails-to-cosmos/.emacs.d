@@ -19,7 +19,10 @@ EMACS_BATCH = $(EMACS) --batch \
 # Find all test .el files (in test/ and src/ subdirs)
 TEST_FILES := $(shell find test src -name 'test-*.el' | sort)
 
-.PHONY: typecheck typecheck-strict clean-elc test test-unit startup-test integration
+.PHONY: bootstrap typecheck typecheck-strict clean-elc test test-unit startup-test integration
+
+bootstrap:
+	@EMACS="$(EMACS)" scripts/bootstrap
 
 # Emacs versions exercised by the podman integration suite.  `latest' tracks
 # the newest image published by silex/emacs, in addition to the pinned matrix.
