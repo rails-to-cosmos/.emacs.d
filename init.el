@@ -8,17 +8,16 @@
 (require 'package)
 (require 'warnings)
 
+(add-to-list 'load-path (expand-file-name "src" user-emacs-directory))
+(require 'mijn-package-policy)
+
 ;; Native compilation of third-party packages can report calls into optional
 ;; integrations as undefined.  Keep the warnings in *Warnings* for diagnosis,
 ;; but do not pop that buffer up during startup.  This changes display only;
 ;; native compiler warnings and errors remain available in the warnings log.
 (add-to-list 'warning-suppress-types '(native-compiler))
 
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                         ("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("rails-to-cosmos" . "https://rails-to-cosmos.github.io/elpa/")))
+(mijn-configure-package-archives)
 
 (package-initialize)
 
@@ -31,7 +30,6 @@
 
 (require 'use-package)
 
-(add-to-list 'load-path (expand-file-name "src" user-emacs-directory))
 (require 'mijn-packages)
 
 ;; Packages can load vterm while being byte-compiled, before its declaration
