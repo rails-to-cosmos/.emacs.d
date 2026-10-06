@@ -39,4 +39,28 @@
           (should (equal applied '(dark light))))
       (delete-directory dir t))))
 
+(ert-deftest mijn-ui-theme-toggle-delegates-desktop-persistence ()
+  "The desktop sync script is the sole writer when it is available."
+  (let* ((dir (make-temp-file "mijn-theme-" t))
+         (mijn-theme-variant-file (expand-file-name "xmobar/theme-variant" dir))
+         (mijn-theme-sync-script (expand-file-name "theme-sync.sh" dir))
+         (started nil)
+         (applied nil))
+    (unwind-protect
+        (progn
+          (make-directory (file-name-directory mijn-theme-variant-file) t)
+          (with-temp-file mijn-theme-variant-file (insert "dark\n"))
+          (with-temp-file mijn-theme-sync-script (insert "#!/bin/sh\n"))
+          (cl-letf (((symbol-function 'mijn-apply-emacs-theme)
+                     (lambda (variant) (setq applied variant)))
+                    ((symbol-function 'start-process)
+                     (lambda (&rest args) (setq started args))))
+            (xmobar-toggle-theme)
+            (should (eq applied 'light))
+            (should (equal started
+                           (list "xmobar-theme-sync" nil "bash"
+                                 mijn-theme-sync-script "light")))
+            (should (eq (mijn-theme-variant) 'dark))))
+      (delete-directory dir t))))
+
 (provide 'test-mijn-ui)

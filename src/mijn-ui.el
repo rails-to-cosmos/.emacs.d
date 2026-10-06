@@ -277,11 +277,11 @@ If KWD is a number, get the corresponding match group."
   (interactive)
   (let ((new (if (eq (mijn-theme-variant) 'light) 'dark 'light)))
     (mijn-apply-emacs-theme new)
-    (mijn-write-theme-variant new)
     (message "Switched to %s theme" new)
-    (when (file-readable-p mijn-theme-sync-script)
-      (start-process "xmobar-theme-sync" nil "bash"
-                     mijn-theme-sync-script (symbol-name new)))))
+    (if (file-readable-p mijn-theme-sync-script)
+        (start-process "xmobar-theme-sync" nil "bash"
+                       mijn-theme-sync-script (symbol-name new))
+      (mijn-write-theme-variant new))))
 
 (global-set-key (kbd "C-x y t x") #'xmobar-toggle-theme)
 
