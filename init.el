@@ -189,10 +189,12 @@
   :commands (table-view-native-display table-view-native-compile))
 
 (up org-glance
+  :demand t
   :bind (("C-x j" . org-glance-transient))
   :custom ((org-glance-directory (expand-file-name "~/sync/views"))
            (org-glance-plugins '(llm)))
-  :ensure org-glance-llm)
+  :ensure org-glance-llm
+  :config (org-glance-init))
 
 (global-set-key (kbd "C-x y m") #'make-menu)
 (global-set-key (kbd "C-x y r a") #'table-view-ray-actors)
