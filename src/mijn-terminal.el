@@ -6,6 +6,15 @@
 
 (up vterm
   :ensure nil)
+(require 'vterm)
+
+(defun my/wrike-refresh-auth-token ()
+  "Refresh the Wrike auth token in a new vterm buffer."
+  (interactive)
+  (let ((default-directory (expand-file-name "~/"))
+        (vterm-shell "npx @wdt/auth-token-refresh")
+        (vterm-kill-buffer-on-exit nil))
+    (vterm "*wrike-token-refresh*")))
 
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))
