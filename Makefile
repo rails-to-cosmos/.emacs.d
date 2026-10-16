@@ -19,10 +19,18 @@ EMACS_BATCH = $(EMACS) --batch \
 # Find all test .el files (in test/ and src/ subdirs)
 TEST_FILES := $(shell find test src -name 'test-*.el' | sort)
 
-.PHONY: bootstrap typecheck typecheck-strict clean-elc test test-unit startup-test integration
+.PHONY: bootstrap keyboard-setup keyboard-check typecheck typecheck-strict clean-elc test test-unit startup-test integration
 
 bootstrap:
 	@EMACS="$(EMACS)" scripts/bootstrap
+
+keyboard-setup:
+	@rm -f "$(CURDIR)/src/mijn-darwin.elc"
+	@$(MAKE) keyboard-check
+
+keyboard-check:
+	@"$(EMACS)" --batch -Q -L "$(CURDIR)/src" -l mijn-darwin \
+	  --eval "(unless (mijn-darwin-modifiers-ready-p) (error \"macOS Emacs modifier policy is not configured\"))"
 
 # Emacs versions exercised by the podman integration suite.  `latest' tracks
 # the newest image published by silex/emacs, in addition to the pinned matrix.

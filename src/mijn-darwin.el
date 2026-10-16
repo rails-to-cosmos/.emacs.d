@@ -1,43 +1,41 @@
 ;; -*- lexical-binding: t; -*-
 
-(require 'json)
-(require 'seq)
-
 ;; These are defined only in macOS Emacs builds; declare them so byte-compiling
 ;; on other platforms does not warn about free variables.
 (defvar mac-command-modifier)
 (defvar mac-right-command-modifier)
 (defvar mac-option-modifier)
+(defvar mac-control-modifier)
+(defvar ns-command-modifier)
+(defvar ns-right-command-modifier)
+(defvar ns-alternate-modifier)
+(defvar ns-control-modifier)
 (defvar mac-redisplay-dont-reset-vscroll)
 (defvar ns-use-native-fullscreen)
 (defvar ns-pop-up-frames)
 (defvar alert-default-style)
 
-(defun mijn-darwin-caps-is-command-p (&optional file)
-  "Whether FILE's selected Karabiner profile maps Caps Lock to left Command.
-FILE defaults to Karabiner's configuration on this machine."
-  (condition-case nil
-      (let* ((json-object-type 'alist)
-             (json-array-type 'list)
-             (json-key-type 'symbol)
-             (json-false nil)
-             (json-null nil)
-             (config (json-read-file
-                      (or file (expand-file-name "~/.config/karabiner/karabiner.json"))))
-             (profile (seq-find (lambda (profile) (alist-get 'selected profile))
-                                (alist-get 'profiles config))))
-        (seq-some
-         (lambda (mapping)
-           (and (equal (alist-get 'key_code (alist-get 'from mapping)) "caps_lock")
-                (equal (alist-get 'to mapping) '(((key_code . "left_command"))))))
-         (alist-get 'simple_modifications profile)))
-    (error nil)))
+(defun mijn-darwin-modifiers-ready-p ()
+  "Whether macOS Emacs keeps Control native and Command/Option as Meta."
+  (and (eq system-type 'darwin)
+       (eq mac-control-modifier 'control)
+       (eq ns-control-modifier 'control)
+       (eq mac-command-modifier 'meta)
+       (eq ns-command-modifier 'meta)
+       (eq mac-right-command-modifier 'left)
+       (eq ns-right-command-modifier 'left)
+       (eq mac-option-modifier 'meta)
+       (eq ns-alternate-modifier 'meta)))
 
 (when (eq system-type 'darwin)
-  (let ((caps-is-command (mijn-darwin-caps-is-command-p)))
-    (setq mac-command-modifier (if caps-is-command 'control 'meta)
-          mac-right-command-modifier (if caps-is-command 'meta 'left)))
-  (setq mac-option-modifier 'meta
+  (setq mac-control-modifier 'control
+        ns-control-modifier 'control
+        mac-command-modifier 'meta
+        ns-command-modifier 'meta
+        mac-right-command-modifier 'left
+        ns-right-command-modifier 'left
+        mac-option-modifier 'meta
+        ns-alternate-modifier 'meta
         ;; sane trackpad/mouse scroll settings
         mac-redisplay-dont-reset-vscroll t
         ;; mac-mouse-wheel-smooth-scroll nil

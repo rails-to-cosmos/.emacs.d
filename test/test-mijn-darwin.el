@@ -4,34 +4,35 @@
 (require 'cl-lib)
 (require 'mijn-darwin)
 
-(ert-deftest test-darwin-karabiner-selected-caps-mapping ()
-  (let ((file (make-temp-file "karabiner-test-")))
-    (unwind-protect
-        (dolist (case
-                 '(("{\"profiles\":[{\"selected\":true,\"simple_modifications\":[{\"from\":{\"key_code\":\"caps_lock\"},\"to\":[{\"key_code\":\"left_command\"}]}]}]}" . t)
-                   ("{\"profiles\":[{\"selected\":false,\"simple_modifications\":[{\"from\":{\"key_code\":\"caps_lock\"},\"to\":[{\"key_code\":\"left_command\"}]}]},{\"selected\":true}]}" . nil)
-                   ("{\"profiles\":[{\"selected\":true,\"simple_modifications\":[{\"from\":{\"key_code\":\"caps_lock\"},\"to\":[{\"key_code\":\"left_control\"}]}]}]}" . nil)
-                   ("{}" . nil)
-                   ("invalid json" . nil)))
-          (with-temp-file file (insert (car case)))
-          (should (eq (mijn-darwin-caps-is-command-p file) (cdr case))))
-      (delete-file file))
-    (should-not (mijn-darwin-caps-is-command-p file))))
-
-(ert-deftest test-darwin-modifiers-with-and-without-karabiner ()
-  (dolist (remapped '(nil t))
+(ert-deftest test-darwin-modifiers-are-independent-of-karabiner-and-prior-state ()
+  (dolist (old '(control meta super nil))
     (let ((system-type 'darwin)
-          (mac-command-modifier nil)
-          (mac-right-command-modifier nil)
-          (mac-option-modifier nil))
+          (mac-control-modifier old)
+          (mac-command-modifier old)
+          (mac-right-command-modifier old)
+          (mac-option-modifier old)
+          (ns-control-modifier old)
+          (ns-command-modifier old)
+          (ns-right-command-modifier old)
+          (ns-alternate-modifier old))
       (cl-letf (((symbol-function 'json-read-file)
-                 (lambda (&rest _)
-                   (when remapped
-                     '((profiles . (((selected . t)
-                                     (simple_modifications .
-                                      (((from . ((key_code . "caps_lock")))
-                                        (to . (((key_code . "left_command")))))))))))))))
+                 (lambda (&rest _) (ert-fail "keyboard policy read historical Karabiner settings"))))
         (load "mijn-darwin" nil t))
-      (should (eq mac-command-modifier (if remapped 'control 'meta)))
-      (should (eq mac-right-command-modifier (if remapped 'meta 'left)))
-      (should (eq mac-option-modifier 'meta)))))
+      (should (mijn-darwin-modifiers-ready-p))
+      (should (equal (mapcar #'symbol-value
+                            '(mac-control-modifier ns-control-modifier
+                              mac-command-modifier ns-command-modifier
+                              mac-right-command-modifier ns-right-command-modifier
+                              mac-option-modifier ns-alternate-modifier))
+                     '(control control meta meta left left meta meta)))
+      (setq ns-control-modifier 'meta)
+      (should-not (mijn-darwin-modifiers-ready-p)))))
+
+(ert-deftest test-darwin-modifiers-leave-other-platforms-unchanged ()
+  (let ((system-type 'gnu/linux)
+        (mac-command-modifier 'super)
+        (mac-control-modifier 'control))
+    (load "mijn-darwin" nil t)
+    (should (eq mac-command-modifier 'super))
+    (should (eq mac-control-modifier 'control))
+    (should-not (mijn-darwin-modifiers-ready-p))))
