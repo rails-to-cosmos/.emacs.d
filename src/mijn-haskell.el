@@ -18,12 +18,14 @@
   ;; smartparens / company / yasnippet come from `mijn-prog-setup'; keep only
   ;; the haskell-specific hooks here.
   :hook ((haskell-mode . eglot-ensure)
-         (haskell-mode . xref-etags-mode))
+         (haskell-mode . xref-etags-mode)
+         (haskell-literate-mode . eglot-ensure)
+         (haskell-literate-mode . xref-etags-mode))
 
   :custom
 
   ;; from https://github.com/jimenezrick/emacs.d/blob/master/packages-haskell.el
-  (haskell-process-type 'stack-ghci)
+  (haskell-process-type 'cabal-repl)
   (haskell-process-load-or-reload-prompt t)
   (haskell-process-auto-import-loaded-modules t)
   (haskell-process-log t)
