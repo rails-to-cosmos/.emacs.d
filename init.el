@@ -119,6 +119,7 @@
 (require 'repos)
 
 (require 'mijn-darwin)
+(require 'wrike-token-refresh)
 
 (require 'mijn-completion)
 (require 'mijn-org)
