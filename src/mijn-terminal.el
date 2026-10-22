@@ -8,6 +8,13 @@
   :ensure nil)
 (require 'vterm)
 
+(defun mijn-vterm-setup ()
+  "Keep displayed rows aligned with vterm's terminal grid."
+  ;; Vterm initially sizes its PTY with `window-body-height'.
+  (setq-local line-spacing 0))
+
+(add-hook 'vterm-mode-hook #'mijn-vterm-setup)
+
 (defun my/wrike-refresh-auth-token ()
   "Refresh the Wrike auth token in a new vterm buffer."
   (interactive)
