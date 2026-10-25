@@ -144,6 +144,7 @@
 (require 'mijn-java)
 (require 'mijn-c)
 (require 'mijn-rust)
+(require 'mijn-swift)
 (require 'mijn-elm)
 (require 'mijn-lisette)
 (require 'mijn-nix)

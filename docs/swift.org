@@ -1,0 +1,31 @@
+#+title: Swift development
+
+=mijn-swift= installs =swift-mode= through the shared =up= package policy
+and starts Eglot in Swift buffers. Existing programming hooks provide
+Company completion, snippets, and structural editing. Eglot provides
+diagnostics, navigation, documentation, and refactoring through SourceKit-LSP.
+
+On macOS the server runs through =/usr/bin/xcrun sourcekit-lsp=, using the
+toolchain selected by =xcode-select=. Other systems and remote buffers use
+=sourcekit-lsp= on PATH. Install a Swift toolchain on those hosts.
+
+| Key       | Action                         |
+|-----------+--------------------------------|
+| M-.       | Go to definition               |
+| M-,       | Return from definition         |
+| C-c C-f   | Format buffer through Eglot     |
+| C-c C-r   | Rename symbol                  |
+| C-c C-a   | Code actions                   |
+| C-c C-c   | Compile (enter =make check=)    |
+
+=M-x run-swift= opens the Swift REPL. Formatting is explicit; saving a
+buffer does not reformat it automatically.
+
+Project-wide intelligence needs build settings. SourceKit-LSP supports
+Swift packages and compilation databases. Standalone files can receive
+limited results, especially for declarations in other files. The
+=lid-awake= Makefile builds with =swiftc=; it currently has no compilation
+database, so cross-file navigation may be incomplete.
+
+References: [[https://github.com/swift-emacs/swift-mode][swift-mode]],
+[[https://github.com/swiftlang/sourcekit-lsp][SourceKit-LSP]].
