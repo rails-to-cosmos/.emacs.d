@@ -4,6 +4,7 @@ Wiki index for design notes and audits on this configuration.
 
 * Documents
 
+- [[file:swift.org][Swift development]] — SourceKit-LSP, formatting, navigation, and builds.
 - [[file:config-reorg.org][Configuration reorganization proposal]] — better separation of packages
   across files: a shared programming baseline, central keybindings, a single
   provisioning source of truth, and dead-code pruning.
