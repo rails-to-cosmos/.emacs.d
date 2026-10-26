@@ -282,8 +282,7 @@ With prefix argument RECONFIGURE, choose the GUI/terminal profile again."
          (file (expand-file-name
                 (if (string= profile "gui")
                     (or saved-path wrike-token-refresh-default-env-file)
-                  (read-file-name "Environment file: " nil
-                                  (or saved-path wrike-token-refresh-default-env-file)))))
+                  (or saved-path (read-file-name "Environment file: " nil wrike-token-refresh-default-env-file)))))
          (current (wrike-token-refresh--read-env file))
          (updates (make-hash-table :test 'equal))
          (resolved (make-hash-table :test 'equal))
