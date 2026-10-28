@@ -1,6 +1,8 @@
 ;; -*- lexical-binding: t; -*-
 (require 'f)
 
+(setq save-abbrevs 'silently)
+
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)
