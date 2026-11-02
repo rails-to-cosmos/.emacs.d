@@ -15,6 +15,7 @@
 (require 'dired-plus)
 (require 'dired)
 (require 'dired-x)
+(require 'seq)
 
 ;; http://pragmaticemacs.com/emacs/case-insensitive-sorting-in-dired-on-os-x/
 ;; using ls-lisp with these settings gives case-insensitve
@@ -154,16 +155,90 @@ If it's a directory, apply recursively to all files and subdirectories."
        (replace-regexp-in-string "^-\\|-$" "")
        (replace-regexp-in-string "^_\\|_$" "")))
 
+(defun my-normalized-path (path)
+  "Return PATH with a lowercase, dash-separated final component.
+Preserve a leading dot and the final extension separator."
+  (let* ((name (file-name-nondirectory (directory-file-name path)))
+         (hidden (and (string-prefix-p "." name) (> (length name) 1)))
+         (body (if hidden (substring name 1) name))
+         (raw-extension (unless (file-directory-p path)
+                          (file-name-extension body)))
+         (extension (and raw-extension
+                         (not (string-empty-p raw-extension))
+                         raw-extension))
+         (base (if extension (file-name-sans-extension body) body))
+         (clean-base (my-clean-file-name (my-transliterate-ru-to-en base)))
+         (clean-extension
+          (and extension
+               (my-clean-file-name (my-transliterate-ru-to-en extension)))))
+    (when (string-empty-p clean-base)
+      (user-error "Cannot normalize empty file name: %s" path))
+    (expand-file-name
+     (concat (and hidden ".") clean-base
+             (and clean-extension (concat "." clean-extension)))
+     (file-name-directory path))))
+
 (defun my-clean-file-name-preserve-extension (path)
-  "Rename PATH based on cleaned-up name, preserving extension if file."
-  (let* ((parent (file-name-directory path))
-         (ext (if (file-directory-p path) "" (file-name-extension path t)))
-         (base (file-name-base path))
-         (new-name (concat (my-clean-file-name base) ext))
-         (new-path (expand-file-name new-name parent)))
+  "Rename PATH to its normalized form, preserving the extension separator."
+  (let ((new-path (my-normalized-path path)))
     (unless (string= path new-path)
       (rename-file path new-path))
     new-path))
+
+(defun my--directory-normalization-plan (directory recursive)
+  "Return a bottom-up rename plan for DIRECTORY's entries.
+Include descendants when RECURSIVE is non-nil, without following symlinks."
+  (let (plan)
+    (dolist (path (directory-files directory t directory-files-no-dot-files-regexp t))
+      (when (and recursive (file-directory-p path) (not (file-symlink-p path)))
+        (setq plan
+              (nconc plan (my--directory-normalization-plan path recursive))))
+      (setq plan (nconc plan (list (cons path (my-normalized-path path))))))
+    plan))
+
+(defun my--validate-directory-normalization-plan (plan)
+  "Signal an error if two entries in PLAN have the same target."
+  (let ((targets (make-hash-table :test #'equal)))
+    (dolist (rename plan)
+      (let* ((source (car rename))
+             (target (cdr rename))
+             (other (gethash target targets)))
+        (when (and other (not (equal source other)))
+          (user-error "Both %s and %s normalize to %s" source other target))
+        (puthash target source targets)))))
+
+(defun my--rename-path-case-safely (source target)
+  "Rename SOURCE to TARGET, including case-only renames."
+  (if (and (file-exists-p target) (file-equal-p source target))
+      (let ((temporary
+             (make-temp-name
+              (expand-file-name ".normalize-name-" (file-name-directory source)))))
+        (rename-file source temporary)
+        (condition-case error-data
+            (rename-file temporary target)
+          (error
+           (rename-file temporary source)
+           (signal (car error-data) (cdr error-data)))))
+    (rename-file source target)))
+
+(defun my-normalize-directory-names (&optional recursive)
+  "Normalize every file and directory name under `default-directory'.
+Names become lowercase, Latin, and dash-separated.  With prefix argument
+RECURSIVE, also normalize descendants.  Hidden entries keep their leading dot."
+  (interactive "P")
+  (let* ((plan (my--directory-normalization-plan default-directory recursive))
+         (renames (seq-filter (lambda (rename)
+                                (not (equal (car rename) (cdr rename))))
+                              plan)))
+    (my--validate-directory-normalization-plan plan)
+    (dolist (rename renames)
+      (my--rename-path-case-safely (car rename) (cdr rename)))
+    (when (derived-mode-p 'dired-mode)
+      (revert-buffer))
+    (message "Normalized %d name%s%s"
+             (length renames)
+             (if (= (length renames) 1) "" "s")
+             (if recursive " recursively" ""))))
 
 (defun my-dired-normalize-permissions ()
   (interactive)

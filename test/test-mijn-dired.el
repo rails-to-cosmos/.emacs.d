@@ -25,6 +25,11 @@
 ;; Load just the pure functions
 (test--eval-defun-from-file test--dired-file 'my-clean-file-name)
 (test--eval-defun-from-file test--dired-file 'my-transliterate-ru-to-en)
+(test--eval-defun-from-file test--dired-file 'my-normalized-path)
+(test--eval-defun-from-file test--dired-file 'my--directory-normalization-plan)
+(test--eval-defun-from-file test--dired-file 'my--validate-directory-normalization-plan)
+(test--eval-defun-from-file test--dired-file 'my--rename-path-case-safely)
+(test--eval-defun-from-file test--dired-file 'my-normalize-directory-names)
 
 ;; ---------------------------------------------------------------------------
 ;; my-clean-file-name
@@ -57,6 +62,66 @@
 (ert-deftest test-clean-file-name-already-clean ()
   "Should not change a name that is already clean."
   (should (string= "clean-name" (my-clean-file-name "clean-name"))))
+
+;; ---------------------------------------------------------------------------
+;; my-normalize-directory-names
+;; ---------------------------------------------------------------------------
+
+(ert-deftest test-normalized-path-transliterates-and-preserves-extension ()
+  "The normalized path should be Latin, lowercase, and keep its extension."
+  (let ((directory (make-temp-file "normalize-name-test-" t)))
+    (unwind-protect
+        (progn
+          (should
+           (equal (my-normalized-path
+                   (expand-file-name "Привет Мир.TXT" directory))
+                  (expand-file-name "privet-mir.txt" directory)))
+          (should
+           (equal (my-normalized-path
+                   (expand-file-name ".Привет Мир.TXT" directory))
+                  (expand-file-name ".privet-mir.txt" directory))))
+      (delete-directory directory t))))
+
+(ert-deftest test-normalize-directory-names-is-nonrecursive-by-default ()
+  "Without a prefix, normalize immediate entries and leave descendants alone."
+  (let ((directory (make-temp-file "normalize-name-test-" t)))
+    (unwind-protect
+        (let* ((default-directory directory)
+               (subdirectory (expand-file-name "Some Folder" directory))
+               (nested (expand-file-name "Nested File.TXT" subdirectory)))
+          (make-directory subdirectory)
+          (with-temp-file nested)
+          (with-temp-file (expand-file-name "Top File.TXT" directory))
+          (my-normalize-directory-names)
+          (should (file-exists-p (expand-file-name "top-file.txt" directory)))
+          (should (file-exists-p
+                   (expand-file-name "some-folder/Nested File.TXT" directory))))
+      (delete-directory directory t))))
+
+(ert-deftest test-normalize-directory-names-recursively-transliterates ()
+  "With a prefix, normalize directory names and all descendants."
+  (let ((directory (make-temp-file "normalize-name-test-" t)))
+    (unwind-protect
+        (let* ((default-directory directory)
+               (subdirectory (expand-file-name "Папка Тест" directory)))
+          (make-directory subdirectory)
+          (with-temp-file (expand-file-name "Файл Один.TXT" subdirectory))
+          (my-normalize-directory-names t)
+          (should (file-exists-p
+                   (expand-file-name "papka-test/fail-odin.txt" directory))))
+      (delete-directory directory t))))
+
+(ert-deftest test-normalize-directory-names-rejects-collisions ()
+  "Reject a batch before renaming when two entries share a normalized name."
+  (let ((directory (make-temp-file "normalize-name-test-" t)))
+    (unwind-protect
+        (let ((default-directory directory))
+          (with-temp-file (expand-file-name "A B" directory))
+          (with-temp-file (expand-file-name "a-b" directory))
+          (should-error (my-normalize-directory-names) :type 'user-error)
+          (should (file-exists-p (expand-file-name "A B" directory)))
+          (should (file-exists-p (expand-file-name "a-b" directory))))
+      (delete-directory directory t))))
 
 ;; ---------------------------------------------------------------------------
 ;; my-transliterate-ru-to-en
