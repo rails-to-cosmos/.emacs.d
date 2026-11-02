@@ -110,21 +110,6 @@ From https://www.reddit.com/r/emacs/comments/cgbpvl/opening_media_files_straight
 
 (add-hook 'dired-after-readin-hook #'dired-smart-sort)
 
-(defun my-dired-apply-recursively (fn)
-  "Apply FN to the file or directory at point in Dired.
-If it's a directory, apply recursively to all files and subdirectories."
-  (interactive)
-  (let ((path (dired-get-filename)))
-    (my--apply-recursively fn path)
-    (revert-buffer)))
-
-(defun my--apply-recursively (fn path)
-  "Helper to apply FN to PATH and its contents recursively if directory."
-  (let ((new-path (funcall fn path))) ; apply function, and get potentially renamed path
-    (when (file-directory-p new-path)
-      (dolist (entry (directory-files new-path t "^[^.]" t)) ; skip . and ..
-        (my--apply-recursively fn entry)))))
-
 (defun dired-set-keys ()
   (define-key dired-mode-map "/" #'dired-narrow-fuzzy)
   (define-key dired-mode-map "~" #'(lambda () (interactive) (dired "~")))
@@ -145,10 +130,10 @@ If it's a directory, apply recursively to all files and subdirectories."
 
 (require 'dash)
 
-(defun my-clean-file-name (name)
-  "Clean up NAME: lowercase, remove [hash], replace non-alphanumerics with dashes."
+(defun my--normalize-name (name)
+  "Transliterate NAME and return it lowercase and dash-separated."
   (->> name
-       (replace-regexp-in-string " \\[[^]]+\\]$" "") ; remove trailing [hash]
+       my-transliterate-ru-to-en
        downcase
        (replace-regexp-in-string "[^а-яa-z0-9]+" "-")
        (replace-regexp-in-string "-+" "-")
@@ -167,23 +152,15 @@ Preserve a leading dot and the final extension separator."
                          (not (string-empty-p raw-extension))
                          raw-extension))
          (base (if extension (file-name-sans-extension body) body))
-         (clean-base (my-clean-file-name (my-transliterate-ru-to-en base)))
+         (clean-base (my--normalize-name base))
          (clean-extension
-          (and extension
-               (my-clean-file-name (my-transliterate-ru-to-en extension)))))
+          (and extension (my--normalize-name extension))))
     (when (string-empty-p clean-base)
       (user-error "Cannot normalize empty file name: %s" path))
     (expand-file-name
      (concat (and hidden ".") clean-base
              (and clean-extension (concat "." clean-extension)))
      (file-name-directory path))))
-
-(defun my-clean-file-name-preserve-extension (path)
-  "Rename PATH to its normalized form, preserving the extension separator."
-  (let ((new-path (my-normalized-path path)))
-    (unless (string= path new-path)
-      (rename-file path new-path))
-    new-path))
 
 (defun my--directory-normalization-plan (directory recursive)
   "Return a bottom-up rename plan for DIRECTORY's entries.
@@ -196,16 +173,34 @@ Include descendants when RECURSIVE is non-nil, without following symlinks."
       (setq plan (nconc plan (list (cons path (my-normalized-path path))))))
     plan))
 
-(defun my--validate-directory-normalization-plan (plan)
-  "Signal an error if two entries in PLAN have the same target."
-  (let ((targets (make-hash-table :test #'equal)))
+(defun my--numbered-normalized-target (source target number)
+  "Add NUMBER before TARGET's extension, using SOURCE to detect directories."
+  (let* ((name (file-name-nondirectory target))
+         (extension (unless (file-directory-p source)
+                      (file-name-extension name t)))
+         (base (if extension (file-name-sans-extension name) name)))
+    (expand-file-name (format "%s-%d%s" base number (or extension ""))
+                      (file-name-directory target))))
+
+(defun my--disambiguate-directory-normalization-plan (plan)
+  "Return PLAN with deterministic numeric suffixes for duplicate targets.
+Already-normalized entries retain their names."
+  (let ((targets (make-hash-table :test #'equal))
+        result)
     (dolist (rename plan)
-      (let* ((source (car rename))
-             (target (cdr rename))
-             (other (gethash target targets)))
-        (when (and other (not (equal source other)))
-          (user-error "Both %s and %s normalize to %s" source other target))
-        (puthash target source targets)))))
+      (when (equal (car rename) (cdr rename))
+        (puthash (cdr rename) t targets)))
+    (dolist (rename plan (nreverse result))
+      (let ((source (car rename))
+            (target (cdr rename)))
+        (unless (equal source target)
+          (let ((number 2))
+            (while (gethash target targets)
+              (setq target
+                    (my--numbered-normalized-target source (cdr rename) number))
+              (setq number (1+ number)))))
+        (puthash target t targets)
+        (push (cons source target) result)))))
 
 (defun my--rename-path-case-safely (source target)
   "Rename SOURCE to TARGET, including case-only renames."
@@ -226,11 +221,12 @@ Include descendants when RECURSIVE is non-nil, without following symlinks."
 Names become lowercase, Latin, and dash-separated.  With prefix argument
 RECURSIVE, also normalize descendants.  Hidden entries keep their leading dot."
   (interactive "P")
-  (let* ((plan (my--directory-normalization-plan default-directory recursive))
+  (let* ((plan
+          (my--disambiguate-directory-normalization-plan
+           (my--directory-normalization-plan default-directory recursive)))
          (renames (seq-filter (lambda (rename)
                                 (not (equal (car rename) (cdr rename))))
                               plan)))
-    (my--validate-directory-normalization-plan plan)
     (dolist (rename renames)
       (my--rename-path-case-safely (car rename) (cdr rename)))
     (when (derived-mode-p 'dired-mode)
@@ -272,6 +268,6 @@ RECURSIVE, also normalize descendants.  Hidden entries keep their leading dot."
   (interactive)
   (my-dired-normalize-permissions)
   (my-dired-cleanup)
-  (my-dired-apply-recursively #'my-clean-file-name-preserve-extension))
+  (my-normalize-directory-names t))
 
 (provide 'mijn-dired)
