@@ -22,6 +22,8 @@
 ;; sorting on OS X
 (require 'ls-lisp)
 
+(setq dired-listing-switches "-alh")
+
 (define-key global-map (kbd "C-x d") #'dired-default-directory)
 
 (eval-after-load "dired-aux"
