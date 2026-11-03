@@ -146,6 +146,7 @@
 (require 'mijn-rust)
 (require 'mijn-swift)
 (require 'mijn-elm)
+(require 'mijn-typescript)
 (require 'mijn-lisette)
 (require 'mijn-nix)
 (require 'mijn-docker)
