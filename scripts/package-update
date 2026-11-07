@@ -1,0 +1,419 @@
+#!/usr/bin/env python3
+"""Stage and review package updates; package Lisp runs only in Podman until apply."""
+import argparse
+import contextlib
+import datetime
+import difflib
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+
+ROOT = Path(__file__).resolve().parent.parent
+STAGE = ROOT / '.cache/package-update'
+SNAPSHOTS = Path.home() / '.cache/emacs-package-snapshots'
+PATTERNS = {
+    'process': r'\b(?:call-process|start-process|shell-command|make-process)\b',
+    'network': r'\b(?:url-retrieve|open-network-stream|make-network-process)\b',
+    'write (check destination)': r'\b(?:write-region|with-temp-file|delete-file|rename-file|copy-file|make-directory)\b',
+    'dynamic evaluation/data': r'\b(?:eval|intern|base64-decode-string|read|read-from-string)\b',
+    'autoload/compile side effect': r'###autoload|\b(?:eval-when-compile|eval-and-compile|autoload|load|require)\b',
+}
+
+
+def run(*args, **kwargs):
+    return subprocess.run([str(x) for x in args], check=True, **kwargs)
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def safe_tree(tree):
+    for path in tree.rglob('*'):
+        if path.relative_to(tree).parts[0] == 'gnupg':
+            continue
+        if path.is_symlink():
+            boundary = tree / path.relative_to(tree).parts[0]
+            if not path.resolve().is_relative_to(boundary.resolve()):
+                raise ValueError(f'Escaping symlink: {path}')
+            continue
+        if not (path.is_file() or path.is_dir()):
+            raise ValueError(f'Unsupported file in package tree: {path}')
+
+
+def inventory(tree):
+    """Hash names and bytes, including compiled/native files; never evaluate Lisp."""
+    safe_tree(tree)
+    origins = json.loads((tree / 'origins.json').read_text()) if (tree / 'origins.json').exists() else {}
+    rows = []
+    for folder in sorted(tree.iterdir()):
+        if not folder.is_dir() or folder.name in ('archives', 'gnupg'):
+            continue
+        descriptors = list(folder.glob('*-pkg.el'))
+        if len(descriptors) != 1:
+            raise ValueError(f'Expected one package descriptor: {folder}')
+        match = re.search(r'\(define-package\s+"([\w+-]+)"\s+"([^"\\]+)"', descriptors[0].read_text())
+        if not match:
+            raise ValueError(f'Cannot read descriptor: {descriptors[0]}')
+        name, version = match.groups()
+        h = hashlib.sha256()
+        for path in sorted(p for p in folder.rglob('*') if p.is_file() or p.is_symlink()):
+            h.update(path.relative_to(folder).as_posix().encode() + b'\0')
+            h.update(b'link\0' + os.readlink(path).encode() if path.is_symlink() else bytes.fromhex(digest(path)))
+        rows.append((name, version, origins.get(folder.name, 'unknown'), h.hexdigest()))
+    return sorted(rows)
+
+
+def lock_text(tree):
+    return (';; Package tree SHA256 includes relative filenames and all file bytes.\n'
+            ';; unknown = historical archive provenance was not recorded.\n(\n' +
+            ''.join(f' ({name} {json.dumps(version)} {json.dumps(archive)} "{sha}")\n'
+                    for name, version, archive, sha in inventory(tree)) + ')\n')
+
+
+def write_lock():
+    target = ROOT / 'lock/packages.el'
+    target.parent.mkdir(exist_ok=True)
+    target.write_text(lock_text(ROOT / 'elpa'))
+
+
+def verify_lock():
+    if (ROOT / 'lock/packages.el').read_text() != lock_text(ROOT / 'elpa'):
+        raise SystemExit('Package tree differs from lock/packages.el')
+
+
+FETCH_LISP = r''';;; -*- lexical-binding: t; -*-
+(require 'package)
+(require 'json)
+(load "/work/policy.el" nil t)
+(setq user-emacs-directory "/work/" package-user-dir "/work/elpa"
+      package-gnupghome-dir "/work/elpa/gnupg")
+(mijn-configure-package-archives)
+(package-initialize t)
+(when (file-directory-p "/work/elpa/archives")
+  (delete-directory "/work/elpa/archives" t))
+(setq url-request-timeout 60)
+(package-refresh-contents)
+(dolist (archive package-archives)
+  (unless (file-exists-p (concat "/work/elpa/archives/" (car archive) "/archive-contents"))
+    (error "Archive refresh failed: %s" (car archive))))
+(let* ((targets (if (getenv "REBUILD")
+                    (mapcar (lambda (p) (or (cadr (assq (car p) package-archive-contents))
+                                           (error "Unavailable package: %s" (car p)))) package-alist)
+                  (mapcar (lambda (name) (cadr (assq name package-archive-contents)))
+                          (package--upgradeable-packages))))
+       (package-alist (if (getenv "REBUILD") '((package-update-empty)) package-alist))
+       (transaction (reverse (package--sort-by-dependence
+                              (package-compute-transaction
+                               targets (apply #'append (mapcar #'package-desc-reqs targets))))))
+       entries)
+  (make-directory "/work/stage/downloads" t)
+  (dolist (desc transaction)
+    (let* ((file (concat (package-desc-full-name desc) (package-desc-suffix desc)))
+           (archive (package-desc-archive desc))
+           (location (package-archive-base desc)))
+      (unless (string-match-p "\\`[A-Za-z0-9+_.-]+\\'" file) (error "Unsafe name"))
+      (message "Fetching %s from %s" file archive)
+      (package--with-response-buffer location :file file
+        (unless (member archive package-unsigned-archives)
+          (let ((sigs (package--check-signature location file (buffer-string))))
+            (unless sigs (error "Signature required"))
+            (with-temp-file (concat "/work/stage/downloads/" file ".signed")
+              (insert (mapconcat #'epg-signature-to-string sigs "\n")))))
+        (let ((coding-system-for-write 'no-conversion))
+          (write-region (point-min) (point-max) (concat "/work/stage/downloads/" file))))
+      (push `((name . ,(symbol-name (package-desc-name desc)))
+              (version . ,(package-version-join (package-desc-version desc)))
+              (archive . ,archive) (file . ,file)) entries)))
+  (with-temp-file "/work/stage/manifest.json"
+    (insert (json-encode (vconcat (nreverse entries))))))
+'''
+
+INSTALL_LISP = r''';;; -*- lexical-binding: t; -*-
+(require 'package)
+(setq user-emacs-directory "/work/" package-user-dir "/work/elpa"
+      package-native-compile nil vterm-always-compile-module t)
+(package-initialize)
+(advice-add 'package-install-from-archive :override
+            (lambda (&rest _) (error "Unstaged dependency refused")))
+(dolist (file command-line-args-left)
+  (package-install-file (concat "/work/stage/downloads/" file)))
+'''
+
+
+@contextlib.contextmanager
+def container(work, script, args=(), rebuild=False):
+    """Copy inputs into container storage; expose no host directories or credentials."""
+    version = os.environ.get('TEST_EMACS_VERSION', '31.1')
+    image = f'emacs-config-test:{version}'
+    run('podman', 'build', '--build-arg', f'EMACS_VERSION={version}', '-t', image,
+        '-f', ROOT / 'test/integration/Containerfile', ROOT)
+    (work / 'run.el').write_text(script)
+    command = ['podman', 'create', '--cap-drop=all', '--security-opt=no-new-privileges',
+               '--pids-limit=512', '--entrypoint=emacs']
+    if rebuild:
+        command += ['-e', 'REBUILD=1']
+    result = run(*command, image, '--batch', '-Q', '-l', '/work/run.el', *args,
+                 capture_output=True, text=True)
+    cid = result.stdout.strip()
+    try:
+        run('podman', 'cp', str(work) + '/.', cid + ':/work')
+        run('podman', 'start', '-a', cid, timeout=1800)
+        status = run('podman', 'inspect', '--format', '{{.State.ExitCode}}', cid,
+                     capture_output=True, text=True)
+        if status.stdout.strip() != '0':
+            raise RuntimeError('Package container failed')
+        yield cid
+    finally:
+        run('podman', 'rm', '-f', cid)
+
+
+def copy_packages(destination):
+    safe_tree(ROOT / 'elpa')
+    shutil.copytree(ROOT / 'elpa', destination, symlinks=True, ignore=shutil.ignore_patterns('gnupg'))
+    # Do not copy personal signing keys into a networked package container.
+    shutil.rmtree(destination / 'gnupg', ignore_errors=True)
+
+
+def fetch(rebuild=False):
+    with tempfile.TemporaryDirectory() as temp:
+        work = Path(temp)
+        copy_packages(work / 'elpa')
+        shutil.copyfile(ROOT / 'src/mijn-package-policy.el', work / 'policy.el')
+        with container(work, FETCH_LISP, rebuild=rebuild) as cid:
+            run('podman', 'cp', cid + ':/work/stage', work / 'result')
+        result = work / 'result'
+        entries = json.loads((result / 'manifest.json').read_text())
+        for entry in entries:
+            entry['sha256'] = digest(result / 'downloads' / entry['file'])
+        (result / 'manifest.json').write_text(json.dumps(entries, indent=2) + '\n')
+        (result / 'baseline.el').write_text(lock_text(ROOT / 'elpa'))
+        (result / 'rebuild').write_text(str(rebuild))
+        if STAGE.exists():
+            shutil.rmtree(STAGE)
+        shutil.copytree(result, STAGE)
+    print(f'Staged {len(entries)} packages in {STAGE}')
+
+
+def manifest():
+    entries = json.loads((STAGE / 'manifest.json').read_text())
+    for entry in entries:
+        if (not re.fullmatch(r'[A-Za-z0-9+_-]+', entry.get('name', ''))
+                or not re.fullmatch(r'[A-Za-z0-9+_.-]+', entry.get('version', ''))
+                or entry['file'] not in (entry['name'] + '-' + entry['version'] + '.tar',
+                                         entry['name'] + '-' + entry['version'] + '.el')):
+            raise ValueError('Unsafe staged filename')
+        if digest(STAGE / 'downloads' / entry['file']) != entry['sha256']:
+            raise ValueError(f'Staged content changed: {entry["file"]}')
+    return entries
+
+
+def unpack(archive, destination, fullname):
+    destination.mkdir(parents=True, exist_ok=True)
+    if archive.suffix == '.el':
+        shutil.copyfile(archive, destination / (fullname.rsplit('-', 1)[0] + '.el'))
+        return
+    with tarfile.open(archive) as tar:
+        for member in tar.getmembers():
+            path = Path(member.name)
+            if path.is_absolute() or '..' in path.parts or not path.parts or path.parts[0] != fullname:
+                raise ValueError(f'Unsafe archive path: {member.name}')
+            if not (member.isfile() or member.isdir()):
+                raise ValueError(f'Unsupported archive member: {member.name}')
+            target = destination.joinpath(*path.parts[1:])
+            if member.isdir():
+                target.mkdir(parents=True, exist_ok=True)
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with tar.extractfile(member) as source, target.open('wb') as out:
+                    shutil.copyfileobj(source, out)
+
+
+def source_files(tree):
+    return {p.relative_to(tree).as_posix(): p for p in tree.rglob('*')
+            if p.is_file() and p.suffix not in ('.elc', '.eln', '.so')
+            and not p.name.endswith('-autoloads.el')}
+
+
+def diffs():
+    entries = manifest()
+    output = STAGE / 'diffs'
+    output.mkdir(exist_ok=True)
+    installed = inventory(ROOT / 'elpa')
+    for entry in entries:
+        name = entry['name']
+        if not re.fullmatch(r'[A-Za-z0-9+_-]+', name):
+            raise ValueError('Unsafe package name')
+        with tempfile.TemporaryDirectory() as temp:
+            new = Path(temp)
+            unpack(STAGE / 'downloads' / entry['file'], new, name + '-' + entry['version'])
+            old_versions = [v for n, v, _, _ in installed if n == name]
+            if len(old_versions) > 1:
+                raise ValueError(f'Remove obsolete versions before diff: {name}')
+            old = source_files(ROOT / 'elpa' / (name + '-' + old_versions[0])) if old_versions else {}
+            fresh = source_files(new)
+            chunks = []
+            for filename in sorted(old.keys() | fresh.keys()):
+                a = old[filename].read_text(errors='replace').splitlines(True) if filename in old else []
+                b = fresh[filename].read_text(errors='replace').splitlines(True) if filename in fresh else []
+                chunks.extend(difflib.unified_diff(a, b, fromfile='old/' + filename, tofile='new/' + filename))
+            (output / (name + '.diff')).write_text(''.join(chunks))
+    return entries
+
+
+def flags(diff):
+    return [(label, line[1:].rstrip()) for line in diff.splitlines()
+            if line.startswith('+') and not line.startswith('+++')
+            for label, pattern in PATTERNS.items() if re.search(pattern, line[1:])]
+
+
+def report():
+    entries = diffs()
+    ranked = []
+    for entry in entries:
+        diff = (STAGE / 'diffs' / (entry['name'] + '.diff')).read_text()
+        ranked.append((len(flags(diff)), entry['name'], diff))
+    print(f'{len(entries)} packages updated, {sum(n > 0 for n, _, _ in ranked)} flagged')
+    print('Heuristic review ordering only. Inspect all diffs, including unflagged packages.')
+    for count, name, diff in sorted(ranked, reverse=True)[:10]:
+        print(f'\n{name}: {count} flags\n{diff}')
+    print(f'Full diffs: {STAGE / "diffs"}')
+
+
+def snapshot():
+    SNAPSHOTS.mkdir(parents=True, exist_ok=True, mode=0o700)
+    SNAPSHOTS.chmod(0o700)
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
+    target = SNAPSHOTS / (stamp + '.tar.zst')
+    partial = target.with_suffix(target.suffix + '.partial')
+    run('tar', '--zstd', '-cf', partial, '-C', ROOT, 'elpa', 'lock/packages.el')
+    partial.rename(target)
+    return target
+
+
+def restore(archive):
+    with tempfile.TemporaryDirectory(dir=ROOT / '.cache') as temp:
+        run('tar', '--zstd', '-xf', archive, '-C', temp)
+        tree = Path(temp) / 'elpa'
+        safe_tree(tree)
+        displaced = Path(temp) / 'displaced'
+        (ROOT / 'elpa').rename(displaced)
+        try:
+            tree.rename(ROOT / 'elpa')
+            shutil.copyfile(Path(temp) / 'lock/packages.el', ROOT / 'lock/packages.el')
+        except BaseException:
+            if (ROOT / 'elpa').exists():
+                shutil.rmtree(ROOT / 'elpa')
+            displaced.rename(ROOT / 'elpa')
+            raise
+
+
+def apply():
+    entries = manifest()
+    if (STAGE / 'baseline.el').read_text() != lock_text(ROOT / 'elpa'):
+        raise ValueError('Installed tree changed since fetch; fetch and review again')
+    diffs()  # Validate archive paths before handing packages to the installer.
+    with tempfile.TemporaryDirectory(dir=ROOT / '.cache') as temp:
+        work = Path(temp)
+        copy_packages(work / 'elpa')
+        shutil.copytree(STAGE, work / 'stage')
+        for entry in entries:
+            for _, version, _, _ in [r for r in inventory(work / 'elpa') if r[0] == entry['name']]:
+                shutil.rmtree(work / 'elpa' / (entry['name'] + '-' + version))
+        with container(work, INSTALL_LISP, [e['file'] for e in entries]) as cid:
+            run('podman', 'cp', cid + ':/work/elpa', work / 'result')
+        result = work / 'result'
+        if (result / 'gnupg').exists():
+            shutil.rmtree(result / 'gnupg')
+        safe_tree(result)
+        origins = json.loads((result / 'origins.json').read_text()) if (result / 'origins.json').exists() else {}
+        for entry in entries:
+            full = entry['name'] + '-' + entry['version']
+            if not (result / full).is_dir():
+                raise ValueError(f'Container did not produce {full}')
+            origins[full] = entry['archive']
+            if entry['archive'] in ('gnu', 'nongnu'):
+                shutil.copyfile(STAGE / 'downloads' / (entry['file'] + '.signed'), result / (full + '.signed'))
+        (result / 'origins.json').write_text(json.dumps(origins, indent=2) + '\n')
+        # Preserve the user's keyring; it never entered the container.
+        if (ROOT / 'elpa/gnupg').exists():
+            shutil.copytree(ROOT / 'elpa/gnupg', result / 'gnupg', dirs_exist_ok=True)
+        backup = snapshot()
+        try:
+            (ROOT / 'elpa').rename(work / 'previous')
+            result.rename(ROOT / 'elpa')
+            for target in ('typecheck', 'test-unit', 'startup-test'):
+                run('make', target, cwd=ROOT)
+            write_lock()
+        except BaseException:
+            restore(backup)
+            raise
+        print(f'Applied {len(entries)} packages; rollback snapshot: {backup}')
+
+
+def upgrade():
+    """Keep the command lock through fetching, human review, and installation."""
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        raise SystemExit('package-upgrade requires an interactive terminal for diff review')
+    verify_lock()
+    fetch()
+    reviewed = manifest()
+    if not reviewed:
+        print('No package upgrades available.')
+        return
+    report()
+    print('Read every diff in the reported directory before approving; flags are only review hints.')
+    try:
+        answer = input('Type apply to install this reviewed set, or Enter to leave it staged: ')
+    except EOFError:
+        answer = ''
+    if answer.strip() != 'apply':
+        print('Packages remain staged; the live tree is unchanged.')
+        return
+    if manifest() != reviewed:
+        raise SystemExit('Staged package set changed during review; review it again')
+    verify_lock()
+    apply()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=['upgrade', 'fetch', 'diff', 'report', 'apply', 'rollback', 'lock', 'verify'])
+    parser.add_argument('--rebuild', action='store_true', help='fetch preferred sources, allowing downgrades')
+    args = parser.parse_args()
+    if args.rebuild and args.command != 'fetch':
+        parser.error('--rebuild is only supported with fetch')
+    (ROOT / '.cache').mkdir(exist_ok=True)
+    with (ROOT / '.cache/package-update.lock').open('w') as guard:
+        try:
+            fcntl.flock(guard, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit('Another package-update command is running; try again when it finishes')
+        if args.command == 'upgrade':
+            upgrade()
+        elif args.command == 'fetch':
+            fetch(args.rebuild)
+        elif args.command == 'diff':
+            diffs()
+        elif args.command == 'report':
+            report()
+        elif args.command == 'apply':
+            apply()
+        elif args.command == 'rollback':
+            restore(sorted(SNAPSHOTS.glob('*.tar.zst'))[-1])
+        elif args.command == 'lock':
+            write_lock()
+        else:
+            verify_lock()
+
+
+if __name__ == '__main__':
+    main()

@@ -31,6 +31,9 @@
 (require 'use-package)
 
 (require 'mijn-packages)
+(mijn-register-packages '(gnu-elpa-keyring-update))
+(require 'mijn-package-usage)
+(unless noninteractive (package-usage-mode 1))
 
 ;; Packages can load vterm while being byte-compiled, before its declaration
 ;; below is reached.  Never prompt on stdin during a batch/bootstrap run.

@@ -1,10 +1,80 @@
 # Package supply-chain hardening
 
 Proposal date: 2026-11-07
-Status: proposed, nothing implemented
+Status: implementation added; live archive migration blocked by rehearsal failures
 Scope: `src/mijn-package-policy.el`, `src/mijn-packages.el`, new `scripts/package-update`, new usage-tracking package
 
-## Measured current state
+## Implementation status (2026-11-07)
+
+Archive priorities and strict signatures are configured. The bootstrap declarations include
+`gnu-elpa-keyring-update`. Eat is declared alongside vterm for the trial; existing vterm
+integrations remain in use.
+
+`lock/packages.el` records the current installed tree. Its SHA256 covers relative filenames
+and file bytes, including compiled files; it is a drift detector, not a download checksum or
+a reproducible-build guarantee. Historical archive provenance is `unknown`. Successful staged
+updates record provenance in `elpa/origins.json`. The lockfile does not reconstruct packages
+that an archive has since removed.
+
+Commands:
+
+```sh
+make package-upgrade                      # fetch, review, approve, install and validate
+make package-lock
+make package-verify
+scripts/package-update fetch             # upgrades only
+scripts/package-update fetch --rebuild   # preferred archives, including downgrades
+scripts/package-update diff
+scripts/package-update report
+scripts/package-update apply
+scripts/package-update rollback
+make test-package-security
+```
+
+`make package-upgrade` requires an interactive terminal. It verifies the current lockfile,
+fetches upgrades under the archive policy, and prints the triage report and full-diff location.
+Review all diffs, then type `apply` to install the staged set. Enter leaves it staged.
+The command holds the update lock throughout review and rejects changes to the staged
+manifest before installation. Installation, validation, rollback, and lock regeneration use
+the existing `apply` workflow. Failed verification or validation stops the upgrade; the
+documented startup blockers must be resolved before an upgrade can succeed.
+
+Fetch and installation run in the integration Podman image with copied inputs and no host
+mounts. Fetch validates signed archive metadata and signed package downloads before staging.
+A failed archive refresh aborts instead of using old metadata. Staged hashes are checked
+before diff or apply. Apply refuses dependencies absent from staging. Snapshot archives are
+written outside the repository; a failed validation restores both the package tree and lock.
+The host validation commands execute the reviewed packages after the swap. Restart Emacs
+after apply or rollback: already loaded definitions cannot be replaced by a filesystem swap.
+The Linux container's native artifacts must also be compatible with the host.
+
+`M-x package-usage-report` shows installed packages and distinct invoked command symbols.
+Interactive startup enables collection; batch checks do not. Per-session records merge under
+an exclusive lock and atomic rename. Retained per-session `.eld` journals in
+`var/package-usage.eld.sessions/` preserve evidence when the merge lock is busy at shutdown.
+A stale `.eld.lock` directory can be removed after confirming no writer is active. The report's candidates need passive-role
+review before removal. Usage persistence does not send network requests.
+
+Validation so far:
+
+- Thirteen Python security tests and three usage ERT tests pass, including upgrade review gates, snapshot restoration,
+  staged-byte tampering, archive traversal, and concurrent-session persistence.
+- Archive-policy ERT tests pass; the policy and usage modules byte-compile cleanly.
+- `make package-verify` passes against the recorded live tree.
+- Full local ERT: 78/79 pass; the Darwin modifier prior-state test fails.
+- Full typecheck fails in existing Org-dependent modules with `org-complete-structure` unbound.
+- Fresh Podman startup rejects the signatures on `exec-path-from-shell-2.2` and
+  `rainbow-delimiters-2.1.5`, even after installing the keyring update. It then aborts at
+  the external `repos` require. Signature checks remain strict.
+- The preferred-source fetch also encountered a GNU archive signature retrieval failure
+  and correctly aborted. A retry passed metadata verification but was stopped during slow
+  package downloads after the startup blockers were confirmed. No staged rebuild remains.
+  A complete live rebuild/apply has not been validated or performed.
+
+The live tree remains in place. The month-long pruning review, week-long eat trial, archive
+publication of the usage package, and removal of vterm/build dependencies remain pending.
+
+## Measured baseline at proposal time
 
 | Property | Value |
 |---|---|
@@ -64,11 +134,11 @@ entry, ahead of install.
 
 Change `src/mijn-package-policy.el`:
 
-- [ ] Replace the `melpa` entry with `https://stable.melpa.org/packages/`, keeping
+- [x] Replace the `melpa` entry with `https://stable.melpa.org/packages/`, keeping
       MELPA-unstable as a separate low-priority archive named `melpa-unstable`.
-- [ ] Drop the `org` archive. GNU ELPA carries org, is signed, and removing the entry
+- [x] Drop the `org` archive. GNU ELPA carries org, is signed, and removing the entry
       removes an unsigned source.
-- [ ] Set `package-archive-priorities`:
+- [x] Set `package-archive-priorities`:
 
       rails-to-cosmos  100
       gnu               50
@@ -76,9 +146,9 @@ Change `src/mijn-package-policy.el`:
       melpa-stable      20
       melpa-unstable     0
 
-- [ ] Set `package-check-signature` to `all`.
-- [ ] Set `package-unsigned-archives` to `("melpa-stable" "melpa-unstable" "rails-to-cosmos")`.
-- [ ] Declare `gnu-elpa-keyring-update` in `mijn-packages.el`. Expired keys turn into hard
+- [x] Set `package-check-signature` to `all`.
+- [x] Set `package-unsigned-archives` to `("melpa-stable" "melpa-unstable" "rails-to-cosmos")`.
+- [x] Declare `gnu-elpa-keyring-update` in `mijn-packages.el`. Expired keys turn into hard
       install failures, so the keyring needs to stay current.
 
 Effect: the 53 packages available from gnu or nongnu install under enforced signatures,
@@ -102,11 +172,11 @@ before doing it for real.
 
 ## Phase 2 — Lockfile
 
-- [ ] Write `lock/packages.el`: an alist of `(name version archive sha256)` per installed
+- [x] Write `lock/packages.el`: an alist of `(name version archive sha256)` per installed
       package, sorted by name, one entry per line.
-- [ ] `make package-lock` regenerates it from the live `elpa/` tree.
-- [ ] `make package-verify` fails when the tree and the lockfile disagree.
-- [ ] Commit the lockfile. `*.eld` is gitignored, hence `.el`.
+- [x] `make package-lock` regenerates it from the live `elpa/` tree.
+- [x] `make package-verify` fails when the tree and the lockfile disagree.
+- [x] Commit the lockfile. `*.eld` is gitignored, hence `.el`.
 
 The lockfile turns updates into discrete reviewable events and gives the podman matrix a
 specific package set to test.
@@ -115,17 +185,17 @@ specific package set to test.
 
 New `scripts/package-update`, one entry point with subcommands:
 
-- [ ] `fetch` — refresh archive contents, compute the upgradeable set, download each new
+- [x] `fetch` — refresh archive contents, compute the upgradeable set, download each new
       tarball to a staging directory. No install, so no package code runs.
-- [ ] `diff` — unpack staged tarballs and diff each against the installed tree, producing
+- [x] `diff` — unpack staged tarballs and diff each against the installed tree, producing
       one unified diff per package.
-- [ ] `report` — print the triage summary from Phase 4.
-- [ ] `apply` — run the staged install **inside podman**, reusing the image from
+- [x] `report` — print the triage summary from Phase 4.
+- [x] `apply` — run the staged install **inside podman**, reusing the image from
       `test/integration/`, so install-time byte-compilation never executes on the host.
       Export the resulting tree, snapshot the live `elpa/`, swap the new tree in, then run
       `make typecheck && make test-unit && make startup-test`. Regenerate the lockfile on
       success; restore the snapshot and exit non-zero on failure.
-- [ ] `rollback` — restore the most recent snapshot.
+- [x] `rollback` — restore the most recent snapshot.
 
 Snapshots belong in `~/.cache/emacs-package-snapshots/<timestamp>.tar.zst`, outside the
 repository. The earlier untracked `package-backups/` directory should stay gone.
@@ -145,13 +215,13 @@ a verdict machine it would teach you to ignore its output.
 It earns a place under one restriction: run it over **added lines in the update diff only**,
 and let it rank review attention rather than grant approval.
 
-- [ ] Flag added lines touching process creation (`call-process`, `start-process`,
+- [x] Flag added lines touching process creation (`call-process`, `start-process`,
       `shell-command`, `make-process`), network (`url-retrieve`, `open-network-stream`,
       `make-network-process`), filesystem writes outside the package tree, `eval` of
       constructed or decoded data (`intern`, `base64-decode-string`, `read` on process
       output), and top-level side effects in autoload-generating positions.
-- [ ] Rank packages by flag count and print the top entries with their diffs inline.
-- [ ] Report "N packages updated, M flagged" and keep the full diffs on disk for reading.
+- [x] Rank packages by flag count and print the top entries with their diffs inline.
+- [x] Report "N packages updated, M flagged" and keep the full diffs on disk for reading.
 
 Keep this to one file and a flat pattern table. The pipeline carries the security; this part
 only orders your reading.
@@ -164,19 +234,19 @@ pruning, and pruning is the only control that removes risk outright.
 New `src/mijn-package-usage.el`, promoted to the rails-to-cosmos archive as `package-usage`
 once it settles.
 
-- [ ] Resolve loaded files to owning packages by matching `load-history` entries against
+- [x] Resolve loaded files to owning packages by matching `load-history` entries against
       `package-user-dir` paths.
-- [ ] Record per package: sessions in which it loaded, first and last seen, and whether it
+- [x] Record per package: sessions in which it loaded, first and last seen, and whether it
       loaded eagerly or through an autoload.
-- [ ] Advise `call-interactively` to record invoked command symbols, mapping each back to its
+- [x] Advise `call-interactively` to record invoked command symbols, mapping each back to its
       package through `symbol-file`. Load alone is weak evidence, since the config `require`s
       many packages eagerly; an invoked command is strong evidence.
-- [ ] Persist to `var/package-usage.eld` on `kill-emacs-hook` and on an idle timer, merging
+- [x] Persist to `var/package-usage.eld` on `kill-emacs-hook` and on an idle timer, merging
       rather than overwriting so concurrent Emacs instances do not lose data. `*.eld` is
       already gitignored.
-- [ ] `M-x package-usage-report` renders through `table-view`: package, archive, sessions
+- [x] `M-x package-usage-report` renders through `table-view`: package, archive, sessions
       loaded, commands invoked, last used, declared in config, removal candidate.
-- [ ] Local file only, no network.
+- [x] Local file only, no network.
 
 Known limits worth stating in the report header: themes, fonts and UI packages count as used
 without ever being invoked, and a package required eagerly always registers as loaded. The

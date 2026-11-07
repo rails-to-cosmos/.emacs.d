@@ -1,0 +1,55 @@
+;;; test-mijn-package-usage.el --- Usage persistence tests -*- lexical-binding: t; -*-
+(require 'ert)
+(require 'mijn-package-usage)
+
+(ert-deftest package-usage-concurrent-sessions-survive-restart ()
+  (let* ((dir (make-temp-file "package-usage" t))
+         (package-usage-file (expand-file-name "usage.eld" dir)))
+    (unwind-protect
+        (progn
+          (let ((package-usage--session "one") (package-usage--events nil))
+            (package-usage--record 'demo 'demo-command 'autoload)
+            (package-usage-save)
+            (package-usage-save))
+          (let ((package-usage--session "two") (package-usage--events nil))
+            (package-usage--record 'demo nil 'eager)
+            (package-usage-save))
+          (let ((saved (package-usage--read)))
+            (should (= 2 (length saved)))
+            (should (equal '(demo-command)
+                           (plist-get (cdr (assoc '(demo . "one") saved)) :commands)))))
+      (delete-directory dir t))))
+
+(ert-deftest package-usage-busy-writer-is-not-overwritten ()
+  (let* ((dir (make-temp-file "package-usage" t))
+         (package-usage-file (expand-file-name "usage.eld" dir))
+         (package-usage--events nil))
+    (unwind-protect
+        (progn
+          (make-directory (concat package-usage-file ".lock"))
+          (package-usage--record 'demo 'demo-command 'autoload)
+          (package-usage-save)
+          (should-not (file-exists-p package-usage-file))
+          (let ((package-usage--events nil))
+            (should (= 1 (length (package-usage--read))))))
+      (delete-directory dir t))))
+
+(ert-deftest package-usage-report-includes-every-installed-package ()
+  (let ((package-alist `((demo . (,(package-desc-create :name 'demo :version '(1) :archive "gnu")))))
+        (package-usage--events nil)
+        (package-usage-file "/nonexistent/usage.eld")
+        (features (copy-sequence features))
+        captured)
+    (provide 'table-view)
+    (cl-letf (((symbol-function 'table-view-display)
+               (lambda (_buffer spec _handlers)
+                 (setq captured spec)
+                 (get-buffer-create " *usage-test*")))
+              ((symbol-function 'pop-to-buffer) #'ignore))
+      (unwind-protect
+          (progn
+            (package-usage-report)
+            (let ((rows (alist-get 'rows captured)))
+              (should (= 1 (length rows)))
+              (should (equal "demo" (alist-get 'package (alist-get 'cells (car rows)))))))
+        (kill-buffer " *usage-test*")))))

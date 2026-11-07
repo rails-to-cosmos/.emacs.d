@@ -75,3 +75,17 @@ integration:
 ## Remove any stale .elc files
 clean-elc:
 	@find src -name '*.elc' -delete 2>/dev/null; true
+
+.PHONY: package-upgrade package-lock package-verify test-package-security
+package-upgrade:
+	@EMACS="$(EMACS)" TEST_EMACS_VERSION="$(TEST_EMACS_VERSION)" scripts/package-update upgrade
+
+package-lock:
+	@scripts/package-update lock
+
+package-verify:
+	@scripts/package-update verify
+
+test-package-security:
+	@PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s test -p 'test_package_security.py'
+	@$(EMACS) --batch -Q -L src -l test/test-mijn-package-usage.el -f ert-run-tests-batch-and-exit

@@ -4,9 +4,15 @@
 (require 'mijn-package-policy)
 
 (ert-deftest test-package-policy-configures-all-archives ()
-  (let (package-archives)
+  (let (package-archives package-archive-priorities package-check-signature package-unsigned-archives)
     (mijn-configure-package-archives)
-    (should (equal package-archives mijn-package-archives))))
+    (should (equal package-archives mijn-package-archives))
+    (should (eq package-check-signature 'all))
+    (should-not (assoc "org" package-archives))
+    (should-not (member "gnu" package-unsigned-archives))
+    (should-not (member "nongnu" package-unsigned-archives))
+    (should (> (cdr (assoc "gnu" package-archive-priorities))
+               (cdr (assoc "melpa-stable" package-archive-priorities))))))
 
 (ert-deftest test-package-update-count-refreshes-and-reports-only ()
   (let ((calls nil))

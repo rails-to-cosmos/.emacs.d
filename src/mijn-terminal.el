@@ -4,16 +4,16 @@
 (require 'mijn-org)
 (require 'direnv)
 
+(up eat :ensure t :commands (eat))
 (up vterm
-  :ensure nil)
-(require 'vterm)
-
-(defun mijn-vterm-setup ()
-  "Keep displayed rows aligned with vterm's terminal grid."
-  ;; Vterm initially sizes its PTY with `window-body-height'.
-  (setq-local line-spacing 0))
-
-(add-hook 'vterm-mode-hook #'mijn-vterm-setup)
+  :ensure nil
+  :demand t
+  :hook (vterm-mode . mijn-vterm-setup)
+  :config
+  (defun mijn-vterm-setup ()
+    "Keep displayed rows aligned with vterm's terminal grid."
+    ;; Vterm initially sizes its PTY with `window-body-height'.
+    (setq-local line-spacing 0)))
 
 (ob-add-language 'shell (cons "shell" "src shell"))
 (ob-add-language 'eshell (cons "eshell" "src eshell"))

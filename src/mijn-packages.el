@@ -7,7 +7,7 @@
 
 ;; These packages are needed before their `up' declarations can run.  All
 ;; other package requirements are registered by `up' itself.
-(defconst mijn-bootstrap-packages '(transient use-package s table-view))
+(defconst mijn-bootstrap-packages '(gnu-elpa-keyring-update transient use-package s table-view))
 
 (defvar mijn-required-packages (copy-sequence mijn-bootstrap-packages)
   "Packages declared by `up', plus early bootstrap dependencies.")
