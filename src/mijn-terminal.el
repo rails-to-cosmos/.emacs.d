@@ -5,6 +5,7 @@
 (require 'direnv)
 
 (up eat :ensure t :commands (eat))
+
 (up vterm
   :ensure nil
   :demand t
