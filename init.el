@@ -175,7 +175,11 @@
 (require 'xmobarrc-mode)
 (require 'network-manager)
 
-(require 'make)
+(up makel
+  :pin "rails-to-cosmos"
+  :bind ("C-x y m" . makel-menu)
+  :ensure t
+  :config (makel-mode-line-mode 1))
 
 (up table-view
   :config (progn
@@ -199,7 +203,6 @@
   :ensure org-glance-llm
   :config (org-glance-init))
 
-(global-set-key (kbd "C-x y m") #'make-menu)
 (global-set-key (kbd "C-x y r a") #'table-view-ray-actors)
 (global-set-key (kbd "C-x y r j") #'table-view-ray-jobs)
 (global-set-key (kbd "C-x y r n") #'table-view-ray-nodes)

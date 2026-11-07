@@ -1,7 +1,25 @@
 # makel — extract the Makefile picker into a package
 
 Proposal date: 2026-11-07
-Status: proposed, nothing implemented
+Status: implemented locally; GitHub publication and clean-profile checks pending
+
+Implementation (2026-11-07):
+- Created `~/sync/stuff/makel` on branch `master`, with package metadata,
+  CI, README, license, parser fixtures and backend integration tests.
+- Ported execution to compilation/comint, retaining the original sentinel.
+  Completion uses a read-only map inheriting compilation navigation.
+- Added optional `makel-mode-line-mode`, enabled by this config.
+- Added the archive recipe/table row and lab catalog entry; removed `src/make.el`
+  and migrated the menu binding to `up makel`.
+- `make check` passes: package-lint, strict byte compilation and four ERT tests.
+  The integration test verifies PTY input, failure status, read-only output and
+  next-error navigation. A real sudo password prompt remains a manual check.
+- Installed locally through `make install-emacs`.
+- Config `make typecheck` excludes the removed file, but fails on existing
+  `org-complete-structure` errors in mijn-python, mijn-sql and mijn-terminal.
+- GitHub reports `rails-to-cosmos/makel` missing or inaccessible; no `gh`
+  executable is available. Push and archive publication remain pending.
+  Clean archive installation and fresh lab bootstrap have not been verified.
 Scope: new `~/sync/stuff/makel/`, `~/sync/stuff/elpa/recipes/`, `~/sync/stuff/lab/config/repos.yaml`,
 removal of `src/make.el` from this config
 
@@ -118,20 +136,20 @@ archive policy signs and enforces. Declaring it explicitly keeps `package-lint` 
 
 - [ ] Create the repo and `git init`; push to `github.com/rails-to-cosmos/makel`, matching
       the other published components.
-- [ ] Port `src/make.el` with the rename and the `compilation-start` backend.
-- [ ] Add tests for `makel--targets` against a fixture Makefile: multi-target rules
+- [x] Port `src/make.el` with the rename and the `compilation-start` backend.
+- [x] Add tests for `makel--targets` against a fixture Makefile: multi-target rules
       (`major minor patch:`), `:=` assignments excluded, dot-targets and pattern rules
       excluded. That parser is the part worth testing and is currently untested.
 
 ## Wiring
 
-- [ ] `~/sync/stuff/elpa/recipes/makel`:
+- [x] `~/sync/stuff/elpa/recipes/makel`:
 
       (makel :fetcher github :repo "rails-to-cosmos/makel"
              :branch "master" :make-targets ("package"))
 
-- [ ] Add the row to the packages table in `~/sync/stuff/elpa/README.md`.
-- [ ] `~/sync/stuff/lab/config/repos.yaml`:
+- [x] Add the row to the packages table in `~/sync/stuff/elpa/README.md`.
+- [x] `~/sync/stuff/lab/config/repos.yaml`:
 
       - dest: ~/sync/stuff/makel
         url: git@github.com:rails-to-cosmos/makel.git
@@ -146,17 +164,17 @@ archive policy signs and enforces. Declaring it explicitly keeps `package-lint` 
 
 ## Changes to this config
 
-- [ ] Delete `src/make.el`.
-- [ ] Replace `init.el:178` `(require 'make)` with a declaration:
+- [x] Delete `src/make.el`.
+- [x] Replace `init.el:178` `(require 'make)` with a declaration:
 
       (up makel
         :pin "rails-to-cosmos"
         :bind ("C-x y m" . makel-menu)
         :ensure t)
 
-- [ ] Drop `init.el:202` `(global-set-key (kbd "C-x y m") #'make-menu)`, now carried by the
+- [x] Drop `init.el:202` `(global-set-key (kbd "C-x y m") #'make-menu)`, now carried by the
       declaration.
-- [ ] Confirm `make typecheck` no longer compiles `src/make.el` and `SRC_FILES` shrinks.
+- [x] Confirm `make typecheck` no longer compiles `src/make.el` and `SRC_FILES` shrinks.
 
 ## Acceptance criteria
 
