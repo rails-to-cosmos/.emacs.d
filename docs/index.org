@@ -15,3 +15,9 @@ Wiki index for design notes and audits on this configuration.
 - [[file:integration-testing.org][Integration testing across Emacs versions]] — podman suite that loads the
   whole config on Emacs 29/30/31 and gates on errors, invariants, and warnings.
 - [[file:network-hardening.md][WiFi network hardening]] — home-network audit notes (Markdown).
+- [[file:package-security.md][Package supply-chain hardening proposal]] — signature
+  enforcement, a move to MELPA Stable, a lockfile, a review-and-rollback update
+  pipeline, diff triage, and usage tracking to justify pruning (Markdown).
+- [[file:makel.md][makel extraction proposal]] — move the Makefile target picker out to
+  its own published package, rebuilt on =compilation-start= so it needs no terminal
+  emulator (Markdown).
