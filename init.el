@@ -178,11 +178,11 @@
 (require 'xmobarrc-mode)
 (require 'network-manager)
 
-(up makel
+(up makeel
   :pin "rails-to-cosmos"
-  :bind ("C-x y m" . makel-menu)
+  :bind ("C-x y m" . makeel-menu)
   :ensure t
-  :config (makel-mode-line-mode 1))
+  :config (makeel-mode-line-mode 1))
 
 (up table-view
   :config (progn

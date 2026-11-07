@@ -76,37 +76,37 @@ publication of the usage package, and removal of vterm/build dependencies remain
 
 ## Measured baseline at proposal time
 
-| Property | Value |
-|---|---|
-| Installed packages | 128 |
-| Packages with a verified-signature marker (`elpa/*.signed`) | 7 |
-| `package-check-signature` | `allow-unsigned` (default) |
-| `package-archive-priorities` | `nil` |
-| `package-pinned-packages` | `nil` |
-| Lockfile | none |
+| Property                                                    | Value                      |
+|-------------------------------------------------------------|----------------------------|
+| Installed packages                                          | 128                        |
+| Packages with a verified-signature marker (`elpa/*.signed`) | 7                          |
+| `package-check-signature`                                   | `allow-unsigned` (default) |
+| `package-archive-priorities`                                | `nil`                      |
+| `package-pinned-packages`                                   | `nil`                      |
+| Lockfile                                                    | none                       |
 
 Archives that publish signatures, from the local `elpa/archives/` cache:
 
-| Archive | `archive-contents.signed` present |
-|---|---|
-| gnu | yes |
-| nongnu | yes |
-| melpa | no |
-| org | no |
-| rails-to-cosmos | no |
+| Archive         | `archive-contents.signed` present |
+|-----------------|-----------------------------------|
+| gnu             | yes                               |
+| nongnu          | yes                               |
+| melpa           | no                                |
+| org             | no                                |
+| rails-to-cosmos | no                                |
 
 `https://stable.melpa.org/packages/archive-contents.sig` returns 404. MELPA publishes no
 signatures on either channel.
 
 Availability of the 128 installed packages across the signed-or-controlled archives:
 
-| Source | Packages available |
-|---|---|
-| stable.melpa.org | 98 |
-| gnu | 23 |
-| nongnu | 30 |
-| rails-to-cosmos | 10 |
-| union of the above | 115 |
+| Source             | Packages available |
+|--------------------|--------------------|
+| stable.melpa.org   | 98                 |
+| gnu                | 23                 |
+| nongnu             | 30                 |
+| rails-to-cosmos    | 10                 |
+| union of the above | 115                |
 
 Thirteen packages exist only on MELPA-unstable:
 
@@ -314,7 +314,7 @@ and deletes the native-module assertion in `scripts/bootstrap.el`. It supports S
 mouse, and shell integration, and its only dependency is `compat`.
 
 `src/make.el` was the only caller of vterm internals (`vterm--process`, `vterm-mode-map`,
-`vterm-shell`, `vterm-kill-buffer-on-exit`, `vterm-mode`). [makel.md](makel.md) moves it out
+`vterm-shell`, `vterm-kill-buffer-on-exit`, `vterm-mode`). [makeel.md](makeel.md) moves it out
 to its own package and rebuilds it on `compilation-start` with comint, which was measured to
 give a PTY on Emacs 31.1. Once that lands, nothing in the config depends on a terminal
 emulator and vterm drops to interactive `M-x` use alone, which eat covers.
@@ -327,7 +327,7 @@ converts the terminal from an unsigned MELPA-unstable dependency into a signed n
 ghostel is the better terminal and the wrong trade here.
 
 - [ ] Prototype `eat` alongside vterm, both installed, and use it for a week.
-- [ ] Land [makel.md](makel.md) first, which removes the only vterm-internals caller.
+- [ ] Land [makeel.md](makeel.md) first, which removes the only vterm-internals caller.
 - [ ] Drop libvterm, cmake and libtool from `scripts/bootstrap`; replace the native-module
       assertion in `scripts/bootstrap.el` with an `eat` smoke test.
 - [ ] Remove the vterm declaration from `src/mijn-terminal.el`.
