@@ -4,11 +4,13 @@
 (require 'mijn-package-policy)
 
 (ert-deftest test-package-policy-configures-all-archives ()
-  (let (package-archives package-archive-priorities package-check-signature package-unsigned-archives)
+  (let (package-archives package-archive-priorities package-check-signature package-unsigned-archives package-pinned-packages)
     (mijn-configure-package-archives)
     (should (equal package-archives mijn-package-archives))
-    (should (eq package-check-signature 'all))
+    (should (eq package-check-signature t))
     (should-not (assoc "org" package-archives))
+    (should (equal (alist-get 'company-eask package-pinned-packages) "melpa-unstable"))
+    (should (equal (alist-get 'lsp-metals package-pinned-packages) "melpa-unstable"))
     (should-not (member "gnu" package-unsigned-archives))
     (should-not (member "nongnu" package-unsigned-archives))
     (should (> (cdr (assoc "gnu" package-archive-priorities))
@@ -16,7 +18,7 @@
 
 (ert-deftest test-package-update-count-refreshes-and-reports-only ()
   (let ((calls nil))
-    (cl-letf (((symbol-function 'package-initialize)
+    (cl-letf (((symbol-function 'mijn-package-initialize)
                (lambda () (push 'initialize calls)))
               ((symbol-function 'package-refresh-contents)
                (lambda () (push 'refresh calls)))
@@ -28,3 +30,18 @@
                (lambda () (ert-fail "reporting must not upgrade packages"))))
       (should (= 3 (mijn-package-refresh-upgrade-count)))
       (should (equal '(initialize refresh count) (nreverse calls))))))
+
+
+(ert-deftest test-package-signatures-require-a-current-valid-signer ()
+  (require 'epg)
+  (let ((package-gnupghome-dir nil))
+    (mijn-configure-package-archives)
+    (dolist (signatures '((good expired-key) (expired-key) (bad) nil))
+      (cl-letf (((symbol-function 'epg-verify-string) #'ignore)
+                ((symbol-function 'epg-context-result-for) (lambda (&rest _) (mapcar #'epg-make-signature signatures)))
+                ((symbol-function 'package--display-verify-error) #'ignore))
+        (if (memq 'good signatures)
+            (should (equal '(good) (mapcar #'epg-signature-status
+                                          (package--check-signature-content "signature" "bytes"))))
+          (should-error (package--check-signature-content "signature" "bytes")
+                        :type 'bad-signature))))))

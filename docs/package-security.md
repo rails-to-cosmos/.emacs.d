@@ -1,7 +1,7 @@
 # Package supply-chain hardening
 
 Proposal date: 2026-11-07
-Status: implementation added; live archive migration blocked by rehearsal failures
+Status: reviewed upgrade validated; full live archive migration remains pending
 Scope: `src/mijn-package-policy.el`, `src/mijn-packages.el`, new `scripts/package-update`, new usage-tracking package
 
 ## Implementation status (2026-11-07)
@@ -55,24 +55,73 @@ an exclusive lock and atomic rename. Retained per-session `.eld` journals in
 A stale `.eld.lock` directory can be removed after confirming no writer is active. The report's candidates need passive-role
 review before removal. Usage persistence does not send network requests.
 
-Validation so far:
+Validation (2026-11-08):
 
-- Thirteen Python security tests and three usage ERT tests pass, including upgrade review gates, snapshot restoration,
-  staged-byte tampering, archive traversal, and concurrent-session persistence.
-- Archive-policy ERT tests pass; the policy and usage modules byte-compile cleanly.
-- `make package-verify` passes against the recorded live tree.
-- Full local ERT: 78/79 pass; the Darwin modifier prior-state test fails.
-- Full typecheck fails in existing Org-dependent modules with `org-complete-structure` unbound.
-- Fresh Podman startup rejects the signatures on `exec-path-from-shell-2.2` and
-  `rainbow-delimiters-2.1.5`, even after installing the keyring update. It then aborts at
-  the external `repos` require. Signature checks remain strict.
-- The preferred-source fetch also encountered a GNU archive signature retrieval failure
-  and correctly aborted. A retry passed metadata verification but was stopped during slow
-  package downloads after the startup blockers were confirmed. No staged rebuild remains.
-  A complete live rebuild/apply has not been validated or performed.
+- Fifteen Python security tests and all 81 local ERT tests pass.
+- Full typecheck passes, with compiler warnings still visible.
+- Mandatory-signature checks accept the two previously failing NonGNU tarballs and reject
+  tampered copies. Expired-only, bad, and absent signatures remain rejected.
+- The exact reviewed `org-glance` update from `err.txt` installed in Podman, passed host
+  typecheck and unit tests, and passed fresh startup plus 81 ERT tests on Emacs 31.1.
+- Host validation also auto-installed the declared `eat` package through `use-package`.
+  A new validation-only guard now exits before any host package installation, even when
+  callers catch Lisp errors. Its refusal tests pass, and host typecheck/unit tests were
+  rerun successfully with the guard enabled. Eat remains installed and is recorded in the
+  lockfile; the successful full replay preceded this guard.
+- Apply regenerated the live lockfile after success. The rollback snapshot is
+  `~/.cache/emacs-package-snapshots/20261108T140116.305395Z.tar.zst`.
+- Fresh installation still prints upstream compilation errors in optional/test/example
+  files: Smartparens Markdown support needs `markdown-mode` before it is installed,
+  `wgrep-subtest` needs `ag`, and Haskell test/demo files need their test helpers or
+  `gifcast`; Hydra test targets need `hydra-test`, and optional Nix MMM support needs
+  `mmm-mode`. Configured runtime features and our validation gates pass; these archive
+  packaging diagnostics remain visible.
 
-The live tree remains in place. The month-long pruning review, week-long eat trial, archive
-publication of the usage package, and removal of vterm/build dependencies remain pending.
+The full live rebuild onto preferred archives, month-long pruning review, week-long eat
+trial, archive publication of the usage package, and removal of vterm/build dependencies
+remain pending. Restart Emacs after applying package updates.
+
+## Upgrade failure diagnosis (2026-11-08)
+
+The failures in `err.txt` had separate causes:
+
+- `org-complete-structure` was evaluated as an unbound variable because `mijn-org.el`
+  used a macro without requiring its defining module. The dependency is now explicit.
+  The macro also emitted a leading `nil` when no docstring was supplied, making its
+  generated `interactive` form ineffective; it now omits that form.
+- Generated autoloads used `transient-define-prefix` before Transient was loaded.
+  Initialization now reads package descriptors, activates and loads the selected Transient,
+  then activates other packages. Early init disables premature automatic activation;
+  batch validation uses `-Q` and the same initializer.
+- The staged installer activated every installed package after removing the old upgrade
+  targets. That made `org-glance-llm` see a temporarily missing `org-glance`. Installation
+  now activates dependencies as needed, leaving unrelated dependents inactive.
+- The two `org-glance` warnings concern definitions elsewhere/later in the published
+  package. They remain visible; neither is a missing runtime definition.
+- Host validation could trigger `use-package` installation of a missing declaration.
+  Apply now sets `EMACS_PACKAGE_VALIDATE_ONLY=1` for its validation commands; the common
+  initializer refuses package/VC installation in those host batch processes. Fresh Podman
+  startup still provisions inside its isolated container.
+- The Python traceback propagated the failed typecheck. Failed apply now explicitly
+  reports the snapshot restored by rollback.
+
+Following validation exposed additional issues:
+
+- The Darwin test used lexical bindings for macOS-only variables on Linux. Its bindings
+  are now dynamic, so its deliberate modifier change reaches the predicate under test.
+- The external `repos` checkout is optional; clean startup no longer requires it.
+- Fresh startup copied machine-local Customize settings that suppressed package errors.
+  It now excludes `custom.el`, `init-local.el`, and `.cache`, and reports package errors
+  before checking features that depend on successful installation.
+- NonGNU's `exec-path-from-shell-2.2` and `rainbow-delimiters-2.1.5` each carry a valid
+  2023-key signature plus an expired 2019-key signature. `all` required both to verify.
+  The corrected `t` policy requires at least one valid signature, with no unsigned
+  exemption for GNU or NonGNU. Both actual tarballs verified; modified bytes were rejected.
+- Stable `company-eask` 0.1.0 requires the removed `company-elisp` backend. A narrow
+  `company-eask` pin selects the compatible unstable version in both startup and updates.
+- Stable `lsp-metals` 1.2.0 calls `(treemacs-initialize)` without the extension argument
+  required by current Treemacs. Its compatible unstable version is also explicitly pinned.
+  Archive availability alone therefore understates how many unstable packages are needed.
 
 ## Measured baseline at proposal time
 
@@ -146,7 +195,7 @@ Change `src/mijn-package-policy.el`:
       melpa-stable      20
       melpa-unstable     0
 
-- [x] Set `package-check-signature` to `all`.
+- [x] Set `package-check-signature` to `t` (require a verified signature).
 - [x] Set `package-unsigned-archives` to `("melpa-stable" "melpa-unstable" "rails-to-cosmos")`.
 - [x] Declare `gnu-elpa-keyring-update` in `mijn-packages.el`. Expired keys turn into hard
       install failures, so the keyring needs to stay current.
@@ -166,7 +215,7 @@ rebuild of `elpa/` rather than an upgrade. `elpa/` is gitignored and `make start
 already provisions a config from scratch inside podman, so a rebuild is cheap to rehearse
 before doing it for real.
 
-- [ ] Rehearse: `make startup-test` under the new policy, confirming all 128 resolve.
+- [x] Rehearse: `make startup-test` under the new policy, confirming the declared config resolves.
 - [ ] Rebuild: snapshot `elpa/`, delete it, start Emacs, compare the resulting set against
       the snapshot.
 

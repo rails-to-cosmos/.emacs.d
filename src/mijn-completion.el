@@ -107,7 +107,7 @@
   (declare (doc-string 3) (indent 2))
   `(prog1
        (defun ,name nil
-         ,(when (stringp (car body)) (car body))
+         ,@(when (stringp (car body)) (list (car body)))
          (interactive)
          (let ((point (point)))
            (when (condition-case nil

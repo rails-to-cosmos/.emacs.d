@@ -2,6 +2,15 @@
 
 (require 'ert)
 (require 'cl-lib)
+;; macOS-only options need dynamic bindings when this test runs on Linux.
+(defvar mac-control-modifier nil)
+(defvar mac-command-modifier nil)
+(defvar mac-right-command-modifier nil)
+(defvar mac-option-modifier nil)
+(defvar ns-control-modifier nil)
+(defvar ns-command-modifier nil)
+(defvar ns-right-command-modifier nil)
+(defvar ns-alternate-modifier nil)
 (require 'mijn-darwin)
 
 (ert-deftest test-darwin-modifiers-are-independent-of-karabiner-and-prior-state ()

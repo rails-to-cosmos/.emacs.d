@@ -4,13 +4,14 @@ EMACS ?= emacs
 SRC_FILES := $(shell find src -name '*.el' -not -path 'src/archive/*' | sort)
 
 # Set up Emacs batch environment with proper load paths.
-# `package-initialize' activates installed packages so their autoloads override
+# Initialize Transient before other autoloads, then activate installed packages over
 # built-ins (e.g. an upgraded `transient' shadowing the older built-in that
 # Magit rejects on Emacs 29/30); the manual add-subdirs cover packages/, which
 # is not a package archive.
-EMACS_BATCH = $(EMACS) --batch \
+EMACS_BATCH = $(EMACS) --batch -Q \
   --eval "(require 'cl-lib)" \
-  --eval "(package-initialize)" \
+  -L $(CURDIR)/src -l mijn-package-policy \
+  --eval "(mijn-package-initialize)" \
   -l $(CURDIR)/src/mijn-packages.el \
   --eval "(let ((default-directory \"$(CURDIR)/elpa\")) (normal-top-level-add-subdirs-to-load-path))" \
   --eval "(let ((default-directory \"$(CURDIR)/packages\")) (normal-top-level-add-subdirs-to-load-path))" \

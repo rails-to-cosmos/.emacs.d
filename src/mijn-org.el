@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (require 'org)
+(require 'mijn-completion)
 (require 'org-clock)
 (require 'ob)
 

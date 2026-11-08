@@ -4,7 +4,7 @@
 ;; Loads the real init.el headlessly and asserts the configuration comes up
 ;; cleanly.  Run inside the integration container:
 ;;
-;;   emacs --batch -l test/integration/load-check.el
+;;   emacs --batch -Q -l test/integration/load-check.el
 ;;
 ;; Exit non-zero on any error signalled during init, on a missing invariant,
 ;; or -- only when the environment variable EMACS_CONFIG_STRICT is set -- on any
@@ -59,6 +59,11 @@ value rather than its mere presence.")
      (message "Integration: init aborted with an uncaught error:\n  %S" err)
      (kill-emacs 1))))
 
+(when ic-use-package-errors
+  (error "Integration: %d use-package error(s) during init:\n  %s"
+         (length ic-use-package-errors)
+         (mapconcat #'identity (reverse ic-use-package-errors) "\n  ")))
+
 ;; --- Invariants: prove the config actually wired itself up -----------------
 (dolist (feat ic-required-features)
   (unless (featurep feat)
@@ -87,11 +92,6 @@ value rather than its mere presence.")
     (error "Integration: smartparens-strict-mode not active in prog-mode")))
 
 ;; --- Warning ledger ---------------------------------------------------------
-(when ic-use-package-errors
-  (error "Integration: %d use-package error(s) during init:\n  %s"
-         (length ic-use-package-errors)
-         (mapconcat #'identity (reverse ic-use-package-errors) "\n  ")))
-
 (let ((unexpected
        (seq-remove (lambda (w)
                      (seq-some (lambda (re) (string-match-p re w))

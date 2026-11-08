@@ -19,7 +19,7 @@
 
 (mijn-configure-package-archives)
 
-(package-initialize)
+(mijn-package-initialize)
 
 (package-read-all-archive-contents)
 (unless package-archive-contents
@@ -119,7 +119,8 @@
 (require 'mijn-tramp)
 (require 'mijn-scratch)
 (require 'mijn-restart)
-(require 'repos)
+;; Optional integration from ~/sync/stuff/lab/modules/repos/emacs.
+(require 'repos nil t)
 
 (require 'mijn-darwin)
 (require 'wrike-token-refresh)

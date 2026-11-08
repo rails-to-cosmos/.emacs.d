@@ -17,6 +17,9 @@ echo "==> Syncing repo into $CFG (excluding host build artifacts)"
 mkdir -p "$CFG"
 rsync -a --delete \
   --exclude '.git' \
+  --exclude '.cache' \
+  --exclude '/custom.el' \
+  --exclude '/init-local.el' \
   --exclude 'elpa' \
   --exclude 'eln-cache' \
   --exclude '*.elc' \
@@ -44,7 +47,7 @@ save_cache() {
 trap save_cache EXIT
 
 echo "==> [1/3] Load full init (provision packages + smoke test)"
-emacs --batch -l test/integration/load-check.el
+emacs --batch -Q -l test/integration/load-check.el
 
 echo "==> [2/3] Byte-compile our src (warning gate)"
 if [ "${EMACS_CONFIG_STRICT:-0}" = "1" ]; then

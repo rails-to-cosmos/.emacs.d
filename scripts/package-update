@@ -141,7 +141,8 @@ INSTALL_LISP = r''';;; -*- lexical-binding: t; -*-
 (require 'package)
 (setq user-emacs-directory "/work/" package-user-dir "/work/elpa"
       package-native-compile nil vterm-always-compile-module t)
-(package-initialize)
+(load "/work/policy.el" nil t)
+(mijn-package-initialize t)
 (advice-add 'package-install-from-archive :override
             (lambda (&rest _) (error "Unstaged dependency refused")))
 (dolist (file command-line-args-left)
@@ -325,6 +326,7 @@ def apply():
         work = Path(temp)
         copy_packages(work / 'elpa')
         shutil.copytree(STAGE, work / 'stage')
+        shutil.copyfile(ROOT / 'src/mijn-package-policy.el', work / 'policy.el')
         for entry in entries:
             for _, version, _, _ in [r for r in inventory(work / 'elpa') if r[0] == entry['name']]:
                 shutil.rmtree(work / 'elpa' / (entry['name'] + '-' + version))
@@ -351,10 +353,12 @@ def apply():
             (ROOT / 'elpa').rename(work / 'previous')
             result.rename(ROOT / 'elpa')
             for target in ('typecheck', 'test-unit', 'startup-test'):
-                run('make', target, cwd=ROOT)
+                run('make', target, cwd=ROOT,
+                    env={**os.environ, 'EMACS_PACKAGE_VALIDATE_ONLY': '1'})
             write_lock()
         except BaseException:
             restore(backup)
+            print(f'Update failed; restored package tree and lock from {backup}', file=sys.stderr)
             raise
         print(f'Applied {len(entries)} packages; rollback snapshot: {backup}')
 

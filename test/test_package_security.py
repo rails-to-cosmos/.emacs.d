@@ -53,6 +53,8 @@ class SecurityTests(unittest.TestCase):
             root = Path(temp)
             (root / '.cache').mkdir()
             (root / 'elpa').mkdir()
+            (root / 'src').mkdir()
+            (root / 'src/mijn-package-policy.el').write_text('')
             (root / 'stage').mkdir()
             (root / 'stage/baseline.el').write_text('baseline')
             from contextlib import contextmanager
@@ -64,6 +66,7 @@ class SecurityTests(unittest.TestCase):
                 destination.mkdir()
             def fake_run(*args, **kwargs):
                 if args[0] == 'make':
+                    self.assertEqual('1', kwargs['env']['EMACS_PACKAGE_VALIDATE_ONLY'])
                     raise RuntimeError('broken package')
             with patch.object(pipeline, 'manifest', return_value=[]), patch.object(pipeline, 'lock_text', return_value='baseline'), patch.object(pipeline, 'diffs'), patch.object(pipeline, 'copy_packages', side_effect=fake_copy), patch.object(pipeline, 'container', fake_container), patch.object(pipeline, 'run', side_effect=fake_run), patch.object(pipeline, 'snapshot', return_value='snapshot'), patch.object(pipeline, 'restore') as restore:
                 with self.assertRaisesRegex(RuntimeError, 'broken package'):
@@ -115,6 +118,50 @@ class SecurityTests(unittest.TestCase):
           (error "Expected dependency then downgraded root; got %S" names))))))
 '''.replace('SOURCE', pipeline.json.dumps(str(source)))
             pipeline.run('emacs', '--batch', '-Q', '--eval', expression, capture_output=True, text=True)
+
+
+    def test_transient_autoloads_and_selective_install_activation(self):
+        for selective in (False, True):
+            with self.subTest(selective=selective), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                package = root / 'demo-1'
+                package.mkdir()
+                (package / 'demo-pkg.el').write_text(
+                    '(define-package "demo" "1" "fixture" \'((transient "0")))')
+                (package / 'demo-autoloads.el').write_text(
+                    '(transient-define-prefix security-demo-menu () "Fixture" [["Actions" ("m" "Message" ignore)]])')
+                if selective:
+                    orphan = root / 'orphan-1'
+                    orphan.mkdir()
+                    (orphan / 'orphan-pkg.el').write_text(
+                        '(define-package "orphan" "1" "fixture" \'((absent "1")))')
+                expression = (
+                    '(progn (require \'mijn-package-policy) '
+                    '(setq package-user-dir ' + pipeline.json.dumps(temp) + ') '
+                    '(mijn-package-initialize ' + ('t' if selective else 'nil') + ') '
+                    + ('(when (fboundp \'security-demo-menu) (error "Activated too early")) '
+                       '(package-activate \'demo) ' if selective else '')
+                    + '(unless (commandp \'security-demo-menu) (error "Transient autoload failed")))')
+                result = pipeline.run('emacs', '--batch', '-Q', '-L', pipeline.ROOT / 'src',
+                                      '--eval', expression, capture_output=True, text=True)
+                self.assertNotIn('Error loading autoloads', result.stderr)
+                self.assertNotIn('Unable to activate', result.stderr)
+
+
+    def test_validation_refuses_host_install_even_when_errors_are_caught(self):
+        for function in ('package-install', 'package-install-file', 'package-vc-install'):
+            with self.subTest(function=function):
+                expression = ("(progn (require 'mijn-package-policy) "
+                              "(mijn-package-initialize t) "
+                              "(ignore-errors (" + function + " 'security-missing-package)) "
+                              "(princ \"UNSAFE: returned from installation\"))")
+                result = pipeline.subprocess.run(
+                    ['emacs', '--batch', '-Q', '-L', str(pipeline.ROOT / 'src'),
+                     '--eval', expression], capture_output=True, text=True,
+                    env={**pipeline.os.environ, 'EMACS_PACKAGE_VALIDATE_ONLY': '1'})
+                self.assertEqual(1, result.returncode)
+                self.assertIn('Package validation cannot install', result.stderr)
+                self.assertNotIn('UNSAFE:', result.stdout)
 
 
 class UpgradeTests(unittest.TestCase):
