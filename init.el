@@ -123,6 +123,7 @@
 (require 'repos nil t)
 
 (require 'mijn-darwin)
+(require 'mijn-cisco-vpn)
 (require 'wrike-token-refresh)
 
 (require 'mijn-completion)
