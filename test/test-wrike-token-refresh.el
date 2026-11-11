@@ -66,7 +66,7 @@
          (wrike-token-refresh-state-file (expand-file-name "state.json" dir))
          (wrike-token-refresh-default-env-file (expand-file-name ".env" dir))
          (config (make-hash-table :test 'equal))
-         (answers '("proxy-example" "wrike-example" "glpat-example"))
+         (answers '("proxy-example" "wrike-example\n" "glpat-example"))
          (emacs-values nil))
     (unwind-protect
         (progn
@@ -88,6 +88,7 @@
             (should (equal "wrike-example" (gethash "WRIKE_PAT" env)))
             (should (equal "glpat-example" (gethash "GITLAB_PERSONAL_ACCESS_TOKEN" env)))
             (should (equal "proxy-example" (cdr (assoc "ANTHROPIC_AUTH_TOKEN" emacs-values))))
+            (should (equal "wrike-example" (cdr (assoc "WRIKE_PAT" emacs-values))))
             (should (gethash "ai-proxy" (gethash "tokens" state)))))
       (delete-directory dir t))))
 

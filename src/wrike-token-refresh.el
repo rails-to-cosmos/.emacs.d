@@ -296,9 +296,12 @@ With prefix argument RECONFIGURE, choose the GUI/terminal profile again."
         (wrike-token-refresh--show-token token status)
         (when (y-or-n-p (format "Open %s token page? " (nth 2 token)))
           (browse-url (nth 4 token)))
-        (let* ((new (read-passwd
-                     (format "%s (blank keeps existing%s): " key
-                             (if old "" "; required"))))
+        (let* ((entered (read-passwd
+                         (format "%s (blank keeps existing%s): " key
+                                 (if old "" "; required"))))
+               (new (if (string= key "WRIKE_PAT")
+                        (string-trim entered)
+                      entered))
                (value (if (string-empty-p new) old new)))
           (unless (and value (not (string-empty-p value)))
             (user-error "%s is required; nothing was written" key))
