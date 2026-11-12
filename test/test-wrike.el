@@ -1,7 +1,7 @@
-;;; test-wrike-token-refresh.el --- Tests for Wrike token refresh -*- lexical-binding: t; -*-
+;;; test-wrike.el --- Tests for Wrike commands -*- lexical-binding: t; -*-
 
 (require 'ert)
-(require 'wrike-token-refresh)
+(require 'wrike)
 
 (ert-deftest wrike-token-refresh-env-preserves-other-lines ()
   (let* ((dir (make-temp-file "wrike-token-test-" t))
@@ -92,5 +92,5 @@
             (should (gethash "ai-proxy" (gethash "tokens" state)))))
       (delete-directory dir t))))
 
-(provide 'test-wrike-token-refresh)
-;;; test-wrike-token-refresh.el ends here
+(provide 'test-wrike)
+;;; test-wrike.el ends here

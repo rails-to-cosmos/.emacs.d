@@ -124,7 +124,7 @@
 
 (require 'mijn-darwin)
 (require 'mijn-cisco-vpn)
-(require 'wrike-token-refresh)
+(require 'wrike)
 
 (require 'mijn-completion)
 (require 'mijn-org)

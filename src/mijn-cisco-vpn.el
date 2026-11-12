@@ -18,16 +18,35 @@
           (push (string-trim (match-string 1)) hosts))
         (nreverse hosts)))))
 
+(defun mijn-cisco-vpn--state ()
+  "Return the Cisco Secure Client connection state, or nil when unknown."
+  (with-temp-buffer
+    (when (zerop (call-process mijn-cisco-vpn-program nil t nil "state"))
+      (goto-char (point-min))
+      (let (state)
+        (while (re-search-forward "^[[:space:]]*>>[[:space:]]*state:[[:space:]]*\\(.+\\)$" nil t)
+          (setq state (string-trim (match-string 1))))
+        state))))
+
+(defun mijn-cisco-vpn-connected-p ()
+  "Return non-nil when Cisco Secure Client reports an established tunnel."
+  (equal "Connected" (mijn-cisco-vpn--state)))
+
+(defun mijn-cisco-vpn--ensure-program ()
+  (unless (file-executable-p mijn-cisco-vpn-program)
+    (user-error "Cisco Secure Client CLI not found: %s" mijn-cisco-vpn-program)))
+
+(defun mijn-cisco-vpn--read-host ()
+  "Prompt for one of the hosts saved in Cisco Secure Client."
+  (mijn-cisco-vpn--ensure-program)
+  (completing-read "Cisco VPN host: " (mijn-cisco-vpn--hosts) nil t))
+
 (defun mijn-cisco-vpn-connect (host)
   "Connect to Cisco VPN HOST, prompting for the password when requested.
-Other Cisco prompts can be answered in the process buffer."
-  (interactive
-   (progn
-     (unless (file-executable-p mijn-cisco-vpn-program)
-       (user-error "Cisco Secure Client CLI not found: %s" mijn-cisco-vpn-program))
-     (list (completing-read "Cisco VPN host: " (mijn-cisco-vpn--hosts) nil t))))
-  (unless (file-executable-p mijn-cisco-vpn-program)
-    (user-error "Cisco Secure Client CLI not found: %s" mijn-cisco-vpn-program))
+Other Cisco prompts can be answered in the process buffer.
+Return the process buffer."
+  (interactive (list (mijn-cisco-vpn--read-host)))
+  (mijn-cisco-vpn--ensure-program)
   (when (string-empty-p host)
     (user-error "Cisco VPN host is required"))
   (let ((buffer (get-buffer-create "*Cisco VPN*")))
@@ -36,7 +55,8 @@ Other Cisco prompts can be answered in the process buffer."
     (let ((default-directory (expand-file-name "~/")))
       (make-comint-in-buffer "Cisco VPN" buffer mijn-cisco-vpn-program nil
                              "connect" host))
-    (pop-to-buffer buffer)))
+    (pop-to-buffer buffer)
+    buffer))
 
 (provide 'mijn-cisco-vpn)
 ;;; mijn-cisco-vpn.el ends here

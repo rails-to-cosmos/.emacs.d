@@ -1,15 +1,17 @@
-;;; wrike-token-refresh.el --- Refresh Wrike tokens from Emacs -*- lexical-binding: t; -*-
+;;; wrike.el --- Wrike VPN and token commands -*- lexical-binding: t; -*-
 
 ;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
-;; Run M-x wrike-token-refresh.  No Node.js package is required.
+;; M-x wrike-token-refresh updates the Wrike tokens; no Node.js package is
+;; required.  M-x wrike-connect brings up the Cisco VPN first.
 
 ;;; Code:
 
 (require 'cl-lib)
 (require 'json)
 (require 'subr-x)
+(require 'mijn-cisco-vpn)
 
 (defgroup wrike-token-refresh nil
   "Refresh Wrike access tokens."
@@ -346,5 +348,37 @@ With prefix argument RECONFIGURE, choose the GUI/terminal profile again."
              (if (member profile '("terminal" "both"))
                  (format ". Run: source %s" (shell-quote-argument file)) ""))))
 
-(provide 'wrike-token-refresh)
-;;; wrike-token-refresh.el ends here
+(defun wrike-connect--refresh ()
+  (condition-case err
+      (call-interactively #'wrike-token-refresh)
+    (quit (message "Wrike token refresh cancelled"))
+    (error (message "Wrike token refresh failed: %s" (error-message-string err)))))
+
+(defun wrike-connect--after-vpn ()
+  (if (mijn-cisco-vpn-connected-p)
+      (run-with-idle-timer 0.1 nil #'wrike-connect--refresh)
+    (message "Cisco VPN is not connected; skipping Wrike token refresh")))
+
+;;;###autoload
+(defun wrike-connect (host)
+  "Connect to Cisco VPN HOST and then refresh Wrike tokens.
+HOST is ignored when the VPN is already connected; in that case the
+token refresh starts right away.  Otherwise the refresh starts once the
+Cisco Secure Client command finishes and reports a connected tunnel."
+  (interactive
+   (list (unless (mijn-cisco-vpn-connected-p) (mijn-cisco-vpn--read-host))))
+  (if (mijn-cisco-vpn-connected-p)
+      (progn
+        (message "Cisco VPN already connected")
+        (wrike-connect--refresh))
+    (let* ((buffer (mijn-cisco-vpn-connect host))
+           (process (get-buffer-process buffer)))
+      (unless process
+        (user-error "Cisco VPN process did not start"))
+      (add-function :after (process-sentinel process)
+                    (lambda (proc _event)
+                      (unless (process-live-p proc)
+                        (wrike-connect--after-vpn)))))))
+
+(provide 'wrike)
+;;; wrike.el ends here
