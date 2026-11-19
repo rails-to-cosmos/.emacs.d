@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (require 'org)
+(require 'org-table)
 (require 'mijn-completion)
 (require 'org-clock)
 (require 'ob)
@@ -158,5 +159,36 @@
       (org-add-note))))
 
 (global-set-key (kbd "C-x y l") #'org-add-note-to-current-task)
+
+(defun mijn-markdown-align-tables ()
+  "Use `org-table-align' on every pipe-led table in the current buffer."
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (while (re-search-forward org-table-line-regexp nil t)
+        (let ((start (line-beginning-position)))
+          (forward-line 1)
+          (while (looking-at-p org-table-line-regexp)
+            (forward-line 1))
+          (save-restriction
+            (narrow-to-region start (point))
+            (atomic-change-group
+              ;; Keep Markdown separators and escaped pipes as Org data.
+              (replace-regexp-in-region "^\\([ \t]*|\\)-" "\\1 -"
+                                        (point-min) (point-max))
+              (let ((placeholder ?\uE000))
+                (goto-char (point-min))
+                (while (search-forward (char-to-string placeholder) nil t)
+                  (setq placeholder (1+ placeholder))
+                  (goto-char (point-min)))
+                (replace-string-in-region "\\|" (string ?\\ placeholder)
+                                          (point-min) (point-max))
+                (goto-char (point-min))
+                (org-table-align)
+                (replace-string-in-region (char-to-string placeholder) "|"
+                                          (point-min) (point-max))))
+            (goto-char (point-max))))))))
 
 (provide 'mijn-org)

@@ -119,7 +119,8 @@
 (require 'repos nil t)
 
 (require 'mijn-darwin)
-(require 'wrike-token-refresh)
+(require 'mijn-cisco-vpn)
+(require 'wrike)
 
 (require 'mijn-completion)
 (require 'mijn-org)
@@ -149,6 +150,7 @@
 (require 'mijn-typescript)
 (require 'mijn-lisette)
 (require 'mijn-nix)
+(require 'mijn-terraform)
 (require 'mijn-docker)
 (require 'mijn-os)
 (require 'mijn-ab)
