@@ -154,6 +154,7 @@
 (require 'mijn-typescript)
 (require 'mijn-lisette)
 (require 'mijn-nix)
+(require 'mijn-terraform)
 (require 'mijn-docker)
 (require 'mijn-os)
 (require 'mijn-ab)
