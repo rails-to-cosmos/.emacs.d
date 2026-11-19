@@ -9,16 +9,28 @@
   :ensure t)
 
 (up org-re-reveal
+  :commands (org-re-reveal-export-to-html org-re-reveal-export-to-html-and-browse
+             org-re-reveal-export-current-subtree)
   :custom (org-re-reveal-revealjs-version "6.0.1")
   :ensure t)
 
 (up ox-reveal-layouts
+  :commands (ox-reveal-layouts-menu ox-reveal-layouts-pin-menu)
   :ensure t)
 
 (up ox-reveal
-  :config (load-library "ox-reveal")
-          (load-library "ox-reveal-layouts")
+  :commands (org-reveal-export-to-html org-reveal-export-to-html-and-browse
+             org-reveal-export-current-subtree)
   :ensure t)
+
+(defun mijn-org-load-presentation-exporters (&rest _)
+  "Register presentation backends when exporting or opening the export menu."
+  (require 'org-re-reveal)
+  (require 'ox-reveal)
+  (require 'ox-reveal-layouts))
+
+(advice-add 'org-export-dispatch :before #'mijn-org-load-presentation-exporters)
+(advice-add 'org-export-as :before #'mijn-org-load-presentation-exporters)
 
 (global-set-key (kbd "C-c o l") #'org-store-link)
 

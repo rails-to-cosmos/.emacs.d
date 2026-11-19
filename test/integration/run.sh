@@ -9,6 +9,7 @@
 # Defaults to 29.4 30.2 31.1 latest. Honours:
 #   EMACS_CONFIG_STRICT=1   fail on unexpected byte-compile warnings
 #   EMACS_CONFIG_FRESH=1    do not restore or save the package cache
+#   EMACS_STARTUP_BUDGET=20  maximum interactive startup seconds
 #   ENGINE=docker           use docker instead of podman
 set -euo pipefail
 
@@ -47,6 +48,7 @@ for v in "${VERSIONS[@]}"; do
 
   run_args=(--rm
             -e "EMACS_CONFIG_STRICT=${STRICT}"
+            -e "EMACS_STARTUP_BUDGET=${EMACS_STARTUP_BUDGET:-20}"
             -v "$REPO_ROOT:/src:ro")
   if [ "$FRESH" != "1" ]; then
     "$ENGINE" volume inspect "$vol" >/dev/null 2>&1 || "$ENGINE" volume create "$vol" >/dev/null

@@ -15,16 +15,43 @@
 (defvar package-usage--autoload nil)
 (defvar package-usage-mode nil)
 
+(defvar package-usage--owner-index nil)
+(defvar package-usage--indexed-packages nil)
+
+(defun package-usage--invalidate-index (&rest _)
+  "Rebuild package ownership on the next lookup."
+  (setq package-usage--owner-index nil))
+
+(dolist (function '(package-initialize package-load-descriptor package-delete))
+  (advice-add function :after #'package-usage--invalidate-index))
+
+(defun package-usage--build-index ()
+  "Index canonical package directories in `package-alist' order."
+  (setq package-usage--owner-index (make-hash-table :test 'equal)
+        package-usage--indexed-packages package-alist)
+  (cl-loop for (name . descriptors) in package-alist
+           for rank from 0
+           do (dolist (desc descriptors)
+                (let ((dir (package-desc-dir desc)))
+                  (when (and dir (file-directory-p dir))
+                    (let ((root (file-name-as-directory (file-truename dir))))
+                      (unless (gethash root package-usage--owner-index)
+                        (puthash root (cons rank name) package-usage--owner-index))))))))
+
 (defun package-usage--owner (file)
   "Return the installed package owning FILE."
   (when (and (stringp file) (file-name-absolute-p file))
-    (cl-loop for (name . descriptors) in package-alist
-             thereis (and (cl-some
-                           (lambda (desc)
-                             (let ((dir (package-desc-dir desc)))
-                               (and dir (file-in-directory-p file dir))))
-                           descriptors)
-                          name))))
+    (unless (and package-usage--owner-index
+                 (eq package-usage--indexed-packages package-alist))
+      (package-usage--build-index))
+    (let ((directory (file-name-as-directory (file-truename file))) owner)
+      (while directory
+        (let ((entry (gethash directory package-usage--owner-index))
+              (parent (file-name-directory (directory-file-name directory))))
+          (when (and entry (or (null owner) (< (car entry) (car owner))))
+            (setq owner entry))
+          (setq directory (unless (equal directory parent) parent))))
+      (cdr owner))))
 
 (defun package-usage--record (name &optional command kind)
   "Record NAME, optional COMMAND and load KIND in this session."
@@ -152,6 +179,7 @@ merge lock at shutdown.  Reports read both the merged state and journals."
   :group 'package-usage
   (if package-usage-mode
       (progn
+        (package-usage--invalidate-index)
         (dolist (entry load-history)
           (package-usage--record (package-usage--owner (car entry)) nil 'eager))
         (add-hook 'after-load-functions #'package-usage--loaded)

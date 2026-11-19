@@ -21,7 +21,6 @@
 
 (mijn-package-initialize)
 
-(package-read-all-archive-contents)
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -70,9 +69,6 @@
 (up bluetooth)
 
 (up vterm
-  :ensure t)
-
-(up magit
   :ensure t)
 
 (up rainbow-delimiters

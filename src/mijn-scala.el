@@ -30,24 +30,21 @@
   :ensure nil)
 
 (up lsp-metals
-    :config (progn
-              ;; (lsp-metals-toggle-show-implicit-arguments)
-              ;; (lsp-metals-toggle-show-implicit-conversions)
-              ;; (lsp-metals-toggle-show-inferred-type)
-              ;; (lsp-metals-toggle-show-super-method-lenses)
-              )
-    :ensure t)
+  :after scala-mode
+  :demand t
+  :ensure t)
 
 (up lsp-ui
-    :ensure t)
-
-;; (use-package company-lsp
-;;     :ensure nil)
+  :after lsp-mode
+  :demand t
+  :ensure t)
 
 (up posframe
-    :ensure nil)
+  :defer t
+  :ensure nil)
 
 (up dap-mode
-    :ensure t)
+  :commands dap-debug
+  :ensure t)
 
 (provide 'mijn-scala)

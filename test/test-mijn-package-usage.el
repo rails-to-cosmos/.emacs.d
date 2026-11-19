@@ -53,3 +53,61 @@
               (should (= 1 (length rows)))
               (should (equal "demo" (alist-get 'package (alist-get 'cells (car rows)))))))
         (kill-buffer " *usage-test*")))))
+
+(ert-deftest package-usage-ownership-matches-directory-semantics ()
+  (let* ((root (make-temp-file "package-owners" t))
+         (parent (expand-file-name "demo" root))
+         (nested (expand-file-name "nested" parent))
+         (other (expand-file-name "demo-other" root))
+         (alias (expand-file-name "alias" root))
+         (package-usage--owner-index nil)
+         (package-usage--indexed-packages nil)
+         (package-alist
+          `((demo ,(package-desc-create :name 'demo :dir parent))
+            (nested ,(package-desc-create :name 'nested :dir nested))
+            (builtin ,(package-desc-create :name 'builtin)))))
+    (unwind-protect
+        (progn
+          (make-directory nested t)
+          (make-directory other)
+          (make-symbolic-link nested alias)
+          (dolist (file (list parent nested
+                              (expand-file-name "file.el" nested)
+                              (expand-file-name "file.el" alias)
+                              (expand-file-name "file.el" other)
+                              "/usr/share/emacs/builtin.el" nil "relative.el"))
+            (should
+             (eq (package-usage--owner file)
+                 (when (and (stringp file) (file-name-absolute-p file))
+                   (cl-loop for (name . descriptors) in package-alist
+                            thereis (and (cl-some
+                                          (lambda (desc)
+                                            (let ((dir (package-desc-dir desc)))
+                                              (and dir (file-in-directory-p file dir))))
+                                          descriptors)
+                                         name))))))
+          ;; A replaced package list must not retain the old owner.
+          (setq package-alist (cdr package-alist))
+          (should (eq 'nested (package-usage--owner (expand-file-name "file.el" alias)))))
+      (delete-directory root t))))
+
+(ert-deftest package-usage-ownership-follows-package-upgrades-and-deletions ()
+  (let* ((root (make-temp-file "package-versions" t))
+         (package-user-dir root)
+         (package-alist nil)
+         (package-usage--owner-index nil)
+         (package-usage--indexed-packages nil)
+         (package-selected-packages '(demo)))
+    (unwind-protect
+        (progn
+          (dolist (version '("1" "2"))
+            (let ((dir (expand-file-name (concat "demo-" version) root)))
+              (make-directory dir)
+              (with-temp-file (expand-file-name "demo-pkg.el" dir)
+                (insert (format "(define-package \"demo\" \"%s\" \"Test package\")" version)))
+              (package-load-descriptor dir)
+              (should (eq 'demo (package-usage--owner (expand-file-name "demo.el" dir))))))
+          (package-delete (cadr (assq 'demo package-alist)) t t)
+          (should-not (package-usage--owner (expand-file-name "demo-2/demo.el" root)))
+          (should (eq 'demo (package-usage--owner (expand-file-name "demo-1/demo.el" root)))))
+      (delete-directory root t))))

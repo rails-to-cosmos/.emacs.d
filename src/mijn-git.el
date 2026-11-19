@@ -1,7 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (up magit
-  :config (progn
-            (define-key global-map (kbd "C-x g") #'magit-status))
-  :ensure nil)
+  :bind ("C-x g" . magit-status)
+  :ensure t)
 
 (provide 'mijn-git)

@@ -46,10 +46,10 @@ save_cache() {
 }
 trap save_cache EXIT
 
-echo "==> [1/3] Load full init (provision packages + smoke test)"
+echo "==> [1/4] Load full init (provision packages + smoke test)"
 emacs --batch -Q -l test/integration/load-check.el
 
-echo "==> [2/3] Byte-compile our src (warning gate)"
+echo "==> [2/4] Byte-compile our src (warning gate)"
 if [ "${EMACS_CONFIG_STRICT:-0}" = "1" ]; then
   make typecheck-strict EMACS=emacs
 else
@@ -57,7 +57,10 @@ else
   make typecheck EMACS=emacs || true
 fi
 
-echo "==> [3/3] ERT unit tests"
+echo "==> [3/4] ERT unit tests"
 make test-unit EMACS=emacs
+
+echo "==> [4/4] Interactive startup performance and deferred integrations"
+timeout 60 emacs --fg-daemon=integration-startup -l test/integration/startup-performance.el
 
 echo "==> ALL GREEN on $(emacs --version | head -1)"
