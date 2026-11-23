@@ -276,11 +276,10 @@ If KWD is a number, get the corresponding match group."
   "Flip the Emacs theme and persist it; sync xmobar when available."
   (interactive)
   (let ((new (if (eq (mijn-theme-variant) 'light) 'dark 'light)))
-    (mijn-apply-emacs-theme new)
-    (message "Switched to %s theme" new)
     (if (file-readable-p mijn-theme-sync-script)
         (start-process "xmobar-theme-sync" nil "bash"
                        mijn-theme-sync-script (symbol-name new))
+      (mijn-apply-emacs-theme new)
       (mijn-write-theme-variant new))))
 
 (global-set-key (kbd "C-x y t x") #'xmobar-toggle-theme)

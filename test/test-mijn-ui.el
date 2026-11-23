@@ -56,7 +56,7 @@
                     ((symbol-function 'start-process)
                      (lambda (&rest args) (setq started args))))
             (xmobar-toggle-theme)
-            (should (eq applied 'light))
+            (should-not applied)
             (should (equal started
                            (list "xmobar-theme-sync" nil "bash"
                                  mijn-theme-sync-script "light")))
