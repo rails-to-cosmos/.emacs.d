@@ -190,19 +190,19 @@
        (directory-files dir nil "\\`v[0-9]+\\.")))))
 
 ;;;###autoload
-(defun wrike-token-refresh-status ()
-  "Show tracked Wrike token expiry without exposing token values."
-  (interactive)
-  (let ((state (wrike-token-refresh--json-file wrike-token-refresh-state-file)))
-    (with-help-window "*Wrike token status*"
-      (princ "Wrike token status\n\n")
-      (dolist (token wrike-token-refresh--tokens)
-        (princ (format "%s (%s): %s\n"
-                       (nth 2 token) (nth 1 token)
-                       (wrike-token-refresh--status token state))))
-      (when-let* ((old (wrike-token-refresh--old-node-versions)))
-        (princ (format "\nPre-18 nvm Node versions may break Claude Desktop MCP servers: %s\n"
-                       (string-join old ", ")))))))
+;; (defun wrike-token-refresh-status ()
+;;   "Show tracked Wrike token expiry without exposing token values."
+;;   (interactive)
+;;   (let ((state (wrike-token-refresh--json-file wrike-token-refresh-state-file)))
+;;     (with-help-window "*Wrike token status*"
+;;       (princ "Wrike token status\n\n")
+;;       (dolist (token wrike-token-refresh--tokens)
+;;         (princ (format "%s (%s): %s\n"
+;;                        (nth 2 token) (nth 1 token)
+;;                        (wrike-token-refresh--status token state))))
+;;       (when-let* ((old (wrike-token-refresh--old-node-versions)))
+;;         (princ (format "\nPre-18 nvm Node versions may break Claude Desktop MCP servers: %s\n"
+;;                        (string-join old ", ")))))))
 
 (defun wrike-token-refresh--profile (config reconfigure)
   (let* ((stored (gethash "profile" config))
